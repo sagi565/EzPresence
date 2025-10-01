@@ -1,0 +1,138 @@
+import { CSSProperties } from 'react';
+import { theme } from '@theme/theme';
+
+export const styles: Record<string, CSSProperties | object> = {
+  drawer: {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    background: theme.colors.surface,
+    borderRadius: '24px 24px 0 0',
+    boxShadow: '0 -4px 20px rgba(155, 93, 229, 0.1)',
+    transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
+    zIndex: 900,
+  },
+  drawerOpen: {},
+  drawerHandle: {
+    padding: '12px',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '4px',
+  },
+  drawerArrow: {
+    fontSize: '16px',
+    color: theme.colors.muted,
+    transition: 'all 0.3s',
+  },
+  drawerArrowOpen: {
+    transform: 'rotate(180deg)',
+    color: theme.colors.primary,
+  },
+  drawerTitle: {
+    fontWeight: 600,
+    color: theme.colors.text,
+    fontSize: '14px',
+  },
+  drawerContent: {
+    maxHeight: 0,
+    overflow: 'hidden',
+    transition: 'max-height 0.3s ease',
+  },
+  drawerContentOpen: {
+    maxHeight: '180px',
+  },
+  drawerInner: {
+    padding: '0 24px 20px',
+  },
+  drawerControls: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '16px',
+    alignItems: 'center',
+  },
+  searchBar: {
+    flex: 1,
+    maxWidth: '300px',
+    padding: '8px 14px',
+    border: `2px solid ${theme.colors.primaryLight}`,
+    borderRadius: '10px',
+    fontSize: '14px',
+    transition: 'all 0.2s',
+  },
+  filterBtn: {
+    padding: '6px 14px',
+    border: `2px solid ${theme.colors.primaryLight}`,
+    background: theme.colors.surface,
+    borderRadius: '8px',
+    fontSize: '13px',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  },
+  filterBtnActive: {
+    background: theme.gradients.balance,
+    color: 'white',
+    borderColor: theme.colors.teal,
+  },
+  contentList: {
+    display: 'flex',
+    gap: '16px',
+    overflowX: 'auto',
+    paddingBottom: '8px',
+  },
+  contentCard: {
+    flexShrink: 0,
+    width: '120px',
+    background: theme.colors.surface,
+    padding: '10px',
+    cursor: 'grab',
+    transition: 'all 0.2s',
+    position: 'relative',
+    borderRadius: '8px',
+  },
+  contentCardDragging: {
+    opacity: 0.5,
+    cursor: 'grabbing',
+  },
+  contentThumbnail: {
+    width: '100%',
+    height: '65px',
+    borderRadius: '8px',
+    marginBottom: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+  },
+  contentThumbnailBurger: {
+    background: theme.gradients.innovator,
+  },
+  contentThumbnailSteakhouse: {
+    background: theme.gradients.balance,
+  },
+  contentTitle: {
+    fontSize: '11px',
+    fontWeight: 600,
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
+  favoriteBadge: {
+    position: 'absolute',
+    top: '6px',
+    right: '6px',
+    color: theme.colors.pink,
+    fontSize: '11px',
+  },
+  presenceBadge: {
+    position: 'absolute',
+    top: '6px',
+    left: '6px',
+    color: theme.colors.teal,
+    fontSize: '11px',
+  },
+};
