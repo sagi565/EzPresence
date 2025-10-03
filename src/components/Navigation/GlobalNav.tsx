@@ -17,7 +17,7 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
   const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
   const [showStudioSecondary, setShowStudioSecondary] = useState(false);
   const [hoveredStudioBtn, setHoveredStudioBtn] = useState<string | null>(null);
-  const studioTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const studioTimeoutRef = useRef<number | null>(null);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -72,7 +72,7 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
   };
 
   const handleStudioMouseLeave = () => {
-    studioTimeoutRef.current = setTimeout(() => {
+    studioTimeoutRef.current = window.setTimeout(() => {
       setShowStudioSecondary(false);
     }, 150);
   };
@@ -85,7 +85,7 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
   };
 
   const handleSecondaryMouseLeave = () => {
-    studioTimeoutRef.current = setTimeout(() => {
+    studioTimeoutRef.current = window.setTimeout(() => {
       setShowStudioSecondary(false);
     }, 150);
   };
@@ -113,7 +113,7 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
             key={btn.id}
             style={styles.navItemWrapper}
           >
-            
+            <a
               href={btn.path}
               style={getButtonStyle(btn.id, btn.active)}
               onMouseEnter={() => {
@@ -148,7 +148,7 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
                     const isHovered = hoveredStudioBtn === subBtn.id;
                     
                     return (
-                      
+                      <a
                         key={subBtn.id}
                         href={subBtn.path}
                         style={{
