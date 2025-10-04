@@ -10,6 +10,7 @@ interface GenerateButtonProps {
 
 const GenerateButton: React.FC<GenerateButtonProps> = ({ onClick, isGenerating }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isActive, setIsActive] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
@@ -21,23 +22,29 @@ const GenerateButton: React.FC<GenerateButtonProps> = ({ onClick, isGenerating }
     setShowConfirm(false);
     onClick();
     setShowCelebration(true);
-    setTimeout(() => {
-      setShowCelebration(false);
-    }, 2000);
+    setTimeout(() => setShowCelebration(false), 2000);
   };
 
   const handleCancel = () => {
     setShowConfirm(false);
   };
 
+  // merge base + hover + active styles
   const buttonStyle = {
     ...styles.generateBtn,
     ...(isHovered ? styles.generateBtnHover : {}),
+    ...(isActive ? styles.generateBtnActive : {}),
+  };
+
+  // shimmering bar (like ::before)
+  const beforeStyle = {
+    ...styles.generateBtnBefore,
+    left: isHovered ? '100%' : '-100%',
   };
 
   return (
     <>
-      <div 
+      <div
         className="generate-button-wrapper"
         style={{ position: 'relative', overflow: 'hidden', borderRadius: '14px' }}
       >
@@ -45,19 +52,22 @@ const GenerateButton: React.FC<GenerateButtonProps> = ({ onClick, isGenerating }
           style={buttonStyle}
           onClick={handleClick}
           onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onMouseLeave={() => {
+            setIsHovered(false);
+            setIsActive(false);
+          }}
+          onMouseDown={() => setIsActive(true)}
+          onMouseUp={() => setIsActive(false)}
           disabled={isGenerating}
         >
+          <span style={beforeStyle} />
           <span style={styles.generateBtnIcon}>▶</span>
           <span>Generate!</span>
         </button>
       </div>
 
       {showConfirm && (
-        <ConfirmDialog
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />
+        <ConfirmDialog onConfirm={handleConfirm} onCancel={handleCancel} />
       )}
 
       {showCelebration && <CelebrationAnimation />}

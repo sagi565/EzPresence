@@ -44,7 +44,7 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
 
   const studioSubButtons = [
     { id: 'creators', label: '👥', text: 'Creators', path: '/studio/creators' },
-    { id: 'wizard', label: '🪄', text: 'Wizard', path: '/studio/wizard' },
+    { id: 'wizard', label: '✨', text: 'Wizard', path: '/studio/wizard' },
     { id: 'producer', label: '🎯', text: 'Producer Mode', path: '/studio/producer' },
   ];
 
@@ -164,7 +164,7 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
                           setShowStudioSecondary(false);
                         }}
                       >
-                        <span>{subBtn.label}</span>
+                        <span>{subBtn.label} </span>
                         <span>{subBtn.text}</span>
                       </a>
                     );

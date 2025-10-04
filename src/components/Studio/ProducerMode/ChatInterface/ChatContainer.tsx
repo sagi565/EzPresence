@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { VideoIdea } from '@models/VideoIdea';
 import { VideoModelType } from '@models/VideoModel';
-import ChatHeader from './ChatHeader';
 import ChatMessages from './ChatMessages';
 import ChatInput from './ChatInput';
 import { styles } from './styles';
@@ -56,7 +55,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       const withoutLoading = prev.filter(m => !m.isLoading);
       return [...withoutLoading, { 
         sender: 'agent', 
-        text: 'הנה כמה רעיונות שעלו לי לראש:',
+        text: 'Here are some ideas that came to my mind',
         ideas: newIdeas 
       }];
     });

@@ -274,5 +274,8 @@ export const globalStyles = `
     left: 100%;
   }
 
-  .loading-dots {
+  @keyframes loadingDotAnim {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+  }
 `;

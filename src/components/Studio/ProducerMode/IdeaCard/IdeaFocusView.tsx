@@ -48,9 +48,9 @@ const IdeaFocusView: React.FC<IdeaFocusViewProps> = ({
     } : {}),
   };
 
-  return (
-    <>
-      <div style={styles.focusOverlay} onClick={onClose} />
+return (
+  <>
+    <div style={styles.focusOverlay} onClick={onClose} />
       <div style={styles.ideaCardFocused}>
         <textarea
           style={styles.ideaTextArea}
@@ -59,26 +59,31 @@ const IdeaFocusView: React.FC<IdeaFocusViewProps> = ({
           onBlur={handleBlur}
           autoFocus
         />
-        <button
-          style={buttonStyle}
-          onClick={onPreviewDetails}
-          onMouseEnter={() => setIsButtonHovered(true)}
-          onMouseLeave={() => setIsButtonHovered(false)}
-          disabled={showPreviewLoading}
-          data-tooltip="See video plan, duration and cost before creating"
-        >
-          Preview Details
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {showPreviewLoading && (
-            <div style={styles.loadingSpinner}>
+            <div className="loading-dots" style={styles.loadingDotsContainer}>
               <span></span>
               <span></span>
               <span></span>
             </div>
           )}
-        </button>
+
+          <button
+            style={buttonStyle}
+            onClick={onPreviewDetails}
+            onMouseEnter={() => setIsButtonHovered(true)}
+            onMouseLeave={() => setIsButtonHovered(false)}
+            disabled={showPreviewLoading}
+            data-tooltip="See video plan, duration and cost before creating"
+          >
+            Preview Details
+          </button>
+        </div>
       </div>
     </>
   );
 };
+
 
 export default IdeaFocusView;

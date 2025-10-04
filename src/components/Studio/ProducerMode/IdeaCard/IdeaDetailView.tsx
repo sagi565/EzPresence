@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { VideoIdea } from '@models/VideoIdea';
 import { VideoModelType, VIDEO_MODELS } from '@models/VideoModel';
 import GenerateButton from '../VideoGeneration/GenerateButton';
@@ -68,28 +69,13 @@ const IdeaDetailView: React.FC<IdeaDetailViewProps> = ({
 
   return (
     <>
-      <div style={styles.focusOverlay} onClick={onClose} />
+      {ReactDOM.createPortal(
+        <div style={styles.focusOverlay} onClick={onClose} />,
+        document.body
+      )}
+
       <div style={styles.ideaCardDetailed}>
         <div style={styles.detailedContent}>
-          <div style={styles.detailedSidebar}>
-            <div style={styles.sidebarTopGroup}>
-              <div 
-                className="model-display-shimmer"
-                style={{ ...styles.modelDisplay, ...styles[`modelDisplay${modelClass.charAt(0).toUpperCase()}${modelClass.slice(1)}` as keyof typeof styles] }}
-              >
-                {selectedModel}
-              </div>
-              <div style={styles.priceDisplay}>
-                <div style={styles.priceLabel}>Price</div>
-                <div style={styles.priceValue}>
-                  {model.price.toLocaleString()}
-                  <span style={styles.priceUnit}>credits</span>
-                </div>
-              </div>
-            </div>
-            <GenerateButton onClick={handleGenerate} isGenerating={isGenerating} />
-          </div>
-
           <div style={styles.detailedMain}>
             <div style={styles.detailedHeader}>
               <div style={styles.fieldLabel}>Title:</div>
@@ -130,6 +116,24 @@ const IdeaDetailView: React.FC<IdeaDetailViewProps> = ({
                 {prompt}
               </div>
             </div>
+          </div>
+          <div style={styles.detailedSidebar}>
+            <div style={styles.sidebarTopGroup}>
+              <div 
+                className="model-display-shimmer"
+                style={{ ...styles.modelDisplay, ...styles[`modelDisplay${modelClass.charAt(0).toUpperCase()}${modelClass.slice(1)}` as keyof typeof styles] }}
+              >
+                {selectedModel}
+              </div>
+              <div style={styles.priceDisplay}>
+                <div style={styles.priceLabel}>Price</div>
+                <div style={styles.priceValue}>
+                  {model.price.toLocaleString()}
+                  <span style={styles.priceUnit}>credits</span>
+                </div>
+              </div>
+            </div>
+            <GenerateButton onClick={handleGenerate} isGenerating={isGenerating} />
           </div>
         </div>
       </div>

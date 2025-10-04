@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { VideoModelType } from '@models/VideoModel';
-import { VideoIdea } from '@models/VideoIdea';
 import { useVideoIdeas } from '@hooks/useVideoIdeas';
 import { useVideoGeneration } from '@hooks/useVideoGeneration';
-import ProducerControls from '@components/Studio/ProducerControls/ProducerControls';
-import ChatContainer from '@components/Studio/ChatInterface/ChatContainer';
+import ProducerControls from '@/components/Studio/ProducerMode/ProducerControls/ProducerControls';
+import ChatContainer from '@/components/Studio/ProducerMode/ChatInterface/ChatContainer';
 import { styles } from './styles';
 
 const ProducerPage: React.FC = () => {
