@@ -1,0 +1,78 @@
+import React, { useState, useEffect } from 'react';
+import { VideoIdea } from '@models/VideoIdea';
+import { styles } from './styles';
+
+interface IdeaFocusViewProps {
+  idea: VideoIdea;
+  onUpdate: (ideaId: string, updates: Partial<VideoIdea>) => void;
+  onClose: () => void;
+  onPreviewDetails: () => void;
+  showPreviewLoading: boolean;
+}
+
+const IdeaFocusView: React.FC<IdeaFocusViewProps> = ({
+  idea,
+  onUpdate,
+  onClose,
+  onPreviewDetails,
+  showPreviewLoading,
+}) => {
+  const [ideaText, setIdeaText] = useState(idea.idea);
+  const [isButtonHovered, setIsButtonHovered] = useState(false);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  const handleBlur = () => {
+    if (ideaText !== idea.idea) {
+      onUpdate(idea.id, { idea: ideaText });
+    }
+  };
+
+  const buttonStyle = {
+    ...styles.ideaPreviewBtn,
+    ...(isButtonHovered ? styles.ideaPreviewBtnHover : {}),
+  };
+
+  return (
+    <>
+      <div style={styles.focusOverlay} onClick={onClose} />
+      <div style={styles.ideaCardFocused}>
+        <textarea
+          style={styles.ideaTextArea}
+          value={ideaText}
+          onChange={(e) => setIdeaText(e.target.value)}
+          onBlur={handleBlur}
+          autoFocus
+        />
+        <button
+          style={buttonStyle}
+          onClick={onPreviewDetails}
+          onMouseEnter={() => setIsButtonHovered(true)}
+          onMouseLeave={() => setIsButtonHovered(false)}
+          disabled={showPreviewLoading}
+          data-tooltip="See video plan, duration and cost before creating"
+        >
+          Preview Details
+          {showPreviewLoading && (
+            <div style={styles.loadingSpinner}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          )}
+        </button>
+      </div>
+    </>
+  );
+};
+
+export default IdeaFocusView;

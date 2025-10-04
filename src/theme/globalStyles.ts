@@ -27,6 +27,14 @@ export const globalStyles = `
     font-family: inherit;
   }
 
+  :root {
+    --color-primary: #9b5de5;
+    --color-secondary: #fbbf24;
+    --color-teal: #14b8a6;
+    --color-blue: #3b82f6;
+    --color-pink: #ec4899;
+  }
+
   @keyframes fadeInUp {
     from {
       opacity: 0;
@@ -93,5 +101,90 @@ export const globalStyles = `
       transform: translateY(100vh) rotate(720deg);
       opacity: 0;
     }
+  }
+
+  @keyframes thinkingBounce {
+    0%, 20%, 80%, 100% {
+      transform: scale(0.8) translateY(0);
+      opacity: 0.5;
+    }
+    40% {
+      transform: scale(1.2) translateY(-8px);
+      opacity: 1;
+      background: var(--color-secondary);
+    }
+    60% {
+      transform: scale(1) translateY(-4px);
+      opacity: 0.8;
+      background: var(--color-primary);
+    }
+  }
+
+  @keyframes spinnerBounce {
+    0%, 80%, 100% {
+      transform: scale(0.8);
+      opacity: 0.5;
+    }
+    40% {
+      transform: scale(1.2);
+      opacity: 1;
+    }
+  }
+
+  @keyframes tooltipFadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  .loading-dots {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .loading-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    animation: thinkingBounce 1.4s infinite ease-in-out both;
+  }
+
+  .loading-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+
+  .loading-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+
+  .loading-dots span:nth-child(3) {
+    animation-delay: 0s;
+  }
+
+  .loading-spinner {
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  .loading-spinner span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-teal);
+    animation: spinnerBounce 1.4s infinite ease-in-out both;
+  }
+
+  .loading-spinner span:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+
+  .loading-spinner span:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+
+  .loading-spinner span:nth-child(3) {
+    animation-delay: 0s;
   }
 `;
