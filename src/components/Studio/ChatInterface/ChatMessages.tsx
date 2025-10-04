@@ -5,10 +5,15 @@ import MessageBubble from './MessageBubble';
 import IdeaCard from '../IdeaCard/IdeaCard';
 import { styles } from './styles';
 
+interface Message {
+  sender: 'user' | 'agent';
+  text?: string;
+  ideas?: VideoIdea[];
+  isLoading?: boolean;
+}
+
 interface ChatMessagesProps {
-  messages: Array<{ sender: 'user' | 'agent'; text: string }>;
-  ideas: VideoIdea[];
-  isLoading: boolean;
+  messages: Message[];
   selectedModel: VideoModelType;
   onUpdateIdea: (ideaId: string, updates: Partial<VideoIdea>) => void;
   onGenerateVideo: (params: any) => Promise<boolean>;
@@ -17,8 +22,6 @@ interface ChatMessagesProps {
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({
   messages,
-  ideas,
-  isLoading,
   selectedModel,
   onUpdateIdea,
   onGenerateVideo,
@@ -26,45 +29,57 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 }) => {
   return (
     <div style={styles.chatMessages}>
-      {messages.map((msg, idx) => (
-        <MessageBubble key={idx} sender={msg.sender} text={msg.text} />
-      ))}
-      
-      {isLoading && (
-        <MessageBubble 
-          sender="agent" 
-          text={
-            <div className="loading-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          } 
-        />
-      )}
+      {messages.map((msg, idx) => {
+        if (msg.isLoading) {
+          return (
+            <MessageBubble 
+              key={idx}
+              sender="agent" 
+              text={
+                <div className="loading-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              } 
+            />
+          );
+        }
 
-      {!isLoading && ideas.length > 0 && (
-        <MessageBubble 
-          sender="agent" 
-          text={
-            <>
-              <div>הנה כמה רעיונות שעלו לי לראש:</div>
-              <div style={styles.ideasList}>
-                {ideas.map((idea) => (
-                  <IdeaCard
-                    key={idea.id}
-                    idea={idea}
-                    selectedModel={selectedModel}
-                    onUpdate={onUpdateIdea}
-                    onGenerate={onGenerateVideo}
-                    isGenerating={isGenerating}
-                  />
-                ))}
-              </div>
-            </>
-          }
-        />
-      )}
+        if (msg.ideas && msg.ideas.length > 0) {
+          return (
+            <MessageBubble 
+              key={idx}
+              sender="agent" 
+              text={
+                <>
+                  {msg.text && <div>{msg.text}</div>}
+                  <div style={styles.ideasList}>
+                    {msg.ideas.map((idea) => (
+                      <IdeaCard
+                        key={idea.id}
+                        idea={idea}
+                        selectedModel={selectedModel}
+                        onUpdate={onUpdateIdea}
+                        onGenerate={onGenerateVideo}
+                        isGenerating={isGenerating}
+                      />
+                    ))}
+                  </div>
+                </>
+              }
+            />
+          );
+        }
+
+        return (
+          <MessageBubble 
+            key={idx}
+            sender={msg.sender} 
+            text={msg.text || ''} 
+          />
+        );
+      })}
     </div>
   );
 };

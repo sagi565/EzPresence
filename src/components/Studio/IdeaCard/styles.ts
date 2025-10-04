@@ -83,6 +83,7 @@ export const styles: Record<string, CSSProperties> = {
     transition: 'all 0.3s ease',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
     backdropFilter: 'blur(10px)',
+    outline: 'none', // Remove outline
   },
   ideaPreviewBtnHover: {
     background: 'rgba(20, 184, 166, 0.05)',

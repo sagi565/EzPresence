@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useBrands } from '@hooks/useBrands';
 import GlobalNav from '@components/Navigation/GlobalNav';
@@ -10,6 +10,7 @@ import { styles } from './styles';
 const StudioPage: React.FC = () => {
   const { section } = useParams<{ section?: string }>();
   const { brands, currentBrand, switchBrand } = useBrands();
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   const renderContent = () => {
     switch (section) {
@@ -29,21 +30,58 @@ const StudioPage: React.FC = () => {
               </p>
             </div>
             <div style={styles.studioFeatures}>
-              <div style={styles.featureCard} onClick={() => window.location.href = '/studio/creators'}>
+              <div 
+                style={{
+                  ...styles.featureCard,
+                  ...(hoveredCard === 'creators' ? {
+                    transform: 'translateY(-8px)',
+                    boxShadow: '0 20px 40px rgba(155, 93, 229, 0.15)',
+                    borderColor: 'var(--color-primary)',
+                  } : {}),
+                }} 
+                onClick={() => window.location.href = '/studio/creators'}
+                onMouseEnter={() => setHoveredCard('creators')}
+                onMouseLeave={() => setHoveredCard(null)}
+              >
                 <span style={styles.featureIcon}>👥</span>
                 <h3 style={styles.featureTitle}>Creators</h3>
                 <p style={styles.featureDescription}>
                   AI-powered content creators that understand your brand voice and generate engaging posts automatically.
                 </p>
               </div>
-              <div style={styles.featureCard} onClick={() => window.location.href = '/studio/wizard'}>
+              <div 
+                style={{
+                  ...styles.featureCard,
+                  ...(hoveredCard === 'wizard' ? {
+                    transform: 'translateY(-8px)',
+                    boxShadow: '0 20px 40px rgba(155, 93, 229, 0.15)',
+                    borderColor: 'var(--color-primary)',
+                  } : {}),
+                }} 
+                onClick={() => window.location.href = '/studio/wizard'}
+                onMouseEnter={() => setHoveredCard('wizard')}
+                onMouseLeave={() => setHoveredCard(null)}
+              >
                 <span style={styles.featureIcon}>🪄</span>
                 <h3 style={styles.featureTitle}>Wizard</h3>
                 <p style={styles.featureDescription}>
                   Step-by-step guided content creation with smart templates and personalized recommendations.
                 </p>
               </div>
-              <div style={{ ...styles.featureCard, ...styles.featureCardPremium }} onClick={() => window.location.href = '/studio/producer'}>
+              <div 
+                style={{ 
+                  ...styles.featureCard, 
+                  ...styles.featureCardPremium,
+                  ...(hoveredCard === 'producer' ? {
+                    transform: 'translateY(-8px)',
+                    boxShadow: '0 0 30px rgba(251, 191, 36, 0.6), 0 20px 40px rgba(155, 93, 229, 0.15)',
+                    borderColor: 'var(--color-primary)',
+                  } : {}),
+                }} 
+                onClick={() => window.location.href = '/studio/producer'}
+                onMouseEnter={() => setHoveredCard('producer')}
+                onMouseLeave={() => setHoveredCard(null)}
+              >
                 <span style={styles.featureIcon}>🎯</span>
                 <h3 style={styles.featureTitle}>Producer Mode</h3>
                 <p style={styles.featureDescription}>

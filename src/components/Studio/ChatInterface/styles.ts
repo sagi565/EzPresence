@@ -33,7 +33,7 @@ export const styles: Record<string, CSSProperties> = {
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text',
     margin: 0,
-    display: 'inline-block',
+    // Removed display: 'inline-block' to match demo
   },
   initialChatInputArea: {
     display: 'flex',
@@ -41,13 +41,14 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     width: '100%',
     direction: 'rtl',
-    maxWidth: 'none',
+    maxWidth: 'none', // This ensures full width like in demo
   },
   chatHeader: {
     padding: '24px',
     textAlign: 'center',
     borderBottom: '1px solid rgba(155, 93, 229, 0.1)',
     background: 'rgba(255, 255, 255, 0.9)',
+    display: 'none', // Hidden by default, shown when expanded
   },
   chatMessages: {
     flex: 1,
