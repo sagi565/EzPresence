@@ -37,16 +37,21 @@ const GenerateButton: React.FC<GenerateButtonProps> = ({ onClick, isGenerating }
 
   return (
     <>
-      <button
-        style={buttonStyle}
-        onClick={handleClick}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        disabled={isGenerating}
+      <div 
+        className="generate-button-wrapper"
+        style={{ position: 'relative', overflow: 'hidden', borderRadius: '14px' }}
       >
-        <span style={styles.generateBtnIcon}>▶</span>
-        <span>Generate!</span>
-      </button>
+        <button
+          style={buttonStyle}
+          onClick={handleClick}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          disabled={isGenerating}
+        >
+          <span style={styles.generateBtnIcon}>▶</span>
+          <span>Generate!</span>
+        </button>
+      </div>
 
       {showConfirm && (
         <ConfirmDialog

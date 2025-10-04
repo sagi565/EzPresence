@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { VideoIdea } from '@models/VideoIdea';
 import { styles } from './styles';
+import { theme } from '@/theme/theme';
 
 interface IdeaFocusViewProps {
   idea: VideoIdea;
@@ -39,7 +40,12 @@ const IdeaFocusView: React.FC<IdeaFocusViewProps> = ({
 
   const buttonStyle = {
     ...styles.ideaPreviewBtn,
-    ...(isButtonHovered ? styles.ideaPreviewBtnHover : {}),
+    ...(isButtonHovered ? {
+      background: 'rgba(20, 184, 166, 0.05)',
+      borderColor: theme.colors.teal,
+      transform: 'translateY(-1px)',
+      boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)',
+    } : {}),
   };
 
   return (

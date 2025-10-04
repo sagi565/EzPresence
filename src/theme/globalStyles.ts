@@ -131,10 +131,51 @@ export const globalStyles = `
     }
   }
 
+
   @keyframes tooltipFadeIn {
     to {
       opacity: 1;
     }
+  }
+
+  /* Generate button with white flash animation */
+  .generate-button-wrapper {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .generate-button-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.6s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .generate-button-wrapper:hover::before {
+    left: 100%;
+  }
+
+  /* Model display shimmer effect */
+  .model-display-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+    pointer-events: none;
+  }
+
+  .model-display-shimmer:hover::before {
+    left: 100%;
   }
 
   .loading-dots {
@@ -187,4 +228,51 @@ export const globalStyles = `
   .loading-spinner span:nth-child(3) {
     animation-delay: 0s;
   }
+@keyframes tooltipFadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Generate button with white flash animation */
+  .generate-button-wrapper {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .generate-button-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.6s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .generate-button-wrapper:hover::before {
+    left: 100%;
+  }
+
+  /* Model display shimmer effect */
+  .model-display-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+    pointer-events: none;
+  }
+
+  .model-display-shimmer:hover::before {
+    left: 100%;
+  }
+
+  .loading-dots {
 `;

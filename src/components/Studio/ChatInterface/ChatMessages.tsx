@@ -34,7 +34,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         <MessageBubble 
           sender="agent" 
           text={
-            <div style={styles.loadingDots}>
+            <div className="loading-dots">
               <span></span>
               <span></span>
               <span></span>

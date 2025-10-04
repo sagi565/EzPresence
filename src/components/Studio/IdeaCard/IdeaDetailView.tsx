@@ -73,7 +73,10 @@ const IdeaDetailView: React.FC<IdeaDetailViewProps> = ({
         <div style={styles.detailedContent}>
           <div style={styles.detailedSidebar}>
             <div style={styles.sidebarTopGroup}>
-              <div style={{ ...styles.modelDisplay, ...styles[`modelDisplay${modelClass.charAt(0).toUpperCase()}${modelClass.slice(1)}` as keyof typeof styles] }}>
+              <div 
+                className="model-display-shimmer"
+                style={{ ...styles.modelDisplay, ...styles[`modelDisplay${modelClass.charAt(0).toUpperCase()}${modelClass.slice(1)}` as keyof typeof styles] }}
+              >
                 {selectedModel}
               </div>
               <div style={styles.priceDisplay}>

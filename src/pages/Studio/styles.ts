@@ -12,6 +12,15 @@ export const styles: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
   },
+  producerContainer: {
+    width: '80%',
+    maxWidth: '80vw',
+    margin: '0 auto',
+    padding: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    height: 'calc(100vh - 80px)',
+  },
   defaultContent: {
     padding: '40px 24px',
     minHeight: '100vh',

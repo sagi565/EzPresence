@@ -22,6 +22,7 @@ export const styles: Record<string, CSSProperties> = {
     justifyContent: 'center',
     gap: '10px',
     marginTop: 'auto',
+    width: '100%',
   },
   generateBtnHover: {
     transform: 'translateY(-4px) scale(1.02)',

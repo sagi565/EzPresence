@@ -22,7 +22,7 @@ export const styles: Record<string, CSSProperties> = {
     color: theme.colors.text,
     background: 'transparent',
   },
-  modelButtonVeo3: {
+    modelButtonVeo3: {
     background: 'linear-gradient(135deg, rgba(155, 93, 229, 0.1) 0%, rgba(251, 191, 36, 0.1) 30%, rgba(245, 158, 11, 0.1) 70%, rgba(217, 119, 6, 0.1) 100%)',
   },
   modelButtonVeo2: {
