@@ -60,7 +60,7 @@ export const styles: Record<string, CSSProperties> = {
   message: {
     display: 'flex',
     gap: '12px',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     animation: 'fadeInUp 0.4s ease',
     direction: 'ltr',
   },
