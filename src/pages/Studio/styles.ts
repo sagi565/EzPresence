@@ -6,19 +6,13 @@ export const styles: Record<string, CSSProperties> = {
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
-  },
-  creatorsContainer: {
-    position: 'fixed',
-    top: '76px',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'linear-gradient(135deg, #f9fafb 0%, rgba(155, 93, 229, 0.02) 100%)',
+    overflow: 'hidden',
   },
   studioContainer: {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
+    overflow: 'hidden',
   },
   producerContainer: {
     width: '80%',
@@ -28,10 +22,15 @@ export const styles: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     height: 'calc(100vh - 80px)',
+    overflow: 'hidden',
   },
   defaultContent: {
     padding: '40px 24px',
-    minHeight: '100vh',
+    height: 'calc(100vh - 76px)',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
   },
   contentHeader: {
     textAlign: 'center',
@@ -89,5 +88,9 @@ export const styles: Record<string, CSSProperties> = {
   featureDescription: {
     color: theme.colors.muted,
     lineHeight: 1.6,
+  },
+  creatorsContainer: {
+    height: 'calc(100vh - 76px)',
+    overflow: 'hidden',
   },
 };
