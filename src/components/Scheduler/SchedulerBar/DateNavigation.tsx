@@ -1,18 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import CreateButton from './CreateButton';
+import CreatePostButton from './CreatePostButton';
 import MiniCalendar from './MiniCalendar';
 import { styles } from './styles';
-import { theme } from '@theme/theme';
 
 interface DateNavigationProps {
   currentMonth: number;
   currentYear: number;
   currentDay?: number;
-  viewMode: 'month' | 'list';
+  viewMode: 'month' | '4days';
   onMonthChange: (direction: number) => void;
   onDayChange?: (direction: number) => void;
   onDateSelect: (date: Date) => void;
-  onViewChange: (view: 'month' | 'list') => void;
+  onViewChange: (view: 'month' | '4days') => void;
 }
 
 const MONTH_NAMES = [
@@ -41,10 +40,10 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
   onViewChange,
 }) => {
   const [showMiniCalendar, setShowMiniCalendar] = useState(false);
-  const [currentView, setCurrentView] = useState<'month' | 'list'>(viewMode);
+  const [currentView, setCurrentView] = useState<'month' | '4days'>(viewMode);
   const [hoveredArrow, setHoveredArrow] = useState<'prev' | 'next' | null>(null);
   const [hoveredMonth, setHoveredMonth] = useState(false);
-  const [hoveredView, setHoveredView] = useState<'month' | 'list' | null>(null);
+  const [hoveredView, setHoveredView] = useState<'month' | '4days' | null>(null);
   const monthDisplayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,7 +66,7 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
     };
   }, [showMiniCalendar]);
 
-  const handleViewChange = (view: 'month' | 'list') => {
+  const handleViewChange = (view: 'month' | '4days') => {
     setCurrentView(view);
     onViewChange(view);
   };
@@ -77,7 +76,7 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
   };
 
   const handleNavigation = (direction: number) => {
-    if (currentView === 'list' && onDayChange) {
+    if (currentView === '4days' && onDayChange) {
       onDayChange(direction * 4);
     } else {
       onMonthChange(direction);
@@ -103,40 +102,23 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
     } : {}),
   };
 
-  const getListViewDateRange = () => {
-    if (!currentDay) return '';
-    
-    const startDate = new Date(currentYear, currentMonth, currentDay);
-    const endDate = new Date(currentYear, currentMonth, currentDay + 3);
-    
-    const formatDate = (date: Date) => {
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return `${monthNames[date.getMonth()]} ${date.getDate()}`;
-    };
 
-    if (startDate.getMonth() === endDate.getMonth()) {
-      return `${formatDate(startDate)} - ${endDate.getDate()}, ${endDate.getFullYear()}`;
-    } else {
-      return `${formatDate(startDate)} - ${formatDate(endDate)}, ${endDate.getFullYear()}`;
-    }
-  };
-
-  const displayText = currentView === 'list' 
+  const displayText = currentView === '4days' 
     ? `${MONTH_NAMES[currentMonth]} ${currentYear}`
     : `${MONTH_NAMES[currentMonth]} ${currentYear}`;
 
   const getPrevTooltip = () => {
-    return currentView === 'list' ? 'Previous 4 days' : 'Previous month';
+    return currentView === '4days' ? 'Previous 4 days' : 'Previous month';
   };
 
   const getNextTooltip = () => {
-    return currentView === 'list' ? 'Next 4 days' : 'Next month';
+    return currentView === '4days' ? 'Next 4 days' : 'Next month';
   };
 
   return (
     <div style={styles.dateNav}>
       <div style={styles.dateLeft}>
-        <CreateButton />
+        <CreatePostButton />
       </div>
 
       <div style={styles.dateControls}>
@@ -214,21 +196,21 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
         >
           📅
           {hoveredView === 'month' && (
-            <div style={styles.tooltip}>Switch to calendar</div>
+            <div style={styles.tooltip}>month view</div>
           )}
         </button>
         <button
           style={{
             ...styles.viewBtn,
-            ...(currentView === 'list' ? styles.viewBtnActive : {}),
+            ...(currentView === '4days' ? styles.viewBtnActive : {}),
           }}
-          onClick={() => handleViewChange('list')}
-          onMouseEnter={() => setHoveredView('list')}
+          onClick={() => handleViewChange('4days')}
+          onMouseEnter={() => setHoveredView('4days')}
           onMouseLeave={() => setHoveredView(null)}
         >
           📋
-          {hoveredView === 'list' && (
-            <div style={styles.tooltip}>Switch to list</div>
+          {hoveredView === '4days' && (
+            <div style={styles.tooltip}>4-day view</div>
           )}
         </button>
       </div>

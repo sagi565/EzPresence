@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Post, PLATFORM_BADGES } from '@models/Post';
+import { Post } from '@models/Post';
 import { styles } from './styles';
 
-interface PostItemProps {
+interface FourDaysViewPostProps {
   post: Post;
+  isHalf?: boolean;
 }
 
-const PostItem: React.FC<PostItemProps> = ({ post }) => {
+const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = false }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isStatusHovered, setIsStatusHovered] = useState(false);
   const mediaEmoji = post.media === 'video' ? '🎥' : '🖼️';
@@ -25,20 +26,14 @@ const PostItem: React.FC<PostItemProps> = ({ post }) => {
   };
 
   const postStyle = {
-    ...styles.postItem,
-    ...(isHovered ? {
-      transform: 'translateX(2px)',
-      boxShadow: '0 2px 6px rgba(155, 93, 229, 0.15)',
-    } : {}),
+    ...styles.post,
+    ...(isHalf ? styles.postHalf : {}),
+    ...(isHovered ? styles.postHovered : {}),
   };
 
   return (
-    <div
-      style={postStyle}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div style={styles.postFirstLine}>
+    <div style={postStyle} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+      <div style={styles.postHeader}>
         <div style={styles.postLeft}>
           <div
             style={{
@@ -83,4 +78,4 @@ const PostItem: React.FC<PostItemProps> = ({ post }) => {
   );
 };
 
-export default PostItem;
+export default FourDaysViewPost;

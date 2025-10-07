@@ -103,7 +103,7 @@ export const styles: Record<string, CSSProperties> = {
   createBtn: {
     background: theme.gradients.innovator,
     color: 'white',
-    border: `2px solid ${theme.colors.secondary}`,
+    border: `0px solid`,
     padding: '10px 16px',
     borderRadius: '12px',
     fontWeight: 600,

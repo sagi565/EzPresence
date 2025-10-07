@@ -3,9 +3,9 @@ import { useBrands } from '@hooks/useBrands';
 import { usePosts } from '@hooks/usePosts';
 import { useContent } from '@hooks/useContent';
 import GlobalNav from '@/components/GlobalBar/Navigation/GlobalNav';
-import DateNavigation from '@/components/Scheduler/DateNavigation/DateNavigation';
+import SchedulerBar from '@/components/Scheduler/SchedulerBar/DateNavigation';
 import CalendarGrid from '@/components/Scheduler/Calendar/GridView/CalendarGrid';
-import ListView from '@/components/Scheduler/Calendar/ListView/ListView';
+import FourDaysView from '@/components/Scheduler/Calendar/FourDaysView/FourDaysView';
 import ContentDrawer from '@/components/Scheduler/ContentDrawer/ContentDrawer';
 import { styles } from './styles';
 
@@ -14,7 +14,7 @@ const SchedulerPage: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentDay, setCurrentDay] = useState(today.getDate());
-  const [viewMode, setViewMode] = useState<'month' | 'list'>('month');
+  const [viewMode, setViewMode] = useState<'month' | '4days'>('month');
 
   const { brands, currentBrand, switchBrand } = useBrands();
   const { posts } = usePosts(currentBrand.id);
@@ -49,7 +49,7 @@ const SchedulerPage: React.FC = () => {
     setCurrentYear(date.getFullYear());
   };
 
-  const handleViewChange = (view: 'month' | 'list') => {
+  const handleViewChange = (view: 'month' | '4days') => {
     setViewMode(view);
   };
 
@@ -57,7 +57,7 @@ const SchedulerPage: React.FC = () => {
     alert(`Opening New Post modal with content "${contentId}" for ${date.toDateString()}`);
   };
 
-  const handleListViewDrop = (date: Date, time: string, contentId: string) => {
+  const handleFourDaysViewDrop = (date: Date, time: string, contentId: string) => {
     alert(`Opening New Post modal with content "${contentId}" for ${date.toDateString()} at ${time}`);
   };
 
@@ -65,7 +65,7 @@ const SchedulerPage: React.FC = () => {
     <div style={styles.container}>
       <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
       <div style={styles.schedulerContainer}>
-        <DateNavigation
+        <SchedulerBar
           currentMonth={currentMonth}
           currentYear={currentYear}
           currentDay={currentDay}
@@ -78,7 +78,7 @@ const SchedulerPage: React.FC = () => {
         {viewMode === 'month' ? (
           <CalendarGrid currentYear={currentYear} currentMonth={currentMonth} posts={posts} today={today} onDrop={handleDrop} />
         ) : (
-          <ListView currentYear={currentYear} currentMonth={currentMonth} currentDay={currentDay} posts={posts} onDayChange={handleDayChange} onDrop={handleListViewDrop} />
+          <FourDaysView currentYear={currentYear} currentMonth={currentMonth} currentDay={currentDay} posts={posts} onDayChange={handleDayChange} onDrop={handleFourDaysViewDrop} />
         )}
       </div>
       <ContentDrawer content={content} brandId={currentBrand.id} />

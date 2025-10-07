@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { styles } from './styles';
 import { theme } from '@theme/theme';
 
-const CreateButton: React.FC = () => {
+const CreatePostButton: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [hoveredBtn, setHoveredBtn] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -33,13 +33,8 @@ const CreateButton: React.FC = () => {
     setShowDropdown(false);
   };
 
-  // Fixed button style - explicitly set border in both states
   const buttonStyle = {
     ...styles.createBtn,
-    // Always ensure the border is set correctly
-    border: hoveredBtn 
-      ? `2px solid ${theme.colors.pink}`
-      : `2px solid ${theme.colors.secondary || '#e5e5e5'}`, // Use secondary or fallback
     ...(hoveredBtn ? {
       background: theme.gradients.vibe,
       transform: 'translateY(-2px)',
@@ -63,7 +58,7 @@ const CreateButton: React.FC = () => {
         onMouseEnter={() => setHoveredBtn(true)}
         onMouseLeave={() => setHoveredBtn(false)}
       >
-        <span style={{ fontSize: '16px' }}>➕</span> Create
+      Create
       </button>
       {showDropdown && (
         <div style={styles.createDropdown}>
@@ -100,4 +95,4 @@ const CreateButton: React.FC = () => {
   );
 };
 
-export default CreateButton;
+export default CreatePostButton;

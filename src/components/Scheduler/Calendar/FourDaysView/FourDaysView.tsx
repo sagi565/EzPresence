@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Post } from '@models/Post';
 import { styles } from './styles';
-import ListViewPost from './ListViewPost';
+import FourDaysViewPost from './FourDaysViewPost';
 
-interface ListViewProps {
+interface FourDaysViewProps {
   currentYear: number;
   currentMonth: number;
   currentDay: number;
@@ -12,7 +12,7 @@ interface ListViewProps {
   onDrop: (date: Date, time: string, contentId: string) => void;
 }
 
-const ListView: React.FC<ListViewProps> = ({
+const FourDaysView: React.FC<FourDaysViewProps> = ({
   currentYear,
   currentMonth,
   currentDay,
@@ -179,7 +179,7 @@ const ListView: React.FC<ListViewProps> = ({
                   >
                     <div style={styles.postContainer}>
                       {visiblePosts.map((post, idx) => (
-                        <ListViewPost 
+                        <FourDaysViewPost 
                           key={post.id} 
                           post={post} 
                           isHalf={visiblePosts.length === 2}
@@ -208,4 +208,4 @@ const ListView: React.FC<ListViewProps> = ({
   );
 };
 
-export default ListView;
+export default FourDaysView;

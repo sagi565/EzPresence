@@ -47,16 +47,17 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
     );
   };
 
-  // Fixed selector style - explicitly set border in both states
+  // Fixed selector style - explicitly set border and boxShadow in both states
   const selectorStyle = {
     ...styles.selector,
-    // Always ensure the border is set correctly
     border: isHovered 
       ? `2px solid ${theme.colors.primary}`
       : `2px solid ${theme.colors.secondary}`,
+    boxShadow: isHovered
+      ? '0 8px 25px rgba(251, 191, 36, 0.3)'
+      : 'none',
     ...(isHovered ? {
       transform: 'translateY(-2px)',
-      boxShadow: '0 8px 25px rgba(251, 191, 36, 0.3)',
     } : {}),
   };
 

@@ -7,6 +7,14 @@ export const styles: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
   },
+  creatorsContainer: {
+    position: 'fixed',
+    top: '76px',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(135deg, #f9fafb 0%, rgba(155, 93, 229, 0.02) 100%)',
+  },
   studioContainer: {
     flex: 1,
     display: 'flex',

@@ -210,6 +210,7 @@ export const styles: Record<string, CSSProperties> = {
     height: '6px',
     borderRadius: '50%',
     flexShrink: 0,
+    cursor: 'pointer',
   },
   statusSuccess: {
     background: theme.colors.teal,
@@ -220,6 +221,21 @@ export const styles: Record<string, CSSProperties> = {
   statusScheduled: {
     background: 'transparent',
     border: `1px solid ${theme.colors.text}`,
+  },
+  statusTooltip: {
+    position: 'absolute',
+    bottom: '12px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: theme.colors.text,
+    color: 'white',
+    padding: '4px 8px',
+    borderRadius: '6px',
+    fontSize: '10px',
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+    pointerEvents: 'none',
+    zIndex: 1000,
   },
   postTime: {
     fontWeight: 600,

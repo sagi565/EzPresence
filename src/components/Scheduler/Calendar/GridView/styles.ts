@@ -50,7 +50,13 @@ export const styles: Record<string, CSSProperties> = {
     border: '1px solid transparent',
   },
   calendarDayPast: {
-    background: theme.colors.bg,
+    background: `repeating-linear-gradient(
+      45deg,
+      ${theme.colors.bg},
+      ${theme.colors.bg} 10px,
+      rgba(107, 114, 128, 0.08) 10px,
+      rgba(107, 114, 128, 0.08) 20px
+    )`,
   },
   calendarDayToday: {
     background: 'rgba(155, 93, 229, 0.05)',
@@ -125,6 +131,7 @@ export const styles: Record<string, CSSProperties> = {
     height: '8px',
     borderRadius: '50%',
     flexShrink: 0,
+    cursor: 'pointer',
   },
   statusSuccess: {
     background: theme.colors.teal,
@@ -135,6 +142,21 @@ export const styles: Record<string, CSSProperties> = {
   statusScheduled: {
     background: 'transparent',
     border: `1px solid ${theme.colors.text}`,
+  },
+  statusTooltip: {
+    position: 'absolute',
+    bottom: '16px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: theme.colors.text,
+    color: 'white',
+    padding: '4px 8px',
+    borderRadius: '6px',
+    fontSize: '11px',
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+    pointerEvents: 'none',
+    zIndex: 1000,
   },
   postTime: {
     fontWeight: 600,
