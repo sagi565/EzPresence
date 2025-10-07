@@ -37,23 +37,6 @@ const IdeaDetailView: React.FC<IdeaDetailViewProps> = ({
     return () => window.removeEventListener('keydown', handleEscape);
   }, [onClose]);
 
-  const handleTitleBlur = () => {
-    if (title !== idea.title) {
-      onUpdate(idea.id, { title });
-    }
-  };
-
-  const handleDescriptionBlur = () => {
-    if (description !== idea.description) {
-      onUpdate(idea.id, { description });
-    }
-  };
-
-  const handlePromptBlur = () => {
-    if (prompt !== idea.prompt) {
-      onUpdate(idea.id, { prompt });
-    }
-  };
 
   const handleGenerate = () => {
     onGenerate({
@@ -67,78 +50,71 @@ const IdeaDetailView: React.FC<IdeaDetailViewProps> = ({
   const model = VIDEO_MODELS[selectedModel];
   const modelClass = selectedModel === 'Veo 3' ? 'veo3' : 'veo2';
 
-  return (
-    <>
-      {ReactDOM.createPortal(
-        <div style={styles.focusOverlay} onClick={onClose} />,
-        document.body
-      )}
-
-      <div style={styles.ideaCardDetailed}>
-        <div style={styles.detailedContent}>
-          <div style={styles.detailedMain}>
-            <div style={styles.detailedHeader}>
-              <div style={styles.fieldLabel}>Title:</div>
-              <input
-                type="text"
-                style={styles.detailedTitle}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={handleTitleBlur}
-                placeholder="Video title"
-              />
-              <div style={{ ...styles.fieldLabel, marginTop: '16px' }}>Description:</div>
-              <textarea
-                style={styles.detailedDescription}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                onBlur={handleDescriptionBlur}
-                placeholder="Video description"
-              />
-            </div>
-
-            <div style={styles.detailedSeparator} />
-
-            <div style={styles.detailedPrompt}>
-              <div style={styles.detailedPromptTitle}>Detailed scene production:</div>
-              <div
-                style={styles.detailedPromptText}
-                contentEditable
-                suppressContentEditableWarning
-                onBlur={(e) => {
-                  const newPrompt = e.currentTarget.textContent || '';
-                  if (newPrompt !== prompt) {
-                    setPrompt(newPrompt);
-                    onUpdate(idea.id, { prompt: newPrompt });
-                  }
-                }}
-              >
-                {prompt}
-              </div>
-            </div>
+  return ReactDOM.createPortal( 
+  <>
+  <div style={styles.focusOverlay} onClick={onClose} />
+    <div style={styles.ideaCardDetailed}>
+      <div style={styles.detailedContent}>
+        <div style={styles.detailedMain}>
+          <div style={styles.detailedHeader}>
+            <div style={styles.fieldLabel}>Title:</div>
+            <input
+              type="text"
+              style={styles.detailedTitle}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Video title"
+            />
+            <div style={{ ...styles.fieldLabel, marginTop: '16px' }}>Description:</div>
+            <textarea
+              style={styles.detailedDescription}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Video description"
+            />
           </div>
-          <div style={styles.detailedSidebar}>
-            <div style={styles.sidebarTopGroup}>
-              <div 
-                className="model-display-shimmer"
-                style={{ ...styles.modelDisplay, ...styles[`modelDisplay${modelClass.charAt(0).toUpperCase()}${modelClass.slice(1)}` as keyof typeof styles] }}
-              >
-                {selectedModel}
-              </div>
-              <div style={styles.priceDisplay}>
-                <div style={styles.priceLabel}>Price</div>
-                <div style={styles.priceValue}>
-                  {model.price.toLocaleString()}
-                  <span style={styles.priceUnit}>credits</span>
-                </div>
-              </div>
+
+          <div style={styles.detailedSeparator} />
+
+          <div style={styles.detailedPrompt}>
+            <div style={styles.detailedPromptTitle}>Detailed scene production:</div>
+            <div
+              style={styles.detailedPromptText}
+              contentEditable
+              suppressContentEditableWarning
+              onBlur={(e) => {
+                const newPrompt = e.currentTarget.textContent || '';
+                if (newPrompt !== prompt) {
+                  setPrompt(newPrompt);
+                  onUpdate(idea.id, { prompt: newPrompt });
+                }
+              }}
+            >
+              {prompt}
             </div>
-            <GenerateButton onClick={handleGenerate} isGenerating={isGenerating} />
           </div>
         </div>
+        <div style={styles.detailedSidebar}>
+          <div style={styles.sidebarTopGroup}>
+            <div 
+              className="model-display-shimmer"
+              style={{ ...styles.modelDisplay, ...styles[`modelDisplay${modelClass.charAt(0).toUpperCase()}${modelClass.slice(1)}` as keyof typeof styles] }}
+            >
+              {selectedModel}
+            </div>
+            <div style={styles.priceDisplay}>
+              <div style={styles.priceLabel}>Price</div>
+              <div style={styles.priceValue}>
+                {model.price.toLocaleString()}
+                <span style={styles.priceUnit}>credits</span>
+              </div>
+            </div>
+          </div>
+          <GenerateButton onClick={handleGenerate} isGenerating={isGenerating} />
+        </div>
       </div>
-    </>
+    </div>
+  </>, document.body
   );
 };
-
 export default IdeaDetailView;

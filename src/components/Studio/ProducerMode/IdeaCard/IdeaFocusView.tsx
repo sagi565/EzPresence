@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { VideoIdea } from '@models/VideoIdea';
 import { styles } from './styles';
 import { theme } from '@/theme/theme';
@@ -48,8 +49,8 @@ const IdeaFocusView: React.FC<IdeaFocusViewProps> = ({
     } : {}),
   };
 
-return (
-  <>
+  return ReactDOM.createPortal(
+    <>
     <div style={styles.focusOverlay} onClick={onClose} />
       <div style={styles.ideaCardFocused}>
         <textarea
@@ -81,7 +82,8 @@ return (
           </button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };
 

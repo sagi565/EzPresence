@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Post, Platform, PostStatus, MediaType } from '@models/Post';
 
 // Helper function to generate random posts
-const generateRandomPosts = (brandId: string, count: number = 100): Post[] => {
+const generateRandomPosts = (brandId: string, count: number = 80): Post[] => {
   const platforms: Platform[] = ['youtube', 'instagram', 'tiktok', 'facebook'];
   const statuses: PostStatus[] = ['success', 'failed', 'scheduled'];
   const mediaTypes: MediaType[] = ['image', 'video'];

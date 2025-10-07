@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useBrands } from '@hooks/useBrands';
 import GlobalNav from '@/components/GlobalBar/Navigation/GlobalNav';
 import ProducerPage from './ProducerPage';
-import CreatorsPage from './CreatorsPage';
+import CreatorsPage from './CreatorsPage'; 
 import WizardPage from './WizardPage';
 import { styles } from './styles';
 
