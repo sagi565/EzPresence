@@ -51,11 +51,11 @@ export const styles: Record<string, CSSProperties> = {
   },
   calendarDayPast: {
     background: `repeating-linear-gradient(
-      45deg,
-      ${theme.colors.bg},
-      ${theme.colors.bg} 10px,
-      rgba(107, 114, 128, 0.08) 10px,
-      rgba(107, 114, 128, 0.08) 20px
+      -45deg,
+      ${theme.colors.surface},
+      ${theme.colors.bg} 8px,
+      hsla(221, 13%, 66%, 0.06) 8px,
+      hsla(221, 13%, 66%, 0.06) 16px
     )`,
   },
   calendarDayToday: {

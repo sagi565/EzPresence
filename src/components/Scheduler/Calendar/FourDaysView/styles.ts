@@ -95,7 +95,7 @@ export const styles: Record<string, CSSProperties> = {
     borderLeft: '1px solid transparent',
     transition: 'all 0.2s',
     cursor: 'pointer',
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   dayCellPast: {
     background: theme.colors.bg,

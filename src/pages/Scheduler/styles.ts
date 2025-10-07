@@ -7,7 +7,7 @@ export const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
   },
   schedulerContainer: {
-    maxWidth: '85vw',
+    maxWidth: '88vw',
     width: '100%',
     margin: '0 auto',
     padding: '24px',
