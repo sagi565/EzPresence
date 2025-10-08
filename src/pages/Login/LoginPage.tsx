@@ -1,105 +1,62 @@
 import React, { useState } from 'react';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
+import AuthLayout from '@components/Auth/AuthLayout/AuthLayout';
+import AuthField from '@components/Auth/AuthField/AuthField';
+import SocialButtons from '@components/Auth/SocialButtons/SocialButtons';
 import { styles } from './styles';
-import { auth, googleProvider, facebookProvider } from '@lib/firebase';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '@auth/AuthProvider';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const { signInEmail, user } = useAuth();
+  const nav = useNavigate();
 
-  const handleEmailLogin = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate('/studio');
-    } catch (err: any) {
-      setError(err.message || 'Login failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (user) return <Navigate to="/scheduler" replace />;
 
-  const handleSocial = async (provider: any) => {
-    setLoading(true);
-    setError('');
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setErr(null);
     try {
-      await signInWithPopup(auth, provider);
-      navigate('/studio');
-    } catch (err: any) {
-      setError(err.message || 'Authentication failed.');
+      await signInEmail(email, password);
+      nav('/scheduler');
+    } catch (e: any) {
+      setErr(e?.message ?? 'Failed to sign in.');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Sign in to your account</h2>
-
-        <input
-          style={styles.input}
-          placeholder="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          style={styles.input}
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        {error && <div style={styles.error}>{error}</div>}
-
-        <button
-          style={styles.button}
-          onMouseEnter={(e) => Object.assign(e.currentTarget.style, styles.buttonHover)}
-          onMouseLeave={(e) => Object.assign(e.currentTarget.style, styles.button)}
-          onClick={handleEmailLogin}
-          disabled={loading}
-        >
-          {loading ? 'Signing in...' : 'Sign In'}
-        </button>
-
-        <div style={styles.toggleText}>
-          <Link to="/signup" style={styles.toggleLink}>
-            Don’t have an account? Sign up
-          </Link>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Please enter your details"
+      footer={
+        <span>
+          Don’t have an account? <Link to="/signup" style={styles.link}>Sign up</Link>
+        </span>
+      }
+    >
+      <form style={styles.form} onSubmit={onSubmit}>
+        <AuthField label="Email address" type="email" value={email} onChange={setEmail} autoComplete="email" />
+        <AuthField label="Password" type="password" value={password} onChange={setPassword} autoComplete="current-password" />
+        <div style={styles.rowBetween}>
+          <label style={styles.rememberLabel}>
+            <input type="checkbox" style={{ marginRight: 8 }} /> Remember for 30 days
+          </label>
+          <Link to="/forgot-password" style={styles.link}>Forgot password</Link>
         </div>
-
-        <div style={styles.dividerContainer}>
-          <div style={styles.dividerLine} />
-          <div style={styles.dividerText}>or continue with</div>
-          <div style={styles.dividerLine} />
-        </div>
-
-        <button
-          style={{ ...styles.socialButton, background: '#DB4437' }}
-          onMouseEnter={(e) => Object.assign(e.currentTarget.style, styles.socialHover)}
-          onMouseLeave={(e) => Object.assign(e.currentTarget.style, styles.socialButton)}
-          onClick={() => handleSocial(googleProvider)}
-        >
-          Continue with Google
+        {err ? <div style={styles.error}>{err}</div> : null}
+        <button style={styles.primaryBtn} disabled={submitting} type="submit">
+          {submitting ? 'Signing in…' : 'Sign in'}
         </button>
-
-        <button
-          style={{ ...styles.socialButton, background: '#1877F2' }}
-          onMouseEnter={(e) => Object.assign(e.currentTarget.style, styles.socialHover)}
-          onMouseLeave={(e) => Object.assign(e.currentTarget.style, styles.socialButton)}
-          onClick={() => handleSocial(facebookProvider)}
-        >
-          Continue with Facebook
-        </button>
-      </div>
-    </div>
+        <div style={styles.divider}><span>or</span></div>
+        <SocialButtons />
+      </form>
+    </AuthLayout>
   );
 };
 
