@@ -1,30 +1,32 @@
 import React from 'react';
 import { styles } from './styles';
+import { Link } from 'react-router-dom';
 
-type Props = {
+const AuthLayout: React.FC<{
   title: string;
   subtitle?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-};
-
-const AuthLayout: React.FC<Props> = ({ title, subtitle, children, footer }) => {
+}> = ({ title, subtitle, children, footer }) => {
   return (
     <div style={styles.shell}>
-      <div style={styles.leftPane}>
+      <div style={styles.header}>
+        <Link to="/" style={styles.brand}>
+          EZpresence
+        </Link>
+      </div>
+      <div style={styles.centerPane}>
         <div style={styles.card}>
           <h1 style={styles.title}>{title}</h1>
-          {subtitle ? <p style={styles.subtitle}>{subtitle}</p> : null}
+          {subtitle && <p style={styles.subtitle}>{subtitle}</p>}
           <div style={styles.formArea}>{children}</div>
-          {footer ? <div style={styles.footer}>{footer}</div> : null}
+          {footer && <div style={styles.footer}>{footer}</div>}
         </div>
       </div>
-
-      {/* Right illustration fills full height */}
-      <div style={styles.rightPane}>
+      <div style={styles.imagePane}>
         <img
           src="/icons/login-image.png"
-          alt="Authentication illustration"
+          alt="Auth illustration"
           style={styles.heroImg}
         />
       </div>

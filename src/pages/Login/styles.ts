@@ -1,27 +1,80 @@
 import { CSSProperties } from 'react';
 import { theme } from '@theme/theme';
 
-export const styles: Record<string, CSSProperties> = {
-  form: { display: 'flex', flexDirection: 'column', gap: 12 },
-  rowBetween: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  rememberLabel: { fontSize: 14, color: theme.colors.muted, display: 'flex', alignItems: 'center' },
-  link: { color: theme.colors.blue, textDecoration: 'none', fontWeight: 600 },
+type S = Record<string, CSSProperties>;
+
+export const styles: S = {
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+  },
+  link: {
+    color: theme.colors.blue,
+    textDecoration: 'none',
+    fontWeight: 600,
+  },
+  forgotLink: {
+    marginTop: 4,
+    marginBottom: 12,
+    color: theme.colors.blue,
+    textDecoration: 'none',
+    fontWeight: 500,
+    alignSelf: 'flex-end',
+    fontSize: 14,
+  },
   primaryBtn: {
+    fontSize: 16,
+    fontWeight: 700,
     height: 44,
     border: 'none',
     borderRadius: 12,
     cursor: 'pointer',
     color: '#fff',
-    backgroundImage: theme.gradients.momentum,
+    backgroundImage: theme.gradients.innovator,
     boxShadow: theme.shadows.primary,
+    transition: 'transform 0.2s, box-shadow 0.2s',
   },
-  divider: {
+  // For the or divider
+  orContainer: {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    margin: '8px 0',
-    color: theme.colors.muted,
+    width: '100%',
+    margin: '20px 0',
   },
+  line: {
+    height: 1,
+    background: theme.colors.muted,
+    flex: 1,
+  },
+  orText: {
+    margin: '0 12px',
+    color: theme.colors.muted,
+    fontSize: 14,
+    whiteSpace: 'nowrap',
+  },
+
+  passwordWrapper: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  eyeBtn: {
+    position: 'absolute',
+    right: 12,
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 4,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eyeIcon: {
+    width: 20,
+    height: 20,
+  },
+
   error: {
     background: theme.colors.primaryLight,
     color: theme.colors.text,

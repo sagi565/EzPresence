@@ -1,5 +1,5 @@
 import React from 'react';
-import CreatorsShowcase from '@/components/Studio/Creators/CreatorsShowcase/CreatorsShowcase';
+import CreatorsShowcase from '@components/Studio/Creators/CreatorsShowcase/CreatorsShowcase';
 import { styles } from './styles';
 
 const CreatorsPage: React.FC = () => {

@@ -28,9 +28,16 @@ const ForgotPasswordPage: React.FC = () => {
 
   return (
     <AuthLayout
-      title="Reset your password"
-      subtitle="We’ll email you a reset link"
-      footer={<span>Back to <Link to="/login" style={styles.link}>Login</Link></span>}
+      title="Reset Password"
+      subtitle="Recover your network presence easily"
+      footer={
+        <span>
+          Back to{' '}
+          <Link to="/login" style={styles.link}>
+            Login
+          </Link>
+        </span>
+      }
     >
       {sent ? (
         <div style={styles.notice}>
@@ -38,8 +45,14 @@ const ForgotPasswordPage: React.FC = () => {
         </div>
       ) : (
         <form style={styles.form} onSubmit={onSubmit}>
-          <AuthField label="Email address" type="email" value={email} onChange={setEmail} autoComplete="email" />
-          {err ? <div style={styles.error}>{err}</div> : null}
+          <AuthField
+            label="Email address"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            autoComplete="email"
+          />
+          {err && <div style={styles.error}>{err}</div>}
           <button style={styles.primaryBtn} disabled={submitting} type="submit">
             {submitting ? 'Sending…' : 'Send reset link'}
           </button>

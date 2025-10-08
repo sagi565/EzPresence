@@ -422,4 +422,30 @@ export const globalStyles = `
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  .login-separator {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 20px 0;
+  color: #888;
+  position: relative;
+  }
+  
+  .login-separator::before,
+  .login-separator::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #ccc;
+    position: relative;
+    top: 0;
+  }
+  .login-separator::before {
+    margin-right: 8px;
+  }
+  .login-separator::after {
+    margin-left: 8px;
+  }
+
 `;

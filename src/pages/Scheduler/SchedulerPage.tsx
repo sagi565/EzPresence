@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useBrands } from '@hooks/useBrands';
 import { usePosts } from '@hooks/usePosts';
 import { useContent } from '@hooks/useContent';
-import GlobalNav from '@/components/GlobalBar/Navigation/GlobalNav';
-import SchedulerBar from '@/components/Scheduler/SchedulerBar/DateNavigation';
-import CalendarGrid from '@/components/Scheduler/Calendar/GridView/CalendarGrid';
-import FourDaysView from '@/components/Scheduler/Calendar/FourDaysView/FourDaysView';
-import ContentDrawer from '@/components/Scheduler/ContentDrawer/ContentDrawer';
+import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
+import SchedulerBar from '@components/Scheduler/SchedulerBar/DateNavigation';
+import CalendarGrid from '@components/Scheduler/Calendar/GridView/CalendarGrid';
+import FourDaysView from '@components/Scheduler/Calendar/FourDaysView/FourDaysView';
+import ContentDrawer from '@components/Scheduler/ContentDrawer/ContentDrawer';
 import { styles } from './styles';
 
 const SchedulerPage: React.FC = () => {

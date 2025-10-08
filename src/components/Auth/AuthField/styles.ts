@@ -1,9 +1,18 @@
 import { CSSProperties } from 'react';
 import { theme } from '@theme/theme';
 
-export const styles: Record<string, CSSProperties> = {
-  wrapper: { display: 'flex', flexDirection: 'column', gap: 6 },
-  label: { fontSize: 13, color: theme.colors.muted },
+type S = Record<string, CSSProperties>;
+
+export const styles: S = {
+  wrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
+  },
+  label: {
+    fontSize: 13,
+    color: theme.colors.muted,
+  },
   input: {
     height: 44,
     borderRadius: 12,

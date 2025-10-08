@@ -1,18 +1,28 @@
 import { CSSProperties } from 'react';
 import { theme } from '@theme/theme';
 
-export const styles: Record<string, CSSProperties> = {
+type S = Record<string, CSSProperties>;
+
+export const styles: S = {
   shell: {
-    minHeight: '100vh',
-    display: 'grid',
-    gridTemplateColumns: 'minmax(340px, 520px) 1fr',
-    background: theme.gradients.background,
+    height: '100vh',
+    display: 'flex',
+    flexDirection: 'row',
+    overflow: 'hidden',
+    position: 'relative',
   },
-  leftPane: {
+  centerPane: {
+    flex: '0 1 95%',  
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '48px 24px',
+  },
+  imagePane: {
+    flex: '0 1 75%', 
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
   },
   card: {
     width: '100%',
@@ -22,28 +32,46 @@ export const styles: Record<string, CSSProperties> = {
     boxShadow: theme.shadows.md,
     padding: 28,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 800,
-    backgroundImage: theme.gradients.momentum,
-    WebkitBackgroundClip: 'text',
-    color: 'transparent',
-    marginBottom: 8,
+  header: {
+    position: 'absolute',
+    top: 16,
+    left: 24,
+    zIndex: 10,
   },
-  subtitle: { color: theme.colors.muted, marginBottom: 20 },
-  formArea: { display: 'flex', flexDirection: 'column', gap: 12 },
-  footer: { marginTop: 16, color: theme.colors.muted, fontSize: 14 },
-  rightPane: {
-    position: 'relative',
-    background: theme.gradients.innovator,
+  brand: {
+    fontSize: 40,
+    fontWeight: 900,
+    backgroundImage: theme.gradients.innovator,
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    textDecoration: 'none',
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: 800,
+    backgroundImage: theme.gradients.innovator,
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginBottom: 12,
+  },
+  subtitle: {
+    color: theme.colors.muted,
+    marginBottom: 20,
+  },
+  formArea: {
     display: 'flex',
-    alignItems: 'stretch',
-    justifyContent: 'center',
+    flexDirection: 'column',
+    gap: 12,
+  },
+  footer: {
+    marginTop: 16,
+    color: theme.colors.muted,
+    fontSize: 14,
   },
   heroImg: {
-    objectFit: 'cover',
-    width: '100%',
     height: '100%',
+    width: 'auto',
+    objectFit: 'cover',
     userSelect: 'none',
   },
 };

@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { globalStyles } from '@theme/globalStyles';
-import SchedulerPage from '@pages/Scheduler/SchedulerPage';
-import StudioPage from '@pages/Studio/StudioPage';
-import LoginPage from '@pages/Login/LoginPage';
-import SignUpPage from '@pages/SignUp/SignUpPage';
-import ForgotPasswordPage from '@pages/ForgotPassword/ForgotPasswordPage';
+import SchedulerPage from './pages/Scheduler/SchedulerPage';
+import StudioPage from './pages/Studio/StudioPage';
+import LoginPage from './pages/Login/LoginPage';
+import SignUpPage from './pages/SignUp/SignUpPage';
+import ForgotPasswordPage from './pages/ForgotPassword/ForgotPasswordPage';
 import ProtectedRoute from '@auth/ProtectedRoute';
 
 function App() {
@@ -36,7 +36,7 @@ function App() {
             }
           />
 
-          {/* default */}
+          {/* fallback */}
           <Route path="/" element={<Navigate to="/scheduler" replace />} />
           <Route path="*" element={<Navigate to="/scheduler" replace />} />
         </Routes>

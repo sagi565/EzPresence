@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { VideoIdea } from '@models/VideoIdea';
 import { styles } from './styles';
-import { theme } from '@/theme/theme';
+import { theme } from '@theme/theme';
 
 interface IdeaFocusViewProps {
   idea: VideoIdea;
