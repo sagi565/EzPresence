@@ -4,6 +4,7 @@ import { theme } from '@theme/theme';
 export const styles: Record<string, CSSProperties> = {
   container: {
     minHeight: '100vh',
+    height: '100vh',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
@@ -27,7 +28,7 @@ export const styles: Record<string, CSSProperties> = {
   defaultContent: {
     padding: '40px 24px',
     height: 'calc(100vh - 76px)',
-    overflow: 'hidden',
+    overflow: 'auto',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
@@ -92,5 +93,6 @@ export const styles: Record<string, CSSProperties> = {
   creatorsContainer: {
     height: 'calc(100vh - 76px)',
     overflow: 'hidden',
+    position: 'relative',
   },
 };

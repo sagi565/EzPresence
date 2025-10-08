@@ -23,7 +23,9 @@
       "@models/*": ["./src/models/*"],
       "@theme/*": ["./src/theme/*"],
       "@pages/*": ["./src/pages/*"],
-      "@assets/*": ["./src/assets/*"]
+      "@assets/*": ["./src/assets/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@auth/*": ["./src/auth/*"]
     }
   },
   "include": ["src"],

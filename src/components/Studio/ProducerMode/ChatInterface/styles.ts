@@ -60,7 +60,7 @@ export const styles: Record<string, CSSProperties> = {
   message: {
     display: 'flex',
     gap: '12px',
-    alignItems: 'center',
+    alignItems: 'flex-start', // Changed from 'center' to align with top
     animation: 'fadeInUp 0.4s ease',
     direction: 'ltr',
   },
@@ -73,6 +73,7 @@ export const styles: Record<string, CSSProperties> = {
     justifyContent: 'center',
     fontSize: '20px',
     flexShrink: 0,
+    marginTop: '-9px', // Negative margin to center 40px avatar with ~22px first line of text
   },
   messageAvatarAgent: {
     background: theme.gradients.innovator,
@@ -86,6 +87,7 @@ export const styles: Record<string, CSSProperties> = {
   messageContent: {
     flex: 1,
     textAlign: 'left',
+    minWidth: 0, // Allows flex item to shrink below content size
   },
   messageText: {
     fontSize: '14px',
@@ -93,6 +95,10 @@ export const styles: Record<string, CSSProperties> = {
     color: theme.colors.text,
     marginBottom: '12px',
     direction: 'ltr',
+    wordWrap: 'break-word', // Ensures long words wrap
+    overflowWrap: 'break-word', // Alternative word wrapping
+    whiteSpace: 'pre-wrap', // Preserves whitespace and wraps text
+    maxWidth: '100%', // Prevents overflow
   },
   loadingDots: {
     display: 'inline-flex',

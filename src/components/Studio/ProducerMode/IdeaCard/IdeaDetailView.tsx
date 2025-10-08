@@ -110,8 +110,12 @@ const IdeaDetailView: React.FC<IdeaDetailViewProps> = ({
               </div>
             </div>
           </div>
-          <GenerateButton onClick={handleGenerate} isGenerating={isGenerating} />
-        </div>
+            <GenerateButton 
+              onClick={handleGenerate} 
+              isGenerating={isGenerating}
+              onClose={onClose}
+            /> 
+       </div>
       </div>
     </div>
   </>, document.body

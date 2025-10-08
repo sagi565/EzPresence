@@ -58,7 +58,7 @@ const CreatePostButton: React.FC = () => {
         onMouseEnter={() => setHoveredBtn(true)}
         onMouseLeave={() => setHoveredBtn(false)}
       >
-      <strong>Create</strong>
+      Create
       </button>
       {showDropdown && (
         <div style={styles.createDropdown}>

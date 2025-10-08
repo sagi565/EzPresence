@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { styles } from './styles';
 
 interface ConfirmDialogProps {
@@ -23,31 +24,37 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ onConfirm, onCancel }) =>
 
   return (
     <>
-      <div style={styles.confirmOverlay} onClick={onCancel} />
-      <div style={styles.confirmDialog}>
-        <div style={styles.confirmTitle}>Are you sure you want to continue?</div>
-        <div style={styles.confirmMessage}>
-          This will use credits, start video generation, and may take some time—but you'll be notified once it's ready.
-        </div>
-        <div style={styles.confirmButtons}>
-          <button
-            style={cancelStyle}
-            onClick={onCancel}
-            onMouseEnter={() => setHoveredButton('cancel')}
-            onMouseLeave={() => setHoveredButton(null)}
-          >
-            Cancel
-          </button>
-          <button
-            style={confirmStyle}
-            onClick={onConfirm}
-            onMouseEnter={() => setHoveredButton('confirm')}
-            onMouseLeave={() => setHoveredButton(null)}
-          >
-            Generate
-          </button>
-        </div>
-      </div>
+      {ReactDOM.createPortal(
+        <div style={styles.confirmOverlay} onClick={onCancel} />,
+        document.body
+      )}
+      {ReactDOM.createPortal(
+        <div style={styles.confirmDialog}>
+          <div style={styles.confirmTitle}>Are you sure you want to continue?</div>
+          <div style={styles.confirmMessage}>
+            This will use credits, start video generation, and may take some time—but you'll be notified once it's ready.
+          </div>
+          <div style={styles.confirmButtons}>
+            <button
+              style={cancelStyle}
+              onClick={onCancel}
+              onMouseEnter={() => setHoveredButton('cancel')}
+              onMouseLeave={() => setHoveredButton(null)}
+            >
+              Cancel
+            </button>
+            <button
+              style={confirmStyle}
+              onClick={onConfirm}
+              onMouseEnter={() => setHoveredButton('confirm')}
+              onMouseLeave={() => setHoveredButton(null)}
+            >
+              Generate
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 };

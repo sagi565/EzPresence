@@ -17,7 +17,7 @@ export const styles: Record<string, CSSProperties> = {
   },
   modal: {
     width: '95%',
-    maxWidth: '900px',
+    maxWidth: '70vw',
     maxHeight: '85vh',
     background: 'white',
     borderRadius: '16px',

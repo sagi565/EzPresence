@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { styles } from './styles';
 import BrandSelector from '../BrandSelector/BrandSelector';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '@lib/firebase';
 import { Brand } from '@models/Brand';
 
 interface GlobalNavProps {
@@ -18,8 +20,18 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
   const [showStudioSecondary, setShowStudioSecondary] = useState(false);
   const [hoveredStudioBtn, setHoveredStudioBtn] = useState<string | null>(null);
   const studioTimeoutRef = useRef<number | null>(null);
+  const [user, setUser] = useState<any>(null);
 
-  // Cleanup timeout on unmount
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsub();
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    setUser(null);
+    navigate('/login');
+  };
   useEffect(() => {
     return () => {
       if (studioTimeoutRef.current) {
@@ -40,6 +52,7 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
     },
     { id: 'scheduler', label: '📅 Scheduler', path: '/scheduler', active: location.pathname === '/scheduler' },
     { id: 'dashboard', label: '📊 Dashboard', path: '/dashboard', active: location.pathname === '/dashboard' },
+    { id: 'login', label: '💩 Login', path: '/login', active: location.pathname === '/login' },
   ];
 
   const studioSubButtons = [
@@ -177,6 +190,27 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
       </div>
 
       <div style={styles.navRight}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {user && (
+            <>
+              <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
+                {user.displayName || user.email?.split('@')[0]}
+              </span>
+              <button
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--accent)',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                }}
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </>
+          )}
+        </div>
         <button
           style={getIconStyle('notifications')}
           onMouseEnter={() => setHoveredIcon('notifications')}

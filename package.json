@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "env": "^0.0.2",
+    "firebase": "^12.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.30.1"

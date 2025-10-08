@@ -103,10 +103,11 @@ export const styles: Record<string, CSSProperties> = {
   createBtn: {
     background: theme.gradients.innovator,
     color: 'white',
-    border: `0px solid`,
+    border: '0px solid',
     padding: '10px 16px',
     borderRadius: '12px',
-    fontWeight: 600,
+    fontWeight: 'bold',
+    letterSpacing: '0.6px', 
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',

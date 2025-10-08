@@ -60,7 +60,8 @@ export const styles: Record<string, CSSProperties> = {
     position: 'fixed',
     inset: 0,
     background: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 3000,
+    zIndex: 3500,
+    backdropFilter: 'blur(4px)',  
   },
   confirmDialog: {
     position: 'fixed',
@@ -71,7 +72,7 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '16px',
     padding: '28px',
     boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)',
-    zIndex: 3001,
+    zIndex: 3501,
     maxWidth: '400px',
     textAlign: 'center',
   },

@@ -14,7 +14,7 @@ export const globalStyles = `
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: Figtree, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     background: ${theme.gradients.background};
     min-height: 100vh;
   }
@@ -410,5 +410,16 @@ export const globalStyles = `
   @keyframes loadingDotAnim {
     0%, 80%, 100% { transform: scale(0); }
     40% { transform: scale(1); }
+  }
+
+  @keyframes pulseLogo {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 `;

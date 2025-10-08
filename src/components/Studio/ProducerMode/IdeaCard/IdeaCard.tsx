@@ -46,40 +46,40 @@ const IdeaCard: React.FC<IdeaCardProps> = ({
     ...(isHovered ? styles.ideaCardHover : {}),
   };
 
-  if (showDetail) {
-    return (
-      <IdeaDetailView
-        idea={idea}
-        selectedModel={selectedModel}
-        onUpdate={onUpdate}
-        onGenerate={onGenerate}
-        onClose={handleClose}
-        isGenerating={isGenerating}
-      />
-    );
-  }
-
-  if (isFocused) {
-    return (
-      <IdeaFocusView
-        idea={idea}
-        onUpdate={onUpdate}
-        onClose={handleClose}
-        onPreviewDetails={handlePreviewDetails}
-        showPreviewLoading={showPreviewLoading}
-      />
-    );
-  }
-
   return (
-    <div
-      style={cardStyle}
-      onClick={handleClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <span style={styles.ideaText}>{idea.idea}</span>
-    </div>
+    <>
+      {/* Always render the card */}
+      <div
+        style={cardStyle}
+        onClick={handleClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <span style={styles.ideaText}>{idea.idea}</span>
+      </div>
+
+      {/* Render dialogs as overlays when needed */}
+      {isFocused && !showDetail && (
+        <IdeaFocusView
+          idea={idea}
+          onUpdate={onUpdate}
+          onClose={handleClose}
+          onPreviewDetails={handlePreviewDetails}
+          showPreviewLoading={showPreviewLoading}
+        />
+      )}
+
+      {showDetail && (
+        <IdeaDetailView
+          idea={idea}
+          selectedModel={selectedModel}
+          onUpdate={onUpdate}
+          onGenerate={onGenerate}
+          onClose={handleClose}
+          isGenerating={isGenerating}
+        />
+      )}
+    </>
   );
 };
 

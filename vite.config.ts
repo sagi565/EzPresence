@@ -13,6 +13,8 @@ export default defineConfig({
       '@theme': path.resolve(__dirname, './src/theme'),
       '@pages': path.resolve(__dirname, './src/pages'),
       '@assets': path.resolve(__dirname, './src/assets'),
+      '@auth': path.resolve(__dirname, './src/auth'),
+      '@lib': path.resolve(__dirname, './src/lib'),
     },
   },
   server: {

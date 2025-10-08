@@ -6,9 +6,10 @@ import { styles } from './styles';
 interface GenerateButtonProps {
   onClick: () => void;
   isGenerating: boolean;
+  onClose?: () => void;  // Add this prop
 }
 
-const GenerateButton: React.FC<GenerateButtonProps> = ({ onClick, isGenerating }) => {
+const GenerateButton: React.FC<GenerateButtonProps> = ({ onClick, isGenerating, onClose }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -22,7 +23,13 @@ const GenerateButton: React.FC<GenerateButtonProps> = ({ onClick, isGenerating }
     setShowConfirm(false);
     onClick();
     setShowCelebration(true);
-    setTimeout(() => setShowCelebration(false), 2000);
+    setTimeout(() => {
+      setShowCelebration(false);
+      // Close the dialog after celebration
+      if (onClose) {
+        onClose();
+      }
+    }, 2000);
   };
 
   const handleCancel = () => {
