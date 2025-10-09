@@ -15,8 +15,14 @@ const SignUpPage: React.FC = () => {
   const { signUpEmail, user } = useAuth();
   const nav = useNavigate();
 
-  if (user) {
+  // If already logged in and verified, redirect to scheduler
+  if (user && user.emailVerified) {
     return <Navigate to="/scheduler" replace />;
+  }
+
+  // If logged in but not verified, redirect to pending page
+  if (user && !user.emailVerified) {
+    return <Navigate to="/verify-email" replace />;
   }
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -25,7 +31,8 @@ const SignUpPage: React.FC = () => {
     setErr(null);
     try {
       await signUpEmail(email, password, displayName);
-      nav('/scheduler');
+      // After successful signup, redirect to verification pending page
+      nav('/verify-email');
     } catch (e: any) {
       setErr(e?.message ?? 'Failed to create account.');
     } finally {
@@ -64,7 +71,7 @@ const SignUpPage: React.FC = () => {
           label="Password"
           value={password}
           onChange={setPassword}
-          autoComplete="current-password"
+          autoComplete="new-password"
         />
 
         {err && <div style={styles.error}>{err}</div>}

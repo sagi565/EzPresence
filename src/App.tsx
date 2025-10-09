@@ -5,7 +5,10 @@ import StudioPage from './pages/Studio/StudioPage';
 import LoginPage from './pages/Login/LoginPage';
 import SignUpPage from './pages/SignUp/SignUpPage';
 import ForgotPasswordPage from './pages/ForgotPassword/ForgotPasswordPage';
+import EmailVerificationPage from './pages/EmailVerification/EmailVerificationPage';
 import ProtectedRoute from '@auth/ProtectedRoute';
+import AuthActionPage from './pages/AuthAction/AuthActionPage';
+import VerificationHandler from './pages/VerificationHandler/VerificationHandler';
 
 function App() {
   return (
@@ -17,6 +20,9 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/verify-email" element={<EmailVerificationPage />} />
+          <Route path="/verify-email-pending" element={<VerificationHandler />} />
+          <Route path="/auth/action" element={<AuthActionPage />} />
 
           {/* protected app routes */}
           <Route
@@ -35,7 +41,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/studio/:section" 
+            element={
+              <ProtectedRoute>
+                <StudioPage />
+              </ProtectedRoute>} 
+            />
+            
           {/* fallback */}
           <Route path="/" element={<Navigate to="/scheduler" replace />} />
           <Route path="*" element={<Navigate to="/scheduler" replace />} />

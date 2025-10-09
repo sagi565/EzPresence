@@ -6,12 +6,33 @@ import SocialButtons from '@components/Auth/SocialButtons/SocialButtons';
 import { styles } from './styles';
 import { useAuth } from '@auth/AuthProvider';
 import PasswordInput from '@components/Auth/PasswordInput/PasswordInput';
+import SocialsBackground from '@components/Background/SocialsBackground';
 
+// Map Firebase auth errors to friendly messages (login)
+function mapLoginError(err: any): string {
+  const code = (typeof err?.code === 'string' ? err.code : '').toLowerCase();
+  const msg  = (typeof err?.message === 'string' ? err.message : '').toLowerCase();
+
+  // Firebase may mask wrong email/password as "invalid-credential"
+  if (
+    code.includes('invalid-credential') ||
+    code.includes('wrong-password') ||
+    code.includes('user-not-found') ||
+    msg.includes('invalid-credential')
+  ) {
+    return 'Incorrect email or password. Please try again.';
+  }
+
+  if (code.includes('invalid-email')) return 'Please enter a valid email address.';
+  if (code.includes('too-many-requests')) return 'Too many attempts. Please wait a moment and try again.';
+  if (code.includes('network-request-failed')) return 'Network issue. Please check your connection and try again.';
+
+  return 'Something went wrong. Please try again later.';
+}
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const { signInEmail, user } = useAuth();
@@ -29,7 +50,7 @@ const LoginPage: React.FC = () => {
       await signInEmail(email, password);
       nav('/scheduler');
     } catch (e: any) {
-      setErr(e?.message ?? 'Failed to sign in.');
+      setErr(mapLoginError(e));
     } finally {
       setSubmitting(false);
     }

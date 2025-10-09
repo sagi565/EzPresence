@@ -36,9 +36,8 @@ const CreatePostButton: React.FC = () => {
   const buttonStyle = {
     ...styles.createBtn,
     ...(hoveredBtn ? {
-      background: theme.gradients.vibe,
-      transform: 'translateY(-2px)',
-      boxShadow: '0 6px 20px rgba(251, 191, 36, 0.4)',
+      transform: 'scale(1.07)',
+      boxShadow: '0 6px 20px rgba(251, 191, 36, 0.4)', 
     } : {}),
   };
 

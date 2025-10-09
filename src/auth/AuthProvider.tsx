@@ -17,6 +17,7 @@ type SessionUser = {
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
+  emailVerified: boolean;
 };
 
 type AuthContextType = {
@@ -29,6 +30,9 @@ type AuthContextType = {
   signInFacebook: () => Promise<void>;
   signInApple: () => Promise<void>;
   logout: () => Promise<void>;
+  // Email verification methods
+  resendVerificationEmail: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   // Bridge to your backend
   refreshBackendSession: () => Promise<void>;
 };
@@ -61,6 +65,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       email: firebaseUser.email,
       displayName: firebaseUser.displayName,
       photoURL: firebaseUser.photoURL,
+      emailVerified: firebaseUser.emailVerified,
     };
   }, [firebaseUser]);
 
@@ -71,15 +76,40 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   const signUpEmail = async (email: string, password: string, displayName?: string) => {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
     if (displayName) await updateProfile(user, { displayName });
-    // Optional: require email verification
-    try { await sendEmailVerification(user); } catch {}
+    
+    // Send email verification (simple version - no custom URL)
+    await sendEmailVerification(user);
   };
 
-  const signInGoogle = async () => { await signInWithPopup(auth, googleProvider); };
-  const signInFacebook = async () => { await signInWithPopup(auth, facebookProvider); };
-  const signInApple = async () => { await signInWithPopup(auth, appleProvider); };
+  const signInGoogle = async () => { 
+    await signInWithPopup(auth, googleProvider); 
+  };
+  
+  const signInFacebook = async () => { 
+    await signInWithPopup(auth, facebookProvider); 
+  };
+  
+  const signInApple = async () => { 
+    await signInWithPopup(auth, appleProvider); 
+  };
 
-  const logout = async () => { await signOut(auth); };
+  const logout = async () => { 
+    await signOut(auth); 
+  };
+
+  const resendVerificationEmail = async () => {
+    if (auth.currentUser) {
+      // Simple version - no custom URL
+      await sendEmailVerification(auth.currentUser);
+    }
+  };
+
+  const refreshUser = async () => {
+    if (auth.currentUser) {
+      await auth.currentUser.reload();
+      setFirebaseUser({ ...auth.currentUser });
+    }
+  };
 
   const refreshBackendSession = async () => {
     if (auth.currentUser) await syncWithBackend(auth.currentUser, { forceRefresh: true });
@@ -105,6 +135,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     signInFacebook,
     signInApple,
     logout,
+    resendVerificationEmail,
+    refreshUser,
     refreshBackendSession,
   };
 

@@ -222,9 +222,9 @@ export const styles: Record<string, CSSProperties> = {
     background: 'transparent',
     border: `1px solid ${theme.colors.text}`,
   },
-  statusTooltip: {
+  blackTooltip: {
     position: 'absolute',
-    bottom: '12px',
+    bottom: '17px',
     left: '50%',
     transform: 'translateX(-50%)',
     background: theme.colors.text,

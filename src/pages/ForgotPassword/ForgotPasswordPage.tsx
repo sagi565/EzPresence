@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import AuthLayout from '@components/Auth/AuthLayout/AuthLayout';
-import AuthField from '@components/Auth/AuthField/AuthField';
-import { styles } from './styles';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '@lib/firebase';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@lib/firebase";
+import AuthLayout from "@components/Auth/AuthLayout/AuthLayout";
+import AuthField from "@components/Auth/AuthField/AuthField";
+import { styles } from "./styles";
 
 const ForgotPasswordPage: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -19,8 +19,15 @@ const ForgotPasswordPage: React.FC = () => {
     try {
       await sendPasswordResetEmail(auth, email);
       setSent(true);
-    } catch (e: any) {
-      setErr(e?.message ?? 'Failed to send reset email.');
+    } catch (error: any) {
+      const code = error?.code || "";
+      if (code.includes("user-not-found")) {
+        setErr("No account found with that email.");
+      } else if (code.includes("invalid-email")) {
+        setErr("Please enter a valid email address.");
+      } else {
+        setErr("We couldn’t send the reset link. Please try again later.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -32,7 +39,7 @@ const ForgotPasswordPage: React.FC = () => {
       subtitle="Recover your network presence easily"
       footer={
         <span>
-          Back to{' '}
+          Back to{" "}
           <Link to="/login" style={styles.link}>
             Login
           </Link>
@@ -54,7 +61,7 @@ const ForgotPasswordPage: React.FC = () => {
           />
           {err && <div style={styles.error}>{err}</div>}
           <button style={styles.primaryBtn} disabled={submitting} type="submit">
-            {submitting ? 'Sending…' : 'Send reset link'}
+            {submitting ? "Sending…" : "Send reset link"}
           </button>
         </form>
       )}
