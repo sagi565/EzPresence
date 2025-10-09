@@ -12,8 +12,9 @@ export const styles: S = {
     position: 'relative',
   },
   centerPane: {
-    flex: '0 1 95%',  
+    flex: '0 1 110%',  
     display: 'flex',
+    zIndex: 10000,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -22,6 +23,7 @@ export const styles: S = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
+    
     overflow: 'hidden',
   },
   card: {
@@ -71,6 +73,7 @@ export const styles: S = {
   heroImg: {
     height: '100%',
     width: 'auto',
+    zIndex: 5000,
     objectFit: 'cover',
     userSelect: 'none',
   },

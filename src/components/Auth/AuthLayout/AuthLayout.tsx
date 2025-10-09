@@ -1,6 +1,7 @@
 import React from 'react';
 import { styles } from './styles';
 import { Link } from 'react-router-dom';
+import SocialsBackground from '@components/Background/SocialsBackground';
 
 const AuthLayout: React.FC<{
   title: string;
@@ -10,6 +11,7 @@ const AuthLayout: React.FC<{
 }> = ({ title, subtitle, children, footer }) => {
   return (
     <div style={styles.shell}>
+      <SocialsBackground />
       <div style={styles.header}>
         <Link to="/" style={styles.brand}>
           EZpresence

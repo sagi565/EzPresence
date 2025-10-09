@@ -12,6 +12,9 @@ const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = fals
   const [isStatusHovered, setIsStatusHovered] = useState(false);
   const mediaEmoji = post.media === 'video' ? '🎥' : '🖼️';
 
+  const [isMediaHovered, setIsMediaHovered] = useState(false);
+  const mediaText = post.media === 'video' ? 'Video' : 'Image';
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'success':
@@ -53,13 +56,31 @@ const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = fals
               onMouseLeave={() => setIsStatusHovered(false)}
             />
             {isStatusHovered && (
-              <div style={styles.statusTooltip}>
+              <div style={styles.blackTooltip}>
                 {getStatusText(post.status)}
               </div>
             )}
           </div>
           <span style={styles.postTime}>{post.time}</span>
-          <span style={styles.mediaIcon}>{mediaEmoji}</span>
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <span
+              style={styles.mediaIcon}
+              onMouseEnter={() => setIsMediaHovered(true)}
+              onMouseLeave={() => setIsMediaHovered(false)}
+            >
+              {mediaEmoji}
+              {isMediaHovered && (
+                <div style={styles.blackTooltip}>{mediaText}</div>
+              )}
+              
+            </span>
+          </div>
         </div>
         <div style={styles.postRight}>
           {post.platforms.map((platform) => (

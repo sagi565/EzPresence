@@ -35,6 +35,15 @@ export const globalStyles = `
     --color-pink: #ec4899;
   }
 
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   @keyframes fadeInUp {
     from {
       opacity: 0;
@@ -265,154 +274,7 @@ export const globalStyles = `
     40% { transform: scale(1); }
   }
 
-  @keyframes tooltipFadeIn {
-    to {
-      opacity: 1;
-    }
-  }
-
-  /* Generate button with white flash animation */
-  .generate-button-wrapper {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .generate-button-wrapper::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    transition: left 0.6s ease;
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .generate-button-wrapper:hover::before {
-    left: 100%;
-  }
-
-  /* Model display shimmer effect */
-  .model-display-shimmer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.5s ease;
-    pointer-events: none;
-  }
-
-  .model-display-shimmer:hover::before {
-    left: 100%;
-  }
-
-  .loading-dots {
-    display: inline-flex;
-    gap: 4px;
-    align-items: center;
-  }
-
-  .loading-dots span {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--color-primary);
-    animation: thinkingBounce 1.4s infinite ease-in-out both;
-  }
-
-  .loading-dots span:nth-child(1) {
-    animation-delay: -0.32s;
-  }
-
-  .loading-dots span:nth-child(2) {
-    animation-delay: -0.16s;
-  }
-
-  .loading-dots span:nth-child(3) {
-    animation-delay: 0s;
-  }
-
-  .loading-spinner {
-    display: inline-flex;
-    gap: 4px;
-  }
-
-  .loading-spinner span {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--color-teal);
-    animation: spinnerBounce 1.4s infinite ease-in-out both;
-  }
-
-  .loading-spinner span:nth-child(1) {
-    animation-delay: -0.32s;
-  }
-
-  .loading-spinner span:nth-child(2) {
-    animation-delay: -0.16s;
-  }
-
-  .loading-spinner span:nth-child(3) {
-    animation-delay: 0s;
-  }
-@keyframes tooltipFadeIn {
-    to {
-      opacity: 1;
-    }
-  }
-
-  /* Generate button with white flash animation */
-  .generate-button-wrapper {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .generate-button-wrapper::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    transition: left 0.6s ease;
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .generate-button-wrapper:hover::before {
-    left: 100%;
-  }
-
-  /* Model display shimmer effect */
-  .model-display-shimmer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.5s ease;
-    pointer-events: none;
-  }
-
-  .model-display-shimmer:hover::before {
-    left: 100%;
-  }
-
-  @keyframes loadingDotAnim {
-    0%, 80%, 100% { transform: scale(0); }
-    40% { transform: scale(1); }
-  }
-
-  @keyframes pulseLogo {
+@keyframes pulseLogo {
   0% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.05); opacity: 0.9; }
   100% { transform: scale(1); opacity: 1; }

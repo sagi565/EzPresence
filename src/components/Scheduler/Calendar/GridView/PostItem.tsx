@@ -9,8 +9,9 @@ interface PostItemProps {
 const PostItem: React.FC<PostItemProps> = ({ post }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isStatusHovered, setIsStatusHovered] = useState(false);
+  const [isMediaHovered, setIsMediaHovered] = useState(false);
   const mediaEmoji = post.media === 'video' ? '🎥' : '🖼️';
-
+  const mediaText = post.media === 'video' ? 'Video' : 'Image';
   const getStatusText = (status: string) => {
     switch (status) {
       case 'success':
@@ -58,13 +59,30 @@ const PostItem: React.FC<PostItemProps> = ({ post }) => {
               onMouseLeave={() => setIsStatusHovered(false)}
             />
             {isStatusHovered && (
-              <div style={styles.statusTooltip}>
+              <div style={styles.blackTooltip}>
                 {getStatusText(post.status)}
               </div>
             )}
           </div>
           <span style={styles.postTime}>{post.time}</span>
-          <span style={styles.mediaIcon}>{mediaEmoji}</span>
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <span
+              style={styles.mediaIcon}
+              onMouseEnter={() => setIsMediaHovered(true)}
+              onMouseLeave={() => setIsMediaHovered(false)}
+            >
+              {mediaEmoji}
+              {isMediaHovered && (
+                <div style={styles.blackTooltip}>{mediaText}</div>
+              )}
+            </span>
+          </div>
         </div>
         <div style={styles.postRight}>
           {post.platforms.map((platform) => (

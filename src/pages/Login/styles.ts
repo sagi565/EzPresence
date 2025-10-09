@@ -7,6 +7,7 @@ export const styles: S = {
   form: {
     display: 'flex',
     flexDirection: 'column',
+    zIndex: 50000,
     gap: 12,
   },
   link: {

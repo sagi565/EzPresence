@@ -17,6 +17,7 @@ type SessionUser = {
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
+  emailVerified: boolean;
 };
 
 type AuthContextType = {
@@ -31,6 +32,8 @@ type AuthContextType = {
   logout: () => Promise<void>;
   // Bridge to your backend
   refreshBackendSession: () => Promise<void>;
+  // Check email verification
+  checkEmailVerification: () => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,6 +57,27 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     return () => unsub();
   }, []);
 
+  // Periodically check email verification status for unverified users
+  useEffect(() => {
+    if (!firebaseUser || firebaseUser.emailVerified) {
+      return;
+    }
+
+    // Check every 3 seconds if email is verified
+    const interval = setInterval(async () => {
+      if (auth.currentUser && !auth.currentUser.emailVerified) {
+        await auth.currentUser.reload();
+        
+        // If verification status changed, update state
+        if (auth.currentUser.emailVerified) {
+          setFirebaseUser({ ...auth.currentUser });
+        }
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [firebaseUser]);
+
   const sessionUser: SessionUser | null = useMemo(() => {
     if (!firebaseUser) return null;
     return {
@@ -61,6 +85,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       email: firebaseUser.email,
       displayName: firebaseUser.displayName,
       photoURL: firebaseUser.photoURL,
+      emailVerified: firebaseUser.emailVerified,
     };
   }, [firebaseUser]);
 
@@ -71,8 +96,12 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   const signUpEmail = async (email: string, password: string, displayName?: string) => {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
     if (displayName) await updateProfile(user, { displayName });
-    // Optional: require email verification
-    try { await sendEmailVerification(user); } catch {}
+    
+    // Send email verification with continue URL pointing to scheduler
+    await sendEmailVerification(user, {
+      url: window.location.origin + '/scheduler',
+      handleCodeInApp: false,
+    });
   };
 
   const signInGoogle = async () => { await signInWithPopup(auth, googleProvider); };
@@ -83,6 +112,18 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
   const refreshBackendSession = async () => {
     if (auth.currentUser) await syncWithBackend(auth.currentUser, { forceRefresh: true });
+  };
+
+  const checkEmailVerification = async (): Promise<boolean> => {
+    if (!auth.currentUser) return false;
+    
+    // Reload user to get latest emailVerified status
+    await auth.currentUser.reload();
+    
+    // Update the firebaseUser state to trigger re-render
+    setFirebaseUser({ ...auth.currentUser });
+    
+    return auth.currentUser.emailVerified;
   };
 
   const syncWithBackend = async (user: User, opts?: { forceRefresh?: boolean }) => {
@@ -106,6 +147,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     signInApple,
     logout,
     refreshBackendSession,
+    checkEmailVerification,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
