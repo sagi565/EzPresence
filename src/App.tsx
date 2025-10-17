@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { globalStyles } from '@theme/globalStyles';
 import SchedulerPage from './pages/Scheduler/SchedulerPage';
 import StudioPage from './pages/Studio/StudioPage';
+import ContentPage from './pages/Content/ContentPage';
 import LoginPage from './pages/Login/LoginPage';
 import SignUpPage from './pages/SignUp/SignUpPage';
 import ForgotPasswordPage from './pages/ForgotPassword/ForgotPasswordPage';
@@ -30,6 +31,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SchedulerPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/content"
+            element={
+              <ProtectedRoute>
+                <ContentPage />
               </ProtectedRoute>
             }
           />

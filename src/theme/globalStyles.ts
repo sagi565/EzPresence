@@ -309,5 +309,107 @@ export const globalStyles = `
   .login-separator::after {
     margin-left: 8px;
   }
+@keyframes favoriteClick {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
 
+  /* Hide scrollbar for content lists */
+  .list-scroll-wrapper::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Ensure content item title and date show on hover */
+  .content-item:hover .content-title,
+  .content-item:hover .content-date {
+    opacity: 1 !important;
+  }
+
+  /* Content item gradient overlay on hover */
+  .content-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .content-item:hover::after {
+    opacity: 1;
+  }
+
+  /* Upload button hover effects */
+  .upload-button:hover .upload-icon {
+    transform: scale(1.1);
+  }
+
+  /* Scroll arrow hover effects */
+  .scroll-arrow:hover {
+    background: rgba(0, 0, 0, 0.25) !important;
+    opacity: 1 !important;
+  }
+
+  /* Delete button tooltip */
+  .delete-item-btn::after {
+    content: 'Delete';
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    background: rgba(17, 24, 39, 0.95);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 1000;
+  }
+
+  .delete-item-btn:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* List delete button hover effects */
+  .list-delete-btn:hover {
+    background: #ef4444 !important;
+    border-color: #dc2626 !important;
+    color: white !important;
+    transform: scale(1.08) !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+  }
+
+  /* Action button hover effects */
+  .action-btn:hover {
+    transform: scale(1.1);
+    background: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .action-btn-wizard:hover {
+    transform: scale(1.15) rotate(15deg);
+    box-shadow: 0 8px 24px rgba(155, 93, 229, 0.4);
+  }
+
+  /* Context menu hover */
+  .scroll-nav-context-item:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
 `;
