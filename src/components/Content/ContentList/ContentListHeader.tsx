@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { styles } from './styles';
 
 interface ContentListHeaderProps {
@@ -9,7 +9,7 @@ interface ContentListHeaderProps {
   isEditable: boolean;
   listId?: string;
   onTitleChange: (newTitle: string) => void;
-  onIconClick: () => void;
+  onIconClick: (element: HTMLElement) => void;
   onDelete: () => void;
 }
 
@@ -27,13 +27,17 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
   const [isTitleFocused, setIsTitleFocused] = useState(false);
   const [isIconHovered, setIsIconHovered] = useState(false);
   const [isDeleteHovered, setIsDeleteHovered] = useState(false);
+  const [titleValue, setTitleValue] = useState(title);
+  const iconRef = useRef<HTMLSpanElement>(null);
 
   const handleTitleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsTitleFocused(false);
-    if (!e.target.value.trim()) {
+    const value = e.target.value.trim();
+    if (!value) {
+      setTitleValue('My new playlist');
       onTitleChange('My new playlist');
     } else {
-      onTitleChange(e.target.value);
+      onTitleChange(value);
     }
   };
 
@@ -43,28 +47,40 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
     }
   };
 
-  const handleIconClick = (e: React.MouseEvent<HTMLSpanElement>) => {
-    if (isEditable && isTitleFocused) {
-      onIconClick();
+  const handleIconClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isEditable && iconRef.current) {
+      console.log('Icon clicked, opening emoji picker');
+      onIconClick(iconRef.current);
     }
   };
 
   const iconStyle = {
     ...styles.listIcon,
-    ...(isEditable ? styles.listIconEditable : {}),
-    ...(isTitleFocused ? styles.listIconFocused : {}),
-    ...(isTitleFocused && isIconHovered ? styles.listIconFocusedHover : {}),
+    ...(isEditable ? {
+      ...styles.listIconEditable,
+      ...(isIconHovered && !isTitleFocused ? styles.listIconHover : {}),
+      ...(isTitleFocused ? styles.listIconFocused : {}),
+      ...(isTitleFocused && isIconHovered ? styles.listIconFocusedHover : {}),
+    } : {}),
   };
-
   const deleteButtonStyle = {
     ...styles.listDeleteBtn,
     ...(isTitleFocused ? styles.listDeleteBtnVisible : {}),
     ...(isDeleteHovered ? styles.listDeleteBtnHover : {}),
   };
 
+  const inputStyle = {
+    ...styles.listTitleEditable,
+    ...(isTitleFocused ? styles.listTitleEditableFocus : {}),
+  };
+
   return (
     <div style={styles.listHeader}>
       <span
+        ref={iconRef}
         className="list-icon"
         style={iconStyle}
         onClick={handleIconClick}
@@ -74,42 +90,52 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
         {icon}
       </span>
       <div style={styles.listTitleGroup}>
-        {isEditable ? (
-          <input
-            type="text"
-            style={styles.listTitleEditable}
-            defaultValue={title}
-            onFocus={() => setIsTitleFocused(true)}
-            onBlur={handleTitleBlur}
-            onKeyPress={handleTitleKeyPress}
-            placeholder="My new playlist"
-          />
-        ) : (
-          <h2 style={styles.listTitle}>
-            {title.includes('Creators') || title.includes('Producer') ? (
-              <>
-                {title.split(' ').slice(0, 2).join(' ')}{' '}
-                <span style={styles.brandGradient}>
-                  {title.split(' ').slice(2).join(' ')}
-                </span>
-              </>
-            ) : (
-              title
-            )}
-          </h2>
-        )}
+        <div style={styles.listTitleContainer}>
+          {isEditable ? (
+            <input
+              type="text"
+              style={inputStyle}
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onFocus={() => setIsTitleFocused(true)}
+              onBlur={handleTitleBlur}
+              onKeyPress={handleTitleKeyPress}
+              placeholder="My new playlist"
+            />
+          ) : (
+            <h2 style={styles.listTitle}>
+              {title.includes('Creators') || title.includes('Producer') ? (
+                <>
+                  {title.split(' ').slice(0, 2).join(' ')}{' '}
+                  <span style={styles.brandGradient}>
+                    {title.split(' ').slice(2).join(' ')}
+                  </span>
+                </>
+              ) : (
+                title
+              )}
+            </h2>
+          )}
+          {!isSystem && (
+            <button
+              style={deleteButtonStyle}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.confirm('Are you sure you want to delete this list and remove all its content?')) {
+                  onDelete();
+                }
+              }}
+              onMouseEnter={() => setIsDeleteHovered(true)}
+              onMouseLeave={() => setIsDeleteHovered(false)}
+              title="Delete list"
+            >
+              ×
+            </button>
+          )}
+        </div>
         {subtitle && <p style={styles.listSubtitle}>{subtitle}</p>}
       </div>
-      {!isSystem && (
-        <button
-          style={deleteButtonStyle}
-          onClick={onDelete}
-          onMouseEnter={() => setIsDeleteHovered(true)}
-          onMouseLeave={() => setIsDeleteHovered(false)}
-        >
-          ×
-        </button>
-      )}
     </div>
   );
 };

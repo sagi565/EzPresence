@@ -17,6 +17,8 @@ interface ContentListProps {
   onItemClick: (itemId: string) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
+  onItemDragStart?: (itemId: string) => void;
+  onItemDragEnd?: () => void;
 }
 
 const ContentList: React.FC<ContentListProps> = ({
@@ -31,6 +33,8 @@ const ContentList: React.FC<ContentListProps> = ({
   onItemClick,
   onDragOver,
   onDrop,
+  onItemDragStart,
+  onItemDragEnd,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const iconRef = useRef<HTMLSpanElement>(null);
@@ -78,8 +82,9 @@ const ContentList: React.FC<ContentListProps> = ({
     const container = scrollRef.current;
     if (!container) return;
 
-    const itemWidth = list.listType === 'video' ? 240 : 320;
-    const scrollAmount = itemWidth * 5 + 16 * 4; // 5 items + gaps
+    // Updated item widths for bigger items
+    const itemWidth = list.listType === 'video' ? 280 : 380;
+    const scrollAmount = itemWidth * 5 + 20 * 4; // 5 items + gaps (updated gap from 16 to 20)
 
     if (direction === 'left') {
       container.scrollLeft = Math.max(0, container.scrollLeft - scrollAmount);
@@ -93,7 +98,8 @@ const ContentList: React.FC<ContentListProps> = ({
 
   const containerStyle = {
     ...styles.listContainer,
-    ...(list.listType === 'image' ? { minHeight: '220px' } : {}),
+    // Updated minHeight for bigger image items
+    ...(list.listType === 'image' ? { minHeight: '260px' } : {}),
   };
 
   const leftArrowStyle = {
@@ -145,8 +151,17 @@ const ContentList: React.FC<ContentListProps> = ({
             onDragStart={(e) => {
               e.dataTransfer.setData('itemId', item.id);
               e.dataTransfer.setData('listId', list.id);
+              // Call the drag start handler to notify parent
+              if (onItemDragStart) {
+                onItemDragStart(item.id);
+              }
             }}
-            onDragEnd={() => {}}
+            onDragEnd={() => {
+              // Call the drag end handler to notify parent
+              if (onItemDragEnd) {
+                onItemDragEnd();
+              }
+            }}
             onClick={() => onItemClick(item.id)}
             onDelete={() => onItemDelete(item.id)}
             onToggleFavorite={() => onToggleFavorite(item.id)}

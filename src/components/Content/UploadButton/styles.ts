@@ -4,9 +4,9 @@ import { theme } from '@theme/theme';
 export const styles: Record<string, CSSProperties> = {
   uploadButton: {
     flexShrink: 0,
-    border: '2px dashed rgba(155, 93, 229, 0.3)',
+    border: '3px dashed rgba(155, 93, 229, 0.3)',
     background: 'rgba(155, 93, 229, 0.05)',
-    borderRadius: '12px',
+    borderRadius: '16px',
     cursor: 'pointer',
     transition: 'all 0.2s',
     display: 'flex',
@@ -16,12 +16,12 @@ export const styles: Record<string, CSSProperties> = {
     overflow: 'hidden',
   },
   uploadButtonVideo: {
-    width: '240px',
-    height: '400px',
+    width: '280px',
+    height: '480px',
   },
   uploadButtonImage: {
-    width: '320px',
-    height: '180px',
+    width: '380px',
+    height: '220px',
   },
   uploadButtonHover: {
     borderColor: theme.colors.primary,
@@ -29,7 +29,7 @@ export const styles: Record<string, CSSProperties> = {
     transform: 'scale(1.05)',
   },
   uploadIcon: {
-    fontSize: '48px',
+    fontSize: '64px',
     color: theme.colors.primary,
   },
 };

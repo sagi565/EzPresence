@@ -4,46 +4,70 @@ import { styles } from './styles';
 
 interface ScrollNavigationProps {
   lists: ContentList[];
-  onNavigate: (listId: string) => void;
+  currentIndex: number;
+  isDragging: boolean;
+  onNavigate: (index: number) => void;
   onDelete: (listId: string) => void;
+  onDropToList: (listId: string) => void;
 }
+
+const MAX_VISIBLE_DOTS = 7;
 
 const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   lists,
+  currentIndex,
+  isDragging,
   onNavigate,
   onDelete,
+  onDropToList,
 }) => {
-  const [activeListId, setActiveListId] = useState(lists[0]?.id || '');
-  const [hoveredListId, setHoveredListId] = useState<string | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     listId: string;
     x: number;
     y: number;
   } | null>(null);
+  const [windowOffset, setWindowOffset] = useState(0);
 
+  const totalItems = lists.length;
+  const showPagination = totalItems > MAX_VISIBLE_DOTS;
+
+  // Calculate the window of visible dots
+  const getVisibleRange = () => {
+    if (!showPagination) {
+      return { start: 0, end: totalItems };
+    }
+
+    // Apply manual offset for arrow navigation
+    let start = Math.max(0, Math.min(totalItems - MAX_VISIBLE_DOTS, windowOffset));
+    let end = Math.min(totalItems, start + MAX_VISIBLE_DOTS);
+    
+    // Adjust if we're near the end
+    if (end === totalItems && totalItems > MAX_VISIBLE_DOTS) {
+      start = Math.max(0, end - MAX_VISIBLE_DOTS);
+    }
+    
+    return { start, end };
+  };
+
+  // Auto-adjust window when currentIndex changes to keep it visible
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + window.innerHeight / 2;
-      
-      for (const list of lists) {
-        const element = document.querySelector(`[data-list-id="${list.id}"]`);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          const elementTop = rect.top + window.scrollY;
-          const elementBottom = elementTop + rect.height;
-          
-          if (scrollPosition >= elementTop && scrollPosition <= elementBottom) {
-            setActiveListId(list.id);
-            break;
-          }
-        }
-      }
-    };
+    if (!showPagination) return;
+    
+    const { start, end } = getVisibleRange();
+    
+    // If currentIndex is outside visible range, adjust window
+    if (currentIndex < start) {
+      setWindowOffset(currentIndex);
+    } else if (currentIndex >= end) {
+      setWindowOffset(Math.max(0, currentIndex - MAX_VISIBLE_DOTS + 1));
+    }
+  }, [currentIndex, showPagination]);
 
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lists]);
+  const { start: startIndex, end: endIndex } = getVisibleRange();
+  const canScrollUp = startIndex > 0;
+  const canScrollDown = endIndex < totalItems;
 
   useEffect(() => {
     const handleClickOutside = () => setContextMenu(null);
@@ -53,7 +77,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     }
   }, [contextMenu]);
 
-  const handleContextMenu = (e: React.MouseEvent, list: ContentList) => {
+  const handleContextMenu = (e: React.MouseEvent, list: ContentList, index: number) => {
     if (list.isSystem) return;
     
     e.preventDefault();
@@ -71,50 +95,139 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     }
   };
 
+  const handlePageUp = () => {
+    if (canScrollUp) {
+      // Move the window up by 1
+      setWindowOffset(Math.max(0, windowOffset - 1));
+    }
+  };
+
+  const handlePageDown = () => {
+    if (canScrollDown) {
+      // Move the window down by 1
+      setWindowOffset(Math.min(totalItems - MAX_VISIBLE_DOTS, windowOffset + 1));
+    }
+  };
+
+  // Calculate which items to show
+  const visibleItems = [];
+  
+  for (let i = startIndex; i < endIndex; i++) {
+    visibleItems.push({ list: lists[i], index: i });
+  }
+  const [hoveredArrow, setHoveredArrow] = useState<'up' | 'down' | null>(null);
+
+  const upArrowStyle = {
+    ...styles.paginationArrow,
+    ...styles.paginationArrowUp,
+    ...(!canScrollUp ? styles.paginationArrowDisabled : {}),
+    ...(hoveredArrow === 'up' && canScrollUp ? styles.paginationArrowHover : {}),
+  };
+
+  const downArrowStyle = {
+    ...styles.paginationArrow,
+    ...styles.paginationArrowDown,
+    ...(!canScrollDown ? styles.paginationArrowDisabled : {}),
+    ...(hoveredArrow === 'down' && canScrollDown ? styles.paginationArrowHover : {}),
+  };
+
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    if (isDragging) {
+      e.preventDefault();
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, listId: string) => {
+    e.preventDefault();
+    onDropToList(listId);
+    setDragOverIndex(null);
+  };
+
   return (
     <>
       <nav style={styles.scrollNav}>
-        {lists.map((list, index) => {
-          const isActive = activeListId === list.id;
-          const isHovered = hoveredListId === list.id;
+        {showPagination && (
+          <button
+            style={upArrowStyle}
+            onClick={handlePageUp}
+            disabled={!canScrollUp}
+            onMouseEnter={() => setHoveredArrow('up')}
+            onMouseLeave={() => setHoveredArrow(null)}
+          >
+            ▲
+          </button>
+        )}
 
-          return (
-            <div key={list.id} style={styles.scrollItem}>
-              {isHovered && (
-                <div style={styles.scrollLabel}>{list.title}</div>
-              )}
+        <div style={styles.dotsContainer}>
+          {visibleItems.map((item, idx) => {
+            const { list, index } = item;
+            const isActive = currentIndex === index;
+            const isHovered = hoveredIndex === index;
+            const isDragOver = dragOverIndex === index;
+            const showAsHovered = isDragging || isHovered;
 
-              <div style={styles.scrollDotContainer}>
-                <div
-                  style={{
-                    ...styles.scrollDot,
-                    ...(isActive
-                      ? list.isSystem
-                        ? styles.scrollDotActiveSystem
-                        : styles.scrollDotActiveCustom
-                      : {}),
-                    ...(isHovered && !isActive ? styles.scrollDotHover : {}),
-                  }}
-                  onClick={() => onNavigate(list.id)}
-                  onContextMenu={(e) => handleContextMenu(e, list)}
-                  onMouseEnter={() => setHoveredListId(list.id)}
-                  onMouseLeave={() => setHoveredListId(null)}
+            return (
+              <div key={list.id} style={styles.scrollItem}>
+                {(showAsHovered || isDragOver) && (
+                  <div style={styles.scrollLabel}>{list.title}</div>
+                )}
+
+                <div 
+                  style={styles.scrollDotContainer}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, list.id)}
                 >
-                  <span
+                  <div
                     style={{
-                      ...styles.scrollIcon,
-                      ...(isHovered || isActive ? styles.scrollIconVisible : {}),
+                      ...styles.scrollDot,
+                      ...(isActive
+                        ? list.isSystem
+                          ? styles.scrollDotActiveSystem
+                          : styles.scrollDotActiveCustom
+                        : {}),
+                      ...(showAsHovered && !isActive ? styles.scrollDotHover : {}),
+                      ...(isDragOver ? styles.scrollDotDragOver : {}),
                     }}
+                    onClick={() => onNavigate(index)}
+                    onContextMenu={(e) => handleContextMenu(e, list, index)}
+                    onMouseEnter={() => setHoveredIndex(index)}
+                    onMouseLeave={() => setHoveredIndex(null)}
                   >
-                    {list.icon}
-                  </span>
+                    <span
+                      style={{
+                        ...styles.scrollIcon,
+                        ...(showAsHovered || isActive || isDragOver ? styles.scrollIconVisible : {}),
+                      }}
+                    >
+                      {list.icon}
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              {index < lists.length - 1 && <div style={styles.scrollLine} />}
-            </div>
-          );
-        })}
+                {idx < visibleItems.length - 1 && <div style={styles.scrollLine} />}
+              </div>
+            );
+          })}
+        </div>
+
+        {showPagination && (
+          <button
+            style={downArrowStyle}
+            onClick={handlePageDown}
+            disabled={!canScrollDown}
+            onMouseEnter={() => setHoveredArrow('down')}
+            onMouseLeave={() => setHoveredArrow(null)}
+          >
+            ▼
+          </button>
+        )}
       </nav>
 
       {contextMenu && (

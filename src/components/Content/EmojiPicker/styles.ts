@@ -14,8 +14,9 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '16px',
     padding: '16px',
     boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-    border: '2px solid var(--color-primary)',
-    maxWidth: '280px',
+    border: '2px solid #9b5de5',
+    width: 'auto',
+    maxWidth: '320px',
     zIndex: 2001,
   },
   grid: {
@@ -33,11 +34,11 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '10px',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    border: '2px solid transparent',
+    border: '2px solid transparent',  // Changed from visible border
   },
   optionHover: {
     background: 'rgba(155, 93, 229, 0.1)',
-    borderColor: 'var(--color-primary)',
+    borderColor: '#9b5de5',
     transform: 'scale(1.1)',
   },
 };

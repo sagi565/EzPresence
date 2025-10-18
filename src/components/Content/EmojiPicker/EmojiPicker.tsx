@@ -28,16 +28,23 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({
   useEffect(() => {
     if (isOpen && anchorElement && pickerRef.current) {
       const iconRect = anchorElement.getBoundingClientRect();
-      const pickerWidth = pickerRef.current.offsetWidth;
       
+      // Force a reflow to get accurate measurements
+      const pickerRect = pickerRef.current.getBoundingClientRect();
+      const pickerWidth = pickerRect.width || 280; // Use actual width or fallback
+      const windowWidth = window.innerWidth;
+      
+      // Center under icon
       let left = iconRect.left + (iconRect.width / 2) - (pickerWidth / 2);
       
       // Ensure picker doesn't go off left edge
-      if (left < 10) left = 10;
+      if (left < 10) {
+        left = 10;
+      }
       
       // Ensure picker doesn't go off right edge
-      if (left + pickerWidth > window.innerWidth - 10) {
-        left = window.innerWidth - pickerWidth - 10;
+      if (left + pickerWidth > windowWidth - 10) {
+        left = windowWidth - pickerWidth - 10;
       }
       
       setPosition({
