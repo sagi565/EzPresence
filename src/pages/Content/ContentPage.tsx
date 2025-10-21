@@ -114,7 +114,7 @@ const ContentPage: React.FC = () => {
     };
   }, []);
 
-  // Handle scroll event
+  // Handle scroll event - FIXED: Better scroll behavior
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -136,14 +136,17 @@ const ContentPage: React.FC = () => {
           // Check for hard scrolling (velocity > 100 pixels per 50ms)
           const isHardScroll = scrollVelocity.current > 100;
 
+          // FIXED: Improved bottom detection - allow scrolling back up more easily
+          const isNearBottom = scrollTop > scrollHeight - containerHeight - 50;
+          
           // If hard scrolling and near top, snap to top
           if (isHardScroll && scrollTop < containerHeight * 0.3) {
             scrollToList(0);
             return;
           }
 
-          // If hard scrolling and near bottom, snap to bottom
-          if (isHardScroll && scrollTop > scrollHeight - containerHeight * 1.3) {
+          // FIXED: Only snap to bottom if we're VERY close and scrolling down
+          if (isHardScroll && isNearBottom && scrollVelocity.current > 0) {
             scrollToList(lists.length); // Add button index
             return;
           }

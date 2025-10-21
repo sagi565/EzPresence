@@ -4,14 +4,13 @@ import { theme } from '@theme/theme';
 export const styles: Record<string, CSSProperties> = {
   listHeader: {
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: '20px',
     marginBottom: '24px',
   },
   listIcon: {
     fontSize: '48px',
     flexShrink: 0,
-    marginTop: '4px',
   },
   listIconEditable: {
     cursor: 'pointer',
@@ -90,8 +89,7 @@ export const styles: Record<string, CSSProperties> = {
     position: 'relative',
     flexShrink: 0,
     padding: 0,
-    alignSelf: 'flex-start',
-    marginTop: '6px',
+    alignSelf: 'center',
     lineHeight: 1,
     paddingBottom: '3px',
   },
@@ -108,9 +106,9 @@ export const styles: Record<string, CSSProperties> = {
     boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)',
   },
   listTitleEditableFocus: {
-  background: 'white',
-  borderColor: theme.colors.primary,
-  boxShadow: '0 0 0 3px rgba(155, 93, 229, 0.1)',
+    background: 'white',
+    borderColor: theme.colors.primary,
+    boxShadow: '0 0 0 3px rgba(155, 93, 229, 0.1)',
   },
   listTitleContainer: {
     display: 'flex',
@@ -120,10 +118,9 @@ export const styles: Record<string, CSSProperties> = {
   listContainer: {
     position: 'relative',
     overflow: 'visible',
-    padding: '16px 0',
+    height: '100%',
     width: '100%',
     maxWidth: '1800px',
-    marginBottom: '48px',
   },
   listScrollWrapper: {
     display: 'flex',

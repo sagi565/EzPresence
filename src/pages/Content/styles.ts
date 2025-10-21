@@ -10,7 +10,7 @@ export const styles: Record<string, CSSProperties> = {
     overflow: 'hidden',
   },
   contentArea: {
-    height: 'calc(100vh - 76px)',
+    height: '100%',
     overflowY: 'auto',
     overflowX: 'hidden',
     scrollSnapType: 'y proximity',
@@ -22,7 +22,7 @@ export const styles: Record<string, CSSProperties> = {
     paddingRight: '120px',
   },
   listSection: {
-    minHeight: 'calc(100vh - 76px)',
+    height: '100%',
     scrollSnapAlign: 'center',
     scrollSnapStop: 'normal',
     display: 'flex',

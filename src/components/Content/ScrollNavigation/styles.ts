@@ -86,6 +86,14 @@ export const styles: Record<string, CSSProperties> = {
     boxShadow: '0 0 30px rgba(155, 93, 229, 0.6)',
     transform: 'scale(1.1)',
   },
+  // FIXED: New style for disabled system lists during drag
+  scrollDotDisabled: {
+    background: 'rgba(155, 93, 229, 0.05)',
+    borderColor: 'rgba(155, 93, 229, 0.15)',
+    opacity: 0.4,
+    cursor: 'not-allowed',
+    filter: 'grayscale(0.7)',
+  },
   scrollIcon: {
     position: 'absolute',
     fontSize: '18px',

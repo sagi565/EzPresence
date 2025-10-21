@@ -131,9 +131,14 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     ...(hoveredArrow === 'down' && canScrollDown ? styles.paginationArrowHover : {}),
   };
 
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
+  // FIXED: Check if list can accept drops (not system list)
+  const handleDragOver = (e: React.DragEvent, index: number, list: ContentList) => {
     if (isDragging) {
+      // Prevent drop on system lists
+      if (list.isSystem) {
+        e.dataTransfer.dropEffect = 'none';
+        return;
+      }
       e.preventDefault();
       setDragOverIndex(index);
     }
@@ -143,7 +148,11 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     setDragOverIndex(null);
   };
 
-  const handleDrop = (e: React.DragEvent, listId: string) => {
+  const handleDrop = (e: React.DragEvent, listId: string, list: ContentList) => {
+    // Prevent drop on system lists
+    if (list.isSystem) {
+      return;
+    }
     e.preventDefault();
     onDropToList(listId);
     setDragOverIndex(null);
@@ -171,18 +180,20 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
             const isHovered = hoveredIndex === index;
             const isDragOver = dragOverIndex === index;
             const showAsHovered = isDragging || isHovered;
+            // FIXED: Check if this is a system list and dragging is happening
+            const isSystemAndDragging = list.isSystem && isDragging;
 
             return (
               <div key={list.id} style={styles.scrollItem}>
-                {(showAsHovered || isDragOver) && (
+                {(showAsHovered || isDragOver) && !isSystemAndDragging && (
                   <div style={styles.scrollLabel}>{list.title}</div>
                 )}
 
                 <div 
                   style={styles.scrollDotContainer}
-                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index, list)}
                   onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, list.id)}
+                  onDrop={(e) => handleDrop(e, list.id, list)}
                 >
                   <div
                     style={{
@@ -192,8 +203,10 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                           ? styles.scrollDotActiveSystem
                           : styles.scrollDotActiveCustom
                         : {}),
-                      ...(showAsHovered && !isActive ? styles.scrollDotHover : {}),
-                      ...(isDragOver ? styles.scrollDotDragOver : {}),
+                      ...(showAsHovered && !isActive && !isSystemAndDragging ? styles.scrollDotHover : {}),
+                      ...(isDragOver && !list.isSystem ? styles.scrollDotDragOver : {}),
+                      // FIXED: Add disabled style for system lists during drag
+                      ...(isSystemAndDragging ? styles.scrollDotDisabled : {}),
                     }}
                     onClick={() => onNavigate(index)}
                     onContextMenu={(e) => handleContextMenu(e, list, index)}
@@ -204,6 +217,8 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                       style={{
                         ...styles.scrollIcon,
                         ...(showAsHovered || isActive || isDragOver ? styles.scrollIconVisible : {}),
+                        // FIXED: Reduce opacity of icon for system lists during drag
+                        ...(isSystemAndDragging ? { opacity: 0.3 } : {}),
                       }}
                     >
                       {list.icon}
