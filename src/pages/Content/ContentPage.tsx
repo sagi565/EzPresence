@@ -27,6 +27,7 @@ const ContentPage: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const listsRef = useRef<HTMLDivElement[]>([]);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const updateIndexTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastScrollTop = useRef(0);
   const scrollVelocity = useRef(0);
   const velocityCheckInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -95,7 +96,7 @@ const ContentPage: React.FC = () => {
     }
   }, [currentIndex, isScrolling]);
 
-  // Track scroll velocity for hard scrolling detection
+  // Track scroll velocity AND direction for hard scrolling detection
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -103,7 +104,7 @@ const ContentPage: React.FC = () => {
     velocityCheckInterval.current = setInterval(() => {
       const currentScrollTop = container.scrollTop;
       const delta = currentScrollTop - lastScrollTop.current;
-      scrollVelocity.current = Math.abs(delta);
+      scrollVelocity.current = delta; // Store signed delta, not absolute
       lastScrollTop.current = currentScrollTop;
     }, 50);
 
@@ -114,30 +115,57 @@ const ContentPage: React.FC = () => {
     };
   }, []);
 
-  // Handle scroll event - FIXED: Better scroll behavior
+  // Handle scroll event - FIXED: Better scroll behavior with throttled index updates
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const handleScroll = () => {
+      // FIXED: Throttle the current index updates to prevent flickering
+      if (updateIndexTimeoutRef.current) {
+        clearTimeout(updateIndexTimeoutRef.current);
+      }
+
+      updateIndexTimeoutRef.current = setTimeout(() => {
+        const scrollTop = container.scrollTop;
+        const containerHeight = container.clientHeight;
+        const scrollCenter = scrollTop + containerHeight / 2;
+
+        let closestIndex = 0;
+        let closestDistance = Infinity;
+
+        listsRef.current.forEach((list, index) => {
+          if (!list) return;
+          const listTop = list.offsetTop;
+          const listHeight = list.offsetHeight;
+          const listCenter = listTop + listHeight / 2;
+          const distance = Math.abs(scrollCenter - listCenter);
+
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = index;
+          }
+        });
+
+        // Update current index only if it changed
+        if (closestIndex !== currentIndex) {
+          setCurrentIndex(closestIndex);
+        }
+      }, 50); // Small delay to prevent rapid flickering
+
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
-
-      updateCurrentIndex();
 
       scrollTimeoutRef.current = setTimeout(() => {
         if (!isScrolling) {
           const scrollTop = container.scrollTop;
           const scrollHeight = container.scrollHeight;
           const containerHeight = container.clientHeight;
-          const scrollCenter = scrollTop + containerHeight / 2;
 
-          // Check for hard scrolling (velocity > 100 pixels per 50ms)
-          const isHardScroll = scrollVelocity.current > 100;
-
-          // FIXED: Improved bottom detection - allow scrolling back up more easily
-          const isNearBottom = scrollTop > scrollHeight - containerHeight - 50;
+          // Use signed velocity for direction detection
+          const absVelocity = Math.abs(scrollVelocity.current);
+          const isHardScroll = absVelocity > 100;
           
           // If hard scrolling and near top, snap to top
           if (isHardScroll && scrollTop < containerHeight * 0.3) {
@@ -145,13 +173,15 @@ const ContentPage: React.FC = () => {
             return;
           }
 
-          // FIXED: Only snap to bottom if we're VERY close and scrolling down
-          if (isHardScroll && isNearBottom && scrollVelocity.current > 0) {
-            scrollToList(lists.length); // Add button index
+          // FIXED: Better bottom handling - check if scrolling down (positive velocity) when near bottom
+          const distanceFromBottom = scrollHeight - scrollTop - containerHeight;
+          if (isHardScroll && distanceFromBottom < containerHeight * 0.3 && scrollVelocity.current > 0) {
+            scrollToList(lists.length);
             return;
           }
 
-          // Otherwise, snap to closest section
+          // Calculate closest for snapping
+          const scrollCenter = scrollTop + containerHeight / 2;
           let closestIndex = 0;
           let closestDistance = Infinity;
 
@@ -168,6 +198,7 @@ const ContentPage: React.FC = () => {
             }
           });
 
+          // Otherwise, snap to closest section
           scrollToList(closestIndex);
         }
       }, 150);
@@ -180,8 +211,11 @@ const ContentPage: React.FC = () => {
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
+      if (updateIndexTimeoutRef.current) {
+        clearTimeout(updateIndexTimeoutRef.current);
+      }
     };
-  }, [updateCurrentIndex, isScrolling, lists.length]);
+  }, [currentIndex, isScrolling, lists.length]);
 
   // Wheel event handler with direct deltaY strength detection
   useEffect(() => {
@@ -193,11 +227,7 @@ const ContentPage: React.FC = () => {
     let direction = 1;
 
     const handleWheel = (e: WheelEvent) => {
-      if (isScrolling) {
-        e.preventDefault();
-        return;
-      }
-
+      // FIXED: Don't block wheel events when isScrolling, just prevent default
       e.preventDefault();
 
       direction = e.deltaY > 0 ? 1 : -1;
@@ -218,6 +248,8 @@ const ContentPage: React.FC = () => {
             0,
             Math.min(lists.length, currentIndex + step * direction)
           );
+          
+          // FIXED: Allow scroll even if currently scrolling (it will interrupt)
           scrollToList(nextIndex);
         }
 
@@ -234,14 +266,13 @@ const ContentPage: React.FC = () => {
   }, [currentIndex, isScrolling, lists.length]);
 
   const scrollToList = (index: number) => {
-    if (isScrolling) return;
-    setIsScrolling(true);
-
-    // Handle add button section (last index)
     const targetList = index < lists.length ? listsRef.current[index] : listsRef.current[lists.length];
     const container = containerRef.current;
 
     if (targetList && container) {
+      // FIXED: Set scrolling flag but allow it to be interrupted
+      setIsScrolling(true);
+      
       const containerHeight = container.clientHeight;
       const listTop = targetList.offsetTop;
       const listHeight = targetList.offsetHeight;
@@ -254,9 +285,14 @@ const ContentPage: React.FC = () => {
 
       setCurrentIndex(index);
 
-      setTimeout(() => {
+      // FIXED: Shorter timeout and clear any existing timeout first
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      scrollTimeoutRef.current = setTimeout(() => {
         setIsScrolling(false);
-      }, 1000);
+      }, 600);
     }
   };
 

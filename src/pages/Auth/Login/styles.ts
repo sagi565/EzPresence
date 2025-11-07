@@ -54,7 +54,6 @@ export const styles: S = {
     fontSize: 14,
     whiteSpace: 'nowrap',
   },
-
   passwordWrapper: {
     position: 'relative',
     display: 'flex',
@@ -75,7 +74,6 @@ export const styles: S = {
     width: 20,
     height: 20,
   },
-
   error: {
     background: theme.colors.primaryLight,
     color: theme.colors.text,
@@ -83,5 +81,15 @@ export const styles: S = {
     borderRadius: 12,
     padding: '8px 12px',
     fontSize: 14,
+  },
+  successMessage: {
+    background: 'rgba(20, 184, 166, 0.1)',
+    color: theme.colors.teal,
+    border: '1px solid rgba(20, 184, 166, 0.3)',
+    borderRadius: 12,
+    padding: '12px 16px',
+    fontSize: 14,
+    fontWeight: 500,
+    marginBottom: 4,
   },
 };

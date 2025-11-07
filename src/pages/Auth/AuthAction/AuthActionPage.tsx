@@ -16,17 +16,21 @@ const AuthActionPage: React.FC = () => {
 
     if (!mode || !oobCode) {
       setStatus('error');
-      setErrorMessage('Invalid verification link');
+      setErrorMessage('Invalid action link');
       return;
     }
 
+    // Handle different action modes
     if (mode === 'verifyEmail') {
       handleVerifyEmail(oobCode);
+    } else if (mode === 'resetPassword') {
+      // Redirect to the reset password page with the code
+      navigate(`/reset-password?mode=resetPassword&oobCode=${oobCode}`, { replace: true });
     } else {
       setStatus('error');
       setErrorMessage('Unsupported action');
     }
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   const handleVerifyEmail = async (oobCode: string) => {
     try {
@@ -71,7 +75,7 @@ const AuthActionPage: React.FC = () => {
         {status === 'loading' && (
           <>
             <div style={styles.spinner}></div>
-            <h2 style={styles.title}>Verifying your email...</h2>
+            <h2 style={styles.title}>Processing...</h2>
             <p style={styles.subtitle}>Please wait a moment</p>
           </>
         )}
@@ -94,13 +98,13 @@ const AuthActionPage: React.FC = () => {
         {status === 'error' && (
           <>
             <div style={styles.errorIcon}>✕</div>
-            <h2 style={styles.title}>Verification Failed</h2>
+            <h2 style={styles.title}>Action Failed</h2>
             <p style={styles.errorText}>{errorMessage}</p>
             <button 
               style={styles.button}
-              onClick={() => navigate('/verify-email')}
+              onClick={() => navigate('/login')}
             >
-              Go to Verification Page
+              Go to Login
             </button>
           </>
         )}

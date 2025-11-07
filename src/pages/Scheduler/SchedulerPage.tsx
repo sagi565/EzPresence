@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useBrands } from '@hooks/useBrands';
-import { usePosts } from '@hooks/usePosts';
-import { useContent } from '@hooks/useContent';
+import { useSchedules } from '@hooks/useSchedules';
+import { useMediaContents } from '@hooks/useMediaContents';
 import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
 import SchedulerBar from '@components/Scheduler/SchedulerBar/DateNavigation';
 import CalendarGrid from '@components/Scheduler/Calendar/GridView/CalendarGrid';
@@ -16,9 +16,21 @@ const SchedulerPage: React.FC = () => {
   const [currentDay, setCurrentDay] = useState(today.getDate());
   const [viewMode, setViewMode] = useState<'month' | '4days'>('month');
 
-  const { brands, currentBrand, switchBrand } = useBrands();
-  const { posts } = usePosts(currentBrand.id);
-  const { content } = useContent(currentBrand.id);
+  const { brands, currentBrand, switchBrand, loading: brandsLoading, error: brandsError } = useBrands();
+  
+  // Use useSchedules instead of usePosts
+  const { 
+    posts, 
+    loading: schedulesLoading, 
+    error: schedulesError 
+  } = useSchedules(currentBrand?.id || '');
+  
+  // Use useMediaContents instead of useContent
+  const { 
+    content, 
+    loading: contentLoading, 
+    error: contentError 
+  } = useMediaContents(currentBrand?.id || '');
 
   const handleMonthChange = (direction: number) => {
     let newMonth = currentMonth + direction;
@@ -61,6 +73,45 @@ const SchedulerPage: React.FC = () => {
     alert(`Opening New Post modal with content "${contentId}" for ${date.toDateString()} at ${time}`);
   };
 
+  // Show loading state
+  if (brandsLoading) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.loadingContainer}>
+          <div style={styles.spinner}></div>
+          <p style={styles.loadingText}>Loading your brands...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (brandsError) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.errorContainer}>
+          <div style={styles.errorIcon}>⚠️</div>
+          <h2 style={styles.errorTitle}>Failed to Load</h2>
+          <p style={styles.errorText}>{brandsError}</p>
+          <button style={styles.retryButton} onClick={() => window.location.reload()}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no brand selected
+  if (!currentBrand) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.errorContainer}>
+          <p style={styles.errorText}>No brand selected</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container}>
       <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
@@ -75,10 +126,33 @@ const SchedulerPage: React.FC = () => {
           onDateSelect={handleDateSelect}
           onViewChange={handleViewChange}
         />
-        {viewMode === 'month' ? (
-          <CalendarGrid currentYear={currentYear} currentMonth={currentMonth} posts={posts} today={today} onDrop={handleDrop} />
+        
+        {schedulesLoading ? (
+          <div style={styles.calendarLoadingContainer}>
+            <div style={styles.spinner}></div>
+            <p style={styles.loadingText}>Loading schedules...</p>
+          </div>
+        ) : schedulesError ? (
+          <div style={styles.calendarErrorContainer}>
+            <p style={styles.errorText}>{schedulesError}</p>
+          </div>
+        ) : viewMode === 'month' ? (
+          <CalendarGrid 
+            currentYear={currentYear} 
+            currentMonth={currentMonth} 
+            posts={posts} 
+            today={today} 
+            onDrop={handleDrop} 
+          />
         ) : (
-          <FourDaysView currentYear={currentYear} currentMonth={currentMonth} currentDay={currentDay} posts={posts} onDayChange={handleDayChange} onDrop={handleFourDaysViewDrop} />
+          <FourDaysView 
+            currentYear={currentYear} 
+            currentMonth={currentMonth} 
+            currentDay={currentDay} 
+            posts={posts} 
+            onDayChange={handleDayChange} 
+            onDrop={handleFourDaysViewDrop} 
+          />
         )}
       </div>
       <ContentDrawer content={content} brandId={currentBrand.id} />

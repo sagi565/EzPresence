@@ -19,7 +19,7 @@ export const styles: Record<string, CSSProperties> = {
     scrollbarWidth: 'thin',
     scrollbarColor: 'rgba(155, 93, 229, 0.3) transparent',
     msOverflowStyle: 'auto',
-    paddingRight: '120px',
+    paddingRight: '100px',
   },
   listSection: {
     height: '100%',

@@ -16,7 +16,7 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
   
   // Logged in but email not verified - redirect to verification pending page
   if (!user.emailVerified) {
-    return <Navigate to="/verify-email-pending" replace />;
+    return <Navigate to="/verify-email" replace />;
   }
   
   // Logged in and email verified - allow access

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ContentList } from '@models/ContentList';
 import { styles } from './styles';
 
@@ -29,6 +29,8 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     y: number;
   } | null>(null);
   const [windowOffset, setWindowOffset] = useState(0);
+  const [hoveredArrow, setHoveredArrow] = useState<'up' | 'down' | null>(null);
+  const autoScrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const totalItems = lists.length;
   const showPagination = totalItems > MAX_VISIBLE_DOTS;
@@ -109,26 +111,65 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     }
   };
 
+  // FIXED: Auto-scroll when dragging over arrows
+  const startAutoScroll = (direction: 'up' | 'down') => {
+    if (autoScrollIntervalRef.current) return; // Already scrolling
+
+    autoScrollIntervalRef.current = setInterval(() => {
+      if (direction === 'up' && canScrollUp) {
+        setWindowOffset(prev => Math.max(0, prev - 1));
+      } else if (direction === 'down' && canScrollDown) {
+        setWindowOffset(prev => Math.min(totalItems - MAX_VISIBLE_DOTS, prev + 1));
+      }
+    }, 300); // Scroll every 300ms while hovering
+  };
+
+  const stopAutoScroll = () => {
+    if (autoScrollIntervalRef.current) {
+      clearInterval(autoScrollIntervalRef.current);
+      autoScrollIntervalRef.current = null;
+    }
+  };
+
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      stopAutoScroll();
+    };
+  }, []);
+
+  // Stop auto-scroll when not dragging
+  useEffect(() => {
+    if (!isDragging) {
+      stopAutoScroll();
+    }
+  }, [isDragging]);
+
   // Calculate which items to show
   const visibleItems = [];
   
   for (let i = startIndex; i < endIndex; i++) {
     visibleItems.push({ list: lists[i], index: i });
   }
-  const [hoveredArrow, setHoveredArrow] = useState<'up' | 'down' | null>(null);
 
   const upArrowStyle = {
     ...styles.paginationArrow,
     ...styles.paginationArrowUp,
-    ...(!canScrollUp ? styles.paginationArrowDisabled : {}),
+    // FIXED: Show when dragging and can scroll
+    ...(isDragging && showPagination && canScrollUp ? styles.paginationArrowDragging : {}),
     ...(hoveredArrow === 'up' && canScrollUp ? styles.paginationArrowHover : {}),
+    // Disable if can't scroll
+    ...(!canScrollUp && isDragging ? styles.paginationArrowDisabled : {}),
   };
 
   const downArrowStyle = {
     ...styles.paginationArrow,
     ...styles.paginationArrowDown,
-    ...(!canScrollDown ? styles.paginationArrowDisabled : {}),
+    // FIXED: Show when dragging and can scroll
+    ...(isDragging && showPagination && canScrollDown ? styles.paginationArrowDragging : {}),
     ...(hoveredArrow === 'down' && canScrollDown ? styles.paginationArrowHover : {}),
+    // Disable if can't scroll
+    ...(!canScrollDown && isDragging ? styles.paginationArrowDisabled : {}),
   };
 
   // FIXED: Check if list can accept drops (not system list)
@@ -161,13 +202,31 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   return (
     <>
       <nav style={styles.scrollNav}>
+        {/* FIXED: Always render arrows, but only show when dragging */}
         {showPagination && (
           <button
             style={upArrowStyle}
             onClick={handlePageUp}
             disabled={!canScrollUp}
-            onMouseEnter={() => setHoveredArrow('up')}
-            onMouseLeave={() => setHoveredArrow(null)}
+            onMouseEnter={() => {
+              setHoveredArrow('up');
+              if (isDragging && canScrollUp) {
+                startAutoScroll('up');
+              }
+            }}
+            onMouseLeave={() => {
+              setHoveredArrow(null);
+              stopAutoScroll();
+            }}
+            onDragOver={(e) => {
+              if (isDragging && canScrollUp) {
+                e.preventDefault();
+                startAutoScroll('up');
+              }
+            }}
+            onDragLeave={() => {
+              stopAutoScroll();
+            }}
           >
             ▲
           </button>
@@ -237,8 +296,25 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
             style={downArrowStyle}
             onClick={handlePageDown}
             disabled={!canScrollDown}
-            onMouseEnter={() => setHoveredArrow('down')}
-            onMouseLeave={() => setHoveredArrow(null)}
+            onMouseEnter={() => {
+              setHoveredArrow('down');
+              if (isDragging && canScrollDown) {
+                startAutoScroll('down');
+              }
+            }}
+            onMouseLeave={() => {
+              setHoveredArrow(null);
+              stopAutoScroll();
+            }}
+            onDragOver={(e) => {
+              if (isDragging && canScrollDown) {
+                e.preventDefault();
+                startAutoScroll('down');
+              }
+            }}
+            onDragLeave={() => {
+              stopAutoScroll();
+            }}
           >
             ▼
           </button>

@@ -1,4 +1,5 @@
 import { CSSProperties } from 'react';
+import { theme } from '@theme/theme';
 
 export const styles: Record<string, CSSProperties> = {
   container: {
@@ -15,5 +16,85 @@ export const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     justifyContent: 'flex-start',
     flex: 1,
+  },
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '60vh',
+    gap: '20px',
+  },
+  spinner: {
+    width: '48px',
+    height: '48px',
+    border: '4px solid rgba(155, 93, 229, 0.2)',
+    borderTopColor: theme.colors.primary,
+    borderRadius: '50%',
+    animation: 'spin 0.8s linear infinite',
+  },
+  loadingText: {
+    fontSize: '16px',
+    color: theme.colors.muted,
+    fontWeight: 500,
+  },
+  errorContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '60vh',
+    gap: '20px',
+    padding: '40px',
+  },
+  errorIcon: {
+    fontSize: '64px',
+  },
+  errorTitle: {
+    fontSize: '24px',
+    fontWeight: 700,
+    color: theme.colors.text,
+    margin: 0,
+  },
+  errorText: {
+    fontSize: '16px',
+    color: '#ef4444',
+    textAlign: 'center',
+    maxWidth: '500px',
+    lineHeight: 1.6,
+  },
+  retryButton: {
+    padding: '12px 24px',
+    background: theme.gradients.innovator,
+    color: 'white',
+    border: 'none',
+    borderRadius: '12px',
+    fontSize: '15px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'transform 0.2s',
+    boxShadow: theme.shadows.primary,
+  },
+  calendarLoadingContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '400px',
+    gap: '16px',
+    background: 'white',
+    borderRadius: '16px',
+    padding: '40px',
+    boxShadow: theme.shadows.md,
+  },
+  calendarErrorContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '400px',
+    background: 'white',
+    borderRadius: '16px',
+    padding: '40px',
+    boxShadow: theme.shadows.md,
   },
 };

@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import AuthLayout from '@components/Auth/AuthLayout/AuthLayout';
 import AuthField from '@components/Auth/AuthField/AuthField';
 import SocialButtons from '@components/Auth/SocialButtons/SocialButtons';
 import { styles } from './styles';
 import { useAuth } from '@auth/AuthProvider';
 import PasswordInput from '@components/Auth/PasswordInput/PasswordInput';
-import SocialsBackground from '@components/Background/SocialsBackground';
 
 // Map Firebase auth errors to friendly messages (login)
 function mapLoginError(err: any): string {
@@ -35,8 +34,22 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const { signInEmail, user } = useAuth();
   const nav = useNavigate();
+  const location = useLocation();
+
+  // Check if there's a success message from password reset
+  useEffect(() => {
+    const state = location.state as { message?: string };
+    if (state?.message) {
+      setSuccessMessage(state.message);
+      // Clear the message after 7 seconds
+      setTimeout(() => setSuccessMessage(null), 7000);
+      // Clear the location state
+      nav(location.pathname, { replace: true });
+    }
+  }, [location, nav]);
 
   if (user) {
     return <Navigate to="/scheduler" replace />;
@@ -62,7 +75,7 @@ const LoginPage: React.FC = () => {
       subtitle="Manage your network presence effortlessly"
       footer={
         <span>
-          Don’t have an account?{' '}
+          Don't have an account?{' '}
           <Link to="/signup" style={styles.link}>
             Sign up
           </Link>
@@ -70,6 +83,12 @@ const LoginPage: React.FC = () => {
       }
     >
       <form style={styles.form} onSubmit={onSubmit}>
+        {successMessage && (
+          <div style={styles.successMessage}>
+            ✓ {successMessage}
+          </div>
+        )}
+
         <AuthField
           label="Email address"
           type="email"

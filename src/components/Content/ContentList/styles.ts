@@ -120,7 +120,6 @@ export const styles: Record<string, CSSProperties> = {
     overflow: 'visible',
     height: '100%',
     width: '100%',
-    maxWidth: '1800px',
   },
   listScrollWrapper: {
     display: 'flex',

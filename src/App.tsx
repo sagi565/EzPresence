@@ -3,13 +3,13 @@ import { globalStyles } from '@theme/globalStyles';
 import SchedulerPage from './pages/Scheduler/SchedulerPage';
 import StudioPage from './pages/Studio/StudioPage';
 import ContentPage from './pages/Content/ContentPage';
-import LoginPage from './pages/Login/LoginPage';
-import SignUpPage from './pages/SignUp/SignUpPage';
-import ForgotPasswordPage from './pages/ForgotPassword/ForgotPasswordPage';
-import EmailVerificationPage from './pages/EmailVerification/EmailVerificationPage';
+import LoginPage from './pages/Auth/Login/LoginPage';
+import SignUpPage from './pages/Auth/SignUp/SignUpPage';
+import ForgotPasswordPage from './pages/Auth/ForgotPassword/ForgotPasswordPage';
+import EmailVerificationPage from './pages/Auth/EmailVerification/EmailVerificationPage';
 import ProtectedRoute from '@auth/ProtectedRoute';
-import AuthActionPage from './pages/AuthAction/AuthActionPage';
-import VerificationHandler from './pages/VerificationHandler/VerificationHandler';
+import AuthActionPage from './pages/Auth/AuthAction/AuthActionPage';
+import ResetPasswordPage from './pages/Auth/ResetPassword/ResetPAsswordPage';
 
 function App() {
   return (
@@ -21,8 +21,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/verify-email" element={<EmailVerificationPage />} />
-          <Route path="/verify-email-pending" element={<VerificationHandler />} />
           <Route path="/auth/action" element={<AuthActionPage />} />
 
           {/* protected app routes */}
