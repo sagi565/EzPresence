@@ -1,7 +1,7 @@
 import { auth } from '@lib/firebase';
 import { getIdToken } from 'firebase/auth';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'http://192.168.1.12:5112/api'; 
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public data?: any) {
@@ -36,13 +36,20 @@ export async function apiRequest<T = any>(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const url = `${API_BASE_URL}${endpoint}`;
+  // Ensure endpoint starts with /
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE_URL}${cleanEndpoint}`;
+  
+  console.log('🔵 [API CLIENT] Making request:', options.method || 'GET', url);
   
   try {
     const response = await fetch(url, {
       ...options,
       headers,
+      credentials: 'include', // Include cookies for session management
     });
+
+    console.log('📩 [API CLIENT] Response:', response.status, url);
 
     // Handle different response statuses
     if (!response.ok) {
@@ -60,20 +67,24 @@ export async function apiRequest<T = any>(
       throw new ApiError(response.status, errorMessage, errorData);
     }
 
-    // Handle empty responses
+    // Handle empty responses (204 No Content, etc.)
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
+      console.log('⚠️ [API CLIENT] Non-JSON response');
       return null as T;
     }
 
-    return await response.json();
+    const data = await response.json();
+    console.log('✅ [API CLIENT] Success:', url);
+    return data;
   } catch (error) {
     if (error instanceof ApiError) {
+      console.error('❌ [API CLIENT] API Error:', error.status, error.message);
       throw error;
     }
     
     // Network or other errors
-    console.error('API request failed:', error);
+    console.error('❌ [API CLIENT] Network error:', error);
     throw new ApiError(
       0,
       error instanceof Error ? error.message : 'Network error occurred'

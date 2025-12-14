@@ -25,7 +25,9 @@
       "@pages/*": ["./src/pages/*"],
       "@assets/*": ["./src/assets/*"],
       "@lib/*": ["./src/lib/*"],
-      "@auth/*": ["./src/auth/*"]
+      "@auth/*": ["./src/auth/*"],
+      "@utils/*": ["./src/utils/*"]
+
     }
   },
   "include": ["src"],

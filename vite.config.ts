@@ -18,15 +18,9 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, './src/utils'),
     },
   },
-  server: {
+    server: {
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://192.168.1.12:5112',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
+    host: '192.168.1.27',
+    strictPort: true,
   },
 })
