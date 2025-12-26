@@ -197,7 +197,8 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
           </span>
           {isConnected && (
             <div style={styles.connectedBadge}>
-              ● Connected
+              {/* Show disconnect hint on hover */}
+              {isHovered ? '✕ Disconnect' : '● Connected'}
             </div>
           )}
         </>
