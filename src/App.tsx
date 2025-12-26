@@ -10,6 +10,7 @@ import EmailVerificationPage from './pages/Auth/EmailVerification/EmailVerificat
 import ProtectedRoute from '@auth/ProtectedRoute';
 import AuthActionPage from './pages/Auth/AuthAction/AuthActionPage';
 import ResetPasswordPage from './pages/Auth/ResetPassword/ResetPAsswordPage';
+import CreateBrandPage from './pages/CreateBrand/CreateBrandPage';
 
 function App() {
   return (
@@ -24,6 +25,21 @@ function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/auth/action" element={<AuthActionPage />} />
+          <Route
+            path="/create-your-first-brand"
+            element={
+                <CreateBrandPage />
+            }
+          />
+          {/* brand creation route - protected but special handling */}
+          {/* <Route
+            path="/create-your-first-brand"
+            element={
+              <ProtectedRoute>
+                <CreateBrandPage />
+              </ProtectedRoute>
+            }
+          /> */}
 
           {/* protected app routes */}
           <Route
