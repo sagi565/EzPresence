@@ -1,21 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Brand } from '@models/Brand';
+import { Brand, ApiBrandDto, convertApiBrandToBrand } from '@models/Brand';
 import { api } from '@utils/apiClient';
-
-// API Response matches BrandDto from OpenAPI spec
-interface ApiBrand {
-  uuid: string;
-  name: string;
-  icon: string;
-  tenantId?: number;
-}
-
-// Convert API brand to internal Brand format
-const convertApiBrand = (apiBrand: ApiBrand): Brand => ({
-  id: apiBrand.uuid,
-  name: apiBrand.name,
-  icon: apiBrand.icon,
-});
 
 export const useBrands = () => {
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -24,59 +9,73 @@ export const useBrands = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch brands from API
-  useEffect(() => {
-    const fetchBrands = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // GET /api/brands
-        const response = await api.get<ApiBrand[]>('/brands');
-        
-        const convertedBrands = response.map(convertApiBrand);
-        setBrands(convertedBrands);
-        
-        // Set first brand as current if available
-        if (convertedBrands.length > 0 && !currentBrand) {
-          setCurrentBrand(convertedBrands[0]);
-        }
-      } catch (err: any) {
-        console.error('Failed to fetch brands:', err);
-        setError(err.message || 'Failed to load brands');
-        
-        // Fallback to mock data on error
-        const fallbackBrands: Brand[] = [
-          { id: 'burger', name: 'MeatBar Burger', icon: '🍔' },
-          { id: 'steakhouse', name: 'MeatBar Steakhouse', icon: '🥩' },
-        ];
-        setBrands(fallbackBrands);
-        setCurrentBrand(fallbackBrands[0]);
-      } finally {
-        setLoading(false);
+  const fetchBrands = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // GET /api/brands
+      const response = await api.get<ApiBrandDto[]>('/brands');
+      
+      if (!response || !Array.isArray(response)) {
+        setBrands([]);
+        return [];
       }
-    };
+      
+      const convertedBrands = response.map(convertApiBrandToBrand);
+      setBrands(convertedBrands);
+      
+      // Find and set the active brand, or use the first one
+      const activeBrand = convertedBrands.find(b => b.isActive) || convertedBrands[0];
+      if (activeBrand && !currentBrand) {
+        setCurrentBrand(activeBrand);
+      }
+      
+      return convertedBrands;
+    } catch (err: any) {
+      console.error('Failed to fetch brands:', err);
+      setError(err.message || 'Failed to load brands');
+      setBrands([]);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [currentBrand]);
 
+  // Fetch brands on mount
+  useEffect(() => {
     fetchBrands();
   }, []);
 
-  const switchBrand = useCallback((brandId: string) => {
+  // Switch to a different brand
+  const switchBrand = useCallback(async (brandId: string) => {
     const brand = brands.find(b => b.id === brandId);
     if (brand) {
-      setCurrentBrand(brand);
+      try {
+        // Set active brand in API
+        await api.post(`/users/set-active-brand?BrandUuid=${brandId}`);
+        setCurrentBrand(brand);
+      } catch (err) {
+        console.error('Failed to set active brand:', err);
+        // Still update locally even if API fails
+        setCurrentBrand(brand);
+      }
     }
   }, [brands]);
 
-  const refetchBrands = useCallback(async () => {
+  // Get active brand from API
+  const fetchActiveBrand = useCallback(async () => {
     try {
-      setLoading(true);
-      const response = await api.get<ApiBrand[]>('/brands');
-      const convertedBrands = response.map(convertApiBrand);
-      setBrands(convertedBrands);
+      const response = await api.get<ApiBrandDto>('/brands/active');
+      if (response) {
+        const activeBrand = convertApiBrandToBrand(response);
+        setCurrentBrand(activeBrand);
+        return activeBrand;
+      }
+      return null;
     } catch (err: any) {
-      console.error('Failed to refetch brands:', err);
-      setError(err.message || 'Failed to reload brands');
-    } finally {
-      setLoading(false);
+      console.error('Failed to fetch active brand:', err);
+      return null;
     }
   }, []);
 
@@ -86,6 +85,8 @@ export const useBrands = () => {
     switchBrand,
     loading,
     error,
-    refetchBrands,
+    refetchBrands: fetchBrands,
+    fetchActiveBrand,
+    hasBrands: brands.length > 0,
   };
 };

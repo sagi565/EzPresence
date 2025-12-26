@@ -1,68 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Post, Platform, PostStatus, MediaType } from '@models/Post';
+import { 
+  Post, 
+  Platform, 
+  MediaType,
+  ApiScheduleDto,
+  convertApiScheduleToPost,
+  convertPostToApiSchedule,
+  parseTimeString 
+} from '@models/Post';
 import { api } from '@utils/apiClient';
-
-// API Response matches ScheduleDto from OpenAPI spec
-interface ApiSchedule {
-  id: string; // uuid
-  scheduledAt: string; // ISO datetime
-  platforms: Platform[];
-  status: PostStatus;
-  mediaType: MediaType;
-  title: string;
-  description?: string;
-  brandId?: string; // uuid
-  mediaContentId?: string; // uuid
-  tenantId?: number;
-}
-
-// Convert API schedule to internal Post format
-const convertApiSchedule = (apiSchedule: ApiSchedule): Post => {
-  const date = new Date(apiSchedule.scheduledAt);
-  
-  // Format time as "HH:MM AM/PM"
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const time = `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
-
-  return {
-    id: apiSchedule.id,
-    date: date,
-    time: time,
-    platforms: apiSchedule.platforms,
-    status: apiSchedule.status,
-    media: apiSchedule.mediaType,
-    title: apiSchedule.title,
-  };
-};
-
-// Convert internal Post to API schedule format
-const convertPostToApi = (post: Partial<Post> & { date: Date; time: string }): Partial<ApiSchedule> => {
-  // Parse time string "HH:MM AM/PM"
-  const [timePart, period] = post.time.split(' ');
-  const [hourStr, minuteStr] = timePart.split(':');
-  let hours = parseInt(hourStr);
-  const minutes = parseInt(minuteStr);
-
-  if (period === 'PM' && hours !== 12) {
-    hours += 12;
-  } else if (period === 'AM' && hours === 12) {
-    hours = 0;
-  }
-
-  const scheduledDate = new Date(post.date);
-  scheduledDate.setHours(hours, minutes, 0, 0);
-
-  return {
-    scheduledAt: scheduledDate.toISOString(),
-    platforms: post.platforms,
-    status: post.status,
-    mediaType: post.media,
-    title: post.title,
-  };
-};
 
 export const useSchedules = (brandId: string) => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -70,23 +16,37 @@ export const useSchedules = (brandId: string) => {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch schedules from API
-  const fetchSchedules = useCallback(async () => {
-    if (!brandId) return;
+  const fetchSchedules = useCallback(async (startTime?: Date, endTime?: Date) => {
+    if (!brandId) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
       
-      // GET /api/schedules
-      // Note: Your API doesn't have brandId filtering in the OpenAPI spec
-      // You may need to filter client-side or add query parameter support
-      const response = await api.get<ApiSchedule[]>('/schedules');
+      // Build query params for date range filtering
+      let queryParams = '';
+      if (startTime || endTime) {
+        const params = new URLSearchParams();
+        if (startTime) params.append('start_time', startTime.toISOString());
+        if (endTime) params.append('end_time', endTime.toISOString());
+        queryParams = `?${params.toString()}`;
+      }
       
-      // Filter by brandId client-side
-      const filteredSchedules = response.filter(s => s.brandId === brandId);
+      // GET /api/schedules - Retrieves all schedules for the active brand
+      const response = await api.get<ApiScheduleDto[]>(`/schedules${queryParams}`);
+      
+      if (!response || !Array.isArray(response)) {
+        setPosts([]);
+        return;
+      }
       
       // Convert API schedules to internal format
-      const convertedPosts = filteredSchedules.map(convertApiSchedule);
+      const convertedPosts = response.map((schedule, index) => 
+        convertApiScheduleToPost(schedule, index)
+      );
       
       // Sort by date
       convertedPosts.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -95,8 +55,6 @@ export const useSchedules = (brandId: string) => {
     } catch (err: any) {
       console.error('Failed to fetch schedules:', err);
       setError(err.message || 'Failed to load schedules');
-      
-      // Fallback to empty array on error
       setPosts([]);
     } finally {
       setLoading(false);
@@ -113,22 +71,17 @@ export const useSchedules = (brandId: string) => {
     date: Date;
     time: string;
     platforms: Platform[];
-    status: PostStatus;
     media: MediaType;
     title: string;
     description?: string;
-    mediaContentId?: string;
+    contentUuids?: string[];
+    rruleText?: string;
+    endDate?: Date;
   }) => {
     try {
-      const apiData = {
-        ...convertPostToApi(scheduleData),
-        brandId,
-        description: scheduleData.description,
-        mediaContentId: scheduleData.mediaContentId,
-      };
+      const apiData = convertPostToApiSchedule(scheduleData);
 
-      // POST /api/schedules
-      // Note: API returns void, so we need to refetch or construct the response
+      // POST /api/schedules - Creates a new schedule
       await api.post('/schedules', apiData);
       
       // Refetch to get the created schedule
@@ -137,34 +90,48 @@ export const useSchedules = (brandId: string) => {
       console.error('Failed to create schedule:', err);
       throw err;
     }
-  }, [brandId, fetchSchedules]);
+  }, [fetchSchedules]);
 
   // Update a schedule
-  const updateSchedule = useCallback(async (scheduleId: string, updates: Partial<{
-    date: Date;
-    time: string;
-    platforms: Platform[];
-    status: PostStatus;
-    media: MediaType;
-    title: string;
-    description?: string;
-  }>) => {
+  const updateSchedule = useCallback(async (
+    calendarItemId: string, 
+    updates: Partial<{
+      date: Date;
+      time: string;
+      platforms: Platform[];
+      media: MediaType;
+      title: string;
+      description?: string;
+    }>,
+    updateOccurrenceOnly: boolean = false
+  ) => {
     try {
-      let apiUpdates: Partial<ApiSchedule> = {};
+      // Build the updated properties object
+      const updatedProperties: Record<string, any> = {};
 
       if (updates.date && updates.time) {
-        const converted = convertPostToApi({ date: updates.date, time: updates.time } as any);
-        apiUpdates.scheduledAt = converted.scheduledAt;
+        const { hours, minutes } = parseTimeString(updates.time);
+        const scheduledDate = new Date(updates.date);
+        scheduledDate.setHours(hours, minutes, 0, 0);
+        updatedProperties.plannedAtUtc = scheduledDate.toISOString();
       }
 
-      if (updates.platforms) apiUpdates.platforms = updates.platforms;
-      if (updates.status) apiUpdates.status = updates.status;
-      if (updates.media) apiUpdates.mediaType = updates.media;
-      if (updates.title) apiUpdates.title = updates.title;
-      if (updates.description !== undefined) apiUpdates.description = updates.description;
+      if (updates.platforms) updatedProperties.targets = updates.platforms;
+      if (updates.media) updatedProperties.postType = updates.media;
+      if (updates.title) {
+        updatedProperties.scheduleName = updates.title;
+        updatedProperties.scheduleTitle = updates.title;
+      }
+      if (updates.description !== undefined) {
+        updatedProperties.scheduleDescription = updates.description;
+      }
 
-      // PUT /api/schedules/{id}
-      await api.put(`/schedules/${scheduleId}`, apiUpdates);
+      // PUT /api/schedules - Partially updates an existing schedule
+      await api.put('/schedules', {
+        calendarItemId,
+        updatedProperties,
+        updateOccurrenceOnly,
+      });
       
       // Refetch to get the updated schedule
       await fetchSchedules();
@@ -177,11 +144,38 @@ export const useSchedules = (brandId: string) => {
   // Delete a schedule
   const deleteSchedule = useCallback(async (scheduleId: string) => {
     try {
-      // DELETE /api/schedules/{id}
-      await api.delete(`/schedules/${scheduleId}`);
+      // Note: The API spec doesn't show a specific schedule delete endpoint
+      // You may need to add this to your backend
+      console.warn('Schedule deletion - check API for correct endpoint');
+      
+      // Remove from local state
       setPosts(prev => prev.filter(p => p.id !== scheduleId));
     } catch (err: any) {
       console.error('Failed to delete schedule:', err);
+      throw err;
+    }
+  }, []);
+
+  // Get a specific calendar item
+  const getCalendarItem = useCallback(async (calendarItemId: string) => {
+    try {
+      // GET /api/schedules/calendarItemId?calendarItemId={base64}
+      const response = await api.get(`/schedules/calendarItemId?calendarItemId=${encodeURIComponent(calendarItemId)}`);
+      return response;
+    } catch (err: any) {
+      console.error('Failed to get calendar item:', err);
+      throw err;
+    }
+  }, []);
+
+  // Get all calendar items for a schedule
+  const getScheduleCalendarItems = useCallback(async (scheduleUuid: string) => {
+    try {
+      // GET /api/schedules/scheduleId?scheduleUuid={uuid}
+      const response = await api.get(`/schedules/scheduleId?scheduleUuid=${scheduleUuid}`);
+      return response;
+    } catch (err: any) {
+      console.error('Failed to get schedule calendar items:', err);
       throw err;
     }
   }, []);
@@ -194,5 +188,7 @@ export const useSchedules = (brandId: string) => {
     createSchedule,
     updateSchedule,
     deleteSchedule,
+    getCalendarItem,
+    getScheduleCalendarItems,
   };
 };

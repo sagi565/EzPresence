@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Brand } from '@models/Brand';
+import { Brand, ApiBrandDto, BrandCreateDto, convertApiBrandToBrand, generateBrandIcon } from '@models/Brand';
 import { api } from '@utils/apiClient';
 
 export interface CreateBrandData {
@@ -10,35 +10,6 @@ export interface CreateBrandData {
   logo?: File;
 }
 
-// API Response matches BrandDto from OpenAPI spec
-interface ApiBrand {
-  uuid: string;
-  name: string;
-  icon: string;
-  tenantId?: number;
-  description?: string;
-  slogan?: string;
-  categories?: string[];
-  logoUrl?: string;
-}
-
-// Convert API brand to internal Brand format
-const convertApiBrand = (apiBrand: ApiBrand): Brand => ({
-  id: apiBrand.uuid,
-  name: apiBrand.name,
-  icon: apiBrand.icon,
-  description: apiBrand.description,
-  slogan: apiBrand.slogan,
-  categories: apiBrand.categories,
-  logoUrl: apiBrand.logoUrl,
-});
-
-// Generate random emoji for brand icon
-const getRandomEmoji = (): string => {
-  const emojis = ['🍔', '🥩', '🍕', '🍣', '🍜', '🍱', '🍰', '☕', '🍷', '🎨', '🎭', '🎪', '🎬', '🎮', '🎯', '🚀', '💡', '⭐', '🌟', '💎'];
-  return emojis[Math.floor(Math.random() * emojis.length)];
-};
-
 export const usePostBrand = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,32 +19,67 @@ export const usePostBrand = () => {
     setError(null);
 
     try {
-      // Mock API call - replace with actual API endpoint
-      // In production, you would upload the logo file first and get the URL
+      // TODO: If logo file is provided, upload it first and get the URL
+      // For now, we'll skip logo upload as the API endpoint for file upload isn't in the spec
+      let logoUrl: string | null = null;
       
-      let logoUrl: string | undefined;
-      if (brandData.logo) {
-        // Mock logo upload - in production, upload to cloud storage
-        // const formData = new FormData();
-        // formData.append('file', brandData.logo);
-        // logoUrl = await api.post('/upload/logo', formData);
-        logoUrl = URL.createObjectURL(brandData.logo); // Mock URL
-      }
+      // If you have a file upload endpoint, uncomment and implement:
+      // if (brandData.logo) {
+      //   const formData = new FormData();
+      //   formData.append('file', brandData.logo);
+      //   const uploadResponse = await api.post<{ url: string }>('/upload/logo', formData);
+      //   logoUrl = uploadResponse.url;
+      // }
 
-      const apiData = {
+      // Prepare the request body according to BrandCreateDto schema
+      const requestBody: BrandCreateDto = {
         name: brandData.name,
-        icon: getRandomEmoji(),
-        description: brandData.description,
-        slogan: brandData.slogan,
-        categories: brandData.categories,
-        logoUrl,
+        logoUrl: logoUrl,
+        slogan: brandData.slogan || brandData.description || null, // Use description as slogan if slogan not provided
+        category: brandData.categories?.[0] || null, // API expects single category, not array
+        subcategory: null, // Could be extended later
       };
 
-      // POST /api/brands
-      const response = await api.post<ApiBrand>('/brands', apiData);
+      // POST /api/brands - Creates a new brand and returns its UUID
+      const brandUuid = await api.post<string>('/brands', requestBody);
       
-      const newBrand = convertApiBrand(response);
-      return newBrand;
+      if (!brandUuid) {
+        throw new Error('No brand UUID returned from API');
+      }
+
+      console.log('✅ Brand created with UUID:', brandUuid);
+
+      // Set this new brand as the active brand
+      // POST /api/users/set-active-brand?BrandUuid={uuid}
+      await api.post(`/users/set-active-brand?BrandUuid=${brandUuid}`);
+      
+      console.log('✅ Brand set as active');
+
+      // Try to fetch the created brand details
+      try {
+        // GET /api/brands/{id}
+        const createdBrand = await api.get<ApiBrandDto>(`/brands/${brandUuid}`);
+        
+        if (createdBrand) {
+          return convertApiBrandToBrand(createdBrand);
+        }
+      } catch (fetchError) {
+        console.warn('Could not fetch created brand, using local data');
+      }
+
+      // If we can't fetch the brand, return a constructed version
+      return {
+        id: brandUuid,
+        name: brandData.name,
+        icon: generateBrandIcon(brandData.categories?.[0], brandData.name),
+        description: brandData.description,
+        slogan: brandData.slogan,
+        category: brandData.categories?.[0],
+        categories: brandData.categories,
+        logoUrl: logoUrl || undefined,
+        isActive: true,
+      };
+      
     } catch (err: any) {
       console.error('Failed to create brand:', err);
       const errorMessage = err.message || 'Failed to create brand';

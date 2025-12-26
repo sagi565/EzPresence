@@ -11,6 +11,45 @@ import ProtectedRoute from '@auth/ProtectedRoute';
 import AuthActionPage from './pages/Auth/AuthAction/AuthActionPage';
 import ResetPasswordPage from './pages/Auth/ResetPassword/ResetPAsswordPage';
 import CreateBrandPage from './pages/CreateBrand/CreateBrandPage';
+import { useAuth } from '@auth/AuthProvider';
+
+// A special wrapper for the Create Brand page that requires auth but not brand
+function AuthOnlyRoute({ children }: { children: React.ReactElement }) {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        flexDirection: 'column',
+        gap: '20px',
+      }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          border: '4px solid rgba(155, 93, 229, 0.2)',
+          borderTopColor: '#9b5de5',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <p style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>Loading...</p>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!user.emailVerified) {
+    return <Navigate to="/verify-email" replace />;
+  }
+  
+  return children;
+}
 
 function App() {
   return (
@@ -25,23 +64,18 @@ function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/auth/action" element={<AuthActionPage />} />
+          
+          {/* Brand creation route - requires auth but allows users without brands */}
           <Route
             path="/create-your-first-brand"
             element={
+              <AuthOnlyRoute>
                 <CreateBrandPage />
+              </AuthOnlyRoute>
             }
           />
-          {/* brand creation route - protected but special handling */}
-          {/* <Route
-            path="/create-your-first-brand"
-            element={
-              <ProtectedRoute>
-                <CreateBrandPage />
-              </ProtectedRoute>
-            }
-          /> */}
 
-          {/* protected app routes */}
+          {/* protected app routes - requires auth AND at least one brand */}
           <Route
             path="/scheduler"
             element={
@@ -71,8 +105,9 @@ function App() {
             element={
               <ProtectedRoute>
                 <StudioPage />
-              </ProtectedRoute>} 
-            />
+              </ProtectedRoute>
+            } 
+          />
             
           {/* fallback */}
           <Route path="/" element={<Navigate to="/scheduler" replace />} />

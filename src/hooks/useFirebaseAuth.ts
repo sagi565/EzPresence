@@ -9,7 +9,7 @@ import {
   updateProfile,
   sendEmailVerification,
 } from 'firebase/auth';
-import { auth, googleProvider, facebookProvider } from '@lib/firebase';
+import { auth, googleProvider, facebookProvider, appleProvider } from '@lib/firebase';
 import { api } from '@utils/apiClient';
 
 type SessionUser = {
@@ -24,6 +24,7 @@ export const useFirebaseAuth = () => {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   // Listen to Firebase auth state changes
   useEffect(() => {
@@ -31,6 +32,7 @@ export const useFirebaseAuth = () => {
       console.log('🔵 Auth state changed:', user?.email || 'logged out');
       
       setFirebaseUser(user);
+      setSyncError(null);
       
       if (user) {
         setSessionUser({
@@ -53,37 +55,84 @@ export const useFirebaseAuth = () => {
 
   // Sign in with email/password
   const signInEmail = useCallback(async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    setSyncError(null);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      setSyncError(error.message);
+      throw error;
+    }
   }, []);
 
   // Sign up with email/password
   const signUpEmail = useCallback(async (email: string, password: string, displayName?: string) => {
-    const { user } = await createUserWithEmailAndPassword(auth, email, password);
-    if (displayName) {
-      await updateProfile(user, { displayName });
+    setSyncError(null);
+    try {
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      if (displayName) {
+        await updateProfile(user, { displayName });
+      }
+      await sendEmailVerification(user);
+    } catch (error: any) {
+      setSyncError(error.message);
+      throw error;
     }
-    await sendEmailVerification(user);
   }, []);
 
   // Sign in with Google
   const signInGoogle = useCallback(async () => {
-    await signInWithPopup(auth, googleProvider);
+    setSyncError(null);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error: any) {
+      setSyncError(error.message);
+      throw error;
+    }
   }, []);
 
   // Sign in with Facebook
   const signInFacebook = useCallback(async () => {
-    await signInWithPopup(auth, facebookProvider);
+    setSyncError(null);
+    try {
+      await signInWithPopup(auth, facebookProvider);
+    } catch (error: any) {
+      setSyncError(error.message);
+      throw error;
+    }
+  }, []);
+
+  // Sign in with Apple
+  const signInApple = useCallback(async () => {
+    setSyncError(null);
+    try {
+      await signInWithPopup(auth, appleProvider);
+    } catch (error: any) {
+      setSyncError(error.message);
+      throw error;
+    }
   }, []);
 
   // Logout
   const logout = useCallback(async () => {
-    await signOut(auth);
+    setSyncError(null);
+    try {
+      await signOut(auth);
+    } catch (error: any) {
+      setSyncError(error.message);
+      throw error;
+    }
   }, []);
 
   // Resend verification email
   const resendVerificationEmail = useCallback(async () => {
-    if (auth.currentUser) {
-      await sendEmailVerification(auth.currentUser);
+    setSyncError(null);
+    try {
+      if (auth.currentUser) {
+        await sendEmailVerification(auth.currentUser);
+      }
+    } catch (error: any) {
+      setSyncError(error.message);
+      throw error;
     }
   }, []);
 
@@ -119,10 +168,12 @@ export const useFirebaseAuth = () => {
   return {
     user: sessionUser,
     loading,
+    syncError,
     signInEmail,
     signUpEmail,
     signInGoogle,
     signInFacebook,
+    signInApple,
     logout,
     resendVerificationEmail,
     refreshUser,

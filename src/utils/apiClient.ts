@@ -1,7 +1,8 @@
 import { auth } from '@lib/firebase';
 import { getIdToken } from 'firebase/auth';
 
-const API_BASE_URL = 'http://192.168.1.12:5112/api'; 
+// Update this to match your backend URL - can be set via environment variable
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.12:7291/api';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public data?: any) {
@@ -13,12 +14,15 @@ export class ApiError extends Error {
 async function getAuthToken(): Promise<string | null> {
   const user = auth.currentUser;
   if (!user) {
+    console.log('⚠️ [API CLIENT] No authenticated user');
     return null;
   }
   try {
-    return await getIdToken(user);
+    const token = await getIdToken(user, false); // Set to true to force refresh if needed
+    console.log('🔑 [API CLIENT] Got Firebase token');
+    return token;
   } catch (error) {
-    console.error('Failed to get auth token:', error);
+    console.error('❌ [API CLIENT] Failed to get auth token:', error);
     return null;
   }
 }
@@ -31,9 +35,15 @@ export async function apiRequest<T = any>(
   
   const headers = new Headers(options.headers as HeadersInit);
   headers.set('Content-Type', 'application/json');
+  headers.set('Accept', 'application/json');
 
+  // IMPORTANT: Use X-Firebase-Token header as specified in the API spec
   if (token) {
+    headers.set('X-Firebase-Token', token);
+    // Also set Authorization header as backup (some backends check both)
     headers.set('Authorization', `Bearer ${token}`);
+  } else {
+    console.warn('⚠️ [API CLIENT] Making request without auth token');
   }
 
   // Ensure endpoint starts with /
@@ -41,12 +51,16 @@ export async function apiRequest<T = any>(
   const url = `${API_BASE_URL}${cleanEndpoint}`;
   
   console.log('🔵 [API CLIENT] Making request:', options.method || 'GET', url);
+  console.log('🔵 [API CLIENT] Has token:', !!token);
   
   try {
     const response = await fetch(url, {
       ...options,
       headers,
-      credentials: 'include', // Include cookies for session management
+      // Use 'cors' mode explicitly
+      mode: 'cors',
+      // Don't include credentials if causing CORS issues
+      // credentials: 'include',
     });
 
     console.log('📩 [API CLIENT] Response:', response.status, url);
@@ -57,21 +71,38 @@ export async function apiRequest<T = any>(
       let errorData;
       
       try {
-        errorData = await response.json();
-        errorMessage = errorData.message || errorData.error || errorMessage;
+        const text = await response.text();
+        if (text) {
+          errorData = JSON.parse(text);
+          errorMessage = errorData.message || errorData.error || errorData.title || errorMessage;
+        }
       } catch {
         // If response is not JSON, use status text
         errorMessage = response.statusText || errorMessage;
       }
       
+      console.error('❌ [API CLIENT] HTTP Error:', response.status, errorMessage);
       throw new ApiError(response.status, errorMessage, errorData);
     }
 
     // Handle empty responses (204 No Content, etc.)
+    const contentLength = response.headers.get('content-length');
     const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      console.log('⚠️ [API CLIENT] Non-JSON response');
+    
+    if (response.status === 204 || contentLength === '0') {
+      console.log('✅ [API CLIENT] Empty response (success):', url);
       return null as T;
+    }
+    
+    if (!contentType || !contentType.includes('application/json')) {
+      console.log('⚠️ [API CLIENT] Non-JSON response, content-type:', contentType);
+      const text = await response.text();
+      // Try to parse as JSON anyway (some servers don't set content-type correctly)
+      try {
+        return JSON.parse(text) as T;
+      } catch {
+        return text as unknown as T;
+      }
     }
 
     const data = await response.json();
@@ -79,16 +110,24 @@ export async function apiRequest<T = any>(
     return data;
   } catch (error) {
     if (error instanceof ApiError) {
-      console.error('❌ [API CLIENT] API Error:', error.status, error.message);
       throw error;
     }
     
     // Network or other errors
     console.error('❌ [API CLIENT] Network error:', error);
-    throw new ApiError(
-      0,
-      error instanceof Error ? error.message : 'Network error occurred'
-    );
+    
+    // Provide more helpful error messages
+    let errorMessage = 'Network error occurred';
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      errorMessage = 'Unable to connect to server. Please check:\n' +
+        '1. Backend server is running\n' +
+        '2. CORS is configured on the backend\n' +
+        '3. The API URL is correct';
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
+    throw new ApiError(0, errorMessage);
   }
 }
 

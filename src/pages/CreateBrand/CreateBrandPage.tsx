@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePostBrand, CreateBrandData } from '@hooks/usePostBrand';
+import { useBrands } from '@hooks/useBrands';
 import SocialsBackground from '@components/Background/SocialsBackground';
 import { CompactSocialButton } from '@components/SocialPlatform/SocialConnection/CompactSocialButton';
 import { SocialPlatform } from '@models/SocialAccount';
@@ -95,6 +96,7 @@ if (!document.head.querySelector('style[data-create-brand-animations]')) {
 const CreateBrandPage: React.FC = () => {
   const navigate = useNavigate();
   const { createBrand, loading, error } = usePostBrand();
+  const { refetchBrands } = useBrands();
   
   const [formData, setFormData] = useState<CreateBrandData>({
     name: '',
@@ -110,6 +112,7 @@ const CreateBrandPage: React.FC = () => {
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -158,11 +161,23 @@ const CreateBrandPage: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      await createBrand(formData);
-      navigate('/scheduler');
+      // Create the brand and set it as active
+      const newBrand = await createBrand(formData);
+      console.log('✅ Brand created successfully:', newBrand);
+      
+      // Show success state briefly
+      setSubmitSuccess(true);
+      
+      // Refetch brands to update the list
+      await refetchBrands();
+      
+      // Navigate to scheduler after short delay
+      setTimeout(() => {
+        navigate('/scheduler');
+      }, 500);
+      
     } catch (err) {
       console.error('Failed to create brand:', err);
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -341,7 +356,7 @@ const CreateBrandPage: React.FC = () => {
           <div style={styles.socialSectionBottom}>
             <div style={styles.socialHeaderBottom}>
               <h2 style={styles.socialTitleBottom}>Connect Social Accounts</h2>
-              <p style={styles.socialSubtitleBottom}>Link your brand's social media accounts</p>
+              <p style={styles.socialSubtitleBottom}>Link your brand's social media accounts (optional - you can do this later)</p>
             </div>
 
             <div style={styles.socialGridBottom}>
@@ -363,17 +378,36 @@ const CreateBrandPage: React.FC = () => {
             </div>
           )}
 
+          {/* Success Message */}
+          {submitSuccess && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '14px 18px',
+              background: 'rgba(20, 184, 166, 0.1)',
+              border: '2px solid #14b8a6',
+              borderRadius: '12px',
+              color: '#14b8a6',
+              fontSize: '14px',
+              fontWeight: 500,
+            }}>
+              <span style={{ fontSize: '20px' }}>✅</span>
+              <span>Brand created successfully! Redirecting...</span>
+            </div>
+          )}
+
           {/* Action Button */}
           <div style={styles.actions}>
             <button
               type="submit"
               style={{
                 ...styles.submitBtn,
-                ...(isSubmitting ? styles.submitBtnLoading : {}),
+                ...(isSubmitting || submitSuccess ? styles.submitBtnLoading : {}),
                 ...(isButtonHovered && !isSubmitting ? styles.submitBtnHover : {}),
                 ...(isButtonActive && !isSubmitting ? styles.submitBtnActive : {}),
               }}
-              disabled={loading || isSubmitting}
+              disabled={loading || isSubmitting || submitSuccess}
               onMouseEnter={() => setIsButtonHovered(true)}
               onMouseLeave={() => {
                 setIsButtonHovered(false);
@@ -402,6 +436,11 @@ const CreateBrandPage: React.FC = () => {
                 <>
                   <span style={styles.spinner} />
                   Creating...
+                </>
+              ) : submitSuccess ? (
+                <>
+                  <span>✅</span>
+                  Success!
                 </>
               ) : (
                 'Create Brand'

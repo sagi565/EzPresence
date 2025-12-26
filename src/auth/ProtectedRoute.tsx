@@ -7,27 +7,66 @@ type Props = { children: React.ReactElement };
 
 const ProtectedRoute: React.FC<Props> = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
-  const { brands, loading: brandsLoading } = useBrands();
+  const { brands, loading: brandsLoading, error: brandsError, hasBrands } = useBrands();
   const location = useLocation();
-  const [shouldRedirectToBrandCreation, setShouldRedirectToBrandCreation] = useState(false);
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
   
-  // Wait for both auth and brands to finish loading
+  // Determine redirect path based on auth and brand state
   useEffect(() => {
-    if (!authLoading && !brandsLoading && user && user.emailVerified) {
-      // Check if user has no brands and is not already on the create brand page
-      const hasBrands = brands && brands.length > 0;
-      const isOnCreateBrandPage = location.pathname === '/create-your-first-brand';
-      
-      if (!hasBrands && !isOnCreateBrandPage) {
-        setShouldRedirectToBrandCreation(true);
-      } else {
-        setShouldRedirectToBrandCreation(false);
-      }
+    // Still loading, don't decide yet
+    if (authLoading) {
+      setRedirectPath(null);
+      return;
     }
-  }, [authLoading, brandsLoading, user, brands, location.pathname]);
+    
+    // Not logged in
+    if (!user) {
+      setRedirectPath('/login');
+      return;
+    }
+    
+    // Logged in but email not verified
+    if (!user.emailVerified) {
+      setRedirectPath('/verify-email');
+      return;
+    }
+    
+    // Still loading brands
+    if (brandsLoading) {
+      setRedirectPath(null);
+      return;
+    }
+    
+    // Check if on create brand page
+    const isOnCreateBrandPage = location.pathname === '/create-your-first-brand';
+    
+    // If brands failed to load with an error (like network timeout)
+    // Allow access to the page but show error state there
+    if (brandsError && !isOnCreateBrandPage) {
+      // We'll let the page handle the error display
+      setRedirectPath(null);
+      return;
+    }
+    
+    // User is verified, check if they have brands
+    if (!hasBrands && !isOnCreateBrandPage) {
+      // No brands, redirect to create brand page
+      setRedirectPath('/create-your-first-brand');
+      return;
+    }
+    
+    // Has brands and trying to access create brand page - redirect to scheduler
+    if (hasBrands && isOnCreateBrandPage) {
+      setRedirectPath('/scheduler');
+      return;
+    }
+    
+    // All good, no redirect needed
+    setRedirectPath(null);
+  }, [authLoading, brandsLoading, user, hasBrands, brandsError, location.pathname]);
   
   // Show loading spinner while checking auth and brands
-  if (authLoading || brandsLoading) {
+  if (authLoading || (brandsLoading && user?.emailVerified)) {
     return (
       <div style={{
         display: 'flex',
@@ -36,6 +75,7 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
         minHeight: '100vh',
         flexDirection: 'column',
         gap: '20px',
+        background: 'linear-gradient(135deg, #f9fafb 0%, rgba(155, 93, 229, 0.03) 50%, #f9fafb 100%)',
       }}>
         <div style={{
           width: '48px',
@@ -45,27 +85,19 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
           borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
         }} />
-        <p style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>Loading...</p>
+        <p style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
+          {authLoading ? 'Checking authentication...' : 'Loading your brands...'}
+        </p>
       </div>
     );
   }
   
-  // Not logged in - redirect to login
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  // Handle redirects
+  if (redirectPath) {
+    return <Navigate to={redirectPath} replace />;
   }
   
-  // Logged in but email not verified - redirect to verification pending page
-  if (!user.emailVerified) {
-    return <Navigate to="/verify-email" replace />;
-  }
-  
-  // Redirect to brand creation if no brands (unless already on that page)
-  if (shouldRedirectToBrandCreation) {
-    return <Navigate to="/create-your-first-brand" replace />;
-  }
-  
-  // Logged in, verified, and has brands (or on brand creation page) - allow access
+  // All checks passed, render children
   return children;
 };
 
