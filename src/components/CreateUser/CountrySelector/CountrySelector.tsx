@@ -13,8 +13,8 @@ interface Country {
 
 interface CountrySelectorProps {
   label: string;
-  value: string;
-  onChange: (country: string) => void;
+  value: string; // This will now receive the Country Code (e.g., "US")
+  onChange: (countryCode: string) => void;
 }
 
 // Get all countries sorted alphabetically
@@ -27,7 +27,7 @@ const getAllCountries = (): Country[] => {
 
 const allCountries = getAllCountries();
 
-// Get flag image URL from country code (using flagcdn with better quality)
+// Get flag image URL from country code
 const getFlagUrl = (countryCode: string): string => {
   return `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`;
 };
@@ -44,10 +44,11 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Find selected country
+  // Find selected country object based on the CODE stored in 'value'
   const selectedCountry = useMemo(() => {
     if (!value) return null;
-    return allCountries.find(c => c.name === value) || null;
+    // Updated: Look for the country where the CODE matches the value
+    return allCountries.find(c => c.code === value) || null;
   }, [value]);
 
   // Filter countries based on search
@@ -75,10 +76,10 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
   // When dropdown opens, scroll to and highlight selected item
   useEffect(() => {
     if (isOpen && value && !searchTerm) {
-      const selectedIndex = filteredCountries.findIndex(c => c.name === value);
+      // Updated: Find index by checking the code
+      const selectedIndex = filteredCountries.findIndex(c => c.code === value);
       if (selectedIndex >= 0) {
         setHighlightedIndex(selectedIndex);
-        // Scroll to selected item after a short delay to ensure DOM is ready
         setTimeout(() => {
           if (listRef.current && listRef.current.children[selectedIndex]) {
             (listRef.current.children[selectedIndex] as HTMLElement).scrollIntoView({ block: 'center' });
@@ -86,7 +87,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
         }, 0);
       }
     }
-  }, [isOpen]);
+  }, [isOpen, value, searchTerm, filteredCountries]); // Added dependencies for safety
 
   // Reset highlighted index when search changes
   useEffect(() => {
@@ -95,7 +96,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
     }
   }, [searchTerm]);
 
-  // Scroll highlighted item into view when navigating with keyboard
+  // Scroll highlighted item into view
   useEffect(() => {
     if (isOpen && listRef.current) {
       const highlightedElement = listRef.current.children[highlightedIndex] as HTMLElement;
@@ -103,10 +104,11 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
         highlightedElement.scrollIntoView({ block: 'nearest' });
       }
     }
-  }, [highlightedIndex]);
+  }, [highlightedIndex, isOpen]);
 
   const handleSelect = (country: Country) => {
-    onChange(country.name);
+    // Updated: Pass the country.code (e.g., "US") instead of name
+    onChange(country.code);
     setIsOpen(false);
     setSearchTerm('');
   };
@@ -197,7 +199,8 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
                   style={{
                     ...styles.option,
                     ...(index === highlightedIndex ? styles.optionHighlighted : {}),
-                    ...(country.name === value ? styles.optionSelected : {}),
+                    // Updated: Check equality by code
+                    ...(country.code === value ? styles.optionSelected : {}),
                   }}
                   onClick={() => handleSelect(country)}
                   onMouseEnter={() => setHighlightedIndex(index)}

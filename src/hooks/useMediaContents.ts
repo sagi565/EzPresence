@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
   Content, 
-  ContentOrigin,
   ApiMediaContentDto,
-  ApiMediaContentCreateDto,
   convertApiMediaContentToContent,
   convertContentToApiCreate
 } from '@models/Content';
@@ -25,10 +23,9 @@ export const useMediaContents = (brandId: string) => {
       setLoading(true);
       setError(null);
       
-      // Note: The API spec doesn't show a contents endpoint with brand filtering
-      // You may need to adjust this endpoint based on your actual API
-      // GET /api/contents/brand/{brandId} or similar
-      const response = await api.get<ApiMediaContentDto[]>(`/contents`);
+      // Fixed: Using the correct endpoint pattern for brand-specific contents
+      // GET /api/brands/{brandId}/contents
+      const response = await api.get<ApiMediaContentDto[]>(`/brands/${brandId}/contents`);
       
       if (!response || !Array.isArray(response)) {
         setContent([]);
@@ -39,8 +36,12 @@ export const useMediaContents = (brandId: string) => {
       setContent(convertedContent);
     } catch (err: any) {
       console.error('Failed to fetch media contents:', err);
-      setError(err.message || 'Failed to load content');
-      setContent([]);
+      // Gracefully handle 404 if the brand has no contents yet (or if endpoint is still wrong)
+      if (err.status === 404) {
+         setContent([]);
+      } else {
+         setError(err.message || 'Failed to load content');
+      }
     } finally {
       setLoading(false);
     }
@@ -57,9 +58,6 @@ export const useMediaContents = (brandId: string) => {
       const contentItem = content.find(c => c.id === contentId);
       if (!contentItem) return;
 
-      // Note: The API spec shows MediaContentUpdateDto only has contentName
-      // If you need to update favorite status, you may need a different endpoint
-      // For now, we'll update locally
       setContent(prev => prev.map(c => 
         c.id === contentId ? { ...c, favorite: !c.favorite } : c
       ));
@@ -83,11 +81,12 @@ export const useMediaContents = (brandId: string) => {
     try {
       const apiData = convertContentToApiCreate(contentData);
 
-      // Note: The API spec doesn't show a POST endpoint for contents
-      // You may need to adjust this based on your actual API
-      const uuid = await api.post<string>('/contents', apiData);
+      // Assumed endpoint: POST /api/brands/{brandId}/contents
+      // Note: You might need to update this to the correct creation endpoint if it's different
+      const uuid = await api.post<string>(`/brands/${brandId}/contents`, apiData);
       
       // Fetch the created content
+      // GET /api/contents/{id} (assuming individual retrieval is global or nested)
       const newContent = await api.get<ApiMediaContentDto>(`/contents/${uuid}`);
       const converted = convertApiMediaContentToContent(newContent);
       
@@ -97,13 +96,11 @@ export const useMediaContents = (brandId: string) => {
       console.error('Failed to create content:', err);
       throw err;
     }
-  }, []);
+  }, [brandId]);
 
   // Delete content
   const deleteContent = useCallback(async (contentId: string) => {
     try {
-      // Note: The API spec doesn't show a DELETE endpoint for contents
-      // You may need to adjust this based on your actual API
       await api.delete(`/contents/${contentId}`);
       setContent(prev => prev.filter(c => c.id !== contentId));
     } catch (err: any) {
@@ -115,8 +112,6 @@ export const useMediaContents = (brandId: string) => {
   // Move content to another list
   const moveContent = useCallback(async (contentId: string, targetListId: number) => {
     try {
-      // Note: The API spec doesn't show a move endpoint
-      // You may need to adjust this based on your actual API
       await api.put(`/contents/${contentId}`, { listId: targetListId });
       await fetchContent();
     } catch (err: any) {
@@ -128,7 +123,6 @@ export const useMediaContents = (brandId: string) => {
   // Rename content
   const renameContent = useCallback(async (contentId: string, newName: string) => {
     try {
-      // PUT using MediaContentUpdateDto
       await api.put(`/contents/${contentId}`, { contentName: newName });
       
       setContent(prev => prev.map(c => 

@@ -5,7 +5,7 @@ import { theme } from '@theme/theme';
 
 interface BrandSelectorProps {
   brands: Brand[];
-  currentBrand: Brand;
+  currentBrand: Brand | null; // Updated to allow null
   onBrandChange: (brandId: string) => void;
 }
 
@@ -35,6 +35,17 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
       document.removeEventListener('click', handleClickOutside);
     };
   }, [isOpen]);
+
+  // Prevent crash if currentBrand is not loaded yet
+  if (!currentBrand) {
+    return (
+      <div style={styles.container}>
+        <div style={{ ...styles.selector, opacity: 0.7, cursor: 'wait' }}>
+          <span style={styles.tenantName}>Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   const handleBrandSelect = (brandId: string) => {
     onBrandChange(brandId);

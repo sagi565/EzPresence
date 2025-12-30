@@ -8,6 +8,7 @@ import {
   Gender
 } from '@models/User';
 import { api } from '@utils/apiClient';
+import { auth } from '@lib/firebase'; // Import auth to access currentUser
 
 export interface CreateUserData {
   firstName: string;
@@ -25,15 +26,27 @@ export const usePostUser = () => {
     setLoading(true);
     setError(null);
 
+    // Get current user and validate email existence
+    const currentUser = auth.currentUser;
+    if (!currentUser || !currentUser.email) {
+      const errorMsg = 'User email is missing. Please try logging in again.';
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    }
+
     try {
-      const requestBody: UserCreateDto = convertUserProfileToCreateDto(data);
+      // Pass the email to the converter
+      const requestBody: UserCreateDto = convertUserProfileToCreateDto(data, currentUser.email);
 
       // POST /api/users
       const response = await api.post<ApiUserProfileDto>('/users', requestBody);
       
-      if (!response) throw new Error('No response returned from API');
+      if (!response) {
+        throw new Error('No response returned from API');
+      }
 
       console.log('✅ User created successfully');
+
       return convertApiUserProfileToUserProfile(response);
       
     } catch (err: any) {
@@ -46,5 +59,9 @@ export const usePostUser = () => {
     }
   }, []);
 
-  return { createUser, loading, error };
+  return {
+    createUser,
+    loading,
+    error,
+  };
 };

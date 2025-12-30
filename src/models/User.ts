@@ -1,3 +1,4 @@
+//
 export interface UserProfile {
   id: string;
   firstName: string;
@@ -10,9 +11,8 @@ export interface UserProfile {
   updatedAt?: string;
 }
 
-export type Gender = 'male' | 'female' | 'other';
+export type Gender = 'male' | 'female' | 'other' | 'prefer_not_to_say';
 
-// Matches API response for GET /api/users/me
 export interface ApiUserProfileDto {
   uuid: string;
   firebaseUserId?: string | null;
@@ -26,16 +26,16 @@ export interface ApiUserProfileDto {
   updatedAt?: string | null;
 }
 
-// Matches POST /api/users request body
+// Updated: Added email field
 export interface UserCreateDto {
   firstName: string;
   lastName: string;
   birthDate: string;
   country?: string | null;
   gender?: string | null;
+  email: string;
 }
 
-// Matches PUT /api/users request body
 export interface UserUpdateDto {
   firstName?: string | null;
   lastName?: string | null;
@@ -62,18 +62,23 @@ export const convertApiUserProfileToUserProfile = (apiProfile: ApiUserProfileDto
   updatedAt: apiProfile.updatedAt || undefined,
 });
 
-export const convertUserProfileToCreateDto = (data: {
-  firstName: string;
-  lastName: string;
-  birthDate: string;
-  country?: string;
-  gender?: Gender;
-}): UserCreateDto => ({
+// Updated: Now accepts email as a second argument
+export const convertUserProfileToCreateDto = (
+  data: {
+    firstName: string;
+    lastName: string;
+    birthDate: string;
+    country?: string;
+    gender?: Gender;
+  },
+  email: string
+): UserCreateDto => ({
   firstName: data.firstName,
   lastName: data.lastName,
   birthDate: data.birthDate,
   country: data.country || null,
   gender: data.gender || null,
+  email: email,
 });
 
 export const convertUserProfileToUpdateDto = (data: Partial<{
