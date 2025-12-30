@@ -9,6 +9,20 @@ export interface CreateBrandData {
   logo?: File;
 }
 
+// Helper function to convert File to base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      // Remove the data:image/xxx;base64, prefix to get just the base64 string
+      const base64 = (reader.result as string).split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 export const usePostBrand = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,41 +32,31 @@ export const usePostBrand = () => {
     setError(null);
 
     try {
-      // TODO: If logo file is provided, upload it first and get the URL
-      // For now, we'll skip logo upload as the API endpoint for file upload isn't in the spec
-      let logoUrl: string | null = null;
+      // Convert logo file to base64 if provided
+      let logoBase64: string | null = null;
       
-      // If you have a file upload endpoint, uncomment and implement:
-      // if (brandData.logo) {
-      //   const formData = new FormData();
-      //   formData.append('file', brandData.logo);
-      //   const uploadResponse = await api.post<{ url: string }>('/upload/logo', formData);
-      //   logoUrl = uploadResponse.url;
-      // }
+      if (brandData.logo) {
+        logoBase64 = await fileToBase64(brandData.logo);
+        console.log('📷 Logo converted to base64, size:', logoBase64.length);
+      }
 
-      // Prepare the request body according to BrandCreateDto schema
+      // Prepare the request body with logo as base64 bytes
       const requestBody: BrandCreateDto = {
         name: brandData.name,
-        logoUrl: logoUrl,
-        slogan: brandData.slogan || null, // Use description as slogan if slogan not provided
-        category: brandData.categories?.[0] || null, // API expects single category, not array
-        subcategory: null, // Could be extended later
+        logo: logoBase64,
+        slogan: brandData.slogan || null,
+        category: brandData.categories?.[0] || null,
+        subcategory: null,
       };
 
-      // POST /api/brands - Creates a new brand and returns its UUID
-      const brandUuid = await api.post<string>('/brands', requestBody);
+      // POST /api/brands?setActive=true - Creates a new brand and sets it as active
+      const brandUuid = await api.post<string>('/brands?setActive=true', requestBody);
       
       if (!brandUuid) {
         throw new Error('No brand UUID returned from API');
       }
 
       console.log('✅ Brand created with UUID:', brandUuid);
-
-      // Set this new brand as the active brand
-      // POST /api/users/set-active-brand?BrandUuid={uuid}
-      await api.post(`/users/set-active-brand?BrandUuid=${brandUuid}`);
-      
-      console.log('✅ Brand set as active');
 
       // Try to fetch the created brand details
       try {
@@ -74,7 +78,6 @@ export const usePostBrand = () => {
         slogan: brandData.slogan,
         category: brandData.categories?.[0],
         categories: brandData.categories,
-        logoUrl: logoUrl || undefined,
         isActive: true,
       };
       

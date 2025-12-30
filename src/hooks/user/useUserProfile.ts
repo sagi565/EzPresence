@@ -18,7 +18,7 @@ export const useUserProfile = () => {
       setError(null);
       
       // GET /api/users/profile - Retrieves the current user's profile
-      const response = await api.get<ApiUserProfileDto>('/users/profile');
+      const response = await api.get<ApiUserProfileDto>('/users/me');
       
       if (response) {
         const convertedProfile = convertApiUserProfileToUserProfile(response);

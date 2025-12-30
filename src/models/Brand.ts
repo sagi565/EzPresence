@@ -3,7 +3,7 @@ export interface Brand {
   id: string;           // uuid from API
   name: string;
   icon: string;         // Generated client-side based on category
-  logoUrl?: string;     // logoUrl from API
+  logo?: string;        // logo as base64 bytes from API
   slogan?: string;      // slogan from API
   category?: string;    // category from API (single value)
   subcategory?: string; // subcategory from API
@@ -20,7 +20,7 @@ export interface ApiBrandDto {
   uuid: string;
   firebaseUserId?: string | null;
   name?: string | null;
-  logoUrl?: string | null;
+  logo?: string | null;          // base64 encoded logo bytes
   slogan?: string | null;
   category?: string | null;
   subcategory?: string | null;
@@ -34,7 +34,7 @@ export interface ApiBrandDto {
 // API Request - matches BrandCreateDto from OpenAPI spec
 export interface BrandCreateDto {
   name?: string | null;
-  logoUrl?: string | null;
+  logo?: string | null;          // base64 encoded logo bytes
   slogan?: string | null;
   category?: string | null;
   subcategory?: string | null;
@@ -43,7 +43,7 @@ export interface BrandCreateDto {
 // API Request - matches BrandUpdateDto from OpenAPI spec
 export interface BrandUpdateDto {
   name?: string | null;
-  logoUrl?: string | null;
+  logo?: string | null;          // base64 encoded logo bytes
   slogan?: string | null;
   category?: string | null;
   subcategory?: string | null;
@@ -91,12 +91,21 @@ export const generateBrandIcon = (category?: string | null, name?: string | null
   return '🏢'; // Default icon
 };
 
+// Helper function to convert base64 to data URL for displaying
+export const getLogoDataUrl = (base64Logo?: string | null): string | undefined => {
+  if (!base64Logo) return undefined;
+  // If it already has the data URL prefix, return as is
+  if (base64Logo.startsWith('data:')) return base64Logo;
+  // Otherwise, add the prefix (assuming it's a PNG, but could be adjusted)
+  return `data:image/png;base64,${base64Logo}`;
+};
+
 // Convert API brand to internal Brand format
 export const convertApiBrandToBrand = (apiBrand: ApiBrandDto): Brand => ({
   id: apiBrand.uuid,
   name: apiBrand.name || 'Unnamed Brand',
   icon: generateBrandIcon(apiBrand.category, apiBrand.name),
-  logoUrl: apiBrand.logoUrl || undefined,
+  logo: apiBrand.logo || undefined,
   slogan: apiBrand.slogan || undefined,
   category: apiBrand.category || undefined,
   subcategory: apiBrand.subcategory || undefined,

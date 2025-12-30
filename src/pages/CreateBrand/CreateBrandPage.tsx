@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePostBrand, CreateBrandData } from '@hooks/usePostBrand';
-import { useBrands } from '@hooks/useBrands';
+import { usePostBrand, CreateBrandData } from '@hooks/brands/usePostBrand';
+import { useBrands } from '@hooks/brands/useBrands';
 import SocialsBackground from '@components/Background/SocialsBackground';
 import { CompactSocialButton } from '@components/SocialPlatform/SocialConnection/CompactSocialButton';
 import { SocialPlatform } from '@models/SocialAccount';
@@ -162,20 +162,20 @@ const CreateBrandPage: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Create the brand and set it as active
+      // Create the brand and set it as active (using setActive=true query param)
       const newBrand = await createBrand(formData);
       console.log('✅ Brand created successfully:', newBrand);
       
       // Show success state briefly
       setSubmitSuccess(true);
       
-      // Refetch brands to update the list
+      // Refetch brands to update the list and wait for it to complete
       await refetchBrands();
       
-      // Navigate to scheduler after short delay
+      // Small delay to ensure state is fully updated, then navigate with replace
       setTimeout(() => {
-        navigate('/scheduler');
-      }, 500);
+        navigate('/scheduler', { replace: true });
+      }, 300);
       
     } catch (err) {
       console.error('Failed to create brand:', err);

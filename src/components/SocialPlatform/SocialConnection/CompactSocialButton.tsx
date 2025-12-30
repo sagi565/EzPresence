@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SocialPlatform, PLATFORM_COLORS, PLATFORM_NAMES } from '@models/SocialAccount';
-import { useConnectSocialAccount } from '@hooks/useConnectSocialAccount';
+import { useConnectPlatform } from '@/hooks/platforms/useConnectPlatform';
 
 // Add CSS animation for gradient shift
 const styleSheet = document.createElement('style');
@@ -52,7 +52,7 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
   platform,
   brandId,
 }) => {
-  const { isConnected, account, loading, connect, disconnect } = useConnectSocialAccount(platform, brandId);
+  const { isConnected, account, loading, connect, disconnect } = useConnectPlatform(platform, brandId);
   const [isHovered, setIsHovered] = useState(false);
 
   const platformColors = PLATFORM_COLORS[platform];

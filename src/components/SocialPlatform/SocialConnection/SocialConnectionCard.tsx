@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SocialPlatform, PLATFORM_COLORS, PLATFORM_NAMES } from '@models/SocialAccount';
-import { useConnectSocialAccount } from '@hooks/useConnectSocialAccount';
+import { useConnectPlatform } from '@/hooks/platforms/useConnectPlatform';
 import { socialCardStyles as styles } from './styles';
 
 interface SocialConnectionCardProps {
@@ -12,7 +12,7 @@ export const SocialConnectionCard: React.FC<SocialConnectionCardProps> = ({
   platform,
   brandId,
 }) => {
-  const { isConnected, account, loading, connect, disconnect } = useConnectSocialAccount(platform, brandId);
+  const { isConnected, account, loading, connect, disconnect } = useConnectPlatform(platform, brandId);
   const [isHovered, setIsHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 

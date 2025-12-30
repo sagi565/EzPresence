@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useBrands } from '@hooks/useBrands';
+import { useBrands } from '@/hooks/brands/useBrands';
 import { useSchedules } from '@hooks/useSchedules';
 import { useMediaContents } from '@hooks/useMediaContents';
 import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';

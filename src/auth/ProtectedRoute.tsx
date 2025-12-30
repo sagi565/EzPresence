@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@auth/AuthProvider';
-import { useBrands } from '@hooks/useBrands';
-import { useUserProfile } from '@hooks/useUserProfile';
+import { useBrands } from '@/hooks/brands/useBrands';
+import { useUserProfile } from '@/hooks/user/useUserProfile';
 
 type Props = { children: React.ReactElement };
 
@@ -46,22 +46,22 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
     const isOnCreateBrandPage = location.pathname === '/create-your-first-brand';
     
     // User is verified, check if they have completed their profile
-    if (!isProfileComplete() && !isOnTellUsPage) {
-      // No profile or incomplete profile, redirect to tell us page
-      setRedirectPath('/tell-us-who-you-are');
-      return;
-    }
+    // if (!isProfileComplete() && !isOnTellUsPage) {
+    //   // No profile or incomplete profile, redirect to tell us page
+    //   setRedirectPath('/tell-us-who-you-are');
+    //   return;
+    // }
     
     // Profile complete but on tell us page - redirect to create brand or scheduler
-    if (isProfileComplete() && isOnTellUsPage) {
-      // Check if they have brands
-      if (!brandsLoading && !hasBrands) {
-        setRedirectPath('/create-your-first-brand');
-      } else if (!brandsLoading && hasBrands) {
-        setRedirectPath('/scheduler');
-      }
-      return;
-    }
+    // if (isProfileComplete() && isOnTellUsPage) {
+    //   // Check if they have brands
+    //   if (!brandsLoading && !hasBrands) {
+    //     setRedirectPath('/create-your-first-brand');
+    //   } else if (!brandsLoading && hasBrands) {
+    //     setRedirectPath('/scheduler');
+    //   }
+    //   return;
+    // }
     
     // Still loading brands (only if profile is complete)
     if (brandsLoading && isProfileComplete()) {

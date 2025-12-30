@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePostUserProfile, CreateUserProfileData } from '@hooks/usePostUserProfile';
-import { useUserProfile } from '@hooks/useUserProfile';
+import { useUserProfile } from '@/hooks/user/useUserProfile';
 import { Gender, validateBirthDate } from '@models/User';
 import SocialsBackground from '@components/Background/SocialsBackground';
 import { DatePicker, CountrySelector, GenderSelector, FormInput } from '@components/CreateUser';

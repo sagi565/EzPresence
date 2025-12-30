@@ -1,6 +1,9 @@
 import { CSSProperties } from 'react';
 import { theme } from '@theme/theme';
 
+// Purple SVG arrow for dropdowns (same as DatePicker)
+const arrowSvg = `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%239B5DE5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`;
+
 export const styles: Record<string, CSSProperties> = {
   container: {
     minHeight: '100vh',
@@ -29,14 +32,14 @@ export const styles: Record<string, CSSProperties> = {
   },
   title: {
     fontSize: '40px',
-    fontWeight: 500,
+    fontWeight: 630,
     color: theme.colors.text,
     marginBottom: '12px',
     letterSpacing: '-0.5px',
   },
   titleHighlight: {
     fontFamily: '"Playfair Display", serif',
-    fontWeight: 700,
+    fontWeight: 750,
     fontStyle: 'italic',
     background: theme.gradients.innovator,
     WebkitBackgroundClip: 'text',
@@ -241,18 +244,24 @@ export const styles: Record<string, CSSProperties> = {
     color: theme.colors.muted,
   },
   input: {
-    height: '48px',
-    padding: '0 16px',
+    height: '52px',
+    padding: '0 18px',
     border: '2px solid',
     borderColor: 'rgba(155, 93, 229, 0.2)',
     borderRadius: '12px',
     fontSize: '15px',
     outline: 'none',
-    transition: 'all 0.2s',
+    transition: 'border-color 0.2s',
     background: 'white',
     color: theme.colors.text,
     fontFamily: 'inherit',
     width: '100%',
+  },
+  inputHovered: {
+    borderColor: 'rgba(155, 93, 229, 0.35)',
+  },
+  inputFocused: {
+    borderColor: 'rgba(155, 93, 229, 0.35)',
   },
   inputWrapper: {
     position: 'relative',
@@ -300,6 +309,88 @@ export const styles: Record<string, CSSProperties> = {
     background: 'white',
     padding: '2px 4px',
     borderRadius: '4px',
+  },
+  // Custom Dropdown Styles (matching DatePicker)
+  dropdownContainer: {
+    position: 'relative',
+    width: '100%',
+  },
+  customSelect: {
+    display: 'flex',
+    alignItems: 'center',
+    height: '52px',
+    padding: '0 40px 0 16px',
+    border: '2px solid',
+    borderColor: 'rgba(155, 93, 229, 0.2)',
+    borderRadius: '12px',
+    fontSize: '15px',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+    background: 'white',
+    color: theme.colors.text,
+    fontFamily: 'inherit',
+    cursor: 'pointer',
+    backgroundImage: arrowSvg,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 14px center',
+    width: '100%',
+  },
+  customSelectHovered: {
+    borderColor: 'rgba(155, 93, 229, 0.35)',
+  },
+  customSelectFocused: {
+    borderColor: 'rgba(155, 93, 229, 0.35)',
+  },
+  selectedText: {
+    color: theme.colors.text,
+  },
+  dropdownSearchInput: {
+    flex: 1,
+    border: 'none',
+    outline: 'none',
+    fontSize: '15px',
+    background: 'transparent',
+    color: theme.colors.text,
+    fontFamily: 'inherit',
+    width: '100%',
+    padding: 0,
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 'calc(100% + 6px)',
+    left: 0,
+    right: 0,
+    background: 'white',
+    border: '2px solid',
+    borderColor: 'rgba(155, 93, 229, 0.15)',
+    borderRadius: '12px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+    zIndex: 1000,
+    overflow: 'hidden',
+  },
+  dropdownList: {
+    maxHeight: '240px',
+    overflowY: 'auto',
+    padding: '6px 0',
+  },
+  dropdownOption: {
+    padding: '10px 16px',
+    fontSize: '15px',
+    color: theme.colors.text,
+    cursor: 'pointer',
+    transition: 'background 0.15s',
+  },
+  optionHighlighted: {
+    background: 'rgba(155, 93, 229, 0.08)',
+  },
+  optionSelected: {
+    background: 'rgba(155, 93, 229, 0.12)',
+  },
+  noResults: {
+    padding: '12px 16px',
+    fontSize: '14px',
+    color: theme.colors.muted,
+    textAlign: 'center',
   },
   categoryInputContainer: {
     position: 'relative',
@@ -440,16 +531,16 @@ export const styles: Record<string, CSSProperties> = {
   },
   submitBtn: {
     flex: 2,
-    height: '52px',
+    height: '56px',
     border: 'none',
     borderRadius: '14px',
     background: theme.gradients.innovator,
     color: 'white',
-    fontSize: '16px',
+    fontSize: '17px',
     fontWeight: 700,
     cursor: 'pointer',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: theme.shadows.primary,
+    boxShadow: '0 8px 24px rgba(155, 93, 229, 0.3)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -463,20 +554,20 @@ export const styles: Record<string, CSSProperties> = {
     '&:active'?: CSSProperties;
   },
   submitBtnHover: {
-    transform: 'scale(1.02) translateY(-2px)',
-    boxShadow: '0 12px 40px rgba(155, 93, 229, 0.4)',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 8px 24px rgba(155, 93, 229, 0.3)',
   },
   submitBtnActive: {
-    transform: 'scale(0.98)',
-    boxShadow: '0 4px 12px rgba(155, 93, 229, 0.3)',
+    transform: 'translateY(0)',
+    boxShadow: '0 4px 12px rgba(155, 93, 229, 0.2)',
   },
   submitBtnLoading: {
     opacity: 0.7,
     cursor: 'not-allowed',
   },
   spinner: {
-    width: '18px',
-    height: '18px',
+    width: '20px',
+    height: '20px',
     border: '3px solid',
     borderColor: 'rgba(255, 255, 255, 0.3)',
     borderTopColor: 'white',

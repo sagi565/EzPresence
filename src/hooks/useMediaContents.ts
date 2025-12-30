@@ -25,10 +25,10 @@ export const useMediaContents = (brandId: string) => {
       setLoading(true);
       setError(null);
       
-      // Note: The API spec doesn't show a media_contents endpoint with brand filtering
+      // Note: The API spec doesn't show a contents endpoint with brand filtering
       // You may need to adjust this endpoint based on your actual API
-      // GET /api/media_contents/brand/{brandId} or similar
-      const response = await api.get<ApiMediaContentDto[]>(`/media_contents`);
+      // GET /api/contents/brand/{brandId} or similar
+      const response = await api.get<ApiMediaContentDto[]>(`/contents`);
       
       if (!response || !Array.isArray(response)) {
         setContent([]);
@@ -83,12 +83,12 @@ export const useMediaContents = (brandId: string) => {
     try {
       const apiData = convertContentToApiCreate(contentData);
 
-      // Note: The API spec doesn't show a POST endpoint for media_contents
+      // Note: The API spec doesn't show a POST endpoint for contents
       // You may need to adjust this based on your actual API
-      const uuid = await api.post<string>('/media_contents', apiData);
+      const uuid = await api.post<string>('/contents', apiData);
       
       // Fetch the created content
-      const newContent = await api.get<ApiMediaContentDto>(`/media_contents/${uuid}`);
+      const newContent = await api.get<ApiMediaContentDto>(`/contents/${uuid}`);
       const converted = convertApiMediaContentToContent(newContent);
       
       setContent(prev => [...prev, converted]);
@@ -102,9 +102,9 @@ export const useMediaContents = (brandId: string) => {
   // Delete content
   const deleteContent = useCallback(async (contentId: string) => {
     try {
-      // Note: The API spec doesn't show a DELETE endpoint for media_contents
+      // Note: The API spec doesn't show a DELETE endpoint for contents
       // You may need to adjust this based on your actual API
-      await api.delete(`/media_contents/${contentId}`);
+      await api.delete(`/contents/${contentId}`);
       setContent(prev => prev.filter(c => c.id !== contentId));
     } catch (err: any) {
       console.error('Failed to delete content:', err);
@@ -117,7 +117,7 @@ export const useMediaContents = (brandId: string) => {
     try {
       // Note: The API spec doesn't show a move endpoint
       // You may need to adjust this based on your actual API
-      await api.put(`/media_contents/${contentId}`, { listId: targetListId });
+      await api.put(`/contents/${contentId}`, { listId: targetListId });
       await fetchContent();
     } catch (err: any) {
       console.error('Failed to move content:', err);
@@ -129,7 +129,7 @@ export const useMediaContents = (brandId: string) => {
   const renameContent = useCallback(async (contentId: string, newName: string) => {
     try {
       // PUT using MediaContentUpdateDto
-      await api.put(`/media_contents/${contentId}`, { contentName: newName });
+      await api.put(`/contents/${contentId}`, { contentName: newName });
       
       setContent(prev => prev.map(c => 
         c.id === contentId ? { ...c, title: newName } : c

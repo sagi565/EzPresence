@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from "react";
-import { useFirebaseAuth } from "@hooks/useFirebaseAuth";
+import { useFirebaseAuth } from "@/hooks/auth/useFirebaseAuth";
 
 type SessionUser = {
   uid: string;

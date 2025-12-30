@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { useBrands } from '@hooks/useBrands';
+import { useBrands } from '@/hooks/brands/useBrands';
 import { useContentLists } from '@hooks/useContentLists';
 import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
 import ContentList from '@components/Content/ContentList/ContentList';
