@@ -11,9 +11,10 @@ import ProtectedRoute from '@auth/ProtectedRoute';
 import AuthActionPage from './pages/Auth/AuthAction/AuthActionPage';
 import ResetPasswordPage from './pages/Auth/ResetPassword/ResetPAsswordPage';
 import CreateBrandPage from './pages/CreateBrand/CreateBrandPage';
+import CreateUserPage from './pages/CreateUser/CreateUserPage';
 import { useAuth } from '@auth/AuthProvider';
 
-// A special wrapper for the Create Brand page that requires auth but not brand
+// A special wrapper for pages that require auth but not full profile/brand setup
 function AuthOnlyRoute({ children }: { children: React.ReactElement }) {
   const { user, loading } = useAuth();
   
@@ -65,7 +66,17 @@ function App() {
           <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/auth/action" element={<AuthActionPage />} />
           
-          {/* Brand creation route - requires auth but allows users without brands */}
+          {/* User profile setup route - requires auth but allows users without profile */}
+          <Route
+            path="/tell-us-who-you-are"
+            element={
+              <AuthOnlyRoute>
+                <CreateUserPage />
+              </AuthOnlyRoute>
+            }
+          />
+          
+          {/* Brand creation route - requires auth and profile but allows users without brands */}
           <Route
             path="/create-your-first-brand"
             element={
@@ -75,7 +86,7 @@ function App() {
             }
           />
 
-          {/* protected app routes - requires auth AND at least one brand */}
+          {/* protected app routes - requires auth, profile, AND at least one brand */}
           <Route
             path="/scheduler"
             element={

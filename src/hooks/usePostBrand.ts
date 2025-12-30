@@ -4,7 +4,6 @@ import { api } from '@utils/apiClient';
 
 export interface CreateBrandData {
   name: string;
-  description?: string;
   slogan?: string;
   categories?: string[];
   logo?: File;
@@ -35,7 +34,7 @@ export const usePostBrand = () => {
       const requestBody: BrandCreateDto = {
         name: brandData.name,
         logoUrl: logoUrl,
-        slogan: brandData.slogan || brandData.description || null, // Use description as slogan if slogan not provided
+        slogan: brandData.slogan || null, // Use description as slogan if slogan not provided
         category: brandData.categories?.[0] || null, // API expects single category, not array
         subcategory: null, // Could be extended later
       };
@@ -72,7 +71,6 @@ export const usePostBrand = () => {
         id: brandUuid,
         name: brandData.name,
         icon: generateBrandIcon(brandData.categories?.[0], brandData.name),
-        description: brandData.description,
         slogan: brandData.slogan,
         category: brandData.categories?.[0],
         categories: brandData.categories,

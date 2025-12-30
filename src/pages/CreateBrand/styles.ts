@@ -13,7 +13,7 @@ export const styles: Record<string, CSSProperties> = {
   },
   content: {
     width: '100%',
-    maxWidth: '900px',
+    maxWidth: '800px',
     background: 'rgba(255, 255, 255, 0.95)',
     borderRadius: '24px',
     padding: '56px 72px',
@@ -29,13 +29,19 @@ export const styles: Record<string, CSSProperties> = {
   },
   title: {
     fontSize: '40px',
-    fontWeight: 800,
+    fontWeight: 500,
+    color: theme.colors.text,
+    marginBottom: '12px',
+    letterSpacing: '-0.5px',
+  },
+  titleHighlight: {
+    fontFamily: '"Playfair Display", serif',
+    fontWeight: 700,
+    fontStyle: 'italic',
     background: theme.gradients.innovator,
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text',
-    marginBottom: '12px',
-    letterSpacing: '-0.5px',
   },
   subtitle: {
     fontSize: '16px',
@@ -54,6 +60,7 @@ export const styles: Record<string, CSSProperties> = {
   },
   socialSectionBottom: {
     padding: '28px 32px',
+    marginTop: '16px',
     background: 'rgba(155, 93, 229, 0.03)',
     borderRadius: '16px',
     border: '2px solid',
@@ -65,6 +72,8 @@ export const styles: Record<string, CSSProperties> = {
   socialTitleBottom: {
     fontSize: '20px',
     fontWeight: 700,
+    fontFamily: 'Figtree, ui-sans-serif, system-ui, sans-serif',
+    fontStyle: 'italic',
     color: theme.colors.text,
     margin: '0 0 6px 0',
   },
@@ -121,7 +130,7 @@ export const styles: Record<string, CSSProperties> = {
   logoSection: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: '8px',
   },
   sectionLabel: {
     fontSize: '18px',
@@ -136,7 +145,6 @@ export const styles: Record<string, CSSProperties> = {
   logoUploadArea: {
     display: 'flex',
     justifyContent: 'center',
-    marginTop: '8px',
   },
   logoPreviewContainer: {
     position: 'relative',
@@ -184,13 +192,13 @@ export const styles: Record<string, CSSProperties> = {
     justifyContent: 'center',
     gap: '8px',
     cursor: 'pointer',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'all 0.3s cubic-bezier(0.2, 0, 0.1, 0.5)',
     background: 'rgba(155, 93, 229, 0.03)',
   },
   logoUploadPlaceholderHover: {
     borderColor: 'rgba(155, 93, 229, 0.6)',
     background: 'rgba(155, 93, 229, 0.08)',
-    transform: 'scale(1.02)',
+    transform: 'scale(1.01)',
     boxShadow: '0 4px 12px rgba(155, 93, 229, 0.15)',
   },
   uploadIcon: {
@@ -226,13 +234,11 @@ export const styles: Record<string, CSSProperties> = {
     fontWeight: 600,
     color: theme.colors.text,
     textAlign: 'center',
-    display: 'block',
-    marginBottom: '8px',
+    gap: '4px',
   },
   fieldHint: {
     fontSize: '13px',
     color: theme.colors.muted,
-    marginTop: '-4px',
   },
   input: {
     height: '48px',
@@ -378,7 +384,7 @@ export const styles: Record<string, CSSProperties> = {
   },
   socialTitle: {
     fontSize: '20px',
-    fontWeight: 700,
+    fontWeight: 650,
     color: theme.colors.text,
     margin: '0 0 6px 0',
   },

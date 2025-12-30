@@ -20,6 +20,48 @@ type SessionUser = {
   emailVerified: boolean;
 };
 
+// Sync user with backend - creates user if not exists
+async function syncUserWithBackend(): Promise<void> {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      console.log('⚠️ [Auth] No user to sync');
+      return;
+    }
+
+    console.log('🔄 [Auth] Syncing user with backend...');
+    
+    // Call the backend to sync/create the user
+    // The backend should handle this with the Firebase token
+    // If your backend auto-creates users on first authenticated request,
+    // you can just make any authenticated request here
+    
+    // Option 1: If you have a dedicated sync endpoint
+    // await api.post('/auth/sync', {
+    //   email: user.email,
+    //   displayName: user.displayName,
+    //   photoURL: user.photoURL,
+    // });
+    
+    // Option 2: If your backend auto-creates users on first request
+    // Just try to get brands - the backend will create the user if needed
+    try {
+      await api.get('/brands');
+      console.log('✅ [Auth] User synced with backend');
+    } catch (err: any) {
+      // If it's a 404 or empty result, that's fine - user exists but has no brands
+      if (err.status === 404 || err.status === 0) {
+        console.log('✅ [Auth] User synced (no brands yet)');
+      } else {
+        throw err;
+      }
+    }
+  } catch (error) {
+    console.error('❌ [Auth] Failed to sync user with backend:', error);
+    // Don't throw - we don't want to block the auth flow
+  }
+}
+
 export const useFirebaseAuth = () => {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
@@ -43,6 +85,11 @@ export const useFirebaseAuth = () => {
           emailVerified: user.emailVerified,
         });
         
+        // Sync user with backend after auth state change
+        // Only sync if email is verified (or for social logins which are auto-verified)
+        if (user.emailVerified) {
+          await syncUserWithBackend();
+        }
       } else {
         setSessionUser(null);
       }
@@ -57,7 +104,12 @@ export const useFirebaseAuth = () => {
   const signInEmail = useCallback(async (email: string, password: string) => {
     setSyncError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Sync with backend after successful login
+      if (result.user.emailVerified) {
+        await syncUserWithBackend();
+      }
     } catch (error: any) {
       setSyncError(error.message);
       throw error;
@@ -73,6 +125,9 @@ export const useFirebaseAuth = () => {
         await updateProfile(user, { displayName });
       }
       await sendEmailVerification(user);
+      
+      // Note: User will be synced with backend after email verification
+      console.log('📧 [Auth] Verification email sent, user will be synced after verification');
     } catch (error: any) {
       setSyncError(error.message);
       throw error;
@@ -83,7 +138,10 @@ export const useFirebaseAuth = () => {
   const signInGoogle = useCallback(async () => {
     setSyncError(null);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      
+      // Google users are automatically verified, sync immediately
+      await syncUserWithBackend();
     } catch (error: any) {
       setSyncError(error.message);
       throw error;
@@ -94,7 +152,10 @@ export const useFirebaseAuth = () => {
   const signInFacebook = useCallback(async () => {
     setSyncError(null);
     try {
-      await signInWithPopup(auth, facebookProvider);
+      const result = await signInWithPopup(auth, facebookProvider);
+      
+      // Facebook users are automatically verified, sync immediately
+      await syncUserWithBackend();
     } catch (error: any) {
       setSyncError(error.message);
       throw error;
@@ -105,7 +166,10 @@ export const useFirebaseAuth = () => {
   const signInApple = useCallback(async () => {
     setSyncError(null);
     try {
-      await signInWithPopup(auth, appleProvider);
+      const result = await signInWithPopup(auth, appleProvider);
+      
+      // Apple users are automatically verified, sync immediately
+      await syncUserWithBackend();
     } catch (error: any) {
       setSyncError(error.message);
       throw error;
@@ -149,19 +213,18 @@ export const useFirebaseAuth = () => {
         photoURL: user.photoURL,
         emailVerified: user.emailVerified,
       });
+      
+      // If user just verified their email, sync with backend
+      if (user.emailVerified) {
+        await syncUserWithBackend();
+      }
     }
   }, []);
 
   // Force refresh backend session
   const refreshBackendSession = useCallback(async () => {
     if (auth.currentUser) {
-      try {
-        const idToken = await auth.currentUser.getIdToken(true); // Force refresh
-        await api.post('/auth/login', { idToken });
-        console.log('✅ Backend session refreshed');
-      } catch (error) {
-        console.error('❌ Failed to refresh backend session:', error);
-      }
+      await syncUserWithBackend();
     }
   }, []);
 

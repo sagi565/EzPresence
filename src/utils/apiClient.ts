@@ -2,7 +2,7 @@ import { auth } from '@lib/firebase';
 import { getIdToken } from 'firebase/auth';
 
 // Update this to match your backend URL - can be set via environment variable
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.12:7291/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://192.168.1.12:7291/api';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public data?: any) {
@@ -14,11 +14,10 @@ export class ApiError extends Error {
 async function getAuthToken(): Promise<string | null> {
   const user = auth.currentUser;
   if (!user) {
-    console.log('⚠️ [API CLIENT] No authenticated user');
     return null;
   }
   try {
-    const token = await getIdToken(user, false); // Set to true to force refresh if needed
+    const token = await getIdToken(user, false);
     console.log('🔑 [API CLIENT] Got Firebase token');
     return token;
   } catch (error) {
@@ -29,21 +28,25 @@ async function getAuthToken(): Promise<string | null> {
 
 export async function apiRequest<T = any>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  requireAuth: boolean = true
 ): Promise<T> {
   const token = await getAuthToken();
+  
+  // If auth is required but no token, throw an error
+  if (requireAuth && !token) {
+    console.warn('⚠️ [API CLIENT] Auth required but no token available');
+    throw new ApiError(401, 'Authentication required. Please log in.');
+  }
   
   const headers = new Headers(options.headers as HeadersInit);
   headers.set('Content-Type', 'application/json');
   headers.set('Accept', 'application/json');
 
-  // IMPORTANT: Use X-Firebase-Token header as specified in the API spec
+  // Use X-Firebase-Token header as specified in the API spec
   if (token) {
     headers.set('X-Firebase-Token', token);
-    // Also set Authorization header as backup (some backends check both)
     headers.set('Authorization', `Bearer ${token}`);
-  } else {
-    console.warn('⚠️ [API CLIENT] Making request without auth token');
   }
 
   // Ensure endpoint starts with /
@@ -57,10 +60,7 @@ export async function apiRequest<T = any>(
     const response = await fetch(url, {
       ...options,
       headers,
-      // Use 'cors' mode explicitly
       mode: 'cors',
-      // Don't include credentials if causing CORS issues
-      // credentials: 'include',
     });
 
     console.log('📩 [API CLIENT] Response:', response.status, url);
@@ -77,7 +77,6 @@ export async function apiRequest<T = any>(
           errorMessage = errorData.message || errorData.error || errorData.title || errorMessage;
         }
       } catch {
-        // If response is not JSON, use status text
         errorMessage = response.statusText || errorMessage;
       }
       
@@ -97,7 +96,6 @@ export async function apiRequest<T = any>(
     if (!contentType || !contentType.includes('application/json')) {
       console.log('⚠️ [API CLIENT] Non-JSON response, content-type:', contentType);
       const text = await response.text();
-      // Try to parse as JSON anyway (some servers don't set content-type correctly)
       try {
         return JSON.parse(text) as T;
       } catch {
@@ -113,10 +111,8 @@ export async function apiRequest<T = any>(
       throw error;
     }
     
-    // Network or other errors
     console.error('❌ [API CLIENT] Network error:', error);
     
-    // Provide more helpful error messages
     let errorMessage = 'Network error occurred';
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
       errorMessage = 'Unable to connect to server. Please check:\n' +
@@ -133,30 +129,40 @@ export async function apiRequest<T = any>(
 
 // Convenience methods
 export const api = {
-  get: <T = any>(endpoint: string, options?: RequestInit) =>
-    apiRequest<T>(endpoint, { ...options, method: 'GET' }),
+  get: <T = any>(endpoint: string, options?: RequestInit & { requireAuth?: boolean }) => {
+    const { requireAuth = true, ...restOptions } = options || {};
+    return apiRequest<T>(endpoint, { ...restOptions, method: 'GET' }, requireAuth);
+  },
   
-  post: <T = any>(endpoint: string, data?: any, options?: RequestInit) =>
-    apiRequest<T>(endpoint, {
-      ...options,
+  post: <T = any>(endpoint: string, data?: any, options?: RequestInit & { requireAuth?: boolean }) => {
+    const { requireAuth = true, ...restOptions } = options || {};
+    return apiRequest<T>(endpoint, {
+      ...restOptions,
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
-    }),
+    }, requireAuth);
+  },
   
-  put: <T = any>(endpoint: string, data?: any, options?: RequestInit) =>
-    apiRequest<T>(endpoint, {
-      ...options,
+  put: <T = any>(endpoint: string, data?: any, options?: RequestInit & { requireAuth?: boolean }) => {
+    const { requireAuth = true, ...restOptions } = options || {};
+    return apiRequest<T>(endpoint, {
+      ...restOptions,
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
-    }),
+    }, requireAuth);
+  },
   
-  patch: <T = any>(endpoint: string, data?: any, options?: RequestInit) =>
-    apiRequest<T>(endpoint, {
-      ...options,
+  patch: <T = any>(endpoint: string, data?: any, options?: RequestInit & { requireAuth?: boolean }) => {
+    const { requireAuth = true, ...restOptions } = options || {};
+    return apiRequest<T>(endpoint, {
+      ...restOptions,
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
-    }),
+    }, requireAuth);
+  },
   
-  delete: <T = any>(endpoint: string, options?: RequestInit) =>
-    apiRequest<T>(endpoint, { ...options, method: 'DELETE' }),
+  delete: <T = any>(endpoint: string, options?: RequestInit & { requireAuth?: boolean }) => {
+    const { requireAuth = true, ...restOptions } = options || {};
+    return apiRequest<T>(endpoint, { ...restOptions, method: 'DELETE' }, requireAuth);
+  },
 };

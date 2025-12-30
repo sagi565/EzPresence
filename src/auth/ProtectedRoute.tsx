@@ -2,18 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@auth/AuthProvider';
 import { useBrands } from '@hooks/useBrands';
+import { useUserProfile } from '@hooks/useUserProfile';
 
 type Props = { children: React.ReactElement };
 
 const ProtectedRoute: React.FC<Props> = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
   const { brands, loading: brandsLoading, error: brandsError, hasBrands } = useBrands();
+  const { profile, loading: profileLoading, isProfileComplete } = useUserProfile();
   const location = useLocation();
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
   
-  // Determine redirect path based on auth and brand state
+  // Determine redirect path based on auth, profile, and brand state
   useEffect(() => {
-    // Still loading, don't decide yet
+    // Still loading auth, don't decide yet
     if (authLoading) {
       setRedirectPath(null);
       return;
@@ -31,26 +33,52 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
       return;
     }
     
-    // Still loading brands
-    if (brandsLoading) {
+    // Still loading profile
+    if (profileLoading) {
       setRedirectPath(null);
       return;
     }
     
+    // Check if on tell us who you are page
+    const isOnTellUsPage = location.pathname === '/tell-us-who-you-are';
+    
     // Check if on create brand page
     const isOnCreateBrandPage = location.pathname === '/create-your-first-brand';
     
+    // User is verified, check if they have completed their profile
+    if (!isProfileComplete() && !isOnTellUsPage) {
+      // No profile or incomplete profile, redirect to tell us page
+      setRedirectPath('/tell-us-who-you-are');
+      return;
+    }
+    
+    // Profile complete but on tell us page - redirect to create brand or scheduler
+    if (isProfileComplete() && isOnTellUsPage) {
+      // Check if they have brands
+      if (!brandsLoading && !hasBrands) {
+        setRedirectPath('/create-your-first-brand');
+      } else if (!brandsLoading && hasBrands) {
+        setRedirectPath('/scheduler');
+      }
+      return;
+    }
+    
+    // Still loading brands (only if profile is complete)
+    if (brandsLoading && isProfileComplete()) {
+      setRedirectPath(null);
+      return;
+    }
+    
     // If brands failed to load with an error (like network timeout)
     // Allow access to the page but show error state there
-    if (brandsError && !isOnCreateBrandPage) {
+    if (brandsError && !isOnCreateBrandPage && !isOnTellUsPage) {
       // We'll let the page handle the error display
       setRedirectPath(null);
       return;
     }
     
-    // User is verified, check if they have brands
-    if (!hasBrands && !isOnCreateBrandPage) {
-      // No brands, redirect to create brand page
+    // User has profile but no brands - redirect to create brand page
+    if (!hasBrands && !isOnCreateBrandPage && !isOnTellUsPage) {
       setRedirectPath('/create-your-first-brand');
       return;
     }
@@ -63,10 +91,15 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
     
     // All good, no redirect needed
     setRedirectPath(null);
-  }, [authLoading, brandsLoading, user, hasBrands, brandsError, location.pathname]);
+  }, [authLoading, brandsLoading, profileLoading, user, hasBrands, brandsError, location.pathname, isProfileComplete]);
   
-  // Show loading spinner while checking auth and brands
-  if (authLoading || (brandsLoading && user?.emailVerified)) {
+  // Calculate loading state
+  const isLoading = authLoading || 
+    (profileLoading && user?.emailVerified) || 
+    (brandsLoading && user?.emailVerified && profile?.isProfileComplete);
+  
+  // Show loading spinner while checking auth, profile, and brands
+  if (isLoading) {
     return (
       <div style={{
         display: 'flex',
@@ -86,7 +119,11 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
           animation: 'spin 0.8s linear infinite',
         }} />
         <p style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
-          {authLoading ? 'Checking authentication...' : 'Loading your brands...'}
+          {authLoading 
+            ? 'Checking authentication...' 
+            : profileLoading 
+              ? 'Loading your profile...'
+              : 'Loading your brands...'}
         </p>
       </div>
     );

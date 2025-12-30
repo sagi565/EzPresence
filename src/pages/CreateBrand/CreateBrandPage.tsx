@@ -30,9 +30,11 @@ const BRAND_CATEGORIES = [
   'Home Services',
 ];
 
-// Add CSS animations
+// Add CSS animations and import Playfair Display font
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+
   @keyframes pulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -100,7 +102,6 @@ const CreateBrandPage: React.FC = () => {
   
   const [formData, setFormData] = useState<CreateBrandData>({
     name: '',
-    description: '',
     slogan: '',
     categories: [],
   });
@@ -188,9 +189,11 @@ const CreateBrandPage: React.FC = () => {
       
       <div style={styles.content}>
         <div style={styles.header}>
-          <h1 style={styles.title}>Create Your First Brand</h1>
+          <h1 style={styles.title}>
+            Create Your <span style={styles.titleHighlight}>First Brand</span>
+          </h1>
           <p style={styles.subtitle}>
-            Set up your brand profile to get started.
+            Set up your brand profile to get started!
           </p>
         </div>
 
@@ -301,32 +304,6 @@ const CreateBrandPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Row 2: Description (Full Width) */}
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Description</label>
-                <div style={styles.textareaWrapper}>
-                  <textarea
-                    style={{
-                      ...styles.textarea,
-                      paddingRight: '60px',
-                    }}
-                    placeholder=""
-                    value={formData.description}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value.length <= 200) {
-                        setFormData({ ...formData, description: value });
-                      }
-                    }}
-                    rows={3}
-                    maxLength={200}
-                  />
-                  <span style={styles.charCountInsideTextarea}>
-                    {formData.description?.length || 0}/200
-                  </span>
-                </div>
-              </div>
-
               {/* Row 3: Category (Dropdown) */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>Category</label>
@@ -355,8 +332,8 @@ const CreateBrandPage: React.FC = () => {
           {/* Social Media Connections Section - Bottom */}
           <div style={styles.socialSectionBottom}>
             <div style={styles.socialHeaderBottom}>
-              <h2 style={styles.socialTitleBottom}>Connect Social Accounts</h2>
-              <p style={styles.socialSubtitleBottom}>Link your brand's social media accounts (optional - you can do this later)</p>
+              <h2 style={styles.socialTitleBottom}>Connect Social Medias</h2>
+              <p style={styles.socialSubtitleBottom}>Link your social accounts to grow your presence</p>
             </div>
 
             <div style={styles.socialGridBottom}>
