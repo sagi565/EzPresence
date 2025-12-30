@@ -1,9 +1,8 @@
-// Internal User Profile type used in the UI
 export interface UserProfile {
   id: string;
   firstName: string;
   lastName: string;
-  birthDate: string; // ISO date string (YYYY-MM-DD)
+  birthDate: string;
   country?: string;
   gender?: Gender;
   isProfileComplete: boolean;
@@ -11,9 +10,9 @@ export interface UserProfile {
   updatedAt?: string;
 }
 
-export type Gender = 'male' | 'female' | 'other' | 'prefer_not_to_say';
+export type Gender = 'male' | 'female' | 'other';
 
-// API Response - matches UserProfileDto from OpenAPI spec
+// Matches API response for GET /api/users/me
 export interface ApiUserProfileDto {
   uuid: string;
   firebaseUserId?: string | null;
@@ -27,8 +26,8 @@ export interface ApiUserProfileDto {
   updatedAt?: string | null;
 }
 
-// API Request - matches UserProfileCreateDto from OpenAPI spec
-export interface UserProfileCreateDto {
+// Matches POST /api/users request body
+export interface UserCreateDto {
   firstName: string;
   lastName: string;
   birthDate: string;
@@ -36,8 +35,8 @@ export interface UserProfileCreateDto {
   gender?: string | null;
 }
 
-// API Request - matches UserProfileUpdateDto from OpenAPI spec
-export interface UserProfileUpdateDto {
+// Matches PUT /api/users request body
+export interface UserUpdateDto {
   firstName?: string | null;
   lastName?: string | null;
   birthDate?: string | null;
@@ -45,14 +44,12 @@ export interface UserProfileUpdateDto {
   gender?: string | null;
 }
 
-// Gender options for UI
 export const GENDER_OPTIONS: { value: Gender; label: string }[] = [
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },
   { value: 'other', label: 'Other' },
 ];
 
-// Convert API user profile to internal format
 export const convertApiUserProfileToUserProfile = (apiProfile: ApiUserProfileDto): UserProfile => ({
   id: apiProfile.uuid,
   firstName: apiProfile.firstName || '',
@@ -65,35 +62,36 @@ export const convertApiUserProfileToUserProfile = (apiProfile: ApiUserProfileDto
   updatedAt: apiProfile.updatedAt || undefined,
 });
 
-// Convert internal profile to API create format
-export const convertUserProfileToApiCreate = (profile: {
+export const convertUserProfileToCreateDto = (data: {
   firstName: string;
   lastName: string;
   birthDate: string;
   country?: string;
   gender?: Gender;
-}): UserProfileCreateDto => ({
-  firstName: profile.firstName,
-  lastName: profile.lastName,
-  birthDate: profile.birthDate,
-  country: profile.country || null,
-  gender: profile.gender || null,
+}): UserCreateDto => ({
+  firstName: data.firstName,
+  lastName: data.lastName,
+  birthDate: data.birthDate,
+  country: data.country || null,
+  gender: data.gender || null,
 });
 
-// Format birth date for display (e.g., "January 15, 1990")
-export const formatBirthDate = (dateString: string): string => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
+export const convertUserProfileToUpdateDto = (data: Partial<{
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  country?: string;
+  gender?: Gender;
+}>): UserUpdateDto => ({
+  firstName: data.firstName || null,
+  lastName: data.lastName || null,
+  birthDate: data.birthDate || null,
+  country: data.country || null,
+  gender: data.gender || null,
+});
 
-// Calculate age from birth date
-export const calculateAge = (birthDate: string): number => {
-  if (!birthDate) return 0;
+export const validateBirthDate = (birthDate: string): { isValid: boolean; error?: string } => {
+  if (!birthDate) return { isValid: false, error: 'Birth date is required' };
   const today = new Date();
   const birth = new Date(birthDate);
   let age = today.getFullYear() - birth.getFullYear();
@@ -101,24 +99,7 @@ export const calculateAge = (birthDate: string): number => {
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
     age--;
   }
-  return age;
-};
-
-// Validate birth date (must be at least 13 years old)
-export const validateBirthDate = (birthDate: string): { isValid: boolean; error?: string } => {
-  if (!birthDate) {
-    return { isValid: false, error: 'Birth date is required' };
-  }
-  
-  const age = calculateAge(birthDate);
-  
-  if (age < 13) {
-    return { isValid: false, error: 'You must be at least 13 years old' };
-  }
-  
-  if (age > 120) {
-    return { isValid: false, error: 'Please enter a valid birth date' };
-  }
-  
+  if (age < 13) return { isValid: false, error: 'You must be at least 13 years old' };
+  if (age > 120) return { isValid: false, error: 'Please enter a valid birth date' };
   return { isValid: true };
 };
