@@ -1,23 +1,33 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   UserProfile, 
   ApiUserProfileDto, 
   convertApiUserProfileToUserProfile 
 } from '@models/User';
 import { api } from '@utils/apiClient';
+import { auth } from '@lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export const useUserProfile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   // Fetch user profile from API
   const fetchProfile = useCallback(async () => {
+    // Double check auth status, though onAuthStateChanged handles the trigger
+    if (!auth.currentUser) {
+      setProfile(null);
+      setLoading(false);
+      return null;
+    }
+
     try {
       setLoading(true);
       setError(null);
+      setNotFound(false);
       
-      // GET /api/users/profile - Retrieves the current user's profile
       const response = await api.get<ApiUserProfileDto>('/users/me');
       
       if (response) {
@@ -31,9 +41,9 @@ export const useUserProfile = () => {
     } catch (err: any) {
       console.error('Failed to fetch user profile:', err);
       
-      // If 404, user profile doesn't exist yet
       if (err.status === 404) {
         setProfile(null);
+        setNotFound(true);
         return null;
       }
       
@@ -44,18 +54,27 @@ export const useUserProfile = () => {
     }
   }, []);
 
-  // Fetch profile on mount
+  // Listen for Auth Changes to trigger fetch
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is logged in, fetch profile
+        fetchProfile();
+      } else {
+        // User is logged out, clear profile and stop loading
+        setProfile(null);
+        setLoading(false);
+      }
+    });
 
-  // Check if profile is complete
+    return () => unsubscribe();
+  }, [fetchProfile]);
+
   const isProfileComplete = useCallback((): boolean => {
     if (!profile) return false;
     return profile.isProfileComplete;
   }, [profile]);
 
-  // Check if profile exists (even if incomplete)
   const hasProfile = useCallback((): boolean => {
     return profile !== null;
   }, [profile]);
@@ -64,6 +83,7 @@ export const useUserProfile = () => {
     profile,
     loading,
     error,
+    notFound,
     refetchProfile: fetchProfile,
     isProfileComplete,
     hasProfile,

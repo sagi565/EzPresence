@@ -10,14 +10,15 @@ export const styles: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '12px',
+    gap: '0', // Changed from 12px to 0 to ensure lines touch
     zIndex: 1000,
     maxHeight: 'calc(100vh - 200px)',
   },
   dotsContainer: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '32px',
+    alignItems: 'center',
+    gap: '0', // Changed from 32px to 0
     overflowY: 'visible',
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
@@ -29,6 +30,7 @@ export const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingBottom: '0',
   },
   scrollDotContainer: {
     width: '40px',
@@ -37,6 +39,10 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    zIndex: 2,
+    background: '#fff', // Masks the line behind it
+    borderRadius: '50%',
+    margin: '8px 0', // Vertical spacing for the dots
   },
   scrollDot: {
     width: '16px',
@@ -51,6 +57,7 @@ export const styles: Record<string, CSSProperties> = {
     justifyContent: 'center',
     position: 'relative',
   },
+  // ... (keep dot hover/active styles same as upload) ...
   scrollDotHover: {
     width: '36px',
     height: '36px',
@@ -86,7 +93,6 @@ export const styles: Record<string, CSSProperties> = {
     boxShadow: '0 0 30px rgba(155, 93, 229, 0.6)',
     transform: 'scale(1.1)',
   },
-  // FIXED: New style for disabled system lists during drag
   scrollDotDisabled: {
     background: 'rgba(155, 93, 229, 0.05)',
     borderColor: 'rgba(155, 93, 229, 0.15)',
@@ -94,6 +100,17 @@ export const styles: Record<string, CSSProperties> = {
     cursor: 'not-allowed',
     filter: 'grayscale(0.7)',
   },
+  // Fixed Line Style:
+  scrollLine: {
+    width: '2px',
+    // Calculate height to span gap: (40px dot container + 16px margins) roughly
+    height: '24px', 
+    background: 'rgba(155, 93, 229, 0.15)',
+    margin: '0', 
+    position: 'relative',
+    zIndex: 1,
+  },
+  // ... (keep rest of styles same as upload) ...
   scrollIcon: {
     position: 'absolute',
     fontSize: '18px',
@@ -104,12 +121,6 @@ export const styles: Record<string, CSSProperties> = {
   scrollIconVisible: {
     opacity: 1,
     transform: 'scale(1)',
-  },
-  scrollLine: {
-    width: '2px',
-    height: '24px',
-    background: 'rgba(155, 93, 229, 0.1)',
-    marginTop: '4px',
   },
   scrollLabel: {
     position: 'absolute',

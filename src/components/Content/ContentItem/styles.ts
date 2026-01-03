@@ -1,186 +1,271 @@
 import { CSSProperties } from 'react';
-import { theme } from '@theme/theme';
+
+// Add keyframes for favorite animation
+const stylesSheet = document.createElement("style");
+stylesSheet.innerText = `
+  @keyframes favoriteClick {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+`;
+document.head.appendChild(stylesSheet);
 
 export const styles: Record<string, CSSProperties> = {
   contentItem: {
-    flexShrink: 0,
-    background: 'white',
+    position: 'relative',
+    backgroundColor: 'white',
     borderRadius: '16px',
     overflow: 'hidden',
-    position: 'relative',
     cursor: 'pointer',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
     userSelect: 'none',
+    display: 'flex',
+    flexDirection: 'column',
+    flexShrink: 0,
   },
-  contentItemOverlay: {
-    content: '""',
+  
+  // Dimensions matching UploadButton exactly
+  contentItemVideo: {
+    width: '280px', 
+    height: '480px', 
+  },
+  contentItemImage: {
+    width: '380px', 
+    height: '220px', 
+  },
+
+  contentItemHover: {
+    transform: 'scale(1.02) translateY(-4px)',
+    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)',
+    zIndex: 10,
+  },
+  
+  contentItemDragging: {
+    opacity: 0.5,
+    cursor: 'grabbing',
+    transform: 'scale(0.95)',
+  },
+  
+  // --- Media Container ---
+  mediaContainer: {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f3f4f6', 
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  
+  mediaCover: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    position: 'absolute',
+    inset: 0,
+    transition: 'opacity 0.3s ease',
+  },
+  
+  // --- Overlays ---
+  gradientOverlay: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: '80px',
-    background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
+    height: '120px', 
+    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)',
     opacity: 0,
     transition: 'opacity 0.3s ease',
     pointerEvents: 'none',
+    zIndex: 2,
   },
-  contentItemOverlayVisible: {
+  gradientOverlayVisible: {
     opacity: 1,
   },
-  contentItemVideo: {
-    width: '280px',
-    height: '480px',
-  },
-  contentItemImage: {
-    width: '380px',
-    height: '220px',
-  },
-  contentItemHover: {
-    transform: 'scale(1.05)',
-    boxShadow: '0 8px 28px rgba(0, 0, 0, 0.15)',
-    zIndex: 10,
-  },
-  contentItemDragging: {
-    opacity: 0.5,
-    cursor: 'grabbing',
-  },
-  contentThumbnail: {
-    width: '100%',
-    height: '100%',
-    background: 'linear-gradient(135deg, #eef2ff 0%, #faf5ff 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '64px',
-    color: theme.colors.primary,
-  },
-  deleteItemBtn: {
-    position: 'absolute',
-    top: '10px',
-    left: '10px',
-    width: '28px',
-    height: '28px',
-    borderRadius: '8px',
-    background: 'rgba(155, 93, 229, 0.1)',
-    border: '1px solid',
-    borderColor: 'rgba(155, 93, 229, 0.2)',
-    color: theme.colors.primary,
-    fontSize: '16px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0,
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    zIndex: 4,
-    padding: 0,
-    fontFamily: 'system-ui, -apple-system, sans-serif',
-    lineHeight: 1,
-  },
-  deleteItemBtnVisible: {
-    opacity: 1,
-  },
-  deleteItemBtnHover: {
-    background: '#ef4444',
-    borderColor: '#dc2626',
-    color: 'white',
-    transform: 'scale(1.08)',
-    boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)',
-  },
+
+  // --- Actions (Top Left) ---
   contentActions: {
     position: 'absolute',
-    top: '10px',
-    right: '10px',
+    top: '12px',
+    left: '12px',
     display: 'flex',
     gap: '8px',
     opacity: 0,
     transition: 'opacity 0.3s ease',
-    zIndex: 3,
+    zIndex: 20,
   },
   contentActionsVisible: {
     opacity: 1,
   },
+
   actionBtn: {
     width: '32px',
     height: '32px',
     borderRadius: '50%',
     background: 'rgba(0, 0, 0, 0.4)',
     backdropFilter: 'blur(10px)',
-    border: '1.5px solid',
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    border: '1.5px solid rgba(255, 255, 255, 0.2)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    fontSize: '18px',
+    fontSize: '16px',
     color: 'white',
+    transition: 'all 0.2s ease',
+    padding: 0,
   },
+  
   actionBtnHover: {
     transform: 'scale(1.1)',
     background: 'rgba(0, 0, 0, 0.6)',
     borderColor: 'rgba(255, 255, 255, 0.4)',
   },
+  
+  // Favorite Active State
   actionBtnFavoriteActive: {
-    background: 'rgba(239, 68, 68, 0.9)',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    background: 'rgba(239, 68, 68, 0.85)',
+    borderColor: 'rgba(239, 68, 68, 0.5)',
+    opacity: 1,
+    animation: 'favoriteClick 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)',
   },
-  actionBtnFavoriteActiveHover: {
-    background: '#ef4444',
-    transform: 'scale(1.15)',
-  },
+
+  // Wizard Button Special Style
   actionBtnWizard: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '50%',
-    background: theme.gradients.innovator,
+    background: 'linear-gradient(135deg, #9b5de5 0%, #fbbf24 100%)',
     border: 'none',
+  },
+  
+  actionBtnWizardHover: {
+    transform: 'scale(1.15) rotate(15deg)',
+    boxShadow: '0 8px 24px rgba(155, 93, 229, 0.4)',
+  },
+
+  // --- More Options (Top Right) ---
+  moreOptionsBtn: {
+    position: 'absolute',
+    top: '12px',
+    right: '12px',
+    background: 'rgba(0, 0, 0, 0.15)',
+    backdropFilter: 'blur(10px)',
+    border: '1.5px solid rgba(255, 255, 255, 0.15)',
+    zIndex: 20,
+    color: 'rgba(255, 255, 255, 0.9)',
+    opacity: 0,
+    transition: 'opacity 0.3s ease, background 0.3s ease, transform 0.3s ease',
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    fontSize: '18px',
-    color: 'white',
-    position: 'relative' as const,
   },
-  actionBtnWizardHover: {
-    transform: 'scale(1.15) rotate(15deg)',
-    boxShadow: '0 8px 24px rgba(155, 93, 229, 0.4)',
-    filter: 'brightness(1.1)',
+  moreOptionsBtnVisible: {
+    opacity: 1,
   },
+  moreOptionsBtnHover: {
+    background: 'rgba(0, 0, 0, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    transform: 'scale(1.1)',
+  },
+
+  // --- Dropdown Menu ---
+  menuDropdown: {
+    position: 'absolute',
+    top: '48px',
+    right: '12px',
+    background: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
+    padding: '6px',
+    zIndex: 100,
+    minWidth: '140px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    animation: 'fadeIn 0.2s ease',
+  },
+  menuItem: {
+    padding: '10px 12px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: 500,
+    color: '#1f2937',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    border: 'none',
+    background: 'transparent',
+    textAlign: 'left',
+    width: '100%',
+    transition: 'all 0.2s',
+  },
+  menuItemHover: {
+    background: 'rgba(155, 93, 229, 0.08)',
+    color: '#9b5de5',
+  },
+  menuItemDeleteHover: {
+    background: 'rgba(239, 68, 68, 0.08)',
+    color: '#ef4444',
+  },
+
+  // --- Bottom Text ---
   contentTitle: {
     position: 'absolute',
-    bottom: '32px',
-    left: '20px',
-    right: '20px',
+    bottom: '28px',
+    left: '16px',
+    right: '16px',
     color: 'white',
-    fontWeight: 600,
-    fontSize: '16px',
+    fontWeight: 700,
+    fontSize: '15px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
     opacity: 0,
     transition: 'opacity 0.3s ease',
-    zIndex: 2,
+    zIndex: 3,
     pointerEvents: 'none',
-  },
-  contentTitleVisible: {
-    opacity: 1,
+    textShadow: '0 2px 8px rgba(0,0,0,0.5)',
   },
   contentDate: {
     position: 'absolute',
-    bottom: '14px',
-    left: '20px',
-    right: '20px',
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: '13px',
-    fontWeight: 400,
+    bottom: '10px',
+    left: '16px',
+    right: '16px',
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: '11px',
+    fontWeight: 500,
     opacity: 0,
     transition: 'opacity 0.3s ease',
-    zIndex: 2,
+    zIndex: 3,
     pointerEvents: 'none',
   },
-  contentDateVisible: {
+  textVisible: {
     opacity: 1,
+  },
+
+  // --- Uploading State ---
+  loadingOverlay: {
+    position: 'absolute',
+    inset: 0,
+    background: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    zIndex: 10,
+  },
+  spinner: {
+    width: '28px',
+    height: '28px',
+    border: '3px solid rgba(255,255,255,0.3)',
+    borderTopColor: 'white',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
   },
 };

@@ -1,3 +1,4 @@
+//
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@auth/AuthProvider';
@@ -8,57 +9,49 @@ type Props = { children: React.ReactElement };
 
 const ProtectedRoute: React.FC<Props> = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
-  // We use the raw 'profile' object to check for existence (null = 404/Not Found)
-  const { profile, loading: profileLoading } = useUserProfile();
+  const { profile, loading: profileLoading, notFound: profileNotFound } = useUserProfile();
   const { hasBrands, loading: brandsLoading } = useBrands();
   
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
   
-  // Calculate a combined loading state to prevent flashing redirects
-  // We only care about brand loading if the profile actually exists
   const isLoading = 
     authLoading || 
     (user && profileLoading) || 
     (user && profile && brandsLoading);
 
   useEffect(() => {
-    // 1. Wait for Auth to initialize
     if (authLoading) return;
 
-    // 2. Not Logged In -> Redirect to Login
     if (!user) {
       setRedirectPath('/login');
       return;
     }
 
-    // 3. Email Not Verified -> Redirect to Verification
     if (!user.emailVerified) {
       setRedirectPath('/verify-email');
       return;
     }
 
-    // 4. Wait for Profile to load
     if (profileLoading) return;
 
-    // 5. Missing Profile (API 404) -> Redirect to Create User
+    // Only redirect if explicitly Not Found (404), otherwise wait/retry
     if (!profile) {
-      setRedirectPath('/tell-us-who-you-are');
+      if (profileNotFound) {
+        setRedirectPath('/tell-us-who-you-are');
+      }
       return;
     }
 
-    // 6. Wait for Brands to load (Only if profile exists)
     if (brandsLoading) return;
 
-    // 7. No Brands found -> Redirect to Create Brand
     if (!hasBrands) {
       setRedirectPath('/create-your-first-brand');
       return;
     }
 
-    // 8. All checks passed -> Stay on current protected route
     setRedirectPath(null);
 
-  }, [authLoading, profileLoading, brandsLoading, user, profile, hasBrands]);
+  }, [authLoading, profileLoading, brandsLoading, user, profile, hasBrands, profileNotFound]);
   
   if (isLoading) {
     return (
@@ -81,9 +74,7 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <p style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
-          {authLoading ? 'Verifying session...' : 
-           profileLoading ? 'Checking profile...' : 
-           'Loading brands...'}
+          Loading...
         </p>
       </div>
     );

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useBrands } from '@/hooks/brands/useBrands';
 import { useSchedules } from '@hooks/useSchedules';
-import { useMediaContents } from '@hooks/useMediaContents';
+import { useMediaContents } from '@/hooks/contents/useMediaContents';
 import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
 import SchedulerBar from '@components/Scheduler/SchedulerBar/DateNavigation';
 import CalendarGrid from '@components/Scheduler/Calendar/GridView/CalendarGrid';
@@ -18,6 +18,8 @@ const SchedulerPage: React.FC = () => {
 
   const { brands, currentBrand, switchBrand, loading: brandsLoading, error: brandsError } = useBrands();
   
+  console.log('🏢 [SchedulerPage] Current brand:', currentBrand?.id, currentBrand?.name);
+  
   // Use useSchedules instead of usePosts
   const { 
     posts, 
@@ -31,6 +33,13 @@ const SchedulerPage: React.FC = () => {
     loading: contentLoading, 
     error: contentError 
   } = useMediaContents(currentBrand?.id || '');
+
+  console.log('📦 [SchedulerPage] Content state:', {
+    contentCount: content?.length || 0,
+    contentLoading,
+    contentError,
+    content: content,
+  });
 
   const handleMonthChange = (direction: number) => {
     let newMonth = currentMonth + direction;
@@ -155,7 +164,11 @@ const SchedulerPage: React.FC = () => {
           />
         )}
       </div>
-      <ContentDrawer content={content} brandId={currentBrand.id} />
+      
+      <ContentDrawer 
+        content={content || []} 
+        brandId={currentBrand.id} 
+      />
     </div>
   );
 };

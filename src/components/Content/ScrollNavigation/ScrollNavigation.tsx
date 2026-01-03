@@ -35,17 +35,14 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   const totalItems = lists.length;
   const showPagination = totalItems > MAX_VISIBLE_DOTS;
 
-  // Calculate the window of visible dots
   const getVisibleRange = () => {
     if (!showPagination) {
       return { start: 0, end: totalItems };
     }
 
-    // Apply manual offset for arrow navigation
     let start = Math.max(0, Math.min(totalItems - MAX_VISIBLE_DOTS, windowOffset));
     let end = Math.min(totalItems, start + MAX_VISIBLE_DOTS);
     
-    // Adjust if we're near the end
     if (end === totalItems && totalItems > MAX_VISIBLE_DOTS) {
       start = Math.max(0, end - MAX_VISIBLE_DOTS);
     }
@@ -53,13 +50,11 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     return { start, end };
   };
 
-  // Auto-adjust window when currentIndex changes to keep it visible
   useEffect(() => {
     if (!showPagination) return;
     
     const { start, end } = getVisibleRange();
     
-    // If currentIndex is outside visible range, adjust window
     if (currentIndex < start) {
       setWindowOffset(currentIndex);
     } else if (currentIndex >= end) {
@@ -99,21 +94,18 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
 
   const handlePageUp = () => {
     if (canScrollUp) {
-      // Move the window up by 1
       setWindowOffset(Math.max(0, windowOffset - 1));
     }
   };
 
   const handlePageDown = () => {
     if (canScrollDown) {
-      // Move the window down by 1
       setWindowOffset(Math.min(totalItems - MAX_VISIBLE_DOTS, windowOffset + 1));
     }
   };
 
-  // FIXED: Auto-scroll when dragging over arrows
   const startAutoScroll = (direction: 'up' | 'down') => {
-    if (autoScrollIntervalRef.current) return; // Already scrolling
+    if (autoScrollIntervalRef.current) return;
 
     autoScrollIntervalRef.current = setInterval(() => {
       if (direction === 'up' && canScrollUp) {
@@ -121,7 +113,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
       } else if (direction === 'down' && canScrollDown) {
         setWindowOffset(prev => Math.min(totalItems - MAX_VISIBLE_DOTS, prev + 1));
       }
-    }, 300); // Scroll every 300ms while hovering
+    }, 300);
   };
 
   const stopAutoScroll = () => {
@@ -131,23 +123,19 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     }
   };
 
-  // Clean up interval on unmount
   useEffect(() => {
     return () => {
       stopAutoScroll();
     };
   }, []);
 
-  // Stop auto-scroll when not dragging
   useEffect(() => {
     if (!isDragging) {
       stopAutoScroll();
     }
   }, [isDragging]);
 
-  // Calculate which items to show
   const visibleItems = [];
-  
   for (let i = startIndex; i < endIndex; i++) {
     visibleItems.push({ list: lists[i], index: i });
   }
@@ -155,27 +143,19 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   const upArrowStyle = {
     ...styles.paginationArrow,
     ...styles.paginationArrowUp,
-    // FIXED: Show when dragging and can scroll
     ...(isDragging && showPagination && canScrollUp ? styles.paginationArrowDragging : {}),
-    ...(hoveredArrow === 'up' && canScrollUp ? styles.paginationArrowHover : {}),
-    // Disable if can't scroll
-    ...(!canScrollUp && isDragging ? styles.paginationArrowDisabled : {}),
+    ...(hoveredArrow === 'up' ? styles.paginationArrowHover : {}),
   };
 
   const downArrowStyle = {
     ...styles.paginationArrow,
     ...styles.paginationArrowDown,
-    // FIXED: Show when dragging and can scroll
     ...(isDragging && showPagination && canScrollDown ? styles.paginationArrowDragging : {}),
-    ...(hoveredArrow === 'down' && canScrollDown ? styles.paginationArrowHover : {}),
-    // Disable if can't scroll
-    ...(!canScrollDown && isDragging ? styles.paginationArrowDisabled : {}),
+    ...(hoveredArrow === 'down' ? styles.paginationArrowHover : {}),
   };
 
-  // FIXED: Check if list can accept drops (not system list)
   const handleDragOver = (e: React.DragEvent, index: number, list: ContentList) => {
     if (isDragging) {
-      // Prevent drop on system lists
       if (list.isSystem) {
         e.dataTransfer.dropEffect = 'none';
         return;
@@ -190,7 +170,6 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   };
 
   const handleDrop = (e: React.DragEvent, listId: string, list: ContentList) => {
-    // Prevent drop on system lists
     if (list.isSystem) {
       return;
     }
@@ -202,31 +181,26 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   return (
     <>
       <nav style={styles.scrollNav}>
-        {/* FIXED: Always render arrows, but only show when dragging */}
-        {showPagination && (
+        {/* Only render UP arrow if pagination is needed AND we can scroll up */}
+        {showPagination && canScrollUp && (
           <button
             style={upArrowStyle}
             onClick={handlePageUp}
-            disabled={!canScrollUp}
             onMouseEnter={() => {
               setHoveredArrow('up');
-              if (isDragging && canScrollUp) {
-                startAutoScroll('up');
-              }
+              if (isDragging) startAutoScroll('up');
             }}
             onMouseLeave={() => {
               setHoveredArrow(null);
               stopAutoScroll();
             }}
             onDragOver={(e) => {
-              if (isDragging && canScrollUp) {
+              if (isDragging) {
                 e.preventDefault();
                 startAutoScroll('up');
               }
             }}
-            onDragLeave={() => {
-              stopAutoScroll();
-            }}
+            onDragLeave={() => stopAutoScroll()}
           >
             ▲
           </button>
@@ -239,7 +213,6 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
             const isHovered = hoveredIndex === index;
             const isDragOver = dragOverIndex === index;
             const showAsHovered = isDragging || isHovered;
-            // FIXED: Check if this is a system list and dragging is happening
             const isSystemAndDragging = list.isSystem && isDragging;
 
             return (
@@ -264,7 +237,6 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                         : {}),
                       ...(showAsHovered && !isActive && !isSystemAndDragging ? styles.scrollDotHover : {}),
                       ...(isDragOver && !list.isSystem ? styles.scrollDotDragOver : {}),
-                      // FIXED: Add disabled style for system lists during drag
                       ...(isSystemAndDragging ? styles.scrollDotDisabled : {}),
                     }}
                     onClick={() => onNavigate(index)}
@@ -276,7 +248,6 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                       style={{
                         ...styles.scrollIcon,
                         ...(showAsHovered || isActive || isDragOver ? styles.scrollIconVisible : {}),
-                        // FIXED: Reduce opacity of icon for system lists during drag
                         ...(isSystemAndDragging ? { opacity: 0.3 } : {}),
                       }}
                     >
@@ -291,30 +262,26 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
           })}
         </div>
 
-        {showPagination && (
+        {/* Only render DOWN arrow if pagination is needed AND we can scroll down */}
+        {showPagination && canScrollDown && (
           <button
             style={downArrowStyle}
             onClick={handlePageDown}
-            disabled={!canScrollDown}
             onMouseEnter={() => {
               setHoveredArrow('down');
-              if (isDragging && canScrollDown) {
-                startAutoScroll('down');
-              }
+              if (isDragging) startAutoScroll('down');
             }}
             onMouseLeave={() => {
               setHoveredArrow(null);
               stopAutoScroll();
             }}
             onDragOver={(e) => {
-              if (isDragging && canScrollDown) {
+              if (isDragging) {
                 e.preventDefault();
                 startAutoScroll('down');
               }
             }}
-            onDragLeave={() => {
-              stopAutoScroll();
-            }}
+            onDragLeave={() => stopAutoScroll()}
           >
             ▼
           </button>

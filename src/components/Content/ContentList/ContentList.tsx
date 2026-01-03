@@ -3,6 +3,7 @@ import { ContentList as ContentListType } from '@models/ContentList';
 import ContentListHeader from './ContentListHeader';
 import ContentItem from '../ContentItem/ContentItem';
 import UploadButton from '../UploadButton/UploadButton';
+import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import { styles } from './styles';
 
 interface ContentListProps {
@@ -37,29 +38,28 @@ const ContentList: React.FC<ContentListProps> = ({
   onItemDragEnd,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const iconRef = useRef<HTMLSpanElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isLeftArrowHovered, setIsLeftArrowHovered] = useState(false);
   const [isRightArrowHovered, setIsRightArrowHovered] = useState(false);
 
+  // Dialog State
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
   const updateArrows = () => {
     const container = scrollRef.current;
     if (!container) return;
 
-    const itemCount = list.items.length + 1; // +1 for upload button
+    const itemCount = list.items.length + 1;
     const scrollLeft = container.scrollLeft;
 
-    // Show arrows only if more than 5 items
     if (itemCount <= 5) {
       setShowLeftArrow(false);
       setShowRightArrow(false);
       return;
     }
 
-    // Show ONLY left arrow if scrolled from start (scrollLeft > 10)
-    // Show ONLY right arrow if at start (scrollLeft < 10)
     if (scrollLeft < 10) {
       setShowLeftArrow(false);
       setShowRightArrow(true);
@@ -82,9 +82,8 @@ const ContentList: React.FC<ContentListProps> = ({
     const container = scrollRef.current;
     if (!container) return;
 
-    // Updated item widths for bigger items
     const itemWidth = list.listType === 'video' ? 280 : 380;
-    const scrollAmount = itemWidth * 5 + 20 * 4; // 5 items + gaps (updated gap from 16 to 20)
+    const scrollAmount = itemWidth * 5 + 20 * 4;
 
     if (direction === 'left') {
       container.scrollLeft = Math.max(0, container.scrollLeft - scrollAmount);
@@ -96,9 +95,15 @@ const ContentList: React.FC<ContentListProps> = ({
     setTimeout(updateArrows, 100);
   };
 
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      onItemDelete(itemToDelete); // Call the prop function
+      setItemToDelete(null);
+    }
+  };
+
   const containerStyle = {
     ...styles.listContainer,
-    // Updated minHeight for bigger image items
     ...(list.listType === 'image' ? { minHeight: '260px' } : {}),
   };
 
@@ -117,75 +122,85 @@ const ContentList: React.FC<ContentListProps> = ({
   };
 
   return (
-    <div
-      data-list-id={list.id}
-      style={containerStyle}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <ContentListHeader
-        icon={list.icon}
-        title={list.title}
-        subtitle={list.subtitle}
-        isSystem={list.isSystem}
-        isEditable={!list.isSystem}
-        onTitleChange={onTitleChange}
-        onIconClick={onIconClick}
-        onDelete={onDelete}
-        listId={list.id}
-      />
-
+    <>
       <div
-        ref={scrollRef}
-        style={styles.listScrollWrapper}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
+        data-list-id={list.id}
+        style={containerStyle}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        <UploadButton listType={list.listType} onUpload={onUpload} />
-        
-        {list.items.map((item) => (
-          <ContentItem
-            key={item.id}
-            item={item}
-            listType={list.listType}
-            onDragStart={(e) => {
-              e.dataTransfer.setData('itemId', item.id);
-              e.dataTransfer.setData('listId', list.id);
-              // Call the drag start handler to notify parent
-              if (onItemDragStart) {
-                onItemDragStart(item.id);
-              }
-            }}
-            onDragEnd={() => {
-              // Call the drag end handler to notify parent
-              if (onItemDragEnd) {
-                onItemDragEnd();
-              }
-            }}
-            onClick={() => onItemClick(item.id)}
-            onDelete={() => onItemDelete(item.id)}
-            onToggleFavorite={() => onToggleFavorite(item.id)}
-          />
-        ))}
+        <ContentListHeader
+          icon={list.icon}
+          title={list.title}
+          subtitle={list.subtitle}
+          isSystem={list.isSystem}
+          isEditable={!list.isSystem}
+          onTitleChange={onTitleChange}
+          onIconClick={onIconClick}
+          onDelete={onDelete}
+          listId={list.id}
+        />
+
+        <div
+          ref={scrollRef}
+          style={styles.listScrollWrapper}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+        >
+          <UploadButton listType={list.listType} onUpload={onUpload} />
+          
+          {list.items.map((item) => (
+            <ContentItem
+              key={item.id}
+              item={item}
+              listType={list.listType}
+              onDragStart={(e) => {
+                e.dataTransfer.setData('itemId', item.id);
+                e.dataTransfer.setData('listId', list.id);
+                if (onItemDragStart) {
+                  onItemDragStart(item.id);
+                }
+              }}
+              onDragEnd={() => {
+                if (onItemDragEnd) {
+                  onItemDragEnd();
+                }
+              }}
+              onClick={() => onItemClick(item.id)}
+              onDelete={() => setItemToDelete(item.id)} // Open dialog instead of alert
+              onToggleFavorite={() => onToggleFavorite(item.id)}
+            />
+          ))}
+        </div>
+
+        <button 
+          style={leftArrowStyle} 
+          onClick={() => handleScroll('left')}
+          onMouseEnter={() => setIsLeftArrowHovered(true)}
+          onMouseLeave={() => setIsLeftArrowHovered(false)}
+        >
+          ‹
+        </button>
+        <button 
+          style={rightArrowStyle} 
+          onClick={() => handleScroll('right')}
+          onMouseEnter={() => setIsRightArrowHovered(true)}
+          onMouseLeave={() => setIsRightArrowHovered(false)}
+        >
+          ›
+        </button>
       </div>
 
-      <button 
-        style={leftArrowStyle} 
-        onClick={() => handleScroll('left')}
-        onMouseEnter={() => setIsLeftArrowHovered(true)}
-        onMouseLeave={() => setIsLeftArrowHovered(false)}
-      >
-        ‹
-      </button>
-      <button 
-        style={rightArrowStyle} 
-        onClick={() => handleScroll('right')}
-        onMouseEnter={() => setIsRightArrowHovered(true)}
-        onMouseLeave={() => setIsRightArrowHovered(false)}
-      >
-        ›
-      </button>
-    </div>
+      <ConfirmDialog
+        isOpen={!!itemToDelete}
+        title="Delete Content?"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        onCancel={() => setItemToDelete(null)}
+      />
+    </>
   );
 };
 

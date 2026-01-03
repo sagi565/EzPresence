@@ -52,7 +52,6 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
     e.stopPropagation();
     
     if (isEditable && iconRef.current) {
-      console.log('Icon clicked, opening emoji picker');
       onIconClick(iconRef.current);
     }
   };

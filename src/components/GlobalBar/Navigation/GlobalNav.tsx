@@ -9,7 +9,8 @@ import { useUserProfile } from '@/hooks/user/useUserProfile';
 
 interface GlobalNavProps {
   brands: Brand[];
-  currentBrand: Brand;
+  // Fix: Allow null for initial loading state
+  currentBrand: Brand | null; 
   onBrandChange: (brandId: string) => void;
 }
 
@@ -188,14 +189,12 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
 
       <div style={styles.navRight}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginRight: '8px' }}>
-          {/* User Name - Bigger and bolder */}
           {profile && (
             <span style={styles.userName}>
               Hello, {profile.firstName}
             </span>
           )}
           
-          {/* Intuitive Logout Icon */}
           <button
             onClick={handleLogout}
             style={{

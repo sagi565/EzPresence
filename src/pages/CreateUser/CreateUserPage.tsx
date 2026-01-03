@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePostUserProfile, CreateUserProfileData } from '@hooks/usePostUserProfile';
+import { usePostUser, CreateUserData } from '@/hooks/user/usePostUser';
 import { useUserProfile } from '@/hooks/user/useUserProfile';
 import { Gender, validateBirthDate } from '@models/User';
 import SocialsBackground from '@components/Background/SocialsBackground';
 import { DatePicker, CountrySelector, GenderSelector, FormInput } from '@components/CreateUser';
 import { styles } from './styles';
-import { CreateUserData, usePostUser } from '@/hooks/user/usePostUser';
 
 // Add CSS animations and dropdown styling
 const styleSheet = document.createElement('style');
@@ -89,7 +88,7 @@ if (!document.head.querySelector('style[data-create-user-animations]')) {
 const CreateUserPage: React.FC = () => {
   const navigate = useNavigate();
   const { createUser, loading, error } = usePostUser(); 
-  const { refetchProfile } = useUserProfile();
+  const { refetchProfile, hasProfile } = useUserProfile();
   
   const [formData, setFormData] = useState<CreateUserData>({
     firstName: '',
@@ -99,12 +98,11 @@ const CreateUserPage: React.FC = () => {
     gender: undefined,
   });
   
-  // ... (Keep existing state for errors, UI flags) ...
   const [errors, setErrors] = useState<{
-      firstName?: string;
-      lastName?: string;
-      birthDate?: string;
-    }>({});
+    firstName?: string;
+    lastName?: string;
+    birthDate?: string;
+  }>({});
     
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
@@ -112,37 +110,54 @@ const CreateUserPage: React.FC = () => {
   const [showRipple, setShowRipple] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   
+  // FIXED: Check if user already has a profile and redirect them
+  useEffect(() => {
+    console.log('🔍 [CreateUserPage] Checking if user already has profile...');
+    
+    // Small delay to ensure profile has loaded
+    const checkProfile = async () => {
+      // Wait a bit for profile to load
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (hasProfile()) {
+        console.log('⚠️ [CreateUserPage] User already has profile, redirecting to brand creation');
+        navigate('/create-your-first-brand', { replace: true });
+      }
+    };
+    
+    checkProfile();
+  }, [hasProfile, navigate]);
+  
   const handleButtonClick = () => {
-      if (!isSubmitting && !loading) {
-        setShowRipple(true);
-        setTimeout(() => setShowRipple(false), 600);
-      }
-    };
+    if (!isSubmitting && !loading) {
+      setShowRipple(true);
+      setTimeout(() => setShowRipple(false), 600);
+    }
+  };
 
-  // ... (Keep validateForm) ...
-   const validateForm = (): boolean => {
-      const newErrors: typeof errors = {};
-      
-      if (!formData.firstName.trim()) {
-        newErrors.firstName = 'First name is required';
-      } else if (formData.firstName.length < 2) {
-        newErrors.firstName = 'First name must be at least 2 characters';
-      }
-      
-      if (!formData.lastName.trim()) {
-        newErrors.lastName = 'Last name is required';
-      } else if (formData.lastName.length < 2) {
-        newErrors.lastName = 'Last name must be at least 2 characters';
-      }
-      
-      const birthDateValidation = validateBirthDate(formData.birthDate);
-      if (!birthDateValidation.isValid) {
-        newErrors.birthDate = birthDateValidation.error;
-      }
-      
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
-    };
+  const validateForm = (): boolean => {
+    const newErrors: typeof errors = {};
+    
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    } else if (formData.firstName.length < 2) {
+      newErrors.firstName = 'First name must be at least 2 characters';
+    }
+    
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    } else if (formData.lastName.length < 2) {
+      newErrors.lastName = 'Last name must be at least 2 characters';
+    }
+    
+    const birthDateValidation = validateBirthDate(formData.birthDate);
+    if (!birthDateValidation.isValid) {
+      newErrors.birthDate = birthDateValidation.error;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,19 +166,38 @@ const CreateUserPage: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      await createUser(formData); // Call the new hook function
-      console.log('✅ Profile created successfully');
+      console.log('📤 [CreateUserPage] Creating user profile...');
+      await createUser(formData);
+      console.log('✅ [CreateUserPage] Profile created successfully');
       
       setSubmitSuccess(true);
+      
+      // Refetch profile to update the context
+      console.log('🔄 [CreateUserPage] Refetching profile...');
       await refetchProfile();
       
       setTimeout(() => {
-        navigate('/create-your-first-brand');
+        console.log('🔀 [CreateUserPage] Redirecting to brand creation...');
+        navigate('/create-your-first-brand', { replace: true });
       }, 500);
       
-    } catch (err) {
-      console.error('Failed to create profile:', err);
-      setIsSubmitting(false);
+    } catch (err: any) {
+      console.error('❌ [CreateUserPage] Failed to create profile:', err);
+      
+      // FIXED: If the error is "user already exists", redirect to brand creation
+      if (err.message && err.message.toLowerCase().includes('already exists')) {
+        console.log('⚠️ [CreateUserPage] User already exists, redirecting to brand creation');
+        setSubmitSuccess(true);
+        
+        // Refetch to ensure we have the latest data
+        await refetchProfile();
+        
+        setTimeout(() => {
+          navigate('/create-your-first-brand', { replace: true });
+        }, 500);
+      } else {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -184,129 +218,127 @@ const CreateUserPage: React.FC = () => {
         </div>
 
         <form style={styles.form} className="create-user-form" onSubmit={handleSubmit}>
-          {/* ... (Keep existing form fields exactly as they are) ... */}
-           {/* Name Row */}
-            {(() => {
-              interface NameInputChange {
-                (value: string): void;
-              }
-  
-              const onFirstNameChange: NameInputChange = (value) => handleInputChange('firstName', value);
-              const onLastNameChange: NameInputChange = (value) => handleInputChange('lastName', value);
-  
-              return (
-                <div style={styles.row}>
-                  <FormInput
-                    label="First Name"
-                    value={formData.firstName}
-                    onChange={onFirstNameChange}
-                    error={errors.firstName}
-                    required
-                    maxLength={50}
-                    name="given-name"
-                    autoComplete="given-name"
-                  />
-  
-                  <FormInput
-                    label="Last Name"
-                    value={formData.lastName}
-                    onChange={onLastNameChange}
-                    error={errors.lastName}
-                    required
-                    maxLength={50}
-                    name="family-name"
-                    autoComplete="family-name"
-                  />
-                </div>
-              );
-            })()}
-  
-            {/* Birth Date */}
-            <DatePicker
-              label="Birth Date"
-              value={formData.birthDate}
-              onChange={(date) => handleInputChange('birthDate', date)}
-              error={errors.birthDate}
-              required
-              minAge={13}
-              maxAge={120}
+          {/* Name Row */}
+          {(() => {
+            interface NameInputChange {
+              (value: string): void;
+            }
+
+            const onFirstNameChange: NameInputChange = (value) => handleInputChange('firstName', value);
+            const onLastNameChange: NameInputChange = (value) => handleInputChange('lastName', value);
+
+            return (
+              <div style={styles.row}>
+                <FormInput
+                  label="First Name"
+                  value={formData.firstName}
+                  onChange={onFirstNameChange}
+                  error={errors.firstName}
+                  required
+                  maxLength={50}
+                  name="given-name"
+                  autoComplete="given-name"
+                />
+
+                <FormInput
+                  label="Last Name"
+                  value={formData.lastName}
+                  onChange={onLastNameChange}
+                  error={errors.lastName}
+                  required
+                  maxLength={50}
+                  name="family-name"
+                  autoComplete="family-name"
+                />
+              </div>
+            );
+          })()}
+
+          {/* Birth Date */}
+          <DatePicker
+            label="Birth Date"
+            value={formData.birthDate}
+            onChange={(date) => handleInputChange('birthDate', date)}
+            error={errors.birthDate}
+            required
+            minAge={13}
+            maxAge={120}
+          />
+
+          {/* Country and Gender Row */}
+          <div style={styles.row}>
+            <CountrySelector
+              label="Country"
+              value={formData.country || ''}
+              onChange={(country) => handleInputChange('country', country)}
             />
-  
-            {/* Country and Gender Row */}
-            <div style={styles.row}>
-              <CountrySelector
-                label="Country"
-                value={formData.country || ''}
-                onChange={(country) => handleInputChange('country', country)}
-              />
-  
-              <GenderSelector
-                label="Gender"
-                value={formData.gender}
-                onChange={(gender) => handleInputChange('gender', gender)}
-              />
-            </div>
+
+            <GenderSelector
+              label="Gender"
+              value={formData.gender}
+              onChange={(gender) => handleInputChange('gender', gender)}
+            />
+          </div>
 
           {/* Error Message */}
-          {error && (
+          {error && !error.toLowerCase().includes('already exists') && (
             <div style={styles.errorMessage}>
               <span style={styles.errorIcon}>⚠️</span>
               <span>{error}</span>
             </div>
           )}
 
-          {/* ... (Keep success message and buttons) ... */}
-           {/* Success Message */}
-                    {submitSuccess && (
-                      <div style={styles.successMessage}>
-                        <span style={styles.successIcon}>✅</span>
-                        <span>Profile created successfully! Redirecting...</span>
-                      </div>
-                    )}
-          
-                    {/* Action Button */}
-                    <div style={styles.actions}>
-                      <button
-                        type="submit"
-                        style={{
-                          ...styles.submitBtn,
-                          ...(isSubmitting || submitSuccess ? styles.submitBtnLoading : {}),
-                          ...(isButtonHovered && !isSubmitting ? styles.submitBtnHover : {}),
-                          ...(isButtonActive && !isSubmitting ? styles.submitBtnActive : {}),
-                        }}
-                        disabled={loading || isSubmitting || submitSuccess}
-                        onMouseEnter={() => setIsButtonHovered(true)}
-                        onMouseLeave={() => {
-                          setIsButtonHovered(false);
-                          setIsButtonActive(false);
-                        }}
-                        onMouseDown={() => {
-                          setIsButtonActive(true);
-                          handleButtonClick();
-                        }}
-                        onMouseUp={() => setIsButtonActive(false)}
-                      >
-                        {showRipple && <span style={styles.ripple} />}
-                        {isSubmitting ? (
-                          <>
-                            <span style={styles.spinner} />
-                            Creating...
-                          </>
-                        ) : submitSuccess ? (
-                          <>
-                            <span>✅</span>
-                            Success!
-                          </>
-                        ) : (
-                          'Create User'
-                        )}
-                      </button>
-                    </div>
-          
-                    {/* Privacy Note */}
-                    <p style={styles.privacyNote}>
-                      🔒 Your information is secure and will only be used to personalize your experience
-                    </p>
+          {/* Success Message */}
+          {submitSuccess && (
+            <div style={styles.successMessage}>
+              <span style={styles.successIcon}>✅</span>
+              <span>Profile created successfully! Redirecting...</span>
+            </div>
+          )}
+
+          {/* Action Button */}
+          <div style={styles.actions}>
+            <button
+              type="submit"
+              style={{
+                ...styles.submitBtn,
+                ...(isSubmitting || submitSuccess ? styles.submitBtnLoading : {}),
+                ...(isButtonHovered && !isSubmitting ? styles.submitBtnHover : {}),
+                ...(isButtonActive && !isSubmitting ? styles.submitBtnActive : {}),
+              }}
+              disabled={loading || isSubmitting || submitSuccess}
+              onMouseEnter={() => setIsButtonHovered(true)}
+              onMouseLeave={() => {
+                setIsButtonHovered(false);
+                setIsButtonActive(false);
+              }}
+              onMouseDown={() => {
+                setIsButtonActive(true);
+                handleButtonClick();
+              }}
+              onMouseUp={() => setIsButtonActive(false)}
+            >
+              {showRipple && <span style={styles.ripple} />}
+              {isSubmitting ? (
+                <>
+                  <span style={styles.spinner} />
+                  Creating...
+                </>
+              ) : submitSuccess ? (
+                <>
+                  <span>✅</span>
+                  Success!
+                </>
+              ) : (
+                'Create Profile'
+              )}
+            </button>
+          </div>
+
+          {/* Privacy Note */}
+          <p style={styles.privacyNote}>
+            🔒 Your information is secure and will only be used to personalize your experience
+          </p>
         </form>
       </div>
     </div>

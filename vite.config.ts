@@ -20,6 +20,7 @@ export default defineConfig({
       '@lib': path.resolve(__dirname, './src/lib'),
       '@theme': path.resolve(__dirname, './src/theme'),
       '@utils': path.resolve(__dirname, './src/utils'),
+      '@context': path.resolve(__dirname, './src/context'),
     },
   },
     server: {

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useBrands } from '@/hooks/brands/useBrands';
-import { useContentLists } from '@hooks/useContentLists';
+import { useContentLists } from '@hooks/contents/useContentLists';
 import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
 import ContentList from '@components/Content/ContentList/ContentList';
 import ScrollNavigation from '@components/Content/ScrollNavigation/ScrollNavigation';
@@ -8,8 +8,9 @@ import EmojiPicker from '@components/Content/EmojiPicker/EmojiPicker';
 import { styles } from './styles';
 
 const ContentPage: React.FC = () => {
-  // Added loading state destructuring
-  const { brands, currentBrand, switchBrand, loading: brandsLoading } = useBrands();
+  const { brands, currentBrand, switchBrand } = useBrands();
+  
+  // Pass brandId to ensure hook refetches
   const {
     lists,
     addNewList,
@@ -21,7 +22,7 @@ const ContentPage: React.FC = () => {
     deleteItem,
     toggleFavorite,
     uploadContent,
-  } = useContentLists();
+  } = useContentLists(currentBrand?.id);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -33,6 +34,8 @@ const ContentPage: React.FC = () => {
   const scrollVelocity = useRef(0);
   const velocityCheckInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isDraggingItem, setIsDraggingItem] = useState(false);
+  
+  const prevListsLength = useRef(lists.length);
 
   const [emojiPicker, setEmojiPicker] = useState<{
     isOpen: boolean;
@@ -54,205 +57,206 @@ const ContentPage: React.FC = () => {
 
   const [hoveredAddButton, setHoveredAddButton] = useState(false);
 
-  // ... (Keep existing scroll effects: updateCurrentIndex, velocity tracking, handleScroll, handleWheel) ...
-  // Update current index based on scroll position
-    const updateCurrentIndex = useCallback(() => {
-      if (!containerRef.current || isScrolling) return;
-  
-      const container = containerRef.current;
-      const scrollTop = container.scrollTop;
-      const containerHeight = container.clientHeight;
-      const scrollCenter = scrollTop + containerHeight / 2;
-  
-      let closestIndex = 0;
-      let closestDistance = Infinity;
-  
-      listsRef.current.forEach((list, index) => {
-        if (!list) return;
-        const listTop = list.offsetTop;
-        const listHeight = list.offsetHeight;
-        const listCenter = listTop + listHeight / 2;
-        const distance = Math.abs(scrollCenter - listCenter);
-  
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestIndex = index;
+  useEffect(() => {
+    if (lists.length > prevListsLength.current) {
+        const newListId = getNewListId();
+        if (newListId) {
+          const newListIndex = lists.findIndex(list => list.id === newListId);
+          if (newListIndex !== -1) {
+            setTimeout(() => {
+              scrollToList(newListIndex);
+            }, 100);
+          }
         }
-      });
-  
-      if (closestIndex !== currentIndex) {
-        setCurrentIndex(closestIndex);
+    }
+    prevListsLength.current = lists.length;
+  }, [lists, getNewListId]);
+
+  const updateCurrentIndex = useCallback(() => {
+    if (!containerRef.current || isScrolling) return;
+
+    const container = containerRef.current;
+    const scrollTop = container.scrollTop;
+    const containerHeight = container.clientHeight;
+    const scrollCenter = scrollTop + containerHeight / 2;
+
+    let closestIndex = 0;
+    let closestDistance = Infinity;
+
+    listsRef.current.forEach((list, index) => {
+      if (!list) return;
+      const listTop = list.offsetTop;
+      const listHeight = list.offsetHeight;
+      const listCenter = listTop + listHeight / 2;
+      const distance = Math.abs(scrollCenter - listCenter);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
       }
-    }, [currentIndex, isScrolling]);
-  
-    // Track scroll velocity AND direction for hard scrolling detection
-    useEffect(() => {
-      const container = containerRef.current;
-      if (!container) return;
-  
-      velocityCheckInterval.current = setInterval(() => {
-        const currentScrollTop = container.scrollTop;
-        const delta = currentScrollTop - lastScrollTop.current;
-        scrollVelocity.current = delta; // Store signed delta, not absolute
-        lastScrollTop.current = currentScrollTop;
+    });
+
+    if (closestIndex !== currentIndex) {
+      setCurrentIndex(closestIndex);
+    }
+  }, [currentIndex, isScrolling]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    velocityCheckInterval.current = setInterval(() => {
+      const currentScrollTop = container.scrollTop;
+      const delta = currentScrollTop - lastScrollTop.current;
+      scrollVelocity.current = delta; 
+      lastScrollTop.current = currentScrollTop;
+    }, 50);
+
+    return () => {
+      if (velocityCheckInterval.current) {
+        clearInterval(velocityCheckInterval.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (updateIndexTimeoutRef.current) {
+        clearTimeout(updateIndexTimeoutRef.current);
+      }
+
+      updateIndexTimeoutRef.current = setTimeout(() => {
+        const scrollTop = container.scrollTop;
+        const containerHeight = container.clientHeight;
+        const scrollCenter = scrollTop + containerHeight / 2;
+
+        let closestIndex = 0;
+        let closestDistance = Infinity;
+
+        listsRef.current.forEach((list, index) => {
+          if (!list) return;
+          const listTop = list.offsetTop;
+          const listHeight = list.offsetHeight;
+          const listCenter = listTop + listHeight / 2;
+          const distance = Math.abs(scrollCenter - listCenter);
+
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = index;
+          }
+        });
+
+        if (closestIndex !== currentIndex) {
+          setCurrentIndex(closestIndex);
+        }
       }, 50);
-  
-      return () => {
-        if (velocityCheckInterval.current) {
-          clearInterval(velocityCheckInterval.current);
-        }
-      };
-    }, []);
-  
-    // Handle scroll event - FIXED: Better scroll behavior with throttled index updates
-    useEffect(() => {
-      const container = containerRef.current;
-      if (!container) return;
-  
-      const handleScroll = () => {
-        // FIXED: Throttle the current index updates to prevent flickering
-        if (updateIndexTimeoutRef.current) {
-          clearTimeout(updateIndexTimeoutRef.current);
-        }
-  
-        updateIndexTimeoutRef.current = setTimeout(() => {
+
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      scrollTimeoutRef.current = setTimeout(() => {
+        if (!isScrolling) {
           const scrollTop = container.scrollTop;
+          const scrollHeight = container.scrollHeight;
           const containerHeight = container.clientHeight;
+
+          const absVelocity = Math.abs(scrollVelocity.current);
+          const isHardScroll = absVelocity > 100;
+          
+          if (isHardScroll && scrollTop < containerHeight * 0.3) {
+            scrollToList(0);
+            return;
+          }
+
+          const distanceFromBottom = scrollHeight - scrollTop - containerHeight;
+          if (isHardScroll && distanceFromBottom < containerHeight * 0.3 && scrollVelocity.current > 0) {
+            scrollToList(lists.length);
+            return;
+          }
+
           const scrollCenter = scrollTop + containerHeight / 2;
-  
           let closestIndex = 0;
           let closestDistance = Infinity;
-  
+
           listsRef.current.forEach((list, index) => {
             if (!list) return;
             const listTop = list.offsetTop;
             const listHeight = list.offsetHeight;
             const listCenter = listTop + listHeight / 2;
             const distance = Math.abs(scrollCenter - listCenter);
-  
+
             if (distance < closestDistance) {
               closestDistance = distance;
               closestIndex = index;
             }
           });
-  
-          // Update current index only if it changed
-          if (closestIndex !== currentIndex) {
-            setCurrentIndex(closestIndex);
-          }
-        }, 50); // Small delay to prevent rapid flickering
-  
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current);
+
+          scrollToList(closestIndex);
         }
-  
-        scrollTimeoutRef.current = setTimeout(() => {
-          if (!isScrolling) {
-            const scrollTop = container.scrollTop;
-            const scrollHeight = container.scrollHeight;
-            const containerHeight = container.clientHeight;
-  
-            // Use signed velocity for direction detection
-            const absVelocity = Math.abs(scrollVelocity.current);
-            const isHardScroll = absVelocity > 100;
-            
-            // If hard scrolling and near top, snap to top
-            if (isHardScroll && scrollTop < containerHeight * 0.3) {
-              scrollToList(0);
-              return;
-            }
-  
-            // FIXED: Better bottom handling - check if scrolling down (positive velocity) when near bottom
-            const distanceFromBottom = scrollHeight - scrollTop - containerHeight;
-            if (isHardScroll && distanceFromBottom < containerHeight * 0.3 && scrollVelocity.current > 0) {
-              scrollToList(lists.length);
-              return;
-            }
-  
-            // Calculate closest for snapping
-            const scrollCenter = scrollTop + containerHeight / 2;
-            let closestIndex = 0;
-            let closestDistance = Infinity;
-  
-            listsRef.current.forEach((list, index) => {
-              if (!list) return;
-              const listTop = list.offsetTop;
-              const listHeight = list.offsetHeight;
-              const listCenter = listTop + listHeight / 2;
-              const distance = Math.abs(scrollCenter - listCenter);
-  
-              if (distance < closestDistance) {
-                closestDistance = distance;
-                closestIndex = index;
-              }
-            });
-  
-            // Otherwise, snap to closest section
-            scrollToList(closestIndex);
-          }
-        }, 150);
-      };
-  
-      container.addEventListener('scroll', handleScroll, { passive: true });
-  
-      return () => {
-        container.removeEventListener('scroll', handleScroll);
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current);
+      }, 150);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      if (updateIndexTimeoutRef.current) {
+        clearTimeout(updateIndexTimeoutRef.current);
+      }
+    };
+  }, [currentIndex, isScrolling, lists.length]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let accumulated = 0;
+    let scrollTimer: ReturnType<typeof setTimeout> | null = null;
+    let direction = 1;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+
+      direction = e.deltaY > 0 ? 1 : -1;
+      accumulated += e.deltaY;
+
+      if (scrollTimer) clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        const total = Math.abs(accumulated);
+
+        let step = 0;
+        if (total > 3500) step = 4;
+        else if (total > 2000) step = 3;
+        else if (total > 900) step = 2;
+        else if (total > 200) step = 1;
+
+        if (step > 0) {
+          const nextIndex = Math.max(
+            0,
+            Math.min(lists.length, currentIndex + step * direction)
+          );
+          
+          scrollToList(nextIndex);
         }
-        if (updateIndexTimeoutRef.current) {
-          clearTimeout(updateIndexTimeoutRef.current);
-        }
-      };
-    }, [currentIndex, isScrolling, lists.length]);
-  
-    // Wheel event handler with direct deltaY strength detection
-    useEffect(() => {
-      const container = containerRef.current;
-      if (!container) return;
-  
-      let accumulated = 0;
-      let scrollTimer: ReturnType<typeof setTimeout> | null = null;
-      let direction = 1;
-  
-      const handleWheel = (e: WheelEvent) => {
-        // FIXED: Don't block wheel events when isScrolling, just prevent default
-        e.preventDefault();
-  
-        direction = e.deltaY > 0 ? 1 : -1;
-        accumulated += e.deltaY;
-  
-        if (scrollTimer) clearTimeout(scrollTimer);
-        scrollTimer = setTimeout(() => {
-          const total = Math.abs(accumulated);
-  
-          let step = 0;
-          if (total > 3500) step = 4;
-          else if (total > 2000) step = 3;
-          else if (total > 900) step = 2;
-          else if (total > 200) step = 1;
-  
-          if (step > 0) {
-            const nextIndex = Math.max(
-              0,
-              Math.min(lists.length, currentIndex + step * direction)
-            );
-            
-            // FIXED: Allow scroll even if currently scrolling (it will interrupt)
-            scrollToList(nextIndex);
-          }
-  
-          accumulated = 0;
-          scrollTimer = null;
-        }, 30);
-      };
-  
-      container.addEventListener('wheel', handleWheel, { passive: false });
-      return () => {
-        container.removeEventListener('wheel', handleWheel);
-        if (scrollTimer) clearTimeout(scrollTimer);
-      };
-    }, [currentIndex, isScrolling, lists.length]);
+
+        accumulated = 0;
+        scrollTimer = null;
+      }, 30);
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+      if (scrollTimer) clearTimeout(scrollTimer);
+    };
+  }, [currentIndex, isScrolling, lists.length]);
 
   const scrollToList = (index: number) => {
     const targetList = index < lists.length ? listsRef.current[index] : listsRef.current[lists.length];
@@ -340,44 +344,6 @@ const ContentPage: React.FC = () => {
     ...(hoveredAddButton ? styles.addListButtonHover : {}),
   };
 
-  // 1. Show loading state if brands are loading
-  if (brandsLoading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        background: '#f9fafb',
-        flexDirection: 'column',
-        gap: '16px'
-      }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          border: '3px solid rgba(155, 93, 229, 0.2)',
-          borderTopColor: '#9b5de5',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-        }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <p style={{ color: '#6b7280', fontSize: '14px' }}>Loading your brand...</p>
-      </div>
-    );
-  }
-
-  // 2. Safely handle case where no brand exists (though Auth wrapper usually catches this)
-  if (!currentBrand) {
-     return (
-        <div style={styles.container}>
-            <div style={{ padding: '40px', textAlign: 'center' }}>
-                <h2>No Brand Selected</h2>
-                <p>Please create or select a brand to view content.</p>
-            </div>
-        </div>
-     );
-  }
-
   return (
     <div style={styles.container}>
       <GlobalNav
@@ -386,7 +352,12 @@ const ContentPage: React.FC = () => {
         onBrandChange={switchBrand}
       />
 
-      <div ref={containerRef} style={styles.contentArea}>
+      {/* KEY FIX: Using key={currentBrand.id} forces a full re-render on brand switch */}
+      <div 
+        ref={containerRef} 
+        style={styles.contentArea} 
+        key={currentBrand?.id || 'no-brand'}
+      >
         {lists.map((list, index) => (
           <div
             key={list.id}
@@ -406,11 +377,11 @@ const ContentPage: React.FC = () => {
                 onTitleChange={(newTitle) => updateListTitle(list.id, newTitle)}
                 onIconClick={(element: HTMLElement) => handleIconClick(list.id, element)}
                 onItemMove={(itemId) => {}}
+                
                 onItemDelete={(itemId) => {
-                  if (confirm('Are you sure you want to remove this content?')) {
-                    deleteItem(itemId, list.id);
-                  }
+                   deleteItem(itemId, list.id);
                 }}
+
                 onToggleFavorite={(itemId) => toggleFavorite(itemId, list.id)}
                 onUpload={(file) => uploadContent(list.id, file)}
                 onItemClick={handleItemClick}

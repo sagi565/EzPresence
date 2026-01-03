@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePostBrand, CreateBrandData } from '@hooks/brands/usePostBrand';
 import { useBrands } from '@hooks/brands/useBrands';
@@ -98,7 +98,7 @@ if (!document.head.querySelector('style[data-create-brand-animations]')) {
 const CreateBrandPage: React.FC = () => {
   const navigate = useNavigate();
   const { createBrand, loading, error } = usePostBrand();
-  const { refetchBrands } = useBrands();
+  const { refetchBrands, hasBrands, brands, loading: brandsLoading } = useBrands();
   
   const [formData, setFormData] = useState<CreateBrandData>({
     name: '',
@@ -116,6 +116,27 @@ const CreateBrandPage: React.FC = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // FIXED: Check if user already has brands and redirect them
+  useEffect(() => {
+    console.log('🔍 [CreateBrandPage] Checking if user already has brands...');
+    console.log('🔍 [CreateBrandPage] brandsLoading:', brandsLoading, 'hasBrands:', hasBrands, 'brands count:', brands.length);
+    
+    // Wait for brands to finish loading
+    if (brandsLoading) {
+      console.log('⏳ [CreateBrandPage] Still loading brands...');
+      return;
+    }
+    
+    // If user has brands, redirect to scheduler
+    if (hasBrands) {
+      console.log('⚠️ [CreateBrandPage] User already has brands, redirecting to scheduler');
+      console.log('🏢 [CreateBrandPage] Brands:', brands.map(b => b.name).join(', '));
+      navigate('/scheduler', { replace: true });
+    } else {
+      console.log('📭 [CreateBrandPage] No brands found, user can create one');
+    }
+  }, [hasBrands, brandsLoading, brands, navigate]);
 
   const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!isSubmitting && !loading) {
@@ -162,26 +183,60 @@ const CreateBrandPage: React.FC = () => {
     setIsSubmitting(true);
     
     try {
+      console.log('📤 [CreateBrandPage] Creating brand...');
+      
       // Create the brand and set it as active (using setActive=true query param)
       const newBrand = await createBrand(formData);
-      console.log('✅ Brand created successfully:', newBrand);
+      console.log('✅ [CreateBrandPage] Brand created successfully:', newBrand);
       
       // Show success state briefly
       setSubmitSuccess(true);
       
       // Refetch brands to update the list and wait for it to complete
+      console.log('🔄 [CreateBrandPage] Refetching brands...');
       await refetchBrands();
       
       // Small delay to ensure state is fully updated, then navigate with replace
       setTimeout(() => {
+        console.log('🔀 [CreateBrandPage] Redirecting to scheduler...');
         navigate('/scheduler', { replace: true });
       }, 300);
       
-    } catch (err) {
-      console.error('Failed to create brand:', err);
+    } catch (err: any) {
+      console.error('❌ [CreateBrandPage] Failed to create brand:', err);
       setIsSubmitting(false);
     }
   };
+
+  // Show loading state while checking brands
+  if (brandsLoading) {
+    return (
+      <div style={styles.container}>
+        <SocialsBackground />
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          gap: '20px',
+        }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            border: '4px solid rgba(155, 93, 229, 0.2)',
+            borderTopColor: '#9b5de5',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <p style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
+            Checking your brands...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
