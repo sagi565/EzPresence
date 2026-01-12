@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { 
-  ContentList, 
+import {
+  ContentList,
   ApiContentListDto,
   ApiContentListCreateDto,
   convertApiContentListToContentList,
@@ -22,6 +22,11 @@ export const useContentLists = (brandId?: string) => {
   const [lists, setLists] = useState<ContentList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [newlyCreatedListId, setNewlyCreatedListId] = useState<string | null>(null);
+
+  const clearNewListFlag = useCallback(() => {
+    setNewlyCreatedListId(null);
+  }, []);
 
   const fetchLists = useCallback(async () => {
     // If brandId is provided but empty, or if we are in a context where we need a brand but don't have it
@@ -34,10 +39,10 @@ export const useContentLists = (brandId?: string) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // 1. Fetch Lists
       const listsResponse = await api.get<ApiContentListDto[]>('/contentlists');
-      
+
       if (!Array.isArray(listsResponse)) {
         setLists([]);
         return;
@@ -48,27 +53,27 @@ export const useContentLists = (brandId?: string) => {
 
       // 2. Fetch Content (Backend filters by the Active Brand set in session)
       const allContentsResponse = await api.get<ApiMediaContentDto[]>('/contents?count=100');
-      
-      if (Array.isArray(allContentsResponse)) {
-         convertedLists.forEach(list => {
-             list.items = allContentsResponse
-                .filter((c) => c.listUuid === list.id)
-                .map((c) => {
-                    const mediaType = (c.mediaType || '').toLowerCase();
-                    const fileName = (c.contentName || '').toLowerCase();
-                    const isVideo = mediaType.includes('video') || fileName.match(/\.(mp4|mov|avi|webm|mkv)$/);
 
-                    return {
-                      id: c.uuid,
-                      type: isVideo ? 'video' : 'image',
-                      title: c.contentName || 'Untitled',
-                      thumbnail: c.thumbnailObject || '', 
-                      favorite: c.isFavorite || false,
-                      status: 'success',
-                      createdAt: c.createdAt
-                    };
-                });
-         });
+      if (Array.isArray(allContentsResponse)) {
+        convertedLists.forEach(list => {
+          list.items = allContentsResponse
+            .filter((c) => c.listUuid === list.id)
+            .map((c) => {
+              const mediaType = (c.mediaType || '').toLowerCase();
+              const fileName = (c.contentName || '').toLowerCase();
+              const isVideo = mediaType.includes('video') || fileName.match(/\.(mp4|mov|avi|webm|mkv)$/);
+
+              return {
+                id: c.uuid,
+                type: isVideo ? 'video' : 'image',
+                title: c.contentName || 'Untitled',
+                thumbnail: c.thumbnailObject || '',
+                favorite: c.isFavorite || false,
+                status: 'success',
+                createdAt: c.createdAt
+              };
+            });
+        });
       }
 
       setLists(convertedLists);
@@ -99,15 +104,17 @@ export const useContentLists = (brandId?: string) => {
         orderIndex: lists.length
       };
       setLists(prev => [...prev, newList]);
+      setNewlyCreatedListId(tempListId);
 
       const payload: ApiContentListCreateDto = {
         listName: 'New List',
         listIcon: '📁'
       };
-      
+
       const newListUuid = await api.post<string>('/contentlists', payload);
       setLists(prev => prev.map(l => l.id === tempListId ? { ...l, id: newListUuid } : l));
-      
+      setNewlyCreatedListId(newListUuid);
+
     } catch (err) {
       console.error("Failed to create list", err);
       await fetchLists();
@@ -173,7 +180,7 @@ export const useContentLists = (brandId?: string) => {
       await api.put(`/contents/${itemId}/list/${targetListId}`);
     } catch (err) {
       console.error("Failed to move item", err);
-      await fetchLists(); 
+      await fetchLists();
     }
   }, [fetchLists]);
 
@@ -198,7 +205,7 @@ export const useContentLists = (brandId?: string) => {
         if (list.id === listId) {
           return {
             ...list,
-            items: list.items.map(item => 
+            items: list.items.map(item =>
               item.id === itemId ? { ...item, favorite: !item.favorite } : item
             )
           };
@@ -213,7 +220,7 @@ export const useContentLists = (brandId?: string) => {
 
   const uploadContent = useCallback(async (listId: string, file: File) => {
     const tempId = `temp-${Date.now()}`;
-    const thumbnailDataUrl = await generateThumbnail(file); 
+    const thumbnailDataUrl = await generateThumbnail(file);
     const isVideo = file.type.startsWith('video/');
 
     setLists(prevLists => prevLists.map(list => {
@@ -241,7 +248,7 @@ export const useContentLists = (brandId?: string) => {
         listUuid: listId,
         contentName: file.name,
         isEzGenerated: false,
-        checksumSha256: checksum 
+        checksumSha256: checksum
       });
 
       const presignedData = await api.get<PresignedUrlResponse>(`/storage/${contentId}/upload-url`);
@@ -281,8 +288,56 @@ export const useContentLists = (brandId?: string) => {
     }
   }, [fetchLists]);
 
+  const renameItem = useCallback(async (itemId: string, listId: string, newName: string) => {
+    try {
+      setLists(prev => prev.map(l => {
+        if (l.id === listId) {
+          return {
+            ...l,
+            items: l.items.map(i => i.id === itemId ? { ...i, title: newName } : i)
+          };
+        }
+        return l;
+      }));
+      // Assuming API structure for content update
+      await api.put(`/contents/${itemId}`, {
+        updatedProperties: { ContentName: newName }
+      });
+    } catch (err) {
+      console.error("Failed to rename item", err);
+      await fetchLists();
+    }
+  }, [fetchLists]);
+
+  const reorderLists = useCallback(async (startIndex: number, endIndex: number) => {
+    try {
+      setLists(prevLists => {
+        const result = Array.from(prevLists);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
+
+        // Update orderIndex
+        const updatedLists = result.map((list, index) => ({
+          ...list,
+          orderIndex: index
+        }));
+
+        // Send new order to server
+        const orderPayload = updatedLists.map((l, i) => ({ id: l.id, order: i }));
+        // Using a fire-and-forget update or assuming generic update endpoint
+        api.put('/contentlists/reorder', { orders: orderPayload })
+          .catch(err => console.error("Failed to reorder lists on server", err));
+
+        return updatedLists;
+      });
+    } catch (err) {
+      console.error("Failed to reorder lists", err);
+    }
+  }, []);
+
   return {
     lists, loading, error, addNewList, deleteList, updateListTitle,
-    updateListIcon, getNewListId, moveItem, deleteItem, toggleFavorite, uploadContent
+    updateListIcon, getNewListId, moveItem, deleteItem, toggleFavorite, uploadContent,
+    reorderLists, renameItem, newlyCreatedListId, clearNewListFlag
   };
 };

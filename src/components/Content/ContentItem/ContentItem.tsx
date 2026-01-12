@@ -2,30 +2,36 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ContentItem as ContentItemType } from '@models/ContentList';
 import { styles } from './styles';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
+import { DraggableProvided } from '@hello-pangea/dnd';
 
 interface ContentItemProps {
   item: ContentItemType;
   listType: 'video' | 'image';
-  onDragStart: (e: React.DragEvent) => void;
-  onDragEnd: () => void;
+  provided?: DraggableProvided;
+  isDragging?: boolean;
   onClick: () => void;
   onDelete: () => void;
   onRename: (newName: string) => void;
   onToggleFavorite: () => void;
+  // Legacy props kept optional to avoid breaking other usages immediately if any
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: () => void;
 }
 
 const ContentItem: React.FC<ContentItemProps> = ({
   item,
-  listType,
-  onDragStart,
-  onDragEnd,
+  // listType,
+  provided,
+  isDragging = false,
   onClick,
   onDelete,
   onRename,
   onToggleFavorite,
+  onDragStart,
+  onDragEnd,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  // const [isDragging, setIsDragging] = useState(false); // Managed by parent now
   const [showMenu, setShowMenu] = useState(false);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -51,34 +57,35 @@ const ContentItem: React.FC<ContentItemProps> = ({
       return item.thumbnail;
     }
     if (item.thumbnail.length < 20) return null;
-    
+
     const cleanBase64 = item.thumbnail.replace(/[\n\r\s]/g, '');
     return `data:image/jpeg;base64,${cleanBase64}`;
   };
 
   const thumbnailSrc = getThumbnailSrc();
 
-  const handleDragStart = (e: React.DragEvent) => {
-    if (isUploading) { e.preventDefault(); return; }
-    setIsDragging(true);
-    setShowMenu(false);
-    onDragStart(e);
-  };
+  // Legacy handler fallback
+  // const handleDragStart = (e: React.DragEvent) => {
+  //   if (isUploading) { e.preventDefault(); return; }
+  //   // setIsDragging(true); // Parent handles state
+  //   setShowMenu(false);
+  //   if (onDragStart) onDragStart(e);
+  // };
 
-  const handleDragEnd = () => {
-    setIsDragging(false);
-    onDragEnd();
-  };
+  // const handleDragEnd = () => {
+  //   // setIsDragging(false);
+  //   if (onDragEnd) onDragEnd();
+  // };
 
   // Handle hover with delay for video preview
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
-    
+
     if (isVideo && !isUploading && item.id && !item.id.startsWith('temp-')) {
       if (!fetchedUrl) {
         fetchUrl(item.id);
       }
-      
+
       hoverTimeoutRef.current = setTimeout(() => {
         setShowPreview(true);
       }, PREVIEW_DELAY);
@@ -88,7 +95,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
     setShowPreview(false);
-    
+
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
@@ -111,7 +118,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
         videoRef.current.currentTime = 0;
         const playPromise = videoRef.current.play();
         if (playPromise !== undefined) {
-          playPromise.catch(() => {});
+          playPromise.catch(() => { });
         }
       } else {
         videoRef.current.pause();
@@ -222,20 +229,20 @@ const ContentItem: React.FC<ContentItemProps> = ({
               loop
               muted
               playsInline
-              style={{ 
-                ...styles.mediaCover, 
-                opacity: showPreview && fetchedUrl ? 1 : 0 
+              style={{
+                ...styles.mediaCover,
+                opacity: showPreview && fetchedUrl ? 1 : 0
               }}
             />
           )}
-          
+
           {thumbnailSrc && (
-            <img 
-              src={thumbnailSrc} 
-              alt={item.title} 
-              style={{ 
-                ...styles.mediaCover, 
-                opacity: showPreview && fetchedUrl ? 0 : 1 
+            <img
+              src={thumbnailSrc}
+              alt={item.title}
+              style={{
+                ...styles.mediaCover,
+                opacity: showPreview && fetchedUrl ? 0 : 1
               }}
             />
           )}
@@ -255,15 +262,17 @@ const ContentItem: React.FC<ContentItemProps> = ({
 
   return (
     <div
+      ref={provided?.innerRef}
+      {...provided?.draggableProps}
+      {...provided?.dragHandleProps}
       style={{
         ...styles.contentItem,
         ...styles.contentItemVideo,
         ...(isHovered && !isUploading ? styles.contentItemHover : {}),
         ...(isDragging ? styles.contentItemDragging : {}),
+        ...provided?.draggableProps.style, // Important for dnd position
       }}
-      draggable={!isUploading && !isRenaming}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      // draggable={!isUploading && !isRenaming} // Handled by dnd
       onClick={!isUploading && !isRenaming ? onClick : undefined}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -311,7 +320,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
 
           {showMenu && (
             <div ref={menuRef} style={styles.menuDropdown} onClick={(e) => e.stopPropagation()}>
-              <button 
+              <button
                 style={{ ...styles.menuItem, ...(hoveredBtn === 'download' ? styles.menuItemHover : {}) }}
                 onClick={handleDownload}
                 onMouseEnter={() => setHoveredBtn('download')}
@@ -319,7 +328,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
               >
                 <span>⬇️</span> Download
               </button>
-              <button 
+              <button
                 style={{ ...styles.menuItem, ...(hoveredBtn === 'rename' ? styles.menuItemHover : {}) }}
                 onClick={handleRenameClick}
                 onMouseEnter={() => setHoveredBtn('rename')}
@@ -327,7 +336,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
               >
                 <span>✏️</span> Rename
               </button>
-              <button 
+              <button
                 style={{ ...styles.menuItem, ...(hoveredBtn === 'delete' ? styles.menuItemDeleteHover : {}) }}
                 onClick={handleDelete}
                 onMouseEnter={() => setHoveredBtn('delete')}
@@ -359,7 +368,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
               }}>
                 {item.title}
               </div>
-              
+
               <div style={{
                 ...styles.contentDate,
                 ...(isHovered ? styles.textVisible : {}),

@@ -15,7 +15,8 @@ interface UseConnectPlatformReturn {
 
 export const useConnectPlatform = (
   platform: SocialPlatform,
-  brandId: string
+  brandId: string,
+  isUninitialized: boolean = false
 ): UseConnectPlatformReturn => {
   const [account, setAccount] = useState<SocialAccount | null>(null);
   const [loading, setLoading] = useState(false);
@@ -35,8 +36,13 @@ export const useConnectPlatform = (
 
       // Call API
       const apiBaseUrl = getApiBaseUrl();
-      const url = `${apiBaseUrl}/platforms/connect?platform=${platform}`;
-      
+      let url = `${apiBaseUrl}/platforms/connect?platform=${platform}`;
+
+      // If brandId is provided and marked as uninitialized, append the query param
+      if (brandId && isUninitialized) {
+        url += `&uninitializedBrandUuid=${brandId}`;
+      }
+
       console.log(`[Platform] Fetching: ${url}`);
 
       const response = await fetch(url, {
@@ -48,7 +54,7 @@ export const useConnectPlatform = (
       });
 
       console.log(`[Platform] Response status: ${response.status}`);
-      
+
       const rawText = await response.text();
       console.log(`[Platform] Raw response: "${rawText}"`);
 

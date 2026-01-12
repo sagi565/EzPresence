@@ -148,6 +148,12 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
     }
   };
 
+  const handleEditCancel = () => {
+    setIsRenaming(false);
+    setRenameValue(item.title || '');
+  };
+
+
   const favoriteBtnStyle = {
     ...styles.favoriteBtn,
     ...(item.favorite ? styles.favoriteBtnActive : {}),
@@ -196,45 +202,60 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
             {/* Title with Edit and Favorite */}
             <div style={styles.titleSection}>
               {isRenaming ? (
-                <input
-                  ref={renameInputRef}
-                  type="text"
-                  value={renameValue}
-                  onChange={(e) => setRenameValue(e.target.value)}
-                  onKeyDown={handleRenameKeyDown}
-                  onBlur={handleRenameSubmit}
-                  style={styles.renameInput}
-                  placeholder="Enter name..."
-                />
+                <div style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'center' }}>
+                  <input
+                    ref={renameInputRef}
+                    type="text"
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onKeyDown={handleRenameKeyDown}
+                    style={styles.renameInput}
+                    placeholder="Enter name..."
+                  />
+                  <button
+                    onClick={handleRenameSubmit}
+                    style={{ ...styles.editBtn, background: '#22c55e', color: 'white' }}
+                    title="Save"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    onClick={handleEditCancel}
+                    style={{ ...styles.editBtn, background: '#ef4444', color: 'white' }}
+                    title="Cancel"
+                  >
+                    ×
+                  </button>
+                </div>
               ) : (
-                <h2 style={styles.title}>{item.title || 'Untitled'}</h2>
+                <>
+                  <h2 style={styles.title}>{item.title || 'Untitled'}</h2>
+                  <button
+                    style={{
+                      ...styles.editBtn,
+                      ...(hoveredBtn === 'edit' ? styles.editBtnHover : {}),
+                    }}
+                    onClick={() => {
+                      setRenameValue(item.title || '');
+                      setIsRenaming(true);
+                    }}
+                    onMouseEnter={() => setHoveredBtn('edit')}
+                    onMouseLeave={() => setHoveredBtn(null)}
+                    title="Rename"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    style={favoriteBtnStyle}
+                    onClick={onToggleFavorite}
+                    onMouseEnter={() => setHoveredBtn('favorite')}
+                    onMouseLeave={() => setHoveredBtn(null)}
+                    title={item.favorite ? 'Remove from favorites' : 'Add to favorites'}
+                  >
+                    {item.favorite ? '❤️' : '🤍'}
+                  </button>
+                </>
               )}
-              
-              <button
-                style={{
-                  ...styles.editBtn,
-                  ...(hoveredBtn === 'edit' ? styles.editBtnHover : {}),
-                }}
-                onClick={() => {
-                  setRenameValue(item.title || '');
-                  setIsRenaming(true);
-                }}
-                onMouseEnter={() => setHoveredBtn('edit')}
-                onMouseLeave={() => setHoveredBtn(null)}
-                title="Rename"
-              >
-                ✏️
-              </button>
-
-              <button
-                style={favoriteBtnStyle}
-                onClick={onToggleFavorite}
-                onMouseEnter={() => setHoveredBtn('favorite')}
-                onMouseLeave={() => setHoveredBtn(null)}
-                title={item.favorite ? 'Remove from favorites' : 'Add to favorites'}
-              >
-                {item.favorite ? '❤️' : '🤍'}
-              </button>
             </div>
 
             {/* Metadata */}

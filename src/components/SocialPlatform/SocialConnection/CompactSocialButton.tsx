@@ -46,13 +46,15 @@ if (!document.head.querySelector('style[data-compact-social-animations]')) {
 interface CompactSocialButtonProps {
   platform: SocialPlatform;
   brandId: string;
+  isUninitialized?: boolean;
 }
 
 export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
   platform,
   brandId,
+  isUninitialized = false,
 }) => {
-  const { isConnected, account, loading, connect, disconnect } = useConnectPlatform(platform, brandId);
+  const { isConnected, account, loading, connect, disconnect } = useConnectPlatform(platform, brandId, isUninitialized);
   const [isHovered, setIsHovered] = useState(false);
 
   const platformColors = PLATFORM_COLORS[platform];

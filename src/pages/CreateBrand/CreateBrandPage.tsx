@@ -1,149 +1,142 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePostBrand, CreateBrandData } from '@hooks/brands/usePostBrand';
 import { useBrands } from '@hooks/brands/useBrands';
+import { styles } from './styles';
+import { SocialPlatform } from '@models/SocialAccount';
 import SocialsBackground from '@components/Background/SocialsBackground';
 import { CompactSocialButton } from '@components/SocialPlatform/SocialConnection/CompactSocialButton';
-import { SocialPlatform } from '@models/SocialAccount';
-import { styles } from './styles';
+import { BrandInitializeDto } from '@models/Brand';
 
 const BRAND_CATEGORIES = [
-  'Restaurant',
-  'Cafe',
-  'Retail',
-  'Fashion',
-  'Beauty',
-  'Fitness',
-  'Healthcare',
-  'Technology',
-  'Education',
-  'Entertainment',
-  'Real Estate',
-  'Travel',
-  'Finance',
-  'Consulting',
-  'Marketing',
-  'Photography',
-  'Art & Design',
-  'Food & Beverage',
-  'Automotive',
-  'Home Services',
+  'Restaurant', 'Cafe', 'Retail', 'Fashion', 'Beauty', 'Fitness', 'Healthcare',
+  'Technology', 'Education', 'Entertainment', 'Real Estate', 'Travel', 'Finance',
+  'Consulting', 'Marketing', 'Photography', 'Art & Design', 'Food & Beverage',
+  'Automotive', 'Home Services',
 ];
 
-// Add CSS animations and import Playfair Display font
+// Add CSS animations
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-  
-  @keyframes ripple {
-    0% {
-      transform: scale(0);
-      opacity: 1;
-    }
-    100% {
-      transform: scale(4);
-      opacity: 0;
-    }
-  }
-  
-  @keyframes adjectiveHover {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-    100% { transform: translateY(0); }
-  }
-  
-  select {
-    position: relative;
-  }
-  
-  select option {
-    padding: 14px 20px;
-    font-size: 15px;
-    font-weight: 500;
-    background: white;
-    color: #333;
-    border-bottom: 1px solid rgba(155, 93, 229, 0.1);
-  }
-  
-  select option:hover {
-    background: rgba(155, 93, 229, 0.08);
-    color: #9B5DE5;
-  }
-  
-  select option:checked {
-    background: linear-gradient(135deg, rgba(155, 93, 229, 0.15), rgba(155, 93, 229, 0.08));
-    color: #9B5DE5;
-    font-weight: 600;
-  }
-  
-  select:hover {
-    border-color: rgba(155, 93, 229, 0.5);
-  }
-  
-  select:focus {
-    border-color: #9B5DE5;
-    box-shadow: 0 0 0 3px rgba(155, 93, 229, 0.1);
-  }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  @keyframes ripple { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
+  @keyframes adjectiveHover { 0% { transform: translateY(0); } 50% { transform: translateY(-4px); } 100% { transform: translateY(0); } }
+  select { position: relative; }
+  select option { padding: 14px 20px; font-size: 15px; font-weight: 500; background: white; color: #333; border-bottom: 1px solid rgba(155, 93, 229, 0.1); }
+  select option:hover { background: rgba(155, 93, 229, 0.08); color: #9B5DE5; }
+  select option:checked { background: linear-gradient(135deg, rgba(155, 93, 229, 0.15), rgba(155, 93, 229, 0.08)); color: #9B5DE5; font-weight: 600; }
+  select:hover { border-color: rgba(155, 93, 229, 0.5); }
+  select:focus { border-color: #9B5DE5; box-shadow: 0 0 0 3px rgba(155, 93, 229, 0.1); }
 `;
 if (!document.head.querySelector('style[data-create-brand-animations]')) {
   styleSheet.setAttribute('data-create-brand-animations', 'true');
   document.head.appendChild(styleSheet);
 }
 
+// Helper: File to Base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 const CreateBrandPage: React.FC = () => {
   const navigate = useNavigate();
-  const { createBrand, loading, error } = usePostBrand();
-  const { refetchBrands, hasBrands, brands, loading: brandsLoading } = useBrands();
+  const { 
+    currentBrand,
+    brands,
+    hasBrands, 
+    loading: brandsLoading, 
+    getUninitializedBrand,
+    createUninitializedBrand,
+    initializeBrand,
+    refetchBrands,
+    setActiveBrand
+  } = useBrands();
   
-  const [formData, setFormData] = useState<CreateBrandData>({
+  const [formData, setFormData] = useState<{
+    name: string;
+    slogan: string;
+    categories: string[];
+    logo?: File;
+  }>({
     name: '',
     slogan: '',
     categories: [],
   });
-  
+
+  const [uninitializedBrandId, setUninitializedBrandId] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [nameError, setNameError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [errorError, setGlobalError] = useState<string | null>(null);
+  
+  // UI States
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // FIXED: Check if user already has brands and redirect them
+  // 1. Check & Redirect Logic
   useEffect(() => {
-    console.log('🔍 [CreateBrandPage] Checking if user already has brands...');
-    console.log('🔍 [CreateBrandPage] brandsLoading:', brandsLoading, 'hasBrands:', hasBrands, 'brands count:', brands.length);
-    
-    // Wait for brands to finish loading
-    if (brandsLoading) {
-      console.log('⏳ [CreateBrandPage] Still loading brands...');
+    if (brandsLoading || isRedirecting) return;
+
+    // Case A: Active Brand Exists -> Redirect
+    if (currentBrand) {
+      console.log('✅ [CreateBrand] Active brand exists, redirecting...');
+      setIsRedirecting(true);
+      navigate('/scheduler', { replace: true });
       return;
     }
-    
-    // If user has brands, redirect to scheduler
-    if (hasBrands) {
-      console.log('⚠️ [CreateBrandPage] User already has brands, redirecting to scheduler');
-      console.log('🏢 [CreateBrandPage] Brands:', brands.map(b => b.name).join(', '));
-      navigate('/scheduler', { replace: true });
-    } else {
-      console.log('📭 [CreateBrandPage] No brands found, user can create one');
-    }
-  }, [hasBrands, brandsLoading, brands, navigate]);
 
-  const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!isSubmitting && !loading) {
-      setShowRipple(true);
-      setTimeout(() => setShowRipple(false), 600);
+    // Case B: Has Brands (but not active) -> Set Active & Redirect
+    if (hasBrands && brands.length > 0) {
+      console.log('🔄 [CreateBrand] Has brands but none active. Setting active...');
+      setIsRedirecting(true);
+      const candidate = brands[0].id;
+      setActiveBrand(candidate)
+        .then(() => navigate('/scheduler', { replace: true }))
+        .catch(err => {
+          console.error('❌ [CreateBrand] Failed to set active brand:', err);
+          setIsRedirecting(false); 
+        });
+      return;
     }
-  };
+
+    // Case C: No Brands -> Ensure Uninitialized Brand
+    if (!uninitializedBrandId && !isRedirecting) {
+      const fetchOrCreateUninitialized = async () => {
+        try {
+          console.log('🔍 [CreateBrand] Checking for uninitialized brand...');
+          // Check if exists
+          let uuid = await getUninitializedBrand();
+          
+          if (!uuid) {
+            console.log('✨ [CreateBrand] Creating new uninitialized brand...');
+            uuid = await createUninitializedBrand();
+          }
+          
+          console.log('🆔 [CreateBrand] Using uninitialized brand:', uuid);
+          setUninitializedBrandId(uuid);
+        } catch (err: any) {
+          console.error('❌ [CreateBrand] Failed to get/create uninitialized brand:', err);
+          setGlobalError('Failed to initialize brand setup. Please refresh.');
+        }
+      };
+      
+      fetchOrCreateUninitialized();
+    }
+  }, [brandsLoading, currentBrand, hasBrands, brands, uninitializedBrandId, getUninitializedBrand, createUninitializedBrand, setActiveBrand, navigate, isRedirecting]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -152,12 +145,10 @@ const CreateBrandPage: React.FC = () => {
         alert('File size must be less than 5MB');
         return;
       }
-      
       if (!file.type.startsWith('image/')) {
         alert('Please upload an image file');
         return;
       }
-      
       setFormData({ ...formData, logo: file });
       setLogoPreview(URL.createObjectURL(file));
     }
@@ -166,55 +157,65 @@ const CreateBrandPage: React.FC = () => {
   const handleRemoveLogo = () => {
     setFormData({ ...formData, logo: undefined });
     setLogoPreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!formData.name.trim()) {
       setNameError(true);
       return;
     }
     
+    if (!uninitializedBrandId) {
+      setGlobalError('Brand initialization failed. Please refresh the page.');
+      return;
+    }
+
     setNameError(false);
     setIsSubmitting(true);
-    
+    setGlobalError(null);
+
     try {
-      console.log('📤 [CreateBrandPage] Creating brand...');
+      console.log('📤 [CreateBrand] Initializing brand:', uninitializedBrandId);
       
-      // Create the brand and set it as active (using setActive=true query param)
-      const newBrand = await createBrand(formData);
-      console.log('✅ [CreateBrandPage] Brand created successfully:', newBrand);
+      let logoBase64: string | null = null;
+      if (formData.logo) {
+        logoBase64 = await fileToBase64(formData.logo);
+      }
+
+      const initData: BrandInitializeDto = {
+        name: formData.name,
+        slogan: formData.slogan || null,
+        category: formData.categories?.[0] || null,
+        // subcategory can be added later
+        logo: logoBase64
+      };
+
+      await initializeBrand(uninitializedBrandId, initData);
       
-      // Show success state briefly
+      console.log('✅ [CreateBrand] Brand initialized!');
       setSubmitSuccess(true);
       
-      // Refetch brands to update the list and wait for it to complete
-      console.log('🔄 [CreateBrandPage] Refetching brands...');
-      await refetchBrands();
-      
-      // Small delay to ensure state is fully updated, then navigate with replace
+      // Delay for success animation before redirect
       setTimeout(() => {
-        console.log('🔀 [CreateBrandPage] Redirecting to scheduler...');
         navigate('/scheduler', { replace: true });
-      }, 300);
-      
+      }, 500);
+
     } catch (err: any) {
-      console.error('❌ [CreateBrandPage] Failed to create brand:', err);
+      console.error('❌ [CreateBrand] Failed to initialize brand:', err);
+      setGlobalError(err.message || 'Failed to create brand.');
       setIsSubmitting(false);
     }
   };
 
-  // Show loading state while checking brands
-  if (brandsLoading) {
+  // Loading State
+  if (brandsLoading || isRedirecting || !uninitializedBrandId) {
     return (
       <div style={styles.container}>
         <SocialsBackground />
         <div style={{
-          display: 'flex',
+          display: 'flex', viewBox: '0 0 24 24',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
@@ -231,7 +232,7 @@ const CreateBrandPage: React.FC = () => {
           }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           <p style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
-            Checking your brands...
+            {isRedirecting ? 'Redirecting...' : 'Setting up your experience...'}
           </p>
         </div>
       </div>
@@ -253,9 +254,8 @@ const CreateBrandPage: React.FC = () => {
         </div>
 
         <form style={styles.form} onSubmit={handleSubmit}>
-          {/* Brand Information - Full Width */}
+          {/* Main Form Fields */}
           <div style={styles.mainContent}>
-              {/* Row 1: Name, Slogan, and Logo */}
               <div style={styles.row}>
                 {/* Left Side: Name and Slogan */}
                 <div style={styles.nameAndSloganColumn}>
@@ -272,7 +272,6 @@ const CreateBrandPage: React.FC = () => {
                           ...(nameError ? styles.inputError : {}),
                           paddingRight: '60px',
                         }}
-                        placeholder=""
                         value={formData.name}
                         onChange={(e) => {
                           const value = e.target.value;
@@ -292,23 +291,17 @@ const CreateBrandPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Slogan Field - Under Name */}
+                  {/* Slogan Field */}
                   <div style={styles.formGroupStacked}>
                     <label style={styles.label}>Slogan</label>
                     <div style={styles.inputWrapper}>
                       <input
                         type="text"
-                        style={{
-                          ...styles.input,
-                          paddingRight: '60px',
-                        }}
-                        placeholder=""
+                        style={{ ...styles.input, paddingRight: '60px' }}
                         value={formData.slogan}
                         onChange={(e) => {
                           const value = e.target.value;
-                          if (value.length <= 60) {
-                            setFormData({ ...formData, slogan: value });
-                          }
+                          if (value.length <= 60) setFormData({ ...formData, slogan: value });
                         }}
                         maxLength={60}
                       />
@@ -359,32 +352,26 @@ const CreateBrandPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Row 3: Category (Dropdown) */}
+              {/* Category */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>Category</label>
-                
                 <select
                   style={styles.categorySelect}
                   value={formData.categories?.[0] || ''}
                   onChange={(e) => {
                     const value = e.target.value;
-                    setFormData({
-                      ...formData,
-                      categories: value ? [value] : [],
-                    });
+                    setFormData({ ...formData, categories: value ? [value] : [] });
                   }}
                 >
                   <option value="">-- Select a category --</option>
                   {BRAND_CATEGORIES.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
+                    <option key={category} value={category}>{category}</option>
                   ))}
                 </select>
               </div>
             </div>
 
-          {/* Social Media Connections Section - Bottom */}
+          {/* Social Media Connections - Pass uninitializedBrandUuid */}
           <div style={styles.socialSectionBottom}>
             <div style={styles.socialHeaderBottom}>
               <h2 style={styles.socialTitleBottom}>Connect Social Medias</h2>
@@ -396,87 +383,57 @@ const CreateBrandPage: React.FC = () => {
                 <CompactSocialButton
                   key={platform}
                   platform={platform}
-                  brandId="temp-brand-id"
+                  // Pass the uninitialized brand ID for connection
+                  // Note: CompactSocialButton needs to be updated to accept this prop if it doesn't already
+                  // Or we repurpose brandId prop if it just passes it to the query param
+                  brandId={uninitializedBrandId} 
                 />
               ))}
             </div>
           </div>
 
-          {/* Error Message */}
-          {error && (
+          {/* Messages */}
+          {errorError && (
             <div style={styles.errorMessage}>
               <span style={styles.errorIcon}>⚠️</span>
-              <span>{error}</span>
+              <span>{errorError}</span>
             </div>
           )}
 
-          {/* Success Message */}
           {submitSuccess && (
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '14px 18px',
-              background: 'rgba(20, 184, 166, 0.1)',
-              border: '2px solid #14b8a6',
-              borderRadius: '12px',
-              color: '#14b8a6',
-              fontSize: '14px',
-              fontWeight: 500,
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 18px',
+              background: 'rgba(20, 184, 166, 0.1)', border: '2px solid #14b8a6',
+              borderRadius: '12px', color: '#14b8a6', fontSize: '14px', fontWeight: 500,
             }}>
               <span style={{ fontSize: '20px' }}>✅</span>
               <span>Brand created successfully! Redirecting...</span>
             </div>
           )}
 
-          {/* Action Button */}
+          {/* Submit Button */}
           <div style={styles.actions}>
             <button
               type="submit"
+              disabled={isSubmitting || submitSuccess}
               style={{
                 ...styles.submitBtn,
                 ...(isSubmitting || submitSuccess ? styles.submitBtnLoading : {}),
                 ...(isButtonHovered && !isSubmitting ? styles.submitBtnHover : {}),
                 ...(isButtonActive && !isSubmitting ? styles.submitBtnActive : {}),
               }}
-              disabled={loading || isSubmitting || submitSuccess}
               onMouseEnter={() => setIsButtonHovered(true)}
-              onMouseLeave={() => {
-                setIsButtonHovered(false);
-                setIsButtonActive(false);
-              }}
-              onMouseDown={(e) => {
-                setIsButtonActive(true);
-                handleButtonClick(e);
-              }}
+              onMouseLeave={() => { setIsButtonHovered(false); setIsButtonActive(false); }}
+              onMouseDown={() => { setIsButtonActive(true); setShowRipple(true); setTimeout(() => setShowRipple(false), 600); }}
               onMouseUp={() => setIsButtonActive(false)}
             >
               {showRipple && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.6)',
-                    animation: 'ripple 0.6s ease-out',
-                    pointerEvents: 'none',
-                  }}
-                />
+                <span style={{
+                  position: 'absolute', width: '20px', height: '20px', borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.6)', animation: 'ripple 0.6s ease-out', pointerEvents: 'none',
+                }} />
               )}
-              {isSubmitting ? (
-                <>
-                  <span style={styles.spinner} />
-                  Creating...
-                </>
-              ) : submitSuccess ? (
-                <>
-                  <span>✅</span>
-                  Success!
-                </>
-              ) : (
-                'Create Brand'
-              )}
+              {isSubmitting ? 'Creating...' : submitSuccess ? 'Success!' : 'Create Brand'}
             </button>
           </div>
         </form>

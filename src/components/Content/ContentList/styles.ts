@@ -109,7 +109,7 @@ export const styles: Record<string, CSSProperties> = {
     padding: 0,
     alignSelf: 'center',
     lineHeight: 1,
-    paddingBottom: '3px',
+    paddingBottom: '0',
     alignItems: 'center',
     justifyContent: 'center',
   },

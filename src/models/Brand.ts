@@ -9,7 +9,7 @@ export interface Brand {
   subcategory?: string; // subcategory from API
   isActive?: boolean;   // isActive from API
   createdAt?: string;   // createdAt from API
-  
+
   // Legacy fields for backward compatibility
   description?: string; // Maps to slogan
   categories?: string[]; // Maps to [category] if exists
@@ -33,6 +33,15 @@ export interface ApiBrandDto {
 
 // API Request - matches BrandCreateDto from OpenAPI spec
 export interface BrandCreateDto {
+  name?: string | null;
+  logo?: string | null;          // base64 encoded logo bytes
+  slogan?: string | null;
+  category?: string | null;
+  subcategory?: string | null;
+}
+
+// API Request - matches BrandInitializeDto from OpenAPI spec
+export interface BrandInitializeDto {
   name?: string | null;
   logo?: string | null;          // base64 encoded logo bytes
   slogan?: string | null;
@@ -78,7 +87,7 @@ export const generateBrandIcon = (category?: string | null, name?: string | null
   if (category && CATEGORY_ICONS[category]) {
     return CATEGORY_ICONS[category];
   }
-  
+
   // Fallback: try to match by name keywords
   const nameLower = (name || '').toLowerCase();
   if (nameLower.includes('burger') || nameLower.includes('food')) return '🍔';
@@ -87,7 +96,7 @@ export const generateBrandIcon = (category?: string | null, name?: string | null
   if (nameLower.includes('steak') || nameLower.includes('meat')) return '🥩';
   if (nameLower.includes('tech')) return '💻';
   if (nameLower.includes('fashion') || nameLower.includes('cloth')) return '👗';
-  
+
   return '🏢'; // Default icon
 };
 

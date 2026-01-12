@@ -61,7 +61,7 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '12px',
     color: theme.colors.primary,
     fontWeight: 600,
-    fontSize: '14px',
+    fontSize: '18px',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     display: 'flex',

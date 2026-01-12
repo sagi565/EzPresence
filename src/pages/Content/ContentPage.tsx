@@ -9,10 +9,11 @@ import ContentDetailModal from '@components/Content/ContentDetailModal/ContentDe
 import ConfirmDialog from '@components/Content/ConfirmDialog/ConfirmDialog';
 import { ContentItem } from '@models/ContentList';
 import { styles } from './styles';
+import { DragDropContext, DropResult, DragStart } from '@hello-pangea/dnd';
 
 const ContentPage: React.FC = () => {
   const { brands, currentBrand, switchBrand } = useBrands();
-  
+
   const {
     lists,
     addNewList,
@@ -38,8 +39,8 @@ const ContentPage: React.FC = () => {
   const lastScrollTop = useRef(0);
   const scrollVelocity = useRef(0);
   const velocityCheckInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isDraggingItem, setIsDraggingItem] = useState(false);
-  
+  const [isDragging, setIsDragging] = useState(false);
+
   const prevListsLength = useRef(lists.length);
 
   const [emojiPicker, setEmojiPicker] = useState<{
@@ -92,7 +93,7 @@ const ContentPage: React.FC = () => {
     velocityCheckInterval.current = setInterval(() => {
       const currentScrollTop = container.scrollTop;
       const delta = currentScrollTop - lastScrollTop.current;
-      scrollVelocity.current = delta; 
+      scrollVelocity.current = delta;
       lastScrollTop.current = currentScrollTop;
     }, 50);
 
@@ -150,7 +151,7 @@ const ContentPage: React.FC = () => {
 
           const absVelocity = Math.abs(scrollVelocity.current);
           const isHardScroll = absVelocity > 100;
-          
+
           if (isHardScroll && scrollTop < containerHeight * 0.3) {
             scrollToList(0);
             return;
@@ -237,7 +238,7 @@ const ContentPage: React.FC = () => {
 
     if (targetList && container) {
       setIsScrolling(true);
-      
+
       const containerHeight = container.clientHeight;
       const listTop = targetList.offsetTop;
       const listHeight = targetList.offsetHeight;
@@ -255,45 +256,6 @@ const ContentPage: React.FC = () => {
     if (emojiPicker.listId) {
       updateListIcon(emojiPicker.listId, emoji);
     }
-  };
-
-  const handleDragOver = (e: React.DragEvent, listId: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
-  };
-
-  const handleDrop = (e: React.DragEvent, targetListId: string) => {
-    e.preventDefault();
-    const itemId = e.dataTransfer.getData('itemId');
-    const sourceListId = e.dataTransfer.getData('listId');
-    if (itemId && sourceListId && sourceListId !== targetListId) {
-      moveItem(itemId, sourceListId, targetListId);
-    }
-  };
-
-  const handleDropToList = (listId: string) => {
-    const draggedItemId = sessionStorage.getItem('draggedItemId');
-    const draggedFromListId = sessionStorage.getItem('draggedFromListId');
-    if (draggedItemId && draggedFromListId && draggedFromListId !== listId) {
-      moveItem(draggedItemId, draggedFromListId, listId);
-    }
-    sessionStorage.removeItem('draggedItemId');
-    sessionStorage.removeItem('draggedFromListId');
-    setIsDraggingItem(false);
-  };
-
-  const handleItemDragStart = (itemId: string, listId: string) => {
-    sessionStorage.setItem('draggedItemId', itemId);
-    sessionStorage.setItem('draggedFromListId', listId);
-    setIsDraggingItem(true);
-  };
-
-  const handleItemDragEnd = () => {
-    setTimeout(() => {
-      sessionStorage.removeItem('draggedItemId');
-      sessionStorage.removeItem('draggedFromListId');
-      setIsDraggingItem(false);
-    }, 100);
   };
 
   const handleItemClick = (itemId: string, listId: string) => {
@@ -336,98 +298,121 @@ const ContentPage: React.FC = () => {
     setDeleteFromModal(false);
   };
 
-  const handleReorderLists = (fromIndex: number, toIndex: number) => {
-    reorderLists(fromIndex, toIndex);
-  };
-
   const addButtonStyle = {
     ...styles.addListButton,
     ...(hoveredAddButton ? styles.addListButtonHover : {}),
   };
 
+  const onDragStart = () => {
+    setIsDragging(true);
+  };
+
+  const onDragEnd = (result: DropResult) => {
+    setIsDragging(false);
+    const { source, destination, type } = result;
+
+    if (!destination) {
+      return;
+    }
+
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+
+    if (type === 'LIST') {
+      reorderLists(source.index, destination.index);
+    } else if (type === 'ITEM') {
+      const sourceListId = source.droppableId;
+      const targetListId = destination.droppableId;
+      const itemId = result.draggableId;
+
+      moveItem(itemId, sourceListId, targetListId);
+    }
+  };
+
   return (
-    <div style={styles.container}>
-      <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
+    <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
+      <div style={styles.container}>
+        <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
 
-      <div ref={containerRef} style={styles.contentArea} key={currentBrand?.id || 'no-brand'}>
-        {lists.map((list, index) => (
-          <div
-            key={list.id}
-            ref={(el) => { if (el) listsRef.current[index] = el; }}
-            style={styles.listSection}
-          >
-            <div style={styles.listWrapper}>
-              <ContentList
-                list={list}
-                isNewList={newlyCreatedListId === list.id}
-                onDelete={() => deleteList(list.id)}
-                onTitleChange={(newTitle) => updateListTitle(list.id, newTitle)}
-                onIconClick={(element: HTMLElement) => handleIconClick(list.id, element)}
-                onItemMove={() => {}}
-                onItemDelete={(itemId) => deleteItem(itemId, list.id)}
-                onItemRename={(itemId, newName) => renameItem(itemId, list.id, newName)}
-                onToggleFavorite={(itemId) => toggleFavorite(itemId, list.id)}
-                onUpload={(file) => uploadContent(list.id, file)}
-                onItemClick={(itemId) => handleItemClick(itemId, list.id)}
-                onDragOver={(e) => handleDragOver(e, list.id)}
-                onDrop={(e) => handleDrop(e, list.id)}
-                onItemDragStart={(itemId) => handleItemDragStart(itemId, list.id)}
-                onItemDragEnd={handleItemDragEnd}
-                onSaveChanges={() => clearNewListFlag()}
-              />
+        <div ref={containerRef} style={styles.contentArea} key={currentBrand?.id || 'no-brand'}>
+          {lists.map((list, index) => (
+            <div
+              key={list.id}
+              ref={(el) => { if (el) listsRef.current[index] = el; }}
+              style={styles.listSection}
+            >
+              <div style={styles.listWrapper}>
+                <ContentList
+                  list={list}
+                  isNewList={newlyCreatedListId === list.id}
+                  onDelete={() => deleteList(list.id)}
+                  onTitleChange={(newTitle) => updateListTitle(list.id, newTitle)}
+                  onIconClick={(element: HTMLElement) => handleIconClick(list.id, element)}
+                  onItemMove={() => { }}
+                  onItemDelete={(itemId) => deleteItem(itemId, list.id)}
+                  onItemRename={(itemId, newName) => renameItem(itemId, list.id, newName)}
+                  onToggleFavorite={(itemId) => toggleFavorite(itemId, list.id)}
+                  onUpload={(file) => uploadContent(list.id, file)}
+                  onItemClick={(itemId) => handleItemClick(itemId, list.id)}
+                  onSaveChanges={() => clearNewListFlag()}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        <ScrollNavigation
+          lists={lists}
+          currentIndex={currentIndex}
+          isDragging={isDragging}
+          onNavigate={scrollToList}
+          onDelete={(listId) => deleteList(listId)}
+          onReorder={() => { }} // Handled by DragDropContext now
+        />
+
+        <EmojiPicker
+          isOpen={emojiPicker.isOpen}
+          onClose={() => setEmojiPicker({ isOpen: false, listId: '', anchorElement: null })}
+          onSelect={handleEmojiSelect}
+          anchorElement={emojiPicker.anchorElement}
+        />
+
+        <ContentDetailModal
+          isOpen={detailModal.isOpen}
+          item={detailModal.item}
+          onClose={() => setDetailModal({ isOpen: false, item: null, listId: '' })}
+          onRename={handleModalRename}
+          onDelete={handleModalDelete}
+          onToggleFavorite={handleModalToggleFavorite}
+        />
+
+        <ConfirmDialog
+          isOpen={deleteFromModal}
+          title="Delete Content?"
+          message="Are you sure you want to delete this item? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmModalDelete}
+          onCancel={() => setDeleteFromModal(false)}
+        />
+
+        <div style={styles.addListButtonWrapper}>
+          <button
+            style={addButtonStyle}
+            onClick={addNewList}
+            onMouseEnter={() => setHoveredAddButton(true)}
+            onMouseLeave={() => setHoveredAddButton(false)}
+          >
+            <span style={{ fontSize: '24px' }}>➕</span>
+            <span>Add new list</span>
+          </button>
+        </div>
       </div>
-
-      <ScrollNavigation
-        lists={lists}
-        currentIndex={currentIndex}
-        isDragging={isDraggingItem}
-        onNavigate={scrollToList}
-        onDelete={(listId) => deleteList(listId)}
-        onDropToList={handleDropToList}
-        onReorder={handleReorderLists}
-      />
-
-      <EmojiPicker
-        isOpen={emojiPicker.isOpen}
-        onClose={() => setEmojiPicker({ isOpen: false, listId: '', anchorElement: null })}
-        onSelect={handleEmojiSelect}
-        anchorElement={emojiPicker.anchorElement}
-      />
-
-      <ContentDetailModal
-        isOpen={detailModal.isOpen}
-        item={detailModal.item}
-        onClose={() => setDetailModal({ isOpen: false, item: null, listId: '' })}
-        onRename={handleModalRename}
-        onDelete={handleModalDelete}
-        onToggleFavorite={handleModalToggleFavorite}
-      />
-
-      <ConfirmDialog
-        isOpen={deleteFromModal}
-        title="Delete Content?"
-        message="Are you sure you want to delete this item? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        onConfirm={confirmModalDelete}
-        onCancel={() => setDeleteFromModal(false)}
-      />
-
-      <div style={styles.addListButtonWrapper}>
-        <button
-          style={addButtonStyle}
-          onClick={addNewList}
-          onMouseEnter={() => setHoveredAddButton(true)}
-          onMouseLeave={() => setHoveredAddButton(false)}
-        >
-          <span>➕</span>
-          <span>Add new list</span>
-        </button>
-      </div>
-    </div>
+    </DragDropContext>
   );
 };
 

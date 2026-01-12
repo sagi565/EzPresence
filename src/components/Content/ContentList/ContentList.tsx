@@ -5,6 +5,7 @@ import ContentItem from '../ContentItem/ContentItem';
 import UploadButton from '../UploadButton/UploadButton';
 import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import { styles } from './styles';
+import { Droppable, Draggable } from '@hello-pangea/dnd';
 
 interface ContentListProps {
   list: ContentListType;
@@ -18,11 +19,8 @@ interface ContentListProps {
   onToggleFavorite: (itemId: string) => void;
   onUpload: (file: File) => void;
   onItemClick: (itemId: string) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent) => void;
-  onItemDragStart?: (itemId: string) => void;
-  onItemDragEnd?: () => void;
   onSaveChanges?: () => void;
+  // Legacy props removed or optional if needed during transition
 }
 
 const ContentList: React.FC<ContentListProps> = ({
@@ -31,16 +29,11 @@ const ContentList: React.FC<ContentListProps> = ({
   onDelete,
   onTitleChange,
   onIconClick,
-  onItemMove,
   onItemDelete,
   onItemRename,
   onToggleFavorite,
   onUpload,
   onItemClick,
-  onDragOver,
-  onDrop,
-  onItemDragStart,
-  onItemDragEnd,
   onSaveChanges,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -58,10 +51,11 @@ const ContentList: React.FC<ContentListProps> = ({
     const container = scrollRef.current;
     if (!container) return;
 
-    const itemCount = list.items.length + 1;
+    // const itemCount = list.items.length + 1; // +1 for upload button
     const scrollLeft = container.scrollLeft;
 
-    if (itemCount <= 3) {
+    // Basic check for scroll possibility
+    if (container.scrollWidth <= container.clientWidth) {
       setShowLeftArrow(false);
       setShowRightArrow(false);
       return;
@@ -70,9 +64,12 @@ const ContentList: React.FC<ContentListProps> = ({
     if (scrollLeft < 10) {
       setShowLeftArrow(false);
       setShowRightArrow(true);
-    } else {
+    } else if (Math.ceil(scrollLeft + container.clientWidth) >= container.scrollWidth - 10) {
       setShowLeftArrow(true);
       setShowRightArrow(false);
+    } else {
+      setShowLeftArrow(true);
+      setShowRightArrow(true);
     }
   };
 
@@ -81,7 +78,12 @@ const ContentList: React.FC<ContentListProps> = ({
     const container = scrollRef.current;
     if (container) {
       container.addEventListener('scroll', updateArrows);
-      return () => container.removeEventListener('scroll', updateArrows);
+      // Also update on resize
+      window.addEventListener('resize', updateArrows);
+      return () => {
+        container.removeEventListener('scroll', updateArrows);
+        window.removeEventListener('resize', updateArrows);
+      };
     }
   }, [list.items.length]);
 
@@ -94,13 +96,10 @@ const ContentList: React.FC<ContentListProps> = ({
     const scrollAmount = itemWidth * 3 + 20 * 2;
 
     if (direction === 'left') {
-      container.scrollLeft = Math.max(0, container.scrollLeft - scrollAmount);
+      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
     } else {
-      const maxScroll = container.scrollWidth - container.clientWidth;
-      container.scrollLeft = Math.min(maxScroll, container.scrollLeft + scrollAmount);
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
-
-    setTimeout(updateArrows, 100);
   };
 
   const confirmDeleteItem = () => {
@@ -161,49 +160,54 @@ const ContentList: React.FC<ContentListProps> = ({
           listId={list.id}
         />
 
-        <div
-          ref={scrollRef}
-          style={styles.listScrollWrapper}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
-        >
-          <UploadButton listType="video" onUpload={onUpload} />
-          
-          {list.items.map((item) => (
-            <ContentItem
-              key={item.id}
-              item={item}
-              listType="video"
-              onDragStart={(e) => {
-                e.dataTransfer.setData('itemId', item.id);
-                e.dataTransfer.setData('listId', list.id);
-                if (onItemDragStart) {
-                  onItemDragStart(item.id);
-                }
+        <Droppable droppableId={list.id} type="ITEM" direction="horizontal">
+          {(droppableProvided, droppableSnapshot) => (
+            <div
+              ref={(el) => {
+                (scrollRef as any).current = el;
+                droppableProvided.innerRef(el);
               }}
-              onDragEnd={() => {
-                if (onItemDragEnd) {
-                  onItemDragEnd();
-                }
+              style={{
+                ...styles.listScrollWrapper,
+                backgroundColor: droppableSnapshot.isDraggingOver ? 'rgba(155, 93, 229, 0.05)' : 'transparent',
+                transition: 'background-color 0.2s ease',
+                minHeight: '420px', // Ensure height for drop target
               }}
-              onClick={() => onItemClick(item.id)}
-              onDelete={() => setItemToDelete(item.id)}
-              onRename={(newName) => onItemRename(item.id, newName)}
-              onToggleFavorite={() => onToggleFavorite(item.id)}
-            />
-          ))}
-        </div>
+              {...droppableProvided.droppableProps}
+            >
+              <UploadButton listType="video" onUpload={onUpload} />
 
-        <button 
-          style={leftArrowStyle} 
+              {list.items.map((item, index) => (
+                <Draggable key={item.id} draggableId={item.id} index={index}>
+                  {(draggableProvided, draggableSnapshot) => (
+                    <ContentItem
+                      item={item}
+                      listType="video"
+                      provided={draggableProvided}
+                      isDragging={draggableSnapshot.isDragging}
+                      onClick={() => onItemClick(item.id)}
+                      onDelete={() => setItemToDelete(item.id)}
+                      onRename={(newName) => onItemRename(item.id, newName)}
+                      onToggleFavorite={() => onToggleFavorite(item.id)}
+                    />
+                  )}
+                </Draggable>
+              ))}
+              {droppableProvided.placeholder}
+            </div>
+          )}
+        </Droppable>
+
+        <button
+          style={leftArrowStyle}
           onClick={() => handleScroll('left')}
           onMouseEnter={() => setIsLeftArrowHovered(true)}
           onMouseLeave={() => setIsLeftArrowHovered(false)}
         >
           ‹
         </button>
-        <button 
-          style={rightArrowStyle} 
+        <button
+          style={rightArrowStyle}
           onClick={() => handleScroll('right')}
           onMouseEnter={() => setIsRightArrowHovered(true)}
           onMouseLeave={() => setIsRightArrowHovered(false)}

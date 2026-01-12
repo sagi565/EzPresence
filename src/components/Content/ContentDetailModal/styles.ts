@@ -77,12 +77,13 @@ export const styles: Record<string, CSSProperties> = {
   },
   infoSection: {
     flex: '1 1 40%',
-    padding: '32px',
+    padding: '72px 32px 32px 32px',
     display: 'flex',
     flexDirection: 'column',
     gap: '24px',
     maxWidth: '360px',
     overflowY: 'auto',
+    overflowX: 'hidden',
   },
   titleSection: {
     display: 'flex',
@@ -98,7 +99,10 @@ export const styles: Record<string, CSSProperties> = {
     wordBreak: 'break-word',
   },
   renameInput: {
-    flex: 1,
+    flex: '1 1 auto',
+    width: '100%',
+    minWidth: '0',
+    maxWidth: '180px',
     fontSize: '20px',
     fontWeight: 600,
     color: '#111827',

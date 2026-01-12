@@ -4,8 +4,8 @@ export const styles: Record<string, CSSProperties> = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.3)',
-    backdropFilter: 'blur(2px)',
+    background: 'rgba(0, 0, 0, 0.1)',
+    backdropFilter: 'blur(1px)',
     zIndex: 2000,
   },
   picker: {
