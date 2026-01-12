@@ -10,7 +10,7 @@ export const styles: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '0', // Changed from 12px to 0 to ensure lines touch
+    gap: '0',
     zIndex: 1000,
     maxHeight: 'calc(100vh - 200px)',
   },
@@ -18,10 +18,11 @@ export const styles: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '0', // Changed from 32px to 0
+    gap: '0',
     overflowY: 'visible',
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
+    transition: 'transform 0.3s ease-out',
   },
   scrollItem: {
     position: 'relative',
@@ -31,6 +32,11 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     paddingBottom: '0',
+    transition: 'transform 0.3s ease, opacity 0.3s ease',
+  },
+  scrollItemDragging: {
+    opacity: 0.4,
+    transform: 'scale(0.8)',
   },
   scrollDotContainer: {
     width: '40px',
@@ -40,9 +46,10 @@ export const styles: Record<string, CSSProperties> = {
     justifyContent: 'center',
     position: 'relative',
     zIndex: 2,
-    background: '#fff', // Masks the line behind it
+    background: '#fff',
     borderRadius: '50%',
-    margin: '8px 0', // Vertical spacing for the dots
+    margin: '8px 0',
+    transition: 'transform 0.3s ease',
   },
   scrollDot: {
     width: '16px',
@@ -51,13 +58,19 @@ export const styles: Record<string, CSSProperties> = {
     background: 'rgba(155, 93, 229, 0.15)',
     border: '2px solid',
     borderColor: 'rgba(155, 93, 229, 0.3)',
-    transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+    transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
-  // ... (keep dot hover/active styles same as upload) ...
+  scrollDotDraggable: {
+    cursor: 'grab',
+  },
+  scrollDotBeingDragged: {
+    opacity: 0.3,
+    transform: 'scale(0.8)',
+  },
   scrollDotHover: {
     width: '36px',
     height: '36px',
@@ -78,20 +91,12 @@ export const styles: Record<string, CSSProperties> = {
     borderColor: theme.colors.teal,
     boxShadow: '0 0 24px rgba(20, 184, 166, 0.4)',
   },
-  scrollDotActiveAdd: {
-    width: '36px',
-    height: '36px',
-    background: theme.colors.primary,
-    borderColor: theme.colors.primary,
-    boxShadow: '0 0 24px rgba(155, 93, 229, 0.4)',
-  },
   scrollDotDragOver: {
-    width: '40px',
-    height: '40px',
+    width: '44px',
+    height: '44px',
     background: 'rgba(155, 93, 229, 0.3)',
     borderColor: theme.colors.primary,
     boxShadow: '0 0 30px rgba(155, 93, 229, 0.6)',
-    transform: 'scale(1.1)',
   },
   scrollDotDisabled: {
     background: 'rgba(155, 93, 229, 0.05)',
@@ -100,23 +105,22 @@ export const styles: Record<string, CSSProperties> = {
     cursor: 'not-allowed',
     filter: 'grayscale(0.7)',
   },
-  // Fixed Line Style:
   scrollLine: {
     width: '2px',
-    // Calculate height to span gap: (40px dot container + 16px margins) roughly
     height: '24px', 
     background: 'rgba(155, 93, 229, 0.15)',
     margin: '0', 
     position: 'relative',
     zIndex: 1,
+    transition: 'background 0.3s ease',
   },
-  // ... (keep rest of styles same as upload) ...
   scrollIcon: {
     position: 'absolute',
     fontSize: '18px',
     opacity: 0,
     transition: 'opacity 0.3s ease, transform 0.3s ease',
     transform: 'scale(0.8)',
+    pointerEvents: 'none',
   },
   scrollIconVisible: {
     opacity: 1,
@@ -125,7 +129,8 @@ export const styles: Record<string, CSSProperties> = {
   scrollLabel: {
     position: 'absolute',
     right: '56px',
-    top: '0',
+    top: '50%',
+    transform: 'translateY(-50%)',
     fontSize: '13px',
     fontWeight: 600,
     color: theme.colors.text,
@@ -135,10 +140,9 @@ export const styles: Record<string, CSSProperties> = {
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
     whiteSpace: 'nowrap',
     zIndex: 100000,
-    transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+    transition: 'all 0.2s ease',
     display: 'flex',
     alignItems: 'center',
-    height: '40px',
   },
   paginationArrow: {
     width: '32px',
@@ -153,23 +157,25 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.3s ease, opacity 0.3s ease, transform 0.3s ease',
     flexShrink: 0,
   },
   paginationArrowUp: {
-    marginBottom: '8px',
+    marginBottom: '12px',
   },
   paginationArrowDown: {
-    marginTop: '8px',
+    marginTop: '12px',
   },
   paginationArrowHover: {
-    background: 'rgba(155, 93, 229, 0.2)',
+    background: 'rgba(155, 93, 229, 0.25)',
     borderColor: theme.colors.primary,
-    transform: 'scale(1.1)',
+    transform: 'scale(1.15)',
+    boxShadow: '0 4px 12px rgba(155, 93, 229, 0.3)',
   },
-  paginationArrowDisabled: {
-    opacity: 0.3,
-    cursor: 'not-allowed',
+  paginationArrowHidden: {
+    opacity: 0,
+    pointerEvents: 'none',
+    transform: 'scale(0.8)',
   },
   contextMenu: {
     position: 'fixed',
@@ -179,6 +185,7 @@ export const styles: Record<string, CSSProperties> = {
     padding: '8px',
     zIndex: 2000,
     minWidth: '140px',
+    animation: 'fadeIn 0.15s ease',
   },
   contextMenuItem: {
     padding: '10px 16px',
@@ -187,7 +194,7 @@ export const styles: Record<string, CSSProperties> = {
     transition: 'all 0.2s',
     fontSize: '14px',
     fontWeight: 500,
-    color: theme.colors.text,
+    color: '#ef4444',
     display: 'flex',
     alignItems: 'center',
     gap: '10px',

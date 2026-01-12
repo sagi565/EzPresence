@@ -8,11 +8,13 @@ import { styles } from './styles';
 
 interface ContentListProps {
   list: ContentListType;
+  isNewList: boolean;
   onDelete: () => void;
   onTitleChange: (newTitle: string) => void;
-  onIconClick: () => void;
+  onIconClick: (element: HTMLElement) => void;
   onItemMove: (itemId: string) => void;
   onItemDelete: (itemId: string) => void;
+  onItemRename: (itemId: string, newName: string) => void;
   onToggleFavorite: (itemId: string) => void;
   onUpload: (file: File) => void;
   onItemClick: (itemId: string) => void;
@@ -20,15 +22,18 @@ interface ContentListProps {
   onDrop: (e: React.DragEvent) => void;
   onItemDragStart?: (itemId: string) => void;
   onItemDragEnd?: () => void;
+  onSaveChanges?: () => void;
 }
 
 const ContentList: React.FC<ContentListProps> = ({
   list,
+  isNewList,
   onDelete,
   onTitleChange,
   onIconClick,
   onItemMove,
   onItemDelete,
+  onItemRename,
   onToggleFavorite,
   onUpload,
   onItemClick,
@@ -36,6 +41,7 @@ const ContentList: React.FC<ContentListProps> = ({
   onDrop,
   onItemDragStart,
   onItemDragEnd,
+  onSaveChanges,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -46,6 +52,7 @@ const ContentList: React.FC<ContentListProps> = ({
 
   // Dialog State
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [deleteListConfirm, setDeleteListConfirm] = useState(false);
 
   const updateArrows = () => {
     const container = scrollRef.current;
@@ -54,7 +61,7 @@ const ContentList: React.FC<ContentListProps> = ({
     const itemCount = list.items.length + 1;
     const scrollLeft = container.scrollLeft;
 
-    if (itemCount <= 5) {
+    if (itemCount <= 3) {
       setShowLeftArrow(false);
       setShowRightArrow(false);
       return;
@@ -82,8 +89,9 @@ const ContentList: React.FC<ContentListProps> = ({
     const container = scrollRef.current;
     if (!container) return;
 
-    const itemWidth = list.listType === 'video' ? 280 : 380;
-    const scrollAmount = itemWidth * 5 + 20 * 4;
+    // All items now use vertical format (280px width)
+    const itemWidth = 280;
+    const scrollAmount = itemWidth * 3 + 20 * 2;
 
     if (direction === 'left') {
       container.scrollLeft = Math.max(0, container.scrollLeft - scrollAmount);
@@ -95,16 +103,26 @@ const ContentList: React.FC<ContentListProps> = ({
     setTimeout(updateArrows, 100);
   };
 
-  const confirmDelete = () => {
+  const confirmDeleteItem = () => {
     if (itemToDelete) {
-      onItemDelete(itemToDelete); // Call the prop function
+      onItemDelete(itemToDelete);
       setItemToDelete(null);
     }
   };
 
+  const handleDeleteList = () => {
+    setDeleteListConfirm(true);
+  };
+
+  const confirmDeleteList = () => {
+    setDeleteListConfirm(false);
+    onDelete();
+  };
+
+  // All lists now have the same min-height for vertical items
   const containerStyle = {
     ...styles.listContainer,
-    ...(list.listType === 'image' ? { minHeight: '260px' } : {}),
+    minHeight: '540px',
   };
 
   const leftArrowStyle = {
@@ -135,9 +153,11 @@ const ContentList: React.FC<ContentListProps> = ({
           subtitle={list.subtitle}
           isSystem={list.isSystem}
           isEditable={!list.isSystem}
+          isNewList={isNewList}
           onTitleChange={onTitleChange}
           onIconClick={onIconClick}
-          onDelete={onDelete}
+          onDelete={handleDeleteList}
+          onSave={onSaveChanges}
           listId={list.id}
         />
 
@@ -147,13 +167,13 @@ const ContentList: React.FC<ContentListProps> = ({
           onDragOver={onDragOver}
           onDrop={onDrop}
         >
-          <UploadButton listType={list.listType} onUpload={onUpload} />
+          <UploadButton listType="video" onUpload={onUpload} />
           
           {list.items.map((item) => (
             <ContentItem
               key={item.id}
               item={item}
-              listType={list.listType}
+              listType="video"
               onDragStart={(e) => {
                 e.dataTransfer.setData('itemId', item.id);
                 e.dataTransfer.setData('listId', list.id);
@@ -167,7 +187,8 @@ const ContentList: React.FC<ContentListProps> = ({
                 }
               }}
               onClick={() => onItemClick(item.id)}
-              onDelete={() => setItemToDelete(item.id)} // Open dialog instead of alert
+              onDelete={() => setItemToDelete(item.id)}
+              onRename={(newName) => onItemRename(item.id, newName)}
               onToggleFavorite={() => onToggleFavorite(item.id)}
             />
           ))}
@@ -191,14 +212,26 @@ const ContentList: React.FC<ContentListProps> = ({
         </button>
       </div>
 
+      {/* Delete Item Confirmation */}
       <ConfirmDialog
         isOpen={!!itemToDelete}
         title="Delete Content?"
         message="Are you sure you want to delete this item? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
-        onConfirm={confirmDelete}
+        onConfirm={confirmDeleteItem}
         onCancel={() => setItemToDelete(null)}
+      />
+
+      {/* Delete List Confirmation */}
+      <ConfirmDialog
+        isOpen={deleteListConfirm}
+        title="Delete List?"
+        message="Are you sure you want to delete this list and all its contents? This action cannot be undone."
+        confirmText="Delete List"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteList}
+        onCancel={() => setDeleteListConfirm(false)}
       />
     </>
   );

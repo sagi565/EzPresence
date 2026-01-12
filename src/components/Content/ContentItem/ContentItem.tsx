@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ContentItem as ContentItemType } from '@models/ContentList';
 import { styles } from './styles';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
@@ -10,6 +10,7 @@ interface ContentItemProps {
   onDragEnd: () => void;
   onClick: () => void;
   onDelete: () => void;
+  onRename: (newName: string) => void;
   onToggleFavorite: () => void;
 }
 
@@ -20,29 +21,35 @@ const ContentItem: React.FC<ContentItemProps> = ({
   onDragEnd,
   onClick,
   onDelete,
+  onRename,
   onToggleFavorite,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState(item.title || '');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const renameInputRef = useRef<HTMLInputElement>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { url: fetchedUrl, fetchUrl } = useContentUrl();
   const isUploading = item.status === 'uploading';
 
-  // Determine type based on item property (populated by useContentLists)
   const isVideo = item.type === 'video';
 
-  // --- Helper: Get Thumbnail Source ---
+  // Preview delay in milliseconds (1 second)
+  const PREVIEW_DELAY = 1000;
+
   const getThumbnailSrc = () => {
     if (!item.thumbnail) return null;
     if (item.thumbnail.startsWith('http') || item.thumbnail.startsWith('data:')) {
       return item.thumbnail;
     }
-    // Filter out very short invalid strings
     if (item.thumbnail.length < 20) return null;
     
     const cleanBase64 = item.thumbnail.replace(/[\n\r\s]/g, '');
@@ -63,31 +70,56 @@ const ContentItem: React.FC<ContentItemProps> = ({
     onDragEnd();
   };
 
-  // --- Fetch URL on Hover (Video Only) ---
-  useEffect(() => {
-    if (isVideo && isHovered && !fetchedUrl && item.id && !isUploading && !item.id.startsWith('temp-')) {
-      fetchUrl(item.id);
+  // Handle hover with delay for video preview
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+    
+    if (isVideo && !isUploading && item.id && !item.id.startsWith('temp-')) {
+      if (!fetchedUrl) {
+        fetchUrl(item.id);
+      }
+      
+      hoverTimeoutRef.current = setTimeout(() => {
+        setShowPreview(true);
+      }, PREVIEW_DELAY);
     }
-  }, [isVideo, isHovered, fetchedUrl, item.id, isUploading, fetchUrl]);
+  }, [isVideo, isUploading, item.id, fetchedUrl, fetchUrl]);
 
-  // --- Video Autoplay Logic ---
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+    setShowPreview(false);
+    
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Video autoplay logic
   useEffect(() => {
     if (isVideo && videoRef.current) {
-      if (isHovered && fetchedUrl) {
+      if (showPreview && fetchedUrl) {
         videoRef.current.currentTime = 0;
         const playPromise = videoRef.current.play();
         if (playPromise !== undefined) {
-          playPromise.catch(() => {
-            // Autoplay blocked by browser policy - quiet failure expected
-          });
+          playPromise.catch(() => {});
         }
       } else {
         videoRef.current.pause();
       }
     }
-  }, [isVideo, isHovered, fetchedUrl]);
+  }, [isVideo, showPreview, fetchedUrl]);
 
-  // --- Click Outside Menu ---
+  // Click outside menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -98,7 +130,14 @@ const ContentItem: React.FC<ContentItemProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
 
-  // --- Action Handlers ---
+  // Focus rename input when renaming
+  useEffect(() => {
+    if (isRenaming && renameInputRef.current) {
+      renameInputRef.current.focus();
+      renameInputRef.current.select();
+    }
+  }, [isRenaming]);
+
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const url = fetchedUrl || thumbnailSrc;
@@ -122,9 +161,28 @@ const ContentItem: React.FC<ContentItemProps> = ({
     setShowMenu(false);
   };
 
-  const handleWizardMe = (e: React.MouseEvent) => {
+  const handleRenameClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    alert("Wizard Me feature coming soon!");
+    setShowMenu(false);
+    setIsRenaming(true);
+    setRenameValue(item.title || '');
+  };
+
+  const handleRenameSubmit = () => {
+    const newName = renameValue.trim();
+    if (newName && newName !== item.title) {
+      onRename(newName);
+    }
+    setIsRenaming(false);
+  };
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleRenameSubmit();
+    } else if (e.key === 'Escape') {
+      setIsRenaming(false);
+      setRenameValue(item.title || '');
+    }
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -141,7 +199,6 @@ const ContentItem: React.FC<ContentItemProps> = ({
     });
   };
 
-  // --- Render Media ---
   const renderMedia = () => {
     if (isUploading) {
       return (
@@ -163,22 +220,22 @@ const ContentItem: React.FC<ContentItemProps> = ({
               ref={videoRef}
               src={fetchedUrl}
               loop
+              muted
               playsInline
               style={{ 
                 ...styles.mediaCover, 
-                opacity: (isHovered && fetchedUrl) ? 1 : 0 
+                opacity: showPreview && fetchedUrl ? 1 : 0 
               }}
             />
           )}
           
-          {/* Thumbnail is ALWAYS rendered, only hidden when video plays */}
           {thumbnailSrc && (
             <img 
               src={thumbnailSrc} 
               alt={item.title} 
               style={{ 
                 ...styles.mediaCover, 
-                opacity: (isHovered && fetchedUrl) ? 0 : 1 
+                opacity: showPreview && fetchedUrl ? 0 : 1 
               }}
             />
           )}
@@ -186,7 +243,6 @@ const ContentItem: React.FC<ContentItemProps> = ({
       );
     }
 
-    // Image Type
     const displaySrc = fetchedUrl || thumbnailSrc;
     return (
       <div style={styles.mediaContainer}>
@@ -201,17 +257,16 @@ const ContentItem: React.FC<ContentItemProps> = ({
     <div
       style={{
         ...styles.contentItem,
-        // Sizing depends on LIST type, but rendering depends on ITEM type
-        ...(listType === 'video' ? styles.contentItemVideo : styles.contentItemImage),
+        ...styles.contentItemVideo,
         ...(isHovered && !isUploading ? styles.contentItemHover : {}),
         ...(isDragging ? styles.contentItemDragging : {}),
       }}
-      draggable={!isUploading}
+      draggable={!isUploading && !isRenaming}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onClick={!isUploading ? onClick : undefined}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onClick={!isUploading && !isRenaming ? onClick : undefined}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {renderMedia()}
 
@@ -239,20 +294,6 @@ const ContentItem: React.FC<ContentItemProps> = ({
             >
               {item.favorite ? '❤️' : '🤍'}
             </button>
-
-            <button
-              style={{
-                ...styles.actionBtn,
-                ...styles.actionBtnWizard,
-                ...(hoveredBtn === 'wizard' ? styles.actionBtnWizardHover : {}),
-              }}
-              onClick={handleWizardMe}
-              onMouseEnter={() => setHoveredBtn('wizard')}
-              onMouseLeave={() => setHoveredBtn(null)}
-              title="Wizard Me!"
-            >
-              ✨
-            </button>
           </div>
 
           <button
@@ -279,6 +320,14 @@ const ContentItem: React.FC<ContentItemProps> = ({
                 <span>⬇️</span> Download
               </button>
               <button 
+                style={{ ...styles.menuItem, ...(hoveredBtn === 'rename' ? styles.menuItemHover : {}) }}
+                onClick={handleRenameClick}
+                onMouseEnter={() => setHoveredBtn('rename')}
+                onMouseLeave={() => setHoveredBtn(null)}
+              >
+                <span>✏️</span> Rename
+              </button>
+              <button 
                 style={{ ...styles.menuItem, ...(hoveredBtn === 'delete' ? styles.menuItemDeleteHover : {}) }}
                 onClick={handleDelete}
                 onMouseEnter={() => setHoveredBtn('delete')}
@@ -289,19 +338,36 @@ const ContentItem: React.FC<ContentItemProps> = ({
             </div>
           )}
 
-          <div style={{
-            ...styles.contentTitle,
-            ...(isHovered ? styles.textVisible : {}),
-          }}>
-            {item.title}
-          </div>
-          
-          <div style={{
-            ...styles.contentDate,
-            ...(isHovered ? styles.textVisible : {}),
-          }}>
-            {formatDate(item.createdAt)}
-          </div>
+          {isRenaming ? (
+            <div style={styles.renameContainer} onClick={(e) => e.stopPropagation()}>
+              <input
+                ref={renameInputRef}
+                type="text"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={handleRenameKeyDown}
+                onBlur={handleRenameSubmit}
+                style={styles.renameInput}
+                placeholder="Enter name..."
+              />
+            </div>
+          ) : (
+            <>
+              <div style={{
+                ...styles.contentTitle,
+                ...(isHovered ? styles.textVisible : {}),
+              }}>
+                {item.title}
+              </div>
+              
+              <div style={{
+                ...styles.contentDate,
+                ...(isHovered ? styles.textVisible : {}),
+              }}>
+                {formatDate(item.createdAt)}
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

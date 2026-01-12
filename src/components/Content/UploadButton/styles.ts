@@ -15,18 +15,20 @@ export const styles: Record<string, CSSProperties> = {
     position: 'relative',
     overflow: 'hidden',
   },
+  // All upload buttons now use vertical format (shorts/reels ratio)
   uploadButtonVideo: {
     width: '280px',
     height: '480px',
   },
+  // Keeping for backwards compatibility but same dimensions
   uploadButtonImage: {
-    width: '380px',
-    height: '220px',
+    width: '280px',
+    height: '480px',
   },
   uploadButtonHover: {
     borderColor: theme.colors.primary,
     background: 'rgba(155, 93, 229, 0.1)',
-    transform: 'scale(1.05)',
+    transform: 'scale(1.02)',
   },
   uploadIcon: {
     fontSize: '64px',

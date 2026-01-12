@@ -5,23 +5,28 @@ import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
 import ContentList from '@components/Content/ContentList/ContentList';
 import ScrollNavigation from '@components/Content/ScrollNavigation/ScrollNavigation';
 import EmojiPicker from '@components/Content/EmojiPicker/EmojiPicker';
+import ContentDetailModal from '@components/Content/ContentDetailModal/ContentDetailModal';
+import ConfirmDialog from '@components/Content/ConfirmDialog/ConfirmDialog';
+import { ContentItem } from '@models/ContentList';
 import { styles } from './styles';
 
 const ContentPage: React.FC = () => {
   const { brands, currentBrand, switchBrand } = useBrands();
   
-  // Pass brandId to ensure hook refetches
   const {
     lists,
     addNewList,
-    getNewListId,
+    clearNewListFlag,
     deleteList,
     updateListTitle,
     updateListIcon,
+    reorderLists,
     moveItem,
     deleteItem,
+    renameItem,
     toggleFavorite,
     uploadContent,
+    newlyCreatedListId,
   } = useContentLists(currentBrand?.id);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -47,6 +52,19 @@ const ContentPage: React.FC = () => {
     anchorElement: null,
   });
 
+  const [detailModal, setDetailModal] = useState<{
+    isOpen: boolean;
+    item: ContentItem | null;
+    listId: string;
+  }>({
+    isOpen: false,
+    item: null,
+    listId: '',
+  });
+
+  const [deleteFromModal, setDeleteFromModal] = useState(false);
+  const [hoveredAddButton, setHoveredAddButton] = useState(false);
+
   const handleIconClick = (listId: string, element: HTMLElement) => {
     setEmojiPicker({
       isOpen: true,
@@ -55,51 +73,17 @@ const ContentPage: React.FC = () => {
     });
   };
 
-  const [hoveredAddButton, setHoveredAddButton] = useState(false);
-
   useEffect(() => {
     if (lists.length > prevListsLength.current) {
-        const newListId = getNewListId();
-        if (newListId) {
-          const newListIndex = lists.findIndex(list => list.id === newListId);
-          if (newListIndex !== -1) {
-            setTimeout(() => {
-              scrollToList(newListIndex);
-            }, 100);
-          }
-        }
+      const newListIndex = lists.length - 1;
+      if (newListIndex >= 0) {
+        setTimeout(() => {
+          scrollToList(newListIndex);
+        }, 100);
+      }
     }
     prevListsLength.current = lists.length;
-  }, [lists, getNewListId]);
-
-  const updateCurrentIndex = useCallback(() => {
-    if (!containerRef.current || isScrolling) return;
-
-    const container = containerRef.current;
-    const scrollTop = container.scrollTop;
-    const containerHeight = container.clientHeight;
-    const scrollCenter = scrollTop + containerHeight / 2;
-
-    let closestIndex = 0;
-    let closestDistance = Infinity;
-
-    listsRef.current.forEach((list, index) => {
-      if (!list) return;
-      const listTop = list.offsetTop;
-      const listHeight = list.offsetHeight;
-      const listCenter = listTop + listHeight / 2;
-      const distance = Math.abs(scrollCenter - listCenter);
-
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestIndex = index;
-      }
-    });
-
-    if (closestIndex !== currentIndex) {
-      setCurrentIndex(closestIndex);
-    }
-  }, [currentIndex, isScrolling]);
+  }, [lists.length]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -174,7 +158,7 @@ const ContentPage: React.FC = () => {
 
           const distanceFromBottom = scrollHeight - scrollTop - containerHeight;
           if (isHardScroll && distanceFromBottom < containerHeight * 0.3 && scrollVelocity.current > 0) {
-            scrollToList(lists.length);
+            scrollToList(lists.length - 1);
             return;
           }
 
@@ -204,12 +188,8 @@ const ContentPage: React.FC = () => {
 
     return () => {
       container.removeEventListener('scroll', handleScroll);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      if (updateIndexTimeoutRef.current) {
-        clearTimeout(updateIndexTimeoutRef.current);
-      }
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      if (updateIndexTimeoutRef.current) clearTimeout(updateIndexTimeoutRef.current);
     };
   }, [currentIndex, isScrolling, lists.length]);
 
@@ -223,14 +203,12 @@ const ContentPage: React.FC = () => {
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-
       direction = e.deltaY > 0 ? 1 : -1;
       accumulated += e.deltaY;
 
       if (scrollTimer) clearTimeout(scrollTimer);
       scrollTimer = setTimeout(() => {
         const total = Math.abs(accumulated);
-
         let step = 0;
         if (total > 3500) step = 4;
         else if (total > 2000) step = 3;
@@ -238,14 +216,9 @@ const ContentPage: React.FC = () => {
         else if (total > 200) step = 1;
 
         if (step > 0) {
-          const nextIndex = Math.max(
-            0,
-            Math.min(lists.length, currentIndex + step * direction)
-          );
-          
+          const nextIndex = Math.max(0, Math.min(lists.length - 1, currentIndex + step * direction));
           scrollToList(nextIndex);
         }
-
         accumulated = 0;
         scrollTimer = null;
       }, 30);
@@ -259,7 +232,7 @@ const ContentPage: React.FC = () => {
   }, [currentIndex, isScrolling, lists.length]);
 
   const scrollToList = (index: number) => {
-    const targetList = index < lists.length ? listsRef.current[index] : listsRef.current[lists.length];
+    const targetList = listsRef.current[index];
     const container = containerRef.current;
 
     if (targetList && container) {
@@ -270,20 +243,11 @@ const ContentPage: React.FC = () => {
       const listHeight = targetList.offsetHeight;
       const scrollPosition = listTop - (containerHeight - listHeight) / 2;
 
-      container.scrollTo({
-        top: scrollPosition,
-        behavior: 'smooth',
-      });
-
+      container.scrollTo({ top: scrollPosition, behavior: 'smooth' });
       setCurrentIndex(index);
 
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      
-      scrollTimeoutRef.current = setTimeout(() => {
-        setIsScrolling(false);
-      }, 600);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => setIsScrolling(false), 600);
     }
   };
 
@@ -302,7 +266,6 @@ const ContentPage: React.FC = () => {
     e.preventDefault();
     const itemId = e.dataTransfer.getData('itemId');
     const sourceListId = e.dataTransfer.getData('listId');
-    
     if (itemId && sourceListId && sourceListId !== targetListId) {
       moveItem(itemId, sourceListId, targetListId);
     }
@@ -311,11 +274,9 @@ const ContentPage: React.FC = () => {
   const handleDropToList = (listId: string) => {
     const draggedItemId = sessionStorage.getItem('draggedItemId');
     const draggedFromListId = sessionStorage.getItem('draggedFromListId');
-    
     if (draggedItemId && draggedFromListId && draggedFromListId !== listId) {
       moveItem(draggedItemId, draggedFromListId, listId);
     }
-    
     sessionStorage.removeItem('draggedItemId');
     sessionStorage.removeItem('draggedFromListId');
     setIsDraggingItem(false);
@@ -335,8 +296,48 @@ const ContentPage: React.FC = () => {
     }, 100);
   };
 
-  const handleItemClick = (itemId: string) => {
-    console.log('Open content modal for item:', itemId);
+  const handleItemClick = (itemId: string, listId: string) => {
+    const list = lists.find(l => l.id === listId);
+    const item = list?.items.find(i => i.id === itemId);
+    if (item) {
+      setDetailModal({ isOpen: true, item, listId });
+    }
+  };
+
+  const handleModalRename = (newName: string) => {
+    if (detailModal.item && detailModal.listId) {
+      renameItem(detailModal.item.id, detailModal.listId, newName);
+      setDetailModal(prev => ({
+        ...prev,
+        item: prev.item ? { ...prev.item, title: newName } : null,
+      }));
+    }
+  };
+
+  const handleModalToggleFavorite = () => {
+    if (detailModal.item && detailModal.listId) {
+      toggleFavorite(detailModal.item.id, detailModal.listId);
+      setDetailModal(prev => ({
+        ...prev,
+        item: prev.item ? { ...prev.item, favorite: !prev.item.favorite } : null,
+      }));
+    }
+  };
+
+  const handleModalDelete = () => {
+    setDeleteFromModal(true);
+  };
+
+  const confirmModalDelete = () => {
+    if (detailModal.item && detailModal.listId) {
+      deleteItem(detailModal.item.id, detailModal.listId);
+      setDetailModal({ isOpen: false, item: null, listId: '' });
+    }
+    setDeleteFromModal(false);
+  };
+
+  const handleReorderLists = (fromIndex: number, toIndex: number) => {
+    reorderLists(fromIndex, toIndex);
   };
 
   const addButtonStyle = {
@@ -346,49 +347,33 @@ const ContentPage: React.FC = () => {
 
   return (
     <div style={styles.container}>
-      <GlobalNav
-        brands={brands}
-        currentBrand={currentBrand}
-        onBrandChange={switchBrand}
-      />
+      <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
 
-      {/* KEY FIX: Using key={currentBrand.id} forces a full re-render on brand switch */}
-      <div 
-        ref={containerRef} 
-        style={styles.contentArea} 
-        key={currentBrand?.id || 'no-brand'}
-      >
+      <div ref={containerRef} style={styles.contentArea} key={currentBrand?.id || 'no-brand'}>
         {lists.map((list, index) => (
           <div
             key={list.id}
-            ref={(el) => {
-              if (el) listsRef.current[index] = el;
-            }}
+            ref={(el) => { if (el) listsRef.current[index] = el; }}
             style={styles.listSection}
           >
             <div style={styles.listWrapper}>
               <ContentList
                 list={list}
-                onDelete={() => {
-                  if (confirm('Are you sure you want to delete this list and remove all its content?')) {
-                    deleteList(list.id);
-                  }
-                }}
+                isNewList={newlyCreatedListId === list.id}
+                onDelete={() => deleteList(list.id)}
                 onTitleChange={(newTitle) => updateListTitle(list.id, newTitle)}
                 onIconClick={(element: HTMLElement) => handleIconClick(list.id, element)}
-                onItemMove={(itemId) => {}}
-                
-                onItemDelete={(itemId) => {
-                   deleteItem(itemId, list.id);
-                }}
-
+                onItemMove={() => {}}
+                onItemDelete={(itemId) => deleteItem(itemId, list.id)}
+                onItemRename={(itemId, newName) => renameItem(itemId, list.id, newName)}
                 onToggleFavorite={(itemId) => toggleFavorite(itemId, list.id)}
                 onUpload={(file) => uploadContent(list.id, file)}
-                onItemClick={handleItemClick}
+                onItemClick={(itemId) => handleItemClick(itemId, list.id)}
                 onDragOver={(e) => handleDragOver(e, list.id)}
                 onDrop={(e) => handleDrop(e, list.id)}
                 onItemDragStart={(itemId) => handleItemDragStart(itemId, list.id)}
                 onItemDragEnd={handleItemDragEnd}
+                onSaveChanges={() => clearNewListFlag()}
               />
             </div>
           </div>
@@ -400,12 +385,9 @@ const ContentPage: React.FC = () => {
         currentIndex={currentIndex}
         isDragging={isDraggingItem}
         onNavigate={scrollToList}
-        onDelete={(listId) => {
-          if (confirm('Are you sure you want to delete this list?')) {
-            deleteList(listId);
-          }
-        }}
+        onDelete={(listId) => deleteList(listId)}
         onDropToList={handleDropToList}
+        onReorder={handleReorderLists}
       />
 
       <EmojiPicker
@@ -414,6 +396,26 @@ const ContentPage: React.FC = () => {
         onSelect={handleEmojiSelect}
         anchorElement={emojiPicker.anchorElement}
       />
+
+      <ContentDetailModal
+        isOpen={detailModal.isOpen}
+        item={detailModal.item}
+        onClose={() => setDetailModal({ isOpen: false, item: null, listId: '' })}
+        onRename={handleModalRename}
+        onDelete={handleModalDelete}
+        onToggleFavorite={handleModalToggleFavorite}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteFromModal}
+        title="Delete Content?"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmModalDelete}
+        onCancel={() => setDeleteFromModal(false)}
+      />
+
       <div style={styles.addListButtonWrapper}>
         <button
           style={addButtonStyle}

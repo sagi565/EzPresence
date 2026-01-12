@@ -1,6 +1,5 @@
 import { CSSProperties } from 'react';
 
-// Add keyframes for favorite animation
 const stylesSheet = document.createElement("style");
 stylesSheet.innerText = `
   @keyframes favoriteClick {
@@ -26,14 +25,13 @@ export const styles: Record<string, CSSProperties> = {
     flexShrink: 0,
   },
   
-  // Dimensions matching UploadButton exactly
   contentItemVideo: {
     width: '280px', 
     height: '480px', 
   },
   contentItemImage: {
-    width: '380px', 
-    height: '220px', 
+    width: '280px', 
+    height: '480px', 
   },
 
   contentItemHover: {
@@ -48,7 +46,6 @@ export const styles: Record<string, CSSProperties> = {
     transform: 'scale(0.95)',
   },
   
-  // --- Media Container ---
   mediaContainer: {
     position: 'relative',
     width: '100%',
@@ -69,7 +66,6 @@ export const styles: Record<string, CSSProperties> = {
     transition: 'opacity 0.3s ease',
   },
   
-  // --- Overlays ---
   gradientOverlay: {
     position: 'absolute',
     bottom: 0,
@@ -86,7 +82,6 @@ export const styles: Record<string, CSSProperties> = {
     opacity: 1,
   },
 
-  // --- Actions (Top Left) ---
   contentActions: {
     position: 'absolute',
     top: '12px',
@@ -107,7 +102,8 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '50%',
     background: 'rgba(0, 0, 0, 0.4)',
     backdropFilter: 'blur(10px)',
-    border: '1.5px solid rgba(255, 255, 255, 0.2)',
+    border: '1.5px solid',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -124,7 +120,6 @@ export const styles: Record<string, CSSProperties> = {
     borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   
-  // Favorite Active State
   actionBtnFavoriteActive: {
     background: 'rgba(239, 68, 68, 0.85)',
     borderColor: 'rgba(239, 68, 68, 0.5)',
@@ -132,25 +127,14 @@ export const styles: Record<string, CSSProperties> = {
     animation: 'favoriteClick 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)',
   },
 
-  // Wizard Button Special Style
-  actionBtnWizard: {
-    background: 'linear-gradient(135deg, #9b5de5 0%, #fbbf24 100%)',
-    border: 'none',
-  },
-  
-  actionBtnWizardHover: {
-    transform: 'scale(1.15) rotate(15deg)',
-    boxShadow: '0 8px 24px rgba(155, 93, 229, 0.4)',
-  },
-
-  // --- More Options (Top Right) ---
   moreOptionsBtn: {
     position: 'absolute',
     top: '12px',
     right: '12px',
     background: 'rgba(0, 0, 0, 0.15)',
     backdropFilter: 'blur(10px)',
-    border: '1.5px solid rgba(255, 255, 255, 0.15)',
+    border: '1.5px solid',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
     zIndex: 20,
     color: 'rgba(255, 255, 255, 0.9)',
     opacity: 0,
@@ -172,7 +156,6 @@ export const styles: Record<string, CSSProperties> = {
     transform: 'scale(1.1)',
   },
 
-  // --- Dropdown Menu ---
   menuDropdown: {
     position: 'absolute',
     top: '48px',
@@ -213,7 +196,6 @@ export const styles: Record<string, CSSProperties> = {
     color: '#ef4444',
   },
 
-  // --- Bottom Text ---
   contentTitle: {
     position: 'absolute',
     bottom: '28px',
@@ -248,7 +230,27 @@ export const styles: Record<string, CSSProperties> = {
     opacity: 1,
   },
 
-  // --- Uploading State ---
+  renameContainer: {
+    position: 'absolute',
+    bottom: '10px',
+    left: '12px',
+    right: '12px',
+    zIndex: 25,
+  },
+  renameInput: {
+    width: '100%',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    border: '2px solid',
+    borderColor: '#9b5de5',
+    background: 'white',
+    fontSize: '14px',
+    fontWeight: 600,
+    color: '#1f2937',
+    outline: 'none',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  },
+
   loadingOverlay: {
     position: 'absolute',
     inset: 0,
@@ -263,7 +265,8 @@ export const styles: Record<string, CSSProperties> = {
   spinner: {
     width: '28px',
     height: '28px',
-    border: '3px solid rgba(255,255,255,0.3)',
+    border: '3px solid',
+    borderColor: 'rgba(255,255,255,0.3)',
     borderTopColor: 'white',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',

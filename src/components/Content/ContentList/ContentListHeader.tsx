@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { styles } from './styles';
+import { formatSystemListTitle } from '@models/ContentList';
 
 interface ContentListHeaderProps {
   icon: string;
@@ -8,9 +9,11 @@ interface ContentListHeaderProps {
   isSystem: boolean;
   isEditable: boolean;
   listId?: string;
+  isNewList?: boolean;
   onTitleChange: (newTitle: string) => void;
   onIconClick: (element: HTMLElement) => void;
   onDelete: () => void;
+  onSave?: () => void;
 }
 
 const ContentListHeader: React.FC<ContentListHeaderProps> = ({
@@ -20,30 +23,78 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
   isSystem,
   isEditable,
   listId,
+  isNewList = false,
   onTitleChange,
   onIconClick,
   onDelete,
+  onSave,
 }) => {
-  const [isTitleFocused, setIsTitleFocused] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(isNewList);
   const [isIconHovered, setIsIconHovered] = useState(false);
+  const [isTitleHovered, setIsTitleHovered] = useState(false);
   const [isDeleteHovered, setIsDeleteHovered] = useState(false);
+  const [isSaveHovered, setIsSaveHovered] = useState(false);
   const [titleValue, setTitleValue] = useState(title);
+  const [originalTitle, setOriginalTitle] = useState(title);
   const iconRef = useRef<HTMLSpanElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleTitleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    setIsTitleFocused(false);
-    const value = e.target.value.trim();
+  // Update title when prop changes
+  useEffect(() => {
+    setTitleValue(title);
+    setOriginalTitle(title);
+  }, [title]);
+
+  // Focus input when entering edit mode
+  useEffect(() => {
+    if (isEditMode && titleInputRef.current) {
+      titleInputRef.current.focus();
+      titleInputRef.current.select();
+    }
+  }, [isEditMode]);
+
+  // Handle click outside to exit edit mode
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        if (isEditMode) {
+          handleSave();
+        }
+      }
+    };
+
+    if (isEditMode) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isEditMode, titleValue]);
+
+  const handleSave = () => {
+    const value = titleValue.trim();
     if (!value) {
       setTitleValue('My new playlist');
       onTitleChange('My new playlist');
-    } else {
+    } else if (value !== originalTitle) {
       onTitleChange(value);
+    }
+    setOriginalTitle(value || 'My new playlist');
+    setIsEditMode(false);
+    if (onSave) {
+      onSave();
     }
   };
 
-  const handleTitleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleCancel = () => {
+    setTitleValue(originalTitle);
+    setIsEditMode(false);
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      e.currentTarget.blur();
+      handleSave();
+    } else if (e.key === 'Escape') {
+      handleCancel();
     }
   };
 
@@ -51,33 +102,75 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
-    if (isEditable && iconRef.current) {
-      onIconClick(iconRef.current);
+    if (isEditable) {
+      setIsEditMode(true);
+      if (iconRef.current) {
+        onIconClick(iconRef.current);
+      }
     }
+  };
+
+  const handleTitleClick = () => {
+    if (isEditable && !isEditMode) {
+      setIsEditMode(true);
+    }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete();
+  };
+
+  // Render system list title with gradient
+  const renderTitle = () => {
+    const gradientParts = formatSystemListTitle(title);
+    
+    if (gradientParts) {
+      return (
+        <h2 style={styles.listTitle}>
+          <span style={{ color: '#111827' }}>{gradientParts.prefix}</span>
+          <span style={styles.brandGradient}>{gradientParts.gradient}</span>
+        </h2>
+      );
+    }
+    
+    return <h2 style={styles.listTitle}>{title}</h2>;
   };
 
   const iconStyle = {
     ...styles.listIcon,
     ...(isEditable ? {
       ...styles.listIconEditable,
-      ...(isIconHovered && !isTitleFocused ? styles.listIconHover : {}),
-      ...(isTitleFocused ? styles.listIconFocused : {}),
-      ...(isTitleFocused && isIconHovered ? styles.listIconFocusedHover : {}),
+      ...(isEditMode ? styles.listIconEditMode : {}),
+      ...(!isEditMode && isIconHovered ? styles.listIconHover : {}),
     } : {}),
   };
-  const deleteButtonStyle = {
-    ...styles.listDeleteBtn,
-    ...(isTitleFocused ? styles.listDeleteBtnVisible : {}),
-    ...(isDeleteHovered ? styles.listDeleteBtnHover : {}),
+
+  const titleContainerStyle = {
+    ...styles.listTitleClickable,
+    ...(isEditable && !isEditMode && isTitleHovered ? styles.listTitleHover : {}),
   };
 
   const inputStyle = {
     ...styles.listTitleEditable,
-    ...(isTitleFocused ? styles.listTitleEditableFocus : {}),
+    ...(isEditMode ? styles.listTitleEditableFocus : {}),
+  };
+
+  const deleteButtonStyle = {
+    ...styles.listDeleteBtn,
+    ...(isEditMode ? styles.listDeleteBtnVisible : {}),
+    ...(isDeleteHovered ? styles.listDeleteBtnHover : {}),
+  };
+
+  const saveButtonStyle = {
+    ...styles.listSaveBtn,
+    ...(isEditMode ? styles.listSaveBtnVisible : {}),
+    ...(isSaveHovered ? styles.listSaveBtnHover : {}),
   };
 
   return (
-    <div style={styles.listHeader}>
+    <div ref={containerRef} style={styles.listHeader}>
       <span
         ref={iconRef}
         className="list-icon"
@@ -91,46 +184,51 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
       <div style={styles.listTitleGroup}>
         <div style={styles.listTitleContainer}>
           {isEditable ? (
-            <input
-              type="text"
-              style={inputStyle}
-              value={titleValue}
-              onChange={(e) => setTitleValue(e.target.value)}
-              onFocus={() => setIsTitleFocused(true)}
-              onBlur={handleTitleBlur}
-              onKeyPress={handleTitleKeyPress}
-              placeholder="My new playlist"
-            />
+            isEditMode ? (
+              <input
+                ref={titleInputRef}
+                type="text"
+                style={inputStyle}
+                value={titleValue}
+                onChange={(e) => setTitleValue(e.target.value)}
+                onKeyDown={handleTitleKeyDown}
+                placeholder="My new playlist"
+              />
+            ) : (
+              <div 
+                style={titleContainerStyle}
+                onClick={handleTitleClick}
+                onMouseEnter={() => setIsTitleHovered(true)}
+                onMouseLeave={() => setIsTitleHovered(false)}
+              >
+                <h2 style={styles.listTitleDisplay}>{titleValue}</h2>
+              </div>
+            )
           ) : (
-            <h2 style={styles.listTitle}>
-              {title.includes('Creators') || title.includes('Producer') ? (
-                <>
-                  {title.split(' ').slice(0, 2).join(' ')}{' '}
-                  <span style={styles.brandGradient}>
-                    {title.split(' ').slice(2).join(' ')}
-                  </span>
-                </>
-              ) : (
-                title
-              )}
-            </h2>
+            renderTitle()
           )}
-          {!isSystem && (
-            <button
-              style={deleteButtonStyle}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.confirm('Are you sure you want to delete this list and remove all its content?')) {
-                  onDelete();
-                }
-              }}
-              onMouseEnter={() => setIsDeleteHovered(true)}
-              onMouseLeave={() => setIsDeleteHovered(false)}
-              title="Delete list"
-            >
-              ×
-            </button>
+          
+          {isEditable && isEditMode && (
+            <>
+              <button
+                style={saveButtonStyle}
+                onClick={handleSave}
+                onMouseEnter={() => setIsSaveHovered(true)}
+                onMouseLeave={() => setIsSaveHovered(false)}
+                title="Save changes"
+              >
+                ✓
+              </button>
+              <button
+                style={deleteButtonStyle}
+                onClick={handleDeleteClick}
+                onMouseEnter={() => setIsDeleteHovered(true)}
+                onMouseLeave={() => setIsDeleteHovered(false)}
+                title="Delete list"
+              >
+                ×
+              </button>
+            </>
           )}
         </div>
         {subtitle && <p style={styles.listSubtitle}>{subtitle}</p>}

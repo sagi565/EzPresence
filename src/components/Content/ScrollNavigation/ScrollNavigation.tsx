@@ -9,6 +9,7 @@ interface ScrollNavigationProps {
   onNavigate: (index: number) => void;
   onDelete: (listId: string) => void;
   onDropToList: (listId: string) => void;
+  onReorder: (fromIndex: number, toIndex: number) => void;
 }
 
 const MAX_VISIBLE_DOTS = 7;
@@ -20,6 +21,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   onNavigate,
   onDelete,
   onDropToList,
+  onReorder,
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -30,7 +32,13 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   } | null>(null);
   const [windowOffset, setWindowOffset] = useState(0);
   const [hoveredArrow, setHoveredArrow] = useState<'up' | 'down' | null>(null);
+  
+  // Reorder drag state
+  const [reorderDragIndex, setReorderDragIndex] = useState<number | null>(null);
+  const [reorderTargetIndex, setReorderTargetIndex] = useState<number | null>(null);
+  
   const autoScrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const dotsContainerRef = useRef<HTMLDivElement>(null);
 
   const totalItems = lists.length;
   const showPagination = totalItems > MAX_VISIBLE_DOTS;
@@ -50,6 +58,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     return { start, end };
   };
 
+  // Keep current item visible
   useEffect(() => {
     if (!showPagination) return;
     
@@ -60,12 +69,13 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     } else if (currentIndex >= end) {
       setWindowOffset(Math.max(0, currentIndex - MAX_VISIBLE_DOTS + 1));
     }
-  }, [currentIndex, showPagination]);
+  }, [currentIndex, showPagination, totalItems]);
 
   const { start: startIndex, end: endIndex } = getVisibleRange();
   const canScrollUp = startIndex > 0;
   const canScrollDown = endIndex < totalItems;
 
+  // Close context menu on outside click
   useEffect(() => {
     const handleClickOutside = () => setContextMenu(null);
     if (contextMenu) {
@@ -74,7 +84,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     }
   }, [contextMenu]);
 
-  const handleContextMenu = (e: React.MouseEvent, list: ContentList, index: number) => {
+  const handleContextMenu = (e: React.MouseEvent, list: ContentList) => {
     if (list.isSystem) return;
     
     e.preventDefault();
@@ -92,15 +102,16 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     }
   };
 
+  // Smooth scroll functions
   const handlePageUp = () => {
     if (canScrollUp) {
-      setWindowOffset(Math.max(0, windowOffset - 1));
+      setWindowOffset(prev => Math.max(0, prev - 1));
     }
   };
 
   const handlePageDown = () => {
     if (canScrollDown) {
-      setWindowOffset(Math.min(totalItems - MAX_VISIBLE_DOTS, windowOffset + 1));
+      setWindowOffset(prev => Math.min(totalItems - MAX_VISIBLE_DOTS, prev + 1));
     }
   };
 
@@ -108,12 +119,12 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     if (autoScrollIntervalRef.current) return;
 
     autoScrollIntervalRef.current = setInterval(() => {
-      if (direction === 'up' && canScrollUp) {
+      if (direction === 'up') {
         setWindowOffset(prev => Math.max(0, prev - 1));
-      } else if (direction === 'down' && canScrollDown) {
+      } else {
         setWindowOffset(prev => Math.min(totalItems - MAX_VISIBLE_DOTS, prev + 1));
       }
-    }, 300);
+    }, 400);
   };
 
   const stopAutoScroll = () => {
@@ -123,109 +134,194 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     }
   };
 
+  // Cleanup
   useEffect(() => {
-    return () => {
-      stopAutoScroll();
-    };
+    return () => stopAutoScroll();
   }, []);
 
   useEffect(() => {
-    if (!isDragging) {
+    if (!isDragging && reorderDragIndex === null) {
       stopAutoScroll();
     }
-  }, [isDragging]);
+  }, [isDragging, reorderDragIndex]);
 
-  const visibleItems = [];
-  for (let i = startIndex; i < endIndex; i++) {
-    visibleItems.push({ list: lists[i], index: i });
-  }
-
-  const upArrowStyle = {
-    ...styles.paginationArrow,
-    ...styles.paginationArrowUp,
-    ...(isDragging && showPagination && canScrollUp ? styles.paginationArrowDragging : {}),
-    ...(hoveredArrow === 'up' ? styles.paginationArrowHover : {}),
-  };
-
-  const downArrowStyle = {
-    ...styles.paginationArrow,
-    ...styles.paginationArrowDown,
-    ...(isDragging && showPagination && canScrollDown ? styles.paginationArrowDragging : {}),
-    ...(hoveredArrow === 'down' ? styles.paginationArrowHover : {}),
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number, list: ContentList) => {
-    if (isDragging) {
-      if (list.isSystem) {
-        e.dataTransfer.dropEffect = 'none';
-        return;
-      }
-      e.preventDefault();
-      setDragOverIndex(index);
-    }
-  };
-
-  const handleDragLeave = () => {
-    setDragOverIndex(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, listId: string, list: ContentList) => {
+  // --- Reorder Drag Handlers ---
+  const handleReorderDragStart = (e: React.DragEvent, index: number, list: ContentList) => {
     if (list.isSystem) {
+      e.preventDefault();
       return;
     }
+    
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('reorder', String(index));
+    setReorderDragIndex(index);
+    
+    // Create custom drag image
+    const dragImage = document.createElement('div');
+    dragImage.style.cssText = `
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #9b5de5 0%, #14b8a6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      position: absolute;
+      top: -1000px;
+    `;
+    dragImage.textContent = list.icon;
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 20, 20);
+    setTimeout(() => document.body.removeChild(dragImage), 0);
+  };
+
+  const handleReorderDragOver = (e: React.DragEvent, index: number, list: ContentList) => {
+    e.preventDefault();
+    
+    // Don't allow dropping on system lists
+    if (list.isSystem) {
+      e.dataTransfer.dropEffect = 'none';
+      return;
+    }
+    
+    e.dataTransfer.dropEffect = 'move';
+    
+    if (reorderDragIndex !== null && index !== reorderDragIndex) {
+      setReorderTargetIndex(index);
+    }
+  };
+
+  const handleReorderDragLeave = () => {
+    // Don't clear immediately to prevent flickering
+  };
+
+  const handleReorderDrop = (e: React.DragEvent, toIndex: number, list: ContentList) => {
+    e.preventDefault();
+    
+    if (list.isSystem) return;
+    
+    const fromIndexStr = e.dataTransfer.getData('reorder');
+    if (fromIndexStr) {
+      const fromIndex = parseInt(fromIndexStr, 10);
+      if (fromIndex !== toIndex && !isNaN(fromIndex)) {
+        onReorder(fromIndex, toIndex);
+      }
+    }
+    
+    setReorderDragIndex(null);
+    setReorderTargetIndex(null);
+  };
+
+  const handleReorderDragEnd = () => {
+    setReorderDragIndex(null);
+    setReorderTargetIndex(null);
+  };
+
+  // Content item drag handlers
+  const handleContentDragOver = (e: React.DragEvent, list: ContentList) => {
+    if (isDragging && !list.isSystem) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    }
+  };
+
+  const handleContentDrop = (e: React.DragEvent, listId: string, list: ContentList) => {
+    if (list.isSystem) return;
     e.preventDefault();
     onDropToList(listId);
     setDragOverIndex(null);
   };
 
+  // Build visible items
+  const visibleItems = [];
+  for (let i = startIndex; i < endIndex; i++) {
+    visibleItems.push({ list: lists[i], index: i });
+  }
+
   return (
     <>
       <nav style={styles.scrollNav}>
-        {/* Only render UP arrow if pagination is needed AND we can scroll up */}
-        {showPagination && canScrollUp && (
+        {/* UP Arrow */}
+        {showPagination && (
           <button
-            style={upArrowStyle}
+            style={{
+              ...styles.paginationArrow,
+              ...styles.paginationArrowUp,
+              ...(canScrollUp ? {} : styles.paginationArrowHidden),
+              ...(hoveredArrow === 'up' && canScrollUp ? styles.paginationArrowHover : {}),
+            }}
             onClick={handlePageUp}
             onMouseEnter={() => {
               setHoveredArrow('up');
-              if (isDragging) startAutoScroll('up');
+              if (reorderDragIndex !== null) startAutoScroll('up');
             }}
             onMouseLeave={() => {
               setHoveredArrow(null);
               stopAutoScroll();
             }}
             onDragOver={(e) => {
-              if (isDragging) {
+              if (reorderDragIndex !== null) {
                 e.preventDefault();
                 startAutoScroll('up');
               }
             }}
-            onDragLeave={() => stopAutoScroll()}
+            onDragLeave={stopAutoScroll}
+            disabled={!canScrollUp}
           >
             ▲
           </button>
         )}
 
-        <div style={styles.dotsContainer}>
+        <div 
+          ref={dotsContainerRef}
+          style={styles.dotsContainer}
+        >
           {visibleItems.map((item, idx) => {
             const { list, index } = item;
             const isActive = currentIndex === index;
             const isHovered = hoveredIndex === index;
-            const isDragOver = dragOverIndex === index;
-            const showAsHovered = isDragging || isHovered;
-            const isSystemAndDragging = list.isSystem && isDragging;
+            const isDragOver = dragOverIndex === index || reorderTargetIndex === index;
+            const showAsHovered = isDragging || isHovered || reorderDragIndex !== null;
+            const isSystemAndDragging = list.isSystem && (isDragging || reorderDragIndex !== null);
+            const isBeingDragged = reorderDragIndex === index;
 
             return (
-              <div key={list.id} style={styles.scrollItem}>
-                {(showAsHovered || isDragOver) && !isSystemAndDragging && (
+              <div 
+                key={list.id} 
+                style={{
+                  ...styles.scrollItem,
+                  ...(isBeingDragged ? styles.scrollItemDragging : {}),
+                }}
+              >
+                {/* Label tooltip */}
+                {(showAsHovered || isDragOver) && !isSystemAndDragging && !isBeingDragged && (
                   <div style={styles.scrollLabel}>{list.title}</div>
                 )}
 
                 <div 
                   style={styles.scrollDotContainer}
-                  onDragOver={(e) => handleDragOver(e, index, list)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, list.id, list)}
+                  draggable={!list.isSystem}
+                  onDragStart={(e) => handleReorderDragStart(e, index, list)}
+                  onDragOver={(e) => {
+                    handleReorderDragOver(e, index, list);
+                    handleContentDragOver(e, list);
+                    if (isDragging && !list.isSystem) {
+                      setDragOverIndex(index);
+                    }
+                  }}
+                  onDragLeave={() => {
+                    handleReorderDragLeave();
+                    setDragOverIndex(null);
+                  }}
+                  onDrop={(e) => {
+                    if (reorderDragIndex !== null) {
+                      handleReorderDrop(e, index, list);
+                    } else if (isDragging) {
+                      handleContentDrop(e, list.id, list);
+                    }
+                  }}
+                  onDragEnd={handleReorderDragEnd}
                 >
                   <div
                     style={{
@@ -235,12 +331,14 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                           ? styles.scrollDotActiveSystem
                           : styles.scrollDotActiveCustom
                         : {}),
-                      ...(showAsHovered && !isActive && !isSystemAndDragging ? styles.scrollDotHover : {}),
+                      ...(showAsHovered && !isActive && !isSystemAndDragging && !isBeingDragged ? styles.scrollDotHover : {}),
                       ...(isDragOver && !list.isSystem ? styles.scrollDotDragOver : {}),
                       ...(isSystemAndDragging ? styles.scrollDotDisabled : {}),
+                      ...(!list.isSystem ? styles.scrollDotDraggable : {}),
+                      ...(isBeingDragged ? styles.scrollDotBeingDragged : {}),
                     }}
                     onClick={() => onNavigate(index)}
-                    onContextMenu={(e) => handleContextMenu(e, list, index)}
+                    onContextMenu={(e) => handleContextMenu(e, list)}
                     onMouseEnter={() => setHoveredIndex(index)}
                     onMouseLeave={() => setHoveredIndex(null)}
                   >
@@ -248,7 +346,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                       style={{
                         ...styles.scrollIcon,
                         ...(showAsHovered || isActive || isDragOver ? styles.scrollIconVisible : {}),
-                        ...(isSystemAndDragging ? { opacity: 0.3 } : {}),
+                        ...(isSystemAndDragging || isBeingDragged ? { opacity: 0.3 } : {}),
                       }}
                     >
                       {list.icon}
@@ -256,38 +354,46 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                   </div>
                 </div>
 
+                {/* Connecting line */}
                 {idx < visibleItems.length - 1 && <div style={styles.scrollLine} />}
               </div>
             );
           })}
         </div>
 
-        {/* Only render DOWN arrow if pagination is needed AND we can scroll down */}
-        {showPagination && canScrollDown && (
+        {/* DOWN Arrow */}
+        {showPagination && (
           <button
-            style={downArrowStyle}
+            style={{
+              ...styles.paginationArrow,
+              ...styles.paginationArrowDown,
+              ...(canScrollDown ? {} : styles.paginationArrowHidden),
+              ...(hoveredArrow === 'down' && canScrollDown ? styles.paginationArrowHover : {}),
+            }}
             onClick={handlePageDown}
             onMouseEnter={() => {
               setHoveredArrow('down');
-              if (isDragging) startAutoScroll('down');
+              if (reorderDragIndex !== null) startAutoScroll('down');
             }}
             onMouseLeave={() => {
               setHoveredArrow(null);
               stopAutoScroll();
             }}
             onDragOver={(e) => {
-              if (isDragging) {
+              if (reorderDragIndex !== null) {
                 e.preventDefault();
                 startAutoScroll('down');
               }
             }}
-            onDragLeave={() => stopAutoScroll()}
+            onDragLeave={stopAutoScroll}
+            disabled={!canScrollDown}
           >
             ▼
           </button>
         )}
       </nav>
 
+      {/* Context Menu */}
       {contextMenu && (
         <div
           style={{
@@ -297,7 +403,12 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={styles.contextMenuItem} onClick={handleDelete}>
+          <div 
+            style={styles.contextMenuItem} 
+            onClick={handleDelete}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
             <span>🗑️</span>
             <span>Delete</span>
           </div>

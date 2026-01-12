@@ -19,11 +19,16 @@ const UploadButton: React.FC<UploadButtonProps> = ({ listType, onUpload }) => {
     if (file) {
       onUpload(file);
     }
+    // Reset input to allow uploading same file again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
+  // All upload buttons now use vertical format
   const buttonStyle = {
     ...styles.uploadButton,
-    ...(listType === 'video' ? styles.uploadButtonVideo : styles.uploadButtonImage),
+    ...styles.uploadButtonVideo,
     ...(isHovered ? styles.uploadButtonHover : {}),
   };
 
@@ -40,7 +45,7 @@ const UploadButton: React.FC<UploadButtonProps> = ({ listType, onUpload }) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept={listType === 'video' ? 'video/*' : 'image/*'}
+        accept={listType === 'video' ? 'video/*' : 'image/*,video/*'}
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
