@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useBrands } from '@/hooks/brands/useBrands';
 import { useContentLists } from '@hooks/contents/useContentLists';
 import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
@@ -9,26 +9,147 @@ import ContentDetailModal from '@components/Content/ContentDetailModal/ContentDe
 import ConfirmDialog from '@components/Content/ConfirmDialog/ConfirmDialog';
 import { ContentItem } from '@models/ContentList';
 import { styles } from './styles';
-import { DragDropContext, DropResult, DragStart } from '@hello-pangea/dnd';
+import { DndProvider, useDndState } from '@/context/DndContext';
 
-const ContentPage: React.FC = () => {
-  const { brands, currentBrand, switchBrand } = useBrands();
+// Drag overlay for content items
+const ItemDragPreview: React.FC<{ item: any }> = ({ item }) => {
+  if (!item) return null;
 
-  const {
-    lists,
-    addNewList,
-    clearNewListFlag,
-    deleteList,
-    updateListTitle,
-    updateListIcon,
-    reorderLists,
-    moveItem,
-    deleteItem,
-    renameItem,
-    toggleFavorite,
-    uploadContent,
-    newlyCreatedListId,
-  } = useContentLists(currentBrand?.id);
+  const thumbnailSrc = item.thumbnail?.startsWith('http') || item.thumbnail?.startsWith('data:')
+    ? item.thumbnail
+    : item.thumbnail
+      ? `data:image/jpeg;base64,${item.thumbnail.replace(/[\n\r\s]/g, '')}`
+      : null;
+
+  return (
+    <div
+      style={{
+        width: '120px',
+        height: '160px',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+        transform: 'rotate(-2deg) scale(1.05)',
+        cursor: 'grabbing',
+        background: '#2a2a2a',
+        position: 'relative',
+      }}
+    >
+      {thumbnailSrc && (
+        <img
+          src={thumbnailSrc}
+          alt={item.title}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+      )}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '8px',
+          background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
+          color: 'white',
+          fontSize: '11px',
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {item.title}
+      </div>
+    </div>
+  );
+};
+
+// Drag overlay for list icons - just the icon, no label
+const ListDragPreview: React.FC<{ list: any }> = ({ list }) => {
+  if (!list) return null;
+
+  return (
+    <div
+      style={{
+        width: '48px',
+        height: '48px',
+        borderRadius: '50%',
+        background: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+        fontSize: '20px',
+        cursor: 'grabbing',
+        border: '2px solid rgba(155, 93, 229, 0.4)',
+      }}
+    >
+      {list.icon}
+    </div>
+  );
+};
+
+// Component that renders the appropriate drag overlay
+const DragOverlayContent: React.FC<{ lists: any[] }> = ({ lists }) => {
+  const { activeId, activeData } = useDndState();
+
+  if (!activeId || !activeData) return null;
+
+  if (activeData.type === 'LIST') {
+    const list = lists.find((l) => l.id === activeId);
+    return <ListDragPreview list={list} />;
+  }
+
+  if (activeData.type === 'ITEM') {
+    // Find the item in any list
+    for (const list of lists) {
+      const item = list.items.find((i: any) => i.id === activeId);
+      if (item) {
+        return <ItemDragPreview item={item} />;
+      }
+    }
+  }
+
+  return null;
+};
+
+interface ContentPageInnerProps {
+  brands: any[];
+  currentBrand: any;
+  switchBrand: (brandId: string) => void;
+  lists: any[];
+  addNewList: () => void;
+  clearNewListFlag: () => void;
+  deleteList: (listId: string) => void;
+  updateListTitle: (listId: string, title: string) => void;
+  updateListIcon: (listId: string, icon: string) => void;
+  deleteItem: (itemId: string, listId: string) => void;
+  renameItem: (itemId: string, listId: string, name: string) => void;
+  toggleFavorite: (itemId: string, listId: string) => void;
+  uploadContent: (listId: string, file: File) => void;
+  newlyCreatedListId: string | null;
+}
+
+const ContentPageInner: React.FC<ContentPageInnerProps> = ({
+  brands,
+  currentBrand,
+  switchBrand,
+  lists,
+  addNewList,
+  clearNewListFlag,
+  deleteList,
+  updateListTitle,
+  updateListIcon,
+  deleteItem,
+  renameItem,
+  toggleFavorite,
+  uploadContent,
+  newlyCreatedListId,
+}) => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -39,7 +160,6 @@ const ContentPage: React.FC = () => {
   const lastScrollTop = useRef(0);
   const scrollVelocity = useRef(0);
   const velocityCheckInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   const prevListsLength = useRef(lists.length);
 
@@ -303,127 +423,129 @@ const ContentPage: React.FC = () => {
     ...(hoveredAddButton ? styles.addListButtonHover : {}),
   };
 
-  const onDragStart = () => {
-    setIsDragging(true);
-  };
-
-  const onDragEnd = (result: DropResult) => {
-    setIsDragging(false);
-    const { source, destination, type } = result;
-
-    if (!destination) {
-      return;
-    }
-
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    ) {
-      return;
-    }
-
-    if (type === 'LIST') {
-      // Reordering lists in scroll navigation
-      reorderLists(source.index, destination.index);
-    } else if (type === 'ITEM') {
-      // Moving content items between lists
-      let sourceListId = source.droppableId;
-      let targetListId = destination.droppableId;
-
-      // Extract list ID from nav-drop droppables
-      if (targetListId.startsWith('nav-drop-')) {
-        targetListId = targetListId.replace('nav-drop-', '');
-      }
-      if (sourceListId.startsWith('nav-drop-')) {
-        sourceListId = sourceListId.replace('nav-drop-', '');
-      }
-
-      const itemId = result.draggableId;
-      moveItem(itemId, sourceListId, targetListId);
-    }
-  };
-
   return (
-    <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div style={styles.container}>
-        <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
+    <div style={styles.container}>
+      <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
 
-        <div ref={containerRef} style={styles.contentArea} key={currentBrand?.id || 'no-brand'}>
-          {lists.map((list, index) => (
-            <div
-              key={list.id}
-              ref={(el) => { if (el) listsRef.current[index] = el; }}
-              style={styles.listSection}
-            >
-              <div style={styles.listWrapper}>
-                <ContentList
-                  list={list}
-                  isNewList={newlyCreatedListId === list.id}
-                  onDelete={() => deleteList(list.id)}
-                  onTitleChange={(newTitle) => updateListTitle(list.id, newTitle)}
-                  onIconClick={(element: HTMLElement) => handleIconClick(list.id, element)}
-                  onItemMove={() => { }}
-                  onItemDelete={(itemId) => deleteItem(itemId, list.id)}
-                  onItemRename={(itemId, newName) => renameItem(itemId, list.id, newName)}
-                  onToggleFavorite={(itemId) => toggleFavorite(itemId, list.id)}
-                  onUpload={(file) => uploadContent(list.id, file)}
-                  onItemClick={(itemId) => handleItemClick(itemId, list.id)}
-                  onSaveChanges={() => clearNewListFlag()}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <ScrollNavigation
-          lists={lists}
-          currentIndex={currentIndex}
-          isDragging={isDragging}
-          onNavigate={scrollToList}
-          onDelete={(listId) => deleteList(listId)}
-          onReorder={() => { }} // Handled by DragDropContext now
-        />
-
-        <EmojiPicker
-          isOpen={emojiPicker.isOpen}
-          onClose={() => setEmojiPicker({ isOpen: false, listId: '', anchorElement: null })}
-          onSelect={handleEmojiSelect}
-          anchorElement={emojiPicker.anchorElement}
-        />
-
-        <ContentDetailModal
-          isOpen={detailModal.isOpen}
-          item={detailModal.item}
-          onClose={() => setDetailModal({ isOpen: false, item: null, listId: '' })}
-          onRename={handleModalRename}
-          onDelete={handleModalDelete}
-          onToggleFavorite={handleModalToggleFavorite}
-        />
-
-        <ConfirmDialog
-          isOpen={deleteFromModal}
-          title="Delete Content?"
-          message="Are you sure you want to delete this item? This action cannot be undone."
-          confirmText="Delete"
-          cancelText="Cancel"
-          onConfirm={confirmModalDelete}
-          onCancel={() => setDeleteFromModal(false)}
-        />
-
-        <div style={styles.addListButtonWrapper}>
-          <button
-            style={addButtonStyle}
-            onClick={addNewList}
-            onMouseEnter={() => setHoveredAddButton(true)}
-            onMouseLeave={() => setHoveredAddButton(false)}
+      <div ref={containerRef} style={styles.contentArea} key={currentBrand?.id || 'no-brand'}>
+        {lists.map((list, index) => (
+          <div
+            key={list.id}
+            ref={(el) => { if (el) listsRef.current[index] = el; }}
+            style={styles.listSection}
           >
-            <span style={{ fontSize: '24px' }}>➕</span>
-            <span>Add new list</span>
-          </button>
-        </div>
+            <div style={styles.listWrapper}>
+              <ContentList
+                list={list}
+                isNewList={newlyCreatedListId === list.id}
+                onDelete={() => deleteList(list.id)}
+                onTitleChange={(newTitle) => updateListTitle(list.id, newTitle)}
+                onIconClick={(element: HTMLElement) => handleIconClick(list.id, element)}
+                onItemMove={() => { }}
+                onItemDelete={(itemId) => deleteItem(itemId, list.id)}
+                onItemRename={(itemId, newName) => renameItem(itemId, list.id, newName)}
+                onToggleFavorite={(itemId) => toggleFavorite(itemId, list.id)}
+                onUpload={(file) => uploadContent(list.id, file)}
+                onItemClick={(itemId) => handleItemClick(itemId, list.id)}
+                onSaveChanges={() => clearNewListFlag()}
+              />
+            </div>
+          </div>
+        ))}
       </div>
-    </DragDropContext>
+
+      <ScrollNavigation
+        lists={lists}
+        currentIndex={currentIndex}
+        onNavigate={scrollToList}
+        onDelete={(listId) => deleteList(listId)}
+      />
+
+      <EmojiPicker
+        isOpen={emojiPicker.isOpen}
+        onClose={() => setEmojiPicker({ isOpen: false, listId: '', anchorElement: null })}
+        onSelect={handleEmojiSelect}
+        anchorElement={emojiPicker.anchorElement}
+      />
+
+      <ContentDetailModal
+        isOpen={detailModal.isOpen}
+        item={detailModal.item}
+        onClose={() => setDetailModal({ isOpen: false, item: null, listId: '' })}
+        onRename={handleModalRename}
+        onDelete={handleModalDelete}
+        onToggleFavorite={handleModalToggleFavorite}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteFromModal}
+        title="Delete Content?"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmModalDelete}
+        onCancel={() => setDeleteFromModal(false)}
+      />
+
+      <div style={styles.addListButtonWrapper}>
+        <button
+          style={addButtonStyle}
+          onClick={addNewList}
+          onMouseEnter={() => setHoveredAddButton(true)}
+          onMouseLeave={() => setHoveredAddButton(false)}
+        >
+          <span style={{ fontSize: '24px' }}>➕</span>
+          <span>Add new list</span>
+        </button>
+      </div>
+    </div>
   );
 };
 
-export default ContentPage;
+// Wrapper that provides the drag overlay content
+const ContentPageWithOverlay: React.FC = () => {
+  const { brands, currentBrand, switchBrand } = useBrands();
+  const {
+    lists,
+    addNewList,
+    clearNewListFlag,
+    deleteList,
+    updateListTitle,
+    updateListIcon,
+    deleteItem,
+    renameItem,
+    toggleFavorite,
+    uploadContent,
+    newlyCreatedListId,
+    reorderLists,
+    moveItem,
+  } = useContentLists(currentBrand?.id);
+
+  return (
+    <DndProvider
+      lists={lists}
+      onListReorder={reorderLists}
+      onItemMove={moveItem}
+      dragOverlay={<DragOverlayContent lists={lists} />}
+    >
+      <ContentPageInner
+        brands={brands}
+        currentBrand={currentBrand}
+        switchBrand={switchBrand}
+        lists={lists}
+        addNewList={addNewList}
+        clearNewListFlag={clearNewListFlag}
+        deleteList={deleteList}
+        updateListTitle={updateListTitle}
+        updateListIcon={updateListIcon}
+        deleteItem={deleteItem}
+        renameItem={renameItem}
+        toggleFavorite={toggleFavorite}
+        uploadContent={uploadContent}
+        newlyCreatedListId={newlyCreatedListId}
+      />
+    </DndProvider>
+  );
+};
+
+export default ContentPageWithOverlay;

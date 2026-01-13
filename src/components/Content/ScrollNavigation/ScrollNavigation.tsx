@@ -1,32 +1,155 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ContentList } from '@models/ContentList';
 import { styles } from './styles';
-import { Droppable, Draggable } from '@hello-pangea/dnd';
+import {
+  useSortable,
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import { useDndState, DragData } from '@/context/DndContext';
 
 interface ScrollNavigationProps {
   lists: ContentList[];
   currentIndex: number;
-  isDragging: boolean;
   onNavigate: (index: number) => void;
   onDelete: (listId: string) => void;
-  onReorder: (fromIndex: number, toIndex: number) => void;
 }
+
+// Individual nav item
+const NavItem: React.FC<{
+  list: ContentList;
+  index: number;
+  totalLists: number;
+  currentIndex: number;
+  showAllLabels: boolean;
+  onNavigate: (index: number) => void;
+  onContextMenu: (e: React.MouseEvent, list: ContentList) => void;
+}> = ({ list, index, totalLists, currentIndex, showAllLabels, onNavigate, onContextMenu }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const { activeId, activeData, isDragging } = useDndState();
+
+  // Sortable for list reordering
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({
+    id: list.id,
+    data: {
+      type: 'LIST',
+      id: list.id,
+      icon: list.icon,
+      title: list.title,
+    } as DragData,
+  });
+
+  // Droppable for accepting content items
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: `nav-drop-${list.id}`,
+    data: {
+      type: 'LIST',
+      id: list.id,
+    } as DragData,
+  });
+
+  const isActive = currentIndex === index;
+  const isItemBeingDragged = isDragging && activeData?.type === 'ITEM';
+  const isDropTarget = isOver && isItemBeingDragged;
+  const isLastItem = index === totalLists - 1;
+
+  // Show label if: hovering OR all labels should be shown (during any drag)
+  const shouldShowLabel = isHovered || showAllLabels || isDropTarget;
+
+  // Combine refs
+  const setRefs = (el: HTMLElement | null) => {
+    setSortableRef(el);
+    setDroppableRef(el);
+  };
+
+  // Sortable transform style - this creates the "make space" animation
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setRefs}
+      style={{
+        ...styles.scrollItem,
+        ...sortableStyle,
+        opacity: isSortableDragging ? 0 : 1,
+        zIndex: isSortableDragging ? 0 : 1,
+      }}
+    >
+      {/* Label on the LEFT of the icon */}
+      <span
+        style={{
+          ...styles.scrollLabel,
+          ...(shouldShowLabel ? styles.scrollLabelVisible : {}),
+        }}
+      >
+        {list.title}
+      </span>
+
+      {/* Icon dot - drag handle is HERE */}
+      <div
+        style={{
+          ...styles.scrollDot,
+          ...(isActive
+            ? list.isSystem
+              ? styles.scrollDotActiveSystem
+              : styles.scrollDotActiveCustom
+            : {}),
+          ...(isHovered && !isActive && !isSortableDragging ? styles.scrollDotHover : {}),
+          ...(isDropTarget ? styles.scrollDotDropTarget : {}),
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onNavigate(index);
+        }}
+        onContextMenu={(e) => onContextMenu(e, list)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        {...attributes}
+        {...listeners}
+      >
+        <span style={styles.scrollIcon}>{list.icon}</span>
+      </div>
+
+      {/* Connecting line */}
+      {!isLastItem && (
+        <div
+          style={{
+            ...styles.scrollLine,
+            ...(isDragging ? styles.scrollLineHidden : {}),
+          }}
+        />
+      )}
+    </div>
+  );
+};
 
 const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   lists,
   currentIndex,
-  isDragging,
   onNavigate,
   onDelete,
 }) => {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const { isDragging, activeData } = useDndState();
+  const isReordering = isDragging && activeData?.type === 'LIST';
+  
   const [contextMenu, setContextMenu] = useState<{
     listId: string;
     x: number;
     y: number;
   } | null>(null);
-
-  const dotsContainerRef = useRef<HTMLDivElement>(null);
+  const [hoveredMenuItem, setHoveredMenuItem] = useState(false);
 
   // Close context menu on outside click
   useEffect(() => {
@@ -39,7 +162,6 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
 
   const handleContextMenu = (e: React.MouseEvent, list: ContentList) => {
     if (list.isSystem) return;
-
     e.preventDefault();
     setContextMenu({
       listId: list.id,
@@ -55,15 +177,14 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     }
   };
 
-  // State for pagination
+  // Pagination
   const [scrollOffset, setScrollOffset] = useState(0);
-  const MAX_VISIBLE = 7;
-  const ITEM_HEIGHT = 120; // (40px dot + 60px line + 20px margin)
+  const MAX_VISIBLE = 6;
+  const ITEM_HEIGHT = 68; // 44px dot + 24px padding
   const showArrows = lists.length > MAX_VISIBLE;
+  const [hoveredArrow, setHoveredArrow] = useState<'up' | 'down' | null>(null);
 
-  const [hoveredArrow, setHoveredArrow] = useState<'up' | 'down' | null>(null); // State for arrow hover
-
-  // Ensure active item is visible when index changes (e.g. valid drop or external nav)
+  // Keep active item visible
   useEffect(() => {
     if (currentIndex < scrollOffset) {
       setScrollOffset(currentIndex);
@@ -74,28 +195,29 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
 
   const handleScrollUp = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (scrollOffset > 0) setScrollOffset(prev => prev - 1);
+    if (scrollOffset > 0) setScrollOffset((prev) => prev - 1);
   };
 
   const handleScrollDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (scrollOffset < lists.length - MAX_VISIBLE) setScrollOffset(prev => prev + 1);
+    if (scrollOffset < lists.length - MAX_VISIBLE) setScrollOffset((prev) => prev + 1);
   };
 
-  // Auto-scroll logic
+  // Auto-scroll ONLY during reordering
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const startAutoScroll = (direction: 'up' | 'down') => {
+    if (!isReordering) return; // Only auto-scroll during reordering
     stopAutoScroll();
     scrollIntervalRef.current = setInterval(() => {
-      setScrollOffset(prev => {
+      setScrollOffset((prev) => {
         if (direction === 'up') {
           return prev > 0 ? prev - 1 : prev;
         } else {
           return prev < lists.length - MAX_VISIBLE ? prev + 1 : prev;
         }
       });
-    }, 150); // Scroll every 150ms
+    }, 200);
   };
 
   const stopAutoScroll = () => {
@@ -105,16 +227,14 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     }
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => stopAutoScroll();
   }, []);
 
+  const listIds = lists.map((l) => l.id);
+
   return (
     <>
-
-
-
       <nav style={styles.scrollNav}>
         {/* Up Arrow */}
         {showArrows && (
@@ -127,180 +247,45 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
             onClick={handleScrollUp}
             onMouseEnter={() => {
               setHoveredArrow('up');
-              startAutoScroll('up');
+              if (isReordering && scrollOffset > 0) startAutoScroll('up');
             }}
             onMouseLeave={() => {
               setHoveredArrow(null);
               stopAutoScroll();
             }}
           >
-            {/* SVG Arrow Up */}
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
             </svg>
           </div>
         )}
 
-        <div style={{
-          ...styles.dotsContainer,
-          height: `${MAX_VISIBLE * ITEM_HEIGHT}px`, // Fixed viewport height
-        }}>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center', // Center items
-            width: '100%', // Fill the masked container
-            transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            transform: `translateY(-${scrollOffset * ITEM_HEIGHT}px)`,
-          }}>
-            <Droppable
-              droppableId="list-navigation"
-              type="LIST"
-              direction="vertical"
-              renderClone={(provided, _snapshot, rubric) => {
-                const list = lists[rubric.source.index];
-                return (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    style={{
-                      ...provided.draggableProps.style,
-                      ...styles.scrollItem,
-                      transform: provided.draggableProps.style?.transform
-                        ? `${provided.draggableProps.style.transform} scale(1.2)`
-                        : 'scale(1.2)',
-                      opacity: 0.95,
-                      cursor: 'grabbing',
-                    }}
-                  >
-                    <div style={styles.scrollDotContainer}>
-                      <div
-                        style={{
-                          ...styles.scrollDot,
-                          ...styles.scrollDotActiveCustom,
-                          boxShadow: '0 0 30px rgba(155, 93, 229, 0.6)',
-                        }}
-                      >
-                        <span style={{ ...styles.scrollIcon, opacity: 1, zIndex: 10 }}>
-                          {list.icon}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }}
-            >
-              {(provided) => (
-                <div
-                  ref={(el) => {
-                    (dotsContainerRef as any).current = el;
-                    provided.innerRef(el);
-                  }}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center', // Center items
-                    width: '100%',
-                  }}
-                  {...provided.droppableProps}
-                >
-                  {lists.map((list, index) => (
-                    <Draggable
-                      key={list.id}
-                      draggableId={list.id}
-                      index={index}
-                    // isDragDisabled={list.isSystem}
-                    >
-                      {(provided, snapshot) => {
-                        const isActive = currentIndex === index;
-                        const isHovered = hoveredIndex === index;
-                        // Force Hover state if dragging this item
-                        const showAsHovered = isDragging || isHovered || snapshot.isDragging;
-
-                        return (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            style={{
-                              ...styles.scrollItem,
-                              ...provided.draggableProps.style,
-                              // Ensure layout stability during drag
-                              opacity: snapshot.isDragging ? 1 : 1, // Full opacity when dragging
-                              zIndex: snapshot.isDragging ? 9999 : 1, // High z-index
-                              height: '120px', // Exact item height
-                              marginBottom: '0', // Remove margin, using line to fill gap
-                            }}
-                          >
-                            {/* Label tooltip - Hide when dragging */}
-                            {(showAsHovered || snapshot.isDragging) && !snapshot.isDragging && (
-                              <div style={styles.scrollLabel}>{list.title}</div>
-                            )}
-
-                            <div style={styles.scrollDotContainer}>
-                              {/* isDropDisabled was removed to allow content items (Type: ITEM) to drop here always. 
-                                   The type mismatch (LIST vs ITEM) will handle list drops. */}
-                              <Droppable droppableId={`nav-drop-${list.id}`} type="ITEM">
-                                {(dropProvided, dropSnapshot) => (
-                                  <div
-                                    ref={dropProvided.innerRef}
-                                    {...dropProvided.droppableProps}
-                                    style={{
-                                      ...styles.scrollDot,
-                                      ...(isActive
-                                        ? list.isSystem
-                                          ? styles.scrollDotActiveSystem
-                                          : styles.scrollDotActiveCustom
-                                        : {}),
-                                      ...(showAsHovered && !isActive && !snapshot.isDragging ? styles.scrollDotHover : {}),
-                                      // Show icon if: Hovered OR Active OR Being Dragged OR Dragging Over
-                                      ...((snapshot.isDragging || snapshot.draggingOver) && !list.isSystem ? styles.scrollDotDragOver : {}),
-                                      // Applying celebration animation when an item is dragged over this specific dot
-                                      ...(dropSnapshot.isDraggingOver ? styles.scrollDotDropTarget : {}),
-                                      ...(!list.isSystem ? styles.scrollDotDraggable : {}),
-                                    }}
-                                    onClick={() => onNavigate(index)}
-                                    // ... rest of events
-                                    onContextMenu={(e) => handleContextMenu(e, list)}
-                                    onMouseEnter={() => setHoveredIndex(index)}
-                                    onMouseLeave={() => setHoveredIndex(null)}
-                                  >
-                                    <span
-                                      style={{
-                                        ...styles.scrollIcon,
-                                        // Ensure high z-index and opacity during drag
-                                        opacity: 1,
-                                        zIndex: snapshot.isDragging ? 10 : 1,
-                                      }}
-                                    >
-                                      {list.icon}
-                                    </span>
-                                    {/* Hidden placeholder for droppable logic */}
-                                    <div style={{ display: 'none' }}>{dropProvided.placeholder}</div>
-                                  </div>
-                                )}
-                              </Droppable>
-                            </div>
-
-                            {/* Connecting line - Hide when dragging so we only see the icon */}
-                            {index < lists.length - 1 && !snapshot.isDragging && (
-                              <div
-                                style={{
-                                  ...styles.scrollLine,
-                                  ...(isDragging || snapshot.isDragging ? styles.scrollLineHidden : {}),
-                                }}
-                              />
-                            )}
-                          </div>
-                        );
-                      }}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
+        <div
+          style={{
+            ...styles.dotsContainer,
+            height: `${Math.min(lists.length, MAX_VISIBLE) * ITEM_HEIGHT}px`,
+          }}
+        >
+          <div
+            style={{
+              ...styles.innerContainer,
+              transform: `translateY(-${scrollOffset * ITEM_HEIGHT}px)`,
+            }}
+          >
+            <SortableContext items={listIds} strategy={verticalListSortingStrategy}>
+              {lists.map((list, index) => (
+                <NavItem
+                  key={list.id}
+                  list={list}
+                  index={index}
+                  totalLists={lists.length}
+                  currentIndex={currentIndex}
+                  showAllLabels={isDragging}
+                  onNavigate={onNavigate}
+                  onContextMenu={handleContextMenu}
+                />
+              ))}
+            </SortableContext>
           </div>
         </div>
 
@@ -310,49 +295,51 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
             style={{
               ...styles.scrollArrow,
               ...(scrollOffset >= lists.length - MAX_VISIBLE ? styles.scrollArrowDisabled : {}),
-              ...(hoveredArrow === 'down' && scrollOffset < lists.length - MAX_VISIBLE ? styles.scrollArrowHover : {}),
+              ...(hoveredArrow === 'down' && scrollOffset < lists.length - MAX_VISIBLE
+                ? styles.scrollArrowHover
+                : {}),
             }}
             onClick={handleScrollDown}
             onMouseEnter={() => {
               setHoveredArrow('down');
-              startAutoScroll('down');
+              if (isReordering && scrollOffset < lists.length - MAX_VISIBLE) startAutoScroll('down');
             }}
             onMouseLeave={() => {
               setHoveredArrow(null);
               stopAutoScroll();
             }}
           >
-            {/* SVG Arrow Down */}
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
         )}
-      </nav >
+      </nav>
 
       {/* Context Menu */}
-      {
-        contextMenu && (
-          <div
+      {contextMenu && (
+        <div
+          style={{
+            ...styles.contextMenu,
+            top: `${contextMenu.y}px`,
+            left: `${contextMenu.x}px`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
             style={{
-              ...styles.contextMenu,
-              top: `${contextMenu.y}px`,
-              left: `${contextMenu.x}px`,
+              ...styles.contextMenuItem,
+              ...(hoveredMenuItem ? styles.contextMenuItemHover : {}),
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleDelete}
+            onMouseEnter={() => setHoveredMenuItem(true)}
+            onMouseLeave={() => setHoveredMenuItem(false)}
           >
-            <div
-              style={styles.contextMenuItem}
-              onClick={handleDelete}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-            >
-              <span>🗑️</span>
-              <span>Delete</span>
-            </div>
-          </div>
-        )
-      }
+            <span>🗑️</span>
+            <span>Delete</span>
+          </button>
+        </div>
+      )}
     </>
   );
 };

@@ -5,7 +5,9 @@ import ContentItem from '../ContentItem/ContentItem';
 import UploadButton from '../UploadButton/UploadButton';
 import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import { styles } from './styles';
-import { Droppable, Draggable } from '@hello-pangea/dnd';
+import { useDraggable } from '@dnd-kit/core';
+import { useDroppable } from '@dnd-kit/core';
+import { useDndState, DragData } from '@/context/DndContext';
 
 interface ContentListProps {
   list: ContentListType;
@@ -20,8 +22,61 @@ interface ContentListProps {
   onUpload: (file: File) => void;
   onItemClick: (itemId: string) => void;
   onSaveChanges?: () => void;
-  // Legacy props removed or optional if needed during transition
 }
+
+// Draggable wrapper for content items
+const DraggableItem: React.FC<{
+  item: any;
+  listId: string;
+  onItemClick: (itemId: string) => void;
+  onItemDelete: (itemId: string) => void;
+  onItemRename: (itemId: string, newName: string) => void;
+  onToggleFavorite: (itemId: string) => void;
+}> = ({ item, listId, onItemClick, onItemDelete, onItemRename, onToggleFavorite }) => {
+  const { activeId } = useDndState();
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    isDragging,
+  } = useDraggable({
+    id: item.id,
+    data: {
+      type: 'ITEM',
+      id: item.id,
+      listId: listId,
+      title: item.title,
+      thumbnail: item.thumbnail,
+    } as DragData,
+  });
+
+  // Hide the item when it's being dragged (the overlay shows the preview)
+  const isBeingDragged = activeId === item.id;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        opacity: isBeingDragged ? 0.3 : 1,
+        cursor: isDragging ? 'grabbing' : 'grab',
+        transition: 'opacity 0.2s ease',
+      }}
+      {...listeners}
+      {...attributes}
+    >
+      <ContentItem
+        item={item}
+        listType="video"
+        isDragging={isBeingDragged}
+        onClick={() => !isDragging && onItemClick(item.id)}
+        onDelete={() => onItemDelete(item.id)}
+        onRename={(newName) => onItemRename(item.id, newName)}
+        onToggleFavorite={() => onToggleFavorite(item.id)}
+      />
+    </div>
+  );
+};
 
 const ContentList: React.FC<ContentListProps> = ({
   list,
@@ -43,18 +98,28 @@ const ContentList: React.FC<ContentListProps> = ({
   const [isLeftArrowHovered, setIsLeftArrowHovered] = useState(false);
   const [isRightArrowHovered, setIsRightArrowHovered] = useState(false);
 
-  // Dialog State
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [deleteListConfirm, setDeleteListConfirm] = useState(false);
+
+  const { isDragging, activeData } = useDndState();
+  const isItemDragging = isDragging && activeData?.type === 'ITEM';
+  const isDraggingFromOtherList = isItemDragging && activeData?.listId !== list.id;
+
+  // Droppable for accepting items from other lists
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: `list-drop-${list.id}`,
+    data: {
+      type: 'LIST',
+      id: list.id,
+    } as DragData,
+  });
 
   const updateArrows = () => {
     const container = scrollRef.current;
     if (!container) return;
 
-    // const itemCount = list.items.length + 1; // +1 for upload button
     const scrollLeft = container.scrollLeft;
 
-    // Basic check for scroll possibility
     if (container.scrollWidth <= container.clientWidth) {
       setShowLeftArrow(false);
       setShowRightArrow(false);
@@ -78,7 +143,6 @@ const ContentList: React.FC<ContentListProps> = ({
     const container = scrollRef.current;
     if (container) {
       container.addEventListener('scroll', updateArrows);
-      // Also update on resize
       window.addEventListener('resize', updateArrows);
       return () => {
         container.removeEventListener('scroll', updateArrows);
@@ -91,7 +155,6 @@ const ContentList: React.FC<ContentListProps> = ({
     const container = scrollRef.current;
     if (!container) return;
 
-    // All items now use vertical format (280px width)
     const itemWidth = 280;
     const scrollAmount = itemWidth * 3 + 20 * 2;
 
@@ -118,7 +181,6 @@ const ContentList: React.FC<ContentListProps> = ({
     onDelete();
   };
 
-  // All lists now have the same min-height for vertical items
   const containerStyle = {
     ...styles.listContainer,
     minHeight: '540px',
@@ -136,6 +198,12 @@ const ContentList: React.FC<ContentListProps> = ({
     ...styles.scrollArrowRight,
     ...(showRightArrow && isHovered ? styles.scrollArrowVisible : {}),
     ...(isRightArrowHovered ? styles.scrollArrowHover : {}),
+  };
+
+  // Combined refs
+  const setRefs = (el: HTMLDivElement | null) => {
+    (scrollRef as any).current = el;
+    setDroppableRef(el);
   };
 
   return (
@@ -160,75 +228,27 @@ const ContentList: React.FC<ContentListProps> = ({
           listId={list.id}
         />
 
-        <Droppable
-          droppableId={list.id}
-          type="ITEM"
-          direction="horizontal"
-          renderClone={(provided, _snapshot, rubric) => {
-            const item = list.items[rubric.source.index];
-            return (
-              <div
-                ref={provided.innerRef}
-                {...provided.draggableProps}
-                {...provided.dragHandleProps}
-                style={{
-                  ...provided.draggableProps.style,
-                  transform: provided.draggableProps.style?.transform
-                    ? `${provided.draggableProps.style.transform} scale(0.3)`
-                    : 'scale(0.3)',
-                  opacity: 0.9,
-                  cursor: 'grabbing',
-                }}
-              >
-                <ContentItem
-                  item={item}
-                  listType="video"
-                  isDragging={true}
-                  onClick={() => { }}
-                  onDelete={() => { }}
-                  onRename={() => { }}
-                  onToggleFavorite={() => { }}
-                />
-              </div>
-            );
+        <div
+          ref={setRefs}
+          style={{
+            ...styles.listScrollWrapper,
+            ...(isOver && isDraggingFromOtherList ? styles.listScrollWrapperDragOver : {}),
           }}
         >
-          {(droppableProvided, _droppableSnapshot) => (
-            <div
-              ref={(el) => {
-                (scrollRef as any).current = el;
-                droppableProvided.innerRef(el);
-              }}
-              style={{
-                ...styles.listScrollWrapper,
-                backgroundColor: 'transparent',
-                transition: 'background-color 0.2s ease',
-                minHeight: '420px', // Ensure height for drop target
-              }}
-              {...droppableProvided.droppableProps}
-            >
-              <UploadButton listType="video" onUpload={onUpload} />
+          <UploadButton listType="video" onUpload={onUpload} />
 
-              {list.items.map((item, index) => (
-                <Draggable key={item.id} draggableId={item.id} index={index}>
-                  {(draggableProvided, draggableSnapshot) => (
-                    <ContentItem
-                      item={item}
-                      listType="video"
-                      provided={draggableProvided}
-                      isDragging={draggableSnapshot.isDragging}
-                      onClick={() => onItemClick(item.id)}
-                      onDelete={() => setItemToDelete(item.id)}
-                      onRename={(newName) => onItemRename(item.id, newName)}
-                      onToggleFavorite={() => onToggleFavorite(item.id)}
-                    />
-                  )}
-                </Draggable>
-              ))}
-              {droppableProvided.placeholder}
-            </div>
-          )}
-        </Droppable>
+          {list.items.map((item) => (
+            <DraggableItem
+              key={item.id}
+              item={item}
+              listId={list.id}
+              onItemClick={onItemClick}
+              onItemDelete={setItemToDelete}
+              onItemRename={onItemRename}
+              onToggleFavorite={onToggleFavorite}
+            />
+          ))}
+        </div>
 
         <button
           style={leftArrowStyle}
@@ -248,7 +268,6 @@ const ContentList: React.FC<ContentListProps> = ({
         </button>
       </div>
 
-      {/* Delete Item Confirmation */}
       <ConfirmDialog
         isOpen={!!itemToDelete}
         title="Delete Content?"
@@ -259,7 +278,6 @@ const ContentList: React.FC<ContentListProps> = ({
         onCancel={() => setItemToDelete(null)}
       />
 
-      {/* Delete List Confirmation */}
       <ConfirmDialog
         isOpen={deleteListConfirm}
         title="Delete List?"

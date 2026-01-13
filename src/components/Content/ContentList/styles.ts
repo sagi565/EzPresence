@@ -178,6 +178,12 @@ export const styles: Record<string, CSSProperties> = {
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
     alignItems: 'flex-start',
+    borderRadius: '16px',
+    transition: 'all 0.3s ease',
+  },
+  listScrollWrapperDragOver: {
+    backgroundColor: 'rgba(155, 93, 229, 0.08)',
+    border: '2px dashed rgba(155, 93, 229, 0.4)',
   },
   scrollArrow: {
     position: 'absolute',
