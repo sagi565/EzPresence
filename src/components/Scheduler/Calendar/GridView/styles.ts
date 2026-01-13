@@ -47,7 +47,8 @@ export const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     minWidth: 0,
     minHeight: '100px',
-    border: '1px solid transparent',
+    border: '1px solid',
+    borderColor: 'transparent',
   },
   calendarDayPast: {
     background: `repeating-linear-gradient(
@@ -60,15 +61,18 @@ export const styles: Record<string, CSSProperties> = {
   },
   calendarDayToday: {
     background: 'rgba(155, 93, 229, 0.05)',
-    border: '2px solid rgba(155, 93, 229, 0.2)',
+    border: '2px solid',
+    borderColor: 'rgba(155, 93, 229, 0.2)',
   },
   calendarDayHover: {
     background: 'rgba(155, 93, 229, 0.02)',
-    border: '1px dashed rgba(155, 93, 229, 0.4)',
+    border: '1px dashed',
+    borderColor: 'rgba(155, 93, 229, 0.4)',
   },
   calendarDayDragOver: {
     background: 'rgba(155, 93, 229, 0.1)',
-    border: '2px dashed rgba(155, 93, 229, 0.6)',
+    border: '2px dashed',
+    borderColor: 'rgba(155, 93, 229, 0.6)',
   },
   dayNumber: {
     fontSize: '14px',
@@ -90,7 +94,8 @@ export const styles: Record<string, CSSProperties> = {
     right: '6px',
     background: 'rgba(155, 93, 229, 0.1)',
     color: theme.colors.primary,
-    border: '1px solid rgba(155, 93, 229, 0.3)',
+    border: '1px solid',
+    borderColor: 'rgba(155, 93, 229, 0.3)',
     borderRadius: '10px',
     padding: '1px 6px',
     fontSize: '9px',
@@ -141,7 +146,8 @@ export const styles: Record<string, CSSProperties> = {
   },
   statusScheduled: {
     background: 'transparent',
-    border: `1px solid ${theme.colors.text}`,
+    border: '1px solid',
+    borderColor: theme.colors.text,
   },
   blackTooltip: {
     position: 'absolute',

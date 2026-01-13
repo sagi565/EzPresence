@@ -11,7 +11,8 @@ export const styles: Record<string, CSSProperties> = {
   newChatBtn: {
     padding: '10px 20px',
     background: 'transparent',
-    border: '1px solid #374151',
+    border: '1px solid',
+    borderColor: '#374151',
     borderRadius: '12px',
     color: '#374151',
     fontWeight: 400,

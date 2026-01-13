@@ -5,7 +5,8 @@ export const styles: Record<string, CSSProperties> = {
   chatContainer: {
     flex: 1,
     background: 'rgba(255, 255, 255, 0.8)',
-    border: '2px solid rgba(155, 93, 229, 0.1)',
+    border: '2px solid',
+    borderColor: 'rgba(155, 93, 229, 0.1)',
     borderRadius: '20px',
     display: 'flex',
     flexDirection: 'column',
@@ -46,7 +47,8 @@ export const styles: Record<string, CSSProperties> = {
   chatHeader: {
     padding: '24px',
     textAlign: 'center',
-    borderBottom: '1px solid rgba(155, 93, 229, 0.1)',
+    borderBottom: '1px solid',
+    borderColor: 'rgba(155, 93, 229, 0.1)',
     background: 'rgba(255, 255, 255, 0.9)',
     display: 'none',
   },
@@ -116,7 +118,8 @@ export const styles: Record<string, CSSProperties> = {
   chatInputArea: {
     padding: '20px',
     background: 'rgba(255, 255, 255, 0.95)',
-    borderTop: '1px solid rgba(155, 93, 229, 0.1)',
+    borderTop: '1px solid',
+    borderColor: 'rgba(155, 93, 229, 0.1)',
     display: 'flex',
     gap: '12px',
     alignItems: 'center',
@@ -125,7 +128,8 @@ export const styles: Record<string, CSSProperties> = {
   chatInput: {
     flex: 1,
     padding: '16px 24px',
-    border: '1px solid rgba(155, 93, 229, 0.1)',
+    border: '1px solid',
+    borderColor: 'rgba(155, 93, 229, 0.1)',
     borderRadius: '25px',
     fontSize: '15px',
     outline: 'none',

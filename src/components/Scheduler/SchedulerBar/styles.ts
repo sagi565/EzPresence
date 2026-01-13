@@ -4,7 +4,8 @@ import { theme } from '@theme/theme';
 export const styles: Record<string, CSSProperties> = {
   dateNav: {
     background: theme.colors.surface,
-    border: '1px solid rgba(251, 191, 36, 0.2)',
+    border: '1px solid',
+    borderColor: 'rgba(251, 191, 36, 0.2)',
     borderRadius: '16px',
     padding: '12px 16px',
     display: 'grid',
@@ -28,6 +29,7 @@ export const styles: Record<string, CSSProperties> = {
   navArrow: {
     background: 'transparent',
     border: 'none',
+    borderColor: 'transparent',
     fontSize: '16px',
     cursor: 'pointer',
     padding: '8px 12px',
@@ -64,6 +66,7 @@ export const styles: Record<string, CSSProperties> = {
     width: '40px',
     height: '36px',
     border: 'none',
+    borderColor: 'transparent',
     background: 'transparent',
     borderRadius: '8px',
     cursor: 'pointer',
@@ -104,6 +107,7 @@ export const styles: Record<string, CSSProperties> = {
     background: theme.gradients.innovator,
     color: 'white',
     border: '0px solid',
+    borderColor: 'transparent',
     padding: '10px 16px',
     borderRadius: '12px',
     fontWeight: 'bold',
@@ -127,7 +131,8 @@ export const styles: Record<string, CSSProperties> = {
     padding: '8px',
     minWidth: '200px',
     zIndex: 100,
-    border: `1px solid ${theme.colors.secondary}`,
+    border: '1px solid',
+    borderColor: theme.colors.secondary,
   },
   dropdownItem: {
     padding: '12px 16px',
@@ -149,7 +154,8 @@ export const styles: Record<string, CSSProperties> = {
     boxShadow: theme.shadows.lg,
     padding: '16px',
     zIndex: 100,
-    border: `1px solid ${theme.colors.blue}`,
+    border: '1px solid',
+    borderColor: theme.colors.blue,
     minWidth: '280px',
   },
   miniCalHeader: {
@@ -161,6 +167,7 @@ export const styles: Record<string, CSSProperties> = {
   miniCalNavBtn: {
     background: 'transparent',
     border: 'none',
+    borderColor: 'transparent',
     fontSize: '20px',
     fontWeight: 'bold',
     cursor: 'pointer',
@@ -201,6 +208,7 @@ export const styles: Record<string, CSSProperties> = {
     background: 'rgba(155, 93, 229, 0.15)',
     color: theme.colors.primary,
     fontWeight: 'bold',
-    border: `2px solid ${theme.colors.primary}`,
+    border: '2px solid',
+    borderColor: theme.colors.primary,
   },
 };

@@ -17,46 +17,55 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '16px',
     overflow: 'hidden',
     cursor: 'pointer',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-radius 0.3s ease, box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
     userSelect: 'none',
     display: 'flex',
     flexDirection: 'column',
     flexShrink: 0,
+    margin: '8px', // Ensure smooth layout flow
   },
-  
+
   contentItemVideo: {
-    width: '280px', 
-    height: '480px', 
+    width: '280px',
+    height: '480px',
   },
   contentItemImage: {
-    width: '280px', 
-    height: '480px', 
+    width: '280px',
+    height: '480px',
   },
 
   contentItemHover: {
-    transform: 'scale(1.02) translateY(-4px)',
-    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)',
+    transform: 'scale(1.05) translateY(-6px)',
+    boxShadow: '0 20px 30px rgba(0, 0, 0, 0.15)',
     zIndex: 10,
   },
-  
+
   contentItemDragging: {
-    opacity: 0.5,
+    opacity: 1,
     cursor: 'grabbing',
-    transform: 'scale(0.95)',
+    // width: '56px', // Relied on scale
+    // height: '96px', // Relied on scale
+    borderRadius: '16px', // Keep original radius so it scales down smoothly
+    boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
+    zIndex: 9999,
+    backgroundColor: 'transparent',
+    // transform: 'none', // Managed by manual positioning
+    margin: 0, // Force zero margin to ensure perfect centering
+    transition: 'none', // CRITICAL: Disable transition during drag to prevent lag
   },
-  
+
   mediaContainer: {
     position: 'relative',
     width: '100%',
     height: '100%',
-    backgroundColor: '#f3f4f6', 
+    backgroundColor: '#f3f4f6',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  
+
   mediaCover: {
     width: '100%',
     height: '100%',
@@ -65,13 +74,13 @@ export const styles: Record<string, CSSProperties> = {
     inset: 0,
     transition: 'opacity 0.3s ease',
   },
-  
+
   gradientOverlay: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: '120px', 
+    height: '120px',
     background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)',
     opacity: 0,
     transition: 'opacity 0.3s ease',
@@ -113,13 +122,13 @@ export const styles: Record<string, CSSProperties> = {
     transition: 'all 0.2s ease',
     padding: 0,
   },
-  
+
   actionBtnHover: {
     transform: 'scale(1.1)',
     background: 'rgba(0, 0, 0, 0.6)',
     borderColor: 'rgba(255, 255, 255, 0.4)',
   },
-  
+
   actionBtnFavoriteActive: {
     background: 'rgba(239, 68, 68, 0.85)',
     borderColor: 'rgba(239, 68, 68, 0.5)',
@@ -182,6 +191,7 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: '10px',
     border: 'none',
+    borderColor: 'transparent',
     background: 'transparent',
     textAlign: 'left',
     width: '100%',

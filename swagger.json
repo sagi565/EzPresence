@@ -1,0 +1,1627 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "EZpresence API",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/brands": {
+      "get": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Retrieves all brands.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BrandDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BrandDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BrandDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Creates a new uninitialized brand and returns its public ID.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/brands/active": {
+      "get": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Retrieves the active brand.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Updates the existing active brand.",
+        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>Name</b> (string)</li>\r\n  <li>\r\n    <b>LogoObject</b> (byte[] – base64)</li>\r\n  <li>\r\n    <b>Slogan</b> (string)</li>\r\n  <li>\r\n    <b>Category</b> (string)</li>\r\n  <li>\r\n    <b>Subcategory</b> (string)</li>\r\n</ul>",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrandUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrandUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrandUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Deletes the existing active brand (soft delete)\r\nSet another existing brand as new active brand.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/brands/{id}": {
+      "get": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Retrieves a brand by its public ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/brands/uninitialized": {
+      "get": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Returns the UUID of the first and only uninitialized brand for the current user.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/brands/{id}/initialize": {
+      "put": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Initializes an existing brand and set it as ActiveBrand.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrandInitializeDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrandInitializeDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrandInitializeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/brands/{id}/restore": {
+      "put": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Restores a brand that is on soft delete state.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/contentlists": {
+      "get": {
+        "tags": [
+          "ContentLists"
+        ],
+        "summary": "Returns all media content lists for the user’s active brand.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaContentListDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaContentListDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaContentListDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ContentLists"
+        ],
+        "summary": "Creates a new media content list and returns its public ID.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaContentListCreateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaContentListCreateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaContentListCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contentlists/{id}": {
+      "put": {
+        "tags": [
+          "ContentLists"
+        ],
+        "summary": "Updates an existing media content list’s metadata by public ID.",
+        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>ListName</b> (string)</li>\r\n  <li>\r\n    <b>ListIcon</b> (string)</li>\r\n</ul>",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaContentListUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaContentListUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaContentListUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ContentLists"
+        ],
+        "summary": "Deletes a media content list by public ID (system lists are protected at service level).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/contentlists/reorder": {
+      "put": {
+        "tags": [
+          "ContentLists"
+        ],
+        "summary": "Persists a new ordering of media content lists based on the provided ordered public ID list.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderMediaContentListsDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderMediaContentListsDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderMediaContentListsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/contents/{id}": {
+      "get": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Retrieves a single media content item by its public ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaContentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaContentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaContentDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Updates info and properties of an existing media content item.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaContentUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaContentUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaContentUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Soft-deletes a media content item by its public ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/contents": {
+      "get": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Retrieves paginated media content items, scoped either by list or by brand with per-list limits.",
+        "parameters": [
+          {
+            "name": "listUuid",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Creates a new media content upload plan and returns the generated public ID.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadPlanRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadPlanRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadPlanRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contents/{id}/favorite": {
+      "put": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Toggles the favorite status of a media content item.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/contents/{id}/list/{targetListId}": {
+      "put": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Moves a media content item to another content list using the target list public ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "targetListId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platforms/connect": {
+      "get": {
+        "tags": [
+          "Platforms"
+        ],
+        "summary": "Generates an OAuth authorization URL for the requested platform and initiates the connection flow.\r\nSupport the inclusion of a query param 'Guid? uninitializedBrandUuid'.",
+        "parameters": [
+          {
+            "name": "platform",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uninitializedBrandUuid",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platforms/disconnect": {
+      "delete": {
+        "tags": [
+          "Platforms"
+        ],
+        "summary": "Disconnects the current user from the specified external platform.\r\nSupport the inclusion of a query param 'Guid? uninitializedBrandUuid'.",
+        "parameters": [
+          {
+            "name": "platform",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uninitializedBrandUuid",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platforms/callback": {
+      "get": {
+        "tags": [
+          "Platforms"
+        ],
+        "summary": "Handles the OAuth callback from an external platform and completes the connection process.",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error_description",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/schedules/calendarItemId": {
+      "get": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "Retrieves a single calendar item using its public calendar item ID (base64-encoded).",
+        "parameters": [
+          {
+            "name": "calendarItemId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/schedules": {
+      "get": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "Retrieves all calendar items for the active brand, optionally filtered by a date range.",
+        "parameters": [
+          {
+            "name": "start_time",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "Creates a new schedule (one-time or recurring) and returns its public ID.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "Partially updates an existing schedule using a set of updated properties.",
+        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>ScheduleName</b> (string) – Logical name of the schedule</li>\r\n  <li>\r\n    <b>ScheduleTitle</b> (string) – Display title of the schedule</li>\r\n  <li>\r\n    <b>ScheduleDescription</b> (string) – Description of the schedule</li>\r\n  <li>\r\n    <b>PostType</b> (string) – Post type (e.g. \"Post\", \"Story\")</li>\r\n  <li>\r\n    <b>RruleText</b> (string, optional) – RRULE for recurring schedules</li>\r\n  <li>\r\n    <b>StartDate</b> (date, optional) – Start date for recurring schedules</li>\r\n  <li>\r\n    <b>EndDate</b> (date, optional) – End date for recurring schedules</li>\r\n  <li>\r\n    <b>PlannedAtUtc</b> (datetime, optional) – UTC time for one-time schedules</li>\r\n  <li>\r\n    <b>Targets</b> (string[]) – Target platforms (e.g. INSTAGRAM, FACEBOOK)</li>\r\n  <li>\r\n    <b>ContentUuids</b> (uuid[]) – Media content public IDs for this schedule</li>\r\n</ul>",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/schedules/scheduleId": {
+      "get": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "Retrieves all calendar items associated with a specific schedule public ID.",
+        "parameters": [
+          {
+            "name": "scheduleUuid",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/storage/{id}/upload-url": {
+      "get": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "Generates a pre-signed upload URL for a media content item using its public ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/storage/{id}/upload/complete": {
+      "post": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "Completes an upload process by attaching a thumbnail to the media content item identified by its public ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteUploadRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteUploadRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteUploadRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/storage/{id}/upload/abort": {
+      "post": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "Aborts an in-progress upload for a media content item identified by its public ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/storage/{id}/download-url": {
+      "get": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "Generates a temporary download URL for a media content item using its public ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Retrieves the currently authenticated user profile.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Creates a new user profile for the authenticated Firebase user.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Updates the profile information of the currently authenticated user.",
+        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>Email</b> (string)</li>\r\n  <li>\r\n    <b>FirstName</b> (string)</li>\r\n  <li>\r\n    <b>LastName</b> (string)</li>\r\n  <li>\r\n    <b>Gender</b> (string)</li>\r\n  <li>\r\n    <b>Phone</b> (string)</li>\r\n  <li>\r\n    <b>Country</b> (string)</li>\r\n  <li>\r\n    <b>PreferredLanguage</b> (string)</li>\r\n  <li>\r\n    <b>Birthdate</b> (date)</li>\r\n</ul>",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/users/set-active-brand": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Sets the active brand for the currently authenticated user using the brand public ID.",
+        "parameters": [
+          {
+            "name": "BrandUuid",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BrandDto": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firebaseUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "logoObject": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "slogan": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "subcategory": {
+            "type": "string",
+            "nullable": true
+          },
+          "creditAddonPlanId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "remainingCredits": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "softDeleteUntil": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BrandInitializeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "logoObject": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "slogan": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "subcategory": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BrandUpdateDto": {
+        "type": "object",
+        "properties": {
+          "updatedProperties": {
+            "type": "object",
+            "additionalProperties": { },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CompleteUploadRequestDto": {
+        "required": [
+          "thumbnailObject"
+        ],
+        "type": "object",
+        "properties": {
+          "thumbnailObject": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateUploadPlanRequestDto": {
+        "type": "object",
+        "properties": {
+          "listUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "checksumSha256": {
+            "type": "string",
+            "nullable": true
+          },
+          "isEzGenerated": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaContentDto": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "listUuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "mediaType": {
+            "type": "string",
+            "nullable": true
+          },
+          "contentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contentExtension": {
+            "type": "string",
+            "nullable": true
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "sizeBytesCompressed": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "durationMs": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "thumbnailObject": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "softDeleteUntil": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "isEzGenerated": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "isFavorite": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaContentListCreateDto": {
+        "type": "object",
+        "properties": {
+          "listName": {
+            "type": "string",
+            "nullable": true
+          },
+          "listIcon": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaContentListDto": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "listName": {
+            "type": "string",
+            "nullable": true
+          },
+          "listIcon": {
+            "type": "string",
+            "nullable": true
+          },
+          "isSystemList": {
+            "type": "boolean"
+          },
+          "orderIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaContentListUpdateDto": {
+        "type": "object",
+        "properties": {
+          "updatedProperties": {
+            "type": "object",
+            "additionalProperties": { },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaContentUpdateDto": {
+        "type": "object",
+        "properties": {
+          "contentName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReorderMediaContentListsDto": {
+        "type": "object",
+        "properties": {
+          "orderedListUuids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScheduleDto": {
+        "type": "object",
+        "properties": {
+          "scheduleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduleTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduleDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "postType": {
+            "type": "string",
+            "nullable": true
+          },
+          "rruleText": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "plannedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "contentUuids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScheduleUpdateDto": {
+        "type": "object",
+        "properties": {
+          "calendarItemId": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedProperties": {
+            "type": "object",
+            "additionalProperties": { },
+            "nullable": true
+          },
+          "updateOccurrenceOnly": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UserCreateDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthdate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "country": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UserUpdateDto": {
+        "type": "object",
+        "properties": {
+          "updatedProperties": {
+            "type": "object",
+            "additionalProperties": { },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "Firebase": {
+        "type": "apiKey",
+        "description": "Firebase ID Token",
+        "name": "X-Firebase-Token",
+        "in": "header"
+      }
+    }
+  },
+  "security": [
+    {
+      "Firebase": [ ]
+    }
+  ]
+}

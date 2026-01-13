@@ -129,22 +129,24 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   };
 
   const handleDownload = async () => {
-    if (mediaSrc) {
-      try {
-        const response = await fetch(mediaSrc);
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        const ext = isVideo ? 'mp4' : 'jpg';
-        a.download = `${item.title || 'download'}.${ext}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(blobUrl);
-      } catch (err) {
-        window.open(mediaSrc, '_blank');
-      }
+    if (!mediaSrc) return;
+
+    try {
+      const response = await fetch(mediaSrc);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      const ext = isVideo ? 'mp4' : 'jpg';
+      a.download = `${item.title || 'download'}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (e) {
+      console.error("Download failed, opening in new tab", e);
+      window.open(mediaSrc, '_blank');
     }
   };
 

@@ -4,8 +4,7 @@ export const styles: Record<string, CSSProperties> = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.1)',
-    backdropFilter: 'blur(1px)',
+    background: 'transparent',
     zIndex: 2000,
   },
   picker: {
@@ -14,7 +13,8 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '16px',
     padding: '16px',
     boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-    border: '2px solid #9b5de5',
+    border: '2px solid',
+    borderColor: '#9b5de5',
     width: 'auto',
     maxWidth: '320px',
     zIndex: 2001,
@@ -34,7 +34,8 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '10px',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    border: '2px solid transparent',  // Changed from visible border
+    border: '2px solid',
+    borderColor: 'transparent',  // Changed from visible border
   },
   optionHover: {
     background: 'rgba(155, 93, 229, 0.1)',

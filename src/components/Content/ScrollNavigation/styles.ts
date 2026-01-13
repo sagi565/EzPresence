@@ -4,25 +4,46 @@ import { theme } from '@theme/theme';
 export const styles: Record<string, CSSProperties> = {
   scrollNav: {
     position: 'fixed',
-    right: '40px',
-    top: '50%',
+    right: '10px', // Closer to right edge as requested
+    top: '48%', // Moved up slightly from 50%
     transform: 'translateY(-50%)',
     display: 'flex',
     flexDirection: 'column',
+    display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center', // Center content vertically
+    width: '400px', // Increased width to accommodate longer tooltips
     gap: '0',
     zIndex: 1000,
-    maxHeight: 'calc(100vh - 200px)',
+    height: 'auto',
+    pointerEvents: 'none', // Allow clicks to pass through container
+  },
+  // ... (keeping dotsContainer as is or checking if it needs update? dotsContainer has alignItems: flex-end. If scrollNav is center, dotsContainer is centered in scrollNav. That's fine.)
+
+  // Update scrollIcon to be super visible
+  scrollIcon: {
+    position: 'absolute',
+    fontSize: '18px',
+    opacity: 1,
+    transition: 'opacity 0.3s ease, transform 0.3s ease',
+    transform: 'scale(1)',
+    pointerEvents: 'none',
+    color: '#333',
+    zIndex: 2000, // Ensure it's on top
+    visibility: 'visible',
   },
   dotsContainer: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
+    alignItems: 'center', // Align items to center
+    width: '400px', // Wide enough to hold the tooltip
+    paddingRight: '0', // Adjust if needed to align perfectly with arrows
     gap: '0',
-    overflowY: 'visible',
+    overflow: 'hidden', // Mask the list to 7 items
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
     transition: 'transform 0.3s ease-out',
+    pointerEvents: 'auto', // Re-enable pointer events for contents
   },
   scrollItem: {
     position: 'relative',
@@ -32,11 +53,14 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     paddingBottom: '0',
-    transition: 'transform 0.3s ease, opacity 0.3s ease',
+    // transition: 'transform 0.3s ease, opacity 0.3s ease', // Disabled for performance/drag
   },
   scrollItemDragging: {
-    opacity: 0.4,
-    transform: 'scale(0.8)',
+    zIndex: 1000,
+    transform: 'scale(1.05)', // Reset to normal size (visible)
+    transformOrigin: 'center center',
+    opacity: 1, // Ensure visibility
+    transition: 'none',
   },
   scrollDotContainer: {
     width: '40px',
@@ -48,8 +72,9 @@ export const styles: Record<string, CSSProperties> = {
     zIndex: 2,
     background: '#fff',
     borderRadius: '50%',
-    margin: '8px 0',
+    margin: '0',
     transition: 'transform 0.3s ease',
+
   },
   scrollDot: {
     width: '16px',
@@ -68,8 +93,8 @@ export const styles: Record<string, CSSProperties> = {
     cursor: 'grab',
   },
   scrollDotBeingDragged: {
-    opacity: 0.3,
-    transform: 'scale(0.8)',
+    opacity: 1, // Ensure fully visible
+    transform: 'scale(1.05)',
   },
   scrollDotHover: {
     width: '36px',
@@ -107,30 +132,26 @@ export const styles: Record<string, CSSProperties> = {
   },
   scrollLine: {
     width: '2px',
-    height: '24px',
-    background: 'rgba(155, 93, 229, 0.15)',
-    margin: '0',
+    height: '60px', // Gap size
+    background: 'rgba(155, 93, 229, 0.15)', // Lighter color
+    margin: '10px 0', // Add margin
     position: 'relative',
     zIndex: 1,
-    transition: 'background 0.3s ease',
+    transition: 'background 0.3s ease, opacity 0.2s ease',
   },
-  scrollIcon: {
-    position: 'absolute',
-    fontSize: '18px',
+  scrollLineHidden: {
     opacity: 0,
-    transition: 'opacity 0.3s ease, transform 0.3s ease',
-    transform: 'scale(0.8)',
-    pointerEvents: 'none',
   },
   scrollIconVisible: {
     opacity: 1,
     transform: 'scale(1)',
   },
+
   scrollLabel: {
     position: 'absolute',
-    right: '56px',
+    right: '60px', // Fixed distance to ensure perfect alignment
     top: '50%',
-    transform: 'translateY(-55%)',
+    transform: 'translateY(-50%)',
     fontSize: '13px',
     fontWeight: 600,
     color: theme.colors.text,
@@ -143,6 +164,7 @@ export const styles: Record<string, CSSProperties> = {
     transition: 'all 0.2s ease',
     display: 'flex',
     alignItems: 'center',
+    pointerEvents: 'none', // Ensure it doesn't block mouse
   },
   paginationArrow: {
     width: '32px',
@@ -199,4 +221,59 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: '10px',
   },
+  scrollDotDropTarget: {
+    animation: 'celebration 0.6s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate',
+    boxShadow: '0 0 30px rgba(155, 93, 229, 0.8), 0 0 10px rgba(255, 255, 255, 0.5)',
+    zIndex: 10,
+    transform: 'scale(1.2)',
+    borderWidth: '2px',
+    borderStyle: 'solid',
+    borderColor: '#fff',
+  },
+  scrollArrow: {
+    width: '36px',
+    height: '36px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    color: '#1f2937',
+    fontSize: '18px',
+    transition: 'all 0.2s',
+    borderRadius: '50%',
+    background: 'white',
+    // border: '1px solid rgba(0,0,0,0.1)',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'rgba(0,0,0,0.1)',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+    margin: '4px 0',
+    zIndex: 10,
+    flexShrink: 0,
+  },
+  scrollArrowDisabled: {
+    opacity: 0, // Completely invisible
+    cursor: 'default',
+    pointerEvents: 'none',
+    background: '#f3f4f6',
+    boxShadow: 'none',
+    border: '1px solid',
+    borderColor: 'transparent',
+  },
+  scrollArrowHover: {
+    transform: 'translateY(-2px) scale(1.1)',
+    boxShadow: '0 6px 12px rgba(0,0,0,0.1)',
+    color: '#9b5de5',
+    borderColor: '#9b5de5',
+  },
 };
+
+// Add global keyframes for celebration
+const styleSheet = document.createElement("style");
+styleSheet.innerText = `
+  @keyframes celebration {
+    0% { transform: scale(1.1); box-shadow: 0 0 15px rgba(155, 93, 229, 0.4); }
+    100% { transform: scale(1.35); box-shadow: 0 0 30px rgba(155, 93, 229, 0.8); }
+  }
+`;
+document.head.appendChild(styleSheet);

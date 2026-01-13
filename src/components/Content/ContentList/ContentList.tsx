@@ -160,7 +160,28 @@ const ContentList: React.FC<ContentListProps> = ({
           listId={list.id}
         />
 
-        <Droppable droppableId={list.id} type="ITEM" direction="horizontal">
+        <Droppable
+          droppableId={list.id}
+          type="ITEM"
+          direction="horizontal"
+          renderClone={(provided, snapshot, rubric) => {
+            const item = list.items[rubric.source.index];
+            return (
+              <MouseTracker provided={provided} style={{}}>
+                <ContentItem
+                  item={item}
+                  listType="video"
+                  isDragging={true}
+                  // Visual clone doesn't need interactivity
+                  onClick={() => { }}
+                  onDelete={() => { }}
+                  onRename={() => { }}
+                  onToggleFavorite={() => { }}
+                />
+              </MouseTracker>
+            );
+          }}
+        >
           {(droppableProvided, droppableSnapshot) => (
             <div
               ref={(el) => {
@@ -169,7 +190,7 @@ const ContentList: React.FC<ContentListProps> = ({
               }}
               style={{
                 ...styles.listScrollWrapper,
-                backgroundColor: droppableSnapshot.isDraggingOver ? 'rgba(155, 93, 229, 0.05)' : 'transparent',
+                backgroundColor: 'transparent',
                 transition: 'background-color 0.2s ease',
                 minHeight: '420px', // Ensure height for drop target
               }}
@@ -238,6 +259,63 @@ const ContentList: React.FC<ContentListProps> = ({
         onCancel={() => setDeleteListConfirm(false)}
       />
     </>
+  );
+};
+
+const MouseTracker = ({ provided, style, children }: any) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const update = (e: MouseEvent) => {
+      if (ref.current) {
+        // Enforce fixed position on the mouse coordinates
+        ref.current.style.setProperty('position', 'fixed', 'important');
+        ref.current.style.setProperty('top', `${e.clientY}px`, 'important');
+        ref.current.style.setProperty('left', `${e.clientX}px`, 'important');
+
+        // Strict transform: center on cursor (-50%) and scale down (0.2)
+        // Strict transform: center on cursor (-50%) and scale down (0.2)
+        ref.current.style.setProperty('transform', 'translate3d(-50%, -50%, 0) scale(0.2)', 'important');
+        ref.current.style.setProperty('transform-origin', 'center center', 'important');
+
+        ref.current.style.setProperty('z-index', '99999', 'important');
+        ref.current.style.setProperty('pointer-events', 'none', 'important');
+        ref.current.style.setProperty('margin', '0', 'important');
+
+        // Ensure width/height don't collapse (though scale handles the visual size)
+        ref.current.style.setProperty('width', '280px', 'important');
+        ref.current.style.setProperty('height', 'auto', 'important');
+      }
+    };
+
+    window.addEventListener('mousemove', update, { capture: true });
+    // Initial position if event is not yet fired
+    // window.dispatchEvent(new Event('mousemove')); 
+
+    return () => {
+      window.removeEventListener('mousemove', update, { capture: true });
+    };
+  }, []);
+
+  return (
+    <div
+      ref={(el) => {
+        provided.innerRef(el);
+        (ref as any).current = el;
+      }}
+      {...provided.draggableProps}
+      {...provided.dragHandleProps}
+      style={{
+        // Do NOT spread provided.draggableProps.style here to avoid conflicting transforms
+        ...style,
+        position: 'fixed',
+        zIndex: 99999,
+        pointerEvents: 'none',
+        width: '280px', // Match original item width
+      }}
+    >
+      {children}
+    </div>
   );
 };
 

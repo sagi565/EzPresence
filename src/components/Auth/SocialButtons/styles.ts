@@ -27,7 +27,8 @@ export const styles: S = {
   googleBtn: {
     background: '#fff',
     color: '#3c4043',
-    border: '1px solid #dadce0',
+    border: '1px solid',
+    borderColor: '#dadce0',
   },
   facebookBtn: {
     background: '#1877F2',

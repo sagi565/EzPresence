@@ -20,7 +20,7 @@ export interface ApiBrandDto {
   uuid: string;
   firebaseUserId?: string | null;
   name?: string | null;
-  logo?: string | null;          // base64 encoded logo bytes
+  logoObject?: string | null;          // base64 encoded logo bytes
   slogan?: string | null;
   category?: string | null;
   subcategory?: string | null;
@@ -34,7 +34,7 @@ export interface ApiBrandDto {
 // API Request - matches BrandCreateDto from OpenAPI spec
 export interface BrandCreateDto {
   name?: string | null;
-  logo?: string | null;          // base64 encoded logo bytes
+  logoObject?: string | null;          // base64 encoded logo bytes
   slogan?: string | null;
   category?: string | null;
   subcategory?: string | null;
@@ -43,7 +43,7 @@ export interface BrandCreateDto {
 // API Request - matches BrandInitializeDto from OpenAPI spec
 export interface BrandInitializeDto {
   name?: string | null;
-  logo?: string | null;          // base64 encoded logo bytes
+  logoObject?: string | null;          // base64 encoded logo bytes
   slogan?: string | null;
   category?: string | null;
   subcategory?: string | null;
@@ -52,7 +52,7 @@ export interface BrandInitializeDto {
 // API Request - matches BrandUpdateDto from OpenAPI spec
 export interface BrandUpdateDto {
   name?: string | null;
-  logo?: string | null;          // base64 encoded logo bytes
+  logoObject?: string | null;          // base64 encoded logo bytes
   slogan?: string | null;
   category?: string | null;
   subcategory?: string | null;
@@ -114,7 +114,7 @@ export const convertApiBrandToBrand = (apiBrand: ApiBrandDto): Brand => ({
   id: apiBrand.uuid,
   name: apiBrand.name || 'Unnamed Brand',
   icon: generateBrandIcon(apiBrand.category, apiBrand.name),
-  logo: apiBrand.logo || undefined,
+  logo: apiBrand.logoObject || undefined,
   slogan: apiBrand.slogan || undefined,
   category: apiBrand.category || undefined,
   subcategory: apiBrand.subcategory || undefined,

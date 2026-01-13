@@ -18,9 +18,8 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '24px',
     overflow: 'hidden',
     boxShadow: '0 25px 80px rgba(0, 0, 0, 0.3)',
-    maxWidth: '900px',
-    width: '90%',
-    maxHeight: '85vh',
+    width: '900px', // Strict fixed width
+    height: '600px', // Strict fixed height
     position: 'relative',
     animation: 'scaleIn 0.3s ease-out',
   },
@@ -33,6 +32,7 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '50%',
     background: 'rgba(255, 255, 255, 0.9)',
     border: 'none',
+    borderColor: 'transparent',
     color: '#666',
     fontSize: '24px',
     cursor: 'pointer',
@@ -58,12 +58,12 @@ export const styles: Record<string, CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '400px',
-    maxHeight: '85vh',
+    height: '600px', // Static height
+    minHeight: '600px',
   },
   media: {
     maxWidth: '100%',
-    maxHeight: '85vh',
+    maxHeight: '100%',
     objectFit: 'contain',
   },
   mediaPlaceholder: {
@@ -84,6 +84,7 @@ export const styles: Record<string, CSSProperties> = {
     maxWidth: '360px',
     overflowY: 'auto',
     overflowX: 'hidden',
+    height: '600px', // Match media height
   },
   titleSection: {
     display: 'flex',
@@ -107,7 +108,8 @@ export const styles: Record<string, CSSProperties> = {
     fontWeight: 600,
     color: '#111827',
     padding: '8px 12px',
-    border: '2px solid #9b5de5',
+    border: '2px solid',
+    borderColor: '#9b5de5',
     borderRadius: '8px',
     outline: 'none',
   },
@@ -117,6 +119,7 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '8px',
     background: 'rgba(155, 93, 229, 0.1)',
     border: 'none',
+    borderColor: 'transparent',
     fontSize: '16px',
     cursor: 'pointer',
     display: 'flex',
@@ -135,7 +138,8 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '50%',
     background: 'rgba(0, 0, 0, 0.05)',
     backdropFilter: 'blur(10px)',
-    border: '2px solid rgba(0, 0, 0, 0.1)',
+    border: '2px solid',
+    borderColor: 'rgba(0, 0, 0, 0.1)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -187,6 +191,7 @@ export const styles: Record<string, CSSProperties> = {
     padding: '14px 20px',
     borderRadius: '12px',
     border: 'none',
+    borderColor: 'transparent',
     fontSize: '15px',
     fontWeight: 600,
     cursor: 'pointer',
@@ -197,20 +202,25 @@ export const styles: Record<string, CSSProperties> = {
     transition: 'all 0.2s',
   },
   downloadBtn: {
-    background: 'linear-gradient(135deg, #9b5de5 0%, #7c3aed 100%)',
+    background: '#3b82f6', // Distinct Blue
     color: 'white',
+    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
   },
   downloadBtnHover: {
+    background: '#2563eb',
     transform: 'translateY(-2px)',
-    boxShadow: '0 8px 20px rgba(155, 93, 229, 0.4)',
+    boxShadow: '0 6px 16px rgba(59, 130, 246, 0.4)',
   },
   deleteBtn: {
-    background: 'rgba(239, 68, 68, 0.1)',
+    background: 'transparent',
     color: '#ef4444',
+    border: '2px solid',
+    borderColor: '#ef4444',
   },
   deleteBtnHover: {
     background: '#ef4444',
     color: 'white',
     transform: 'translateY(-2px)',
+    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
   },
 };

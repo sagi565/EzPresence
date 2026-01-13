@@ -24,7 +24,8 @@ export const styles: S = {
   },
   cancelBtn: {
     height: 40,
-    border: '2px solid rgba(155, 93, 229, 0.2)',
+    border: '2px solid',
+    borderColor: 'rgba(155, 93, 229, 0.2)',
     borderRadius: 12,
     cursor: 'pointer',
     color: theme.colors.muted,
@@ -36,7 +37,8 @@ export const styles: S = {
   error: {
     background: 'rgba(239, 68, 68, 0.1)',
     color: '#ef4444',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
+    border: '1px solid',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
     borderRadius: 12,
     padding: '10px 14px',
     fontSize: 14,
@@ -51,7 +53,8 @@ export const styles: S = {
   spinner: {
     width: 48,
     height: 48,
-    border: '4px solid rgba(155, 93, 229, 0.2)',
+    border: '4px solid',
+    borderColor: 'rgba(155, 93, 229, 0.2)',
     borderTopColor: theme.colors.primary,
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',
@@ -80,7 +83,8 @@ export const styles: S = {
     justifyContent: 'center',
     fontSize: 40,
     fontWeight: 'bold',
-    border: '3px solid #ef4444',
+    border: '3px solid',
+    borderColor: '#ef4444',
   },
   errorText: {
     fontSize: 15,

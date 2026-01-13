@@ -25,7 +25,8 @@ export const styles: S = {
   spinner: {
     width: '60px',
     height: '60px',
-    border: '4px solid rgba(155, 93, 229, 0.2)',
+    border: '4px solid',
+    borderColor: 'rgba(155, 93, 229, 0.2)',
     borderTopColor: theme.colors.primary,
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',

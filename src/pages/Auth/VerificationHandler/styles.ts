@@ -18,7 +18,8 @@ export const styles: S = {
     padding: '16px 20px',
     background: 'rgba(155, 93, 229, 0.05)',
     borderRadius: 12,
-    border: '1px solid rgba(155, 93, 229, 0.15)',
+    border: '1px solid',
+    borderColor: 'rgba(155, 93, 229, 0.15)',
   },
   emailIcon: {
     fontSize: 24,
@@ -37,7 +38,8 @@ export const styles: S = {
   successMessage: {
     background: 'rgba(20, 184, 166, 0.1)',
     color: theme.colors.teal,
-    border: '1px solid rgba(20, 184, 166, 0.3)',
+    border: '1px solid',
+    borderColor: 'rgba(20, 184, 166, 0.3)',
     borderRadius: 12,
     padding: '12px 16px',
     fontSize: 14,
@@ -46,7 +48,8 @@ export const styles: S = {
   errorMessage: {
     background: 'rgba(239, 68, 68, 0.1)',
     color: '#ef4444',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
+    border: '1px solid',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
     borderRadius: 12,
     padding: '12px 16px',
     fontSize: 14,
@@ -63,7 +66,8 @@ export const styles: S = {
   spinner: {
     width: 16,
     height: 16,
-    border: '2px solid rgba(155, 93, 229, 0.2)',
+    border: '2px solid',
+    borderColor: 'rgba(155, 93, 229, 0.2)',
     borderTopColor: theme.colors.primary,
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',
@@ -89,7 +93,8 @@ export const styles: S = {
   backButton: {
     flex: 1,
     height: 40,
-    border: '2px solid rgba(155, 93, 229, 0.2)',
+    border: '2px solid',
+    borderColor: 'rgba(155, 93, 229, 0.2)',
     borderRadius: 10,
     cursor: 'pointer',
     color: theme.colors.muted,

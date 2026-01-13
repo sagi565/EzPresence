@@ -549,7 +549,7 @@ export const styles: Record<string, CSSProperties> = {
     position: 'relative',
     overflow: 'hidden',
     transform: 'scale(1)',
-  } as CSSProperties & { 
+  } as CSSProperties & {
     '&:hover'?: CSSProperties;
     '&:active'?: CSSProperties;
   },

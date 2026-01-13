@@ -260,22 +260,23 @@ const ContentItem: React.FC<ContentItemProps> = ({
     );
   };
 
+  // Mouse tracking removed
+
   return (
     <div
       ref={provided?.innerRef}
       {...provided?.draggableProps}
       {...provided?.dragHandleProps}
+      onClick={onClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{
         ...styles.contentItem,
         ...styles.contentItemVideo,
-        ...(isHovered && !isUploading ? styles.contentItemHover : {}),
+        ...provided?.draggableProps.style,
+        ...(isHovered && !isUploading && !isDragging ? styles.contentItemHover : {}),
         ...(isDragging ? styles.contentItemDragging : {}),
-        ...provided?.draggableProps.style, // Important for dnd position
       }}
-      // draggable={!isUploading && !isRenaming} // Handled by dnd
-      onClick={!isUploading && !isRenaming ? onClick : undefined}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
       {renderMedia()}
 

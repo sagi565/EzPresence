@@ -4,7 +4,8 @@ import { theme } from '@theme/theme';
 export const styles: Record<string, CSSProperties> = {
   uploadButton: {
     flexShrink: 0,
-    border: '3px dashed rgba(155, 93, 229, 0.3)',
+    border: '3px dashed',
+    borderColor: 'rgba(155, 93, 229, 0.3)',
     background: 'rgba(155, 93, 229, 0.05)',
     borderRadius: '16px',
     cursor: 'pointer',

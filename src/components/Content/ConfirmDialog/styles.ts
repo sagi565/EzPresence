@@ -6,7 +6,7 @@ export const styles: Record<string, CSSProperties> = {
     position: 'fixed',
     inset: 0,
     background: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 3500,
+    zIndex: 99999,
     backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
@@ -49,6 +49,7 @@ export const styles: Record<string, CSSProperties> = {
     cursor: 'pointer',
     transition: 'all 0.2s',
     border: 'none',
+    borderColor: 'transparent',
   },
   btnCancel: {
     background: 'rgba(107, 114, 128, 0.1)',

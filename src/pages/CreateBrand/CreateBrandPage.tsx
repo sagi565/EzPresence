@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBrands } from '@hooks/brands/useBrands';
+import { api } from '@utils/apiClient';
 import { styles } from './styles';
 import { SocialPlatform } from '@models/SocialAccount';
 import SocialsBackground from '@components/Background/SocialsBackground';
@@ -48,18 +49,17 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 const CreateBrandPage: React.FC = () => {
   const navigate = useNavigate();
-  const { 
+  const {
     currentBrand,
     brands,
-    hasBrands, 
-    loading: brandsLoading, 
+    hasBrands,
+    loading: brandsLoading,
     getUninitializedBrand,
     createUninitializedBrand,
     initializeBrand,
-    refetchBrands,
     setActiveBrand
   } = useBrands();
-  
+
   const [formData, setFormData] = useState<{
     name: string;
     slogan: string;
@@ -77,66 +77,120 @@ const CreateBrandPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorError, setGlobalError] = useState<string | null>(null);
-  
+
   // UI States
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [userChecked, setUserChecked] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 1. Check & Redirect Logic
   useEffect(() => {
-    if (brandsLoading || isRedirecting) return;
+    // Prevent multiple concurrent checks/redirects
+    if (isRedirecting) return;
 
-    // Case A: Active Brand Exists -> Redirect
-    if (currentBrand) {
-      console.log('✅ [CreateBrand] Active brand exists, redirecting...');
-      setIsRedirecting(true);
-      navigate('/scheduler', { replace: true });
-      return;
-    }
-
-    // Case B: Has Brands (but not active) -> Set Active & Redirect
-    if (hasBrands && brands.length > 0) {
-      console.log('🔄 [CreateBrand] Has brands but none active. Setting active...');
-      setIsRedirecting(true);
-      const candidate = brands[0].id;
-      setActiveBrand(candidate)
-        .then(() => navigate('/scheduler', { replace: true }))
-        .catch(err => {
-          console.error('❌ [CreateBrand] Failed to set active brand:', err);
-          setIsRedirecting(false); 
-        });
-      return;
-    }
-
-    // Case C: No Brands -> Ensure Uninitialized Brand
-    if (!uninitializedBrandId && !isRedirecting) {
-      const fetchOrCreateUninitialized = async () => {
-        try {
-          console.log('🔍 [CreateBrand] Checking for uninitialized brand...');
-          // Check if exists
-          let uuid = await getUninitializedBrand();
-          
-          if (!uuid) {
-            console.log('✨ [CreateBrand] Creating new uninitialized brand...');
-            uuid = await createUninitializedBrand();
+    const checkUserAndProceed = async () => {
+      try {
+        // Step 1: Check if user exists
+        if (!userChecked) {
+          console.log('🔍 [CreateBrand] Checking user existence...');
+          try {
+            await api.get('/users/me');
+            console.log('✅ [CreateBrand] User exists.');
+            setUserChecked(true);
+            // Continue to next checks in next render or immediately
+          } catch (err: any) {
+            if (err.status === 404) {
+              console.log('⚠️ [CreateBrand] User not found (404). Redirecting to creation...');
+              setIsRedirecting(true);
+              navigate('/tell-us-who-you-are', { replace: true });
+              return;
+            }
+            throw err; // Other errors handled below
           }
-          
-          console.log('🆔 [CreateBrand] Using uninitialized brand:', uuid);
-          setUninitializedBrandId(uuid);
-        } catch (err: any) {
-          console.error('❌ [CreateBrand] Failed to get/create uninitialized brand:', err);
-          setGlobalError('Failed to initialize brand setup. Please refresh.');
         }
-      };
-      
-      fetchOrCreateUninitialized();
-    }
-  }, [brandsLoading, currentBrand, hasBrands, brands, uninitializedBrandId, getUninitializedBrand, createUninitializedBrand, setActiveBrand, navigate, isRedirecting]);
+
+        // If user not checked yet (or just checked), we wait for state update to trigger effect again? 
+        // Or we can just proceed if we just set it true? 
+        // For safety/cleanliness, let's just proceed in this function if we confirmed user.
+
+        // Wait for brands loading to finish before making decisions about brands
+        if (brandsLoading) return;
+
+        // Step 2: Check Active Brand
+        // If we have a current active brand, we shouldn't be here -> Redirect
+        if (currentBrand) {
+          console.log('✅ [CreateBrand] Active brand exists, redirecting to scheduler...');
+          setIsRedirecting(true);
+          navigate('/scheduler', { replace: true });
+          return;
+        }
+
+        // Step 3: Check Brands List (but no active)
+        if (hasBrands && brands.length > 0) {
+          console.log('🔄 [CreateBrand] Has brands but none active. Setting active...');
+          setIsRedirecting(true);
+          // Try to set the first available brand as active
+          try {
+            await setActiveBrand(brands[0].id);
+            navigate('/scheduler', { replace: true });
+          } catch (err) {
+            console.error('❌ [CreateBrand] Failed to set active brand:', err);
+            setIsRedirecting(false);
+            setGlobalError('Failed to restore session. Please refresh.');
+          }
+          return;
+        }
+
+        // Step 4: Uninitialized Brand
+        // If we are here: User exists, No active brand, No initialized brands.
+        // We need an uninitialized brand to work with.
+        if (!uninitializedBrandId) {
+          console.log('🔍 [CreateBrand] Checking for uninitialized brand...');
+          try {
+            let uuid = await getUninitializedBrand();
+
+            if (!uuid) {
+              console.log('✨ [CreateBrand] Creating new uninitialized brand...');
+              uuid = await createUninitializedBrand(); // This should be POST /api/brands
+            }
+
+            if (uuid) {
+              console.log('🆔 [CreateBrand] Using uninitialized brand:', uuid);
+              setUninitializedBrandId(uuid);
+            }
+          } catch (err: any) {
+            console.error('❌ [CreateBrand] Failed to get/create uninitialized brand:', err);
+            // If create failed because one already exists (bad request), we should have caught it with get?
+            // But if we get here, something is wrong.
+            setGlobalError('Failed to initialize brand setup. Please refresh.');
+          }
+        }
+
+      } catch (err: any) {
+        console.error('❌ [CreateBrand] Global check failed:', err);
+        setGlobalError('An unexpected error occurred. Please refresh.');
+      }
+    };
+
+    checkUserAndProceed();
+  }, [
+    brandsLoading,
+    currentBrand,
+    hasBrands,
+    brands,
+    uninitializedBrandId,
+    getUninitializedBrand,
+    createUninitializedBrand,
+    setActiveBrand,
+    navigate,
+    isRedirecting,
+    userChecked
+  ]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -166,7 +220,7 @@ const CreateBrandPage: React.FC = () => {
       setNameError(true);
       return;
     }
-    
+
     if (!uninitializedBrandId) {
       setGlobalError('Brand initialization failed. Please refresh the page.');
       return;
@@ -178,7 +232,7 @@ const CreateBrandPage: React.FC = () => {
 
     try {
       console.log('📤 [CreateBrand] Initializing brand:', uninitializedBrandId);
-      
+
       let logoBase64: string | null = null;
       if (formData.logo) {
         logoBase64 = await fileToBase64(formData.logo);
@@ -189,14 +243,14 @@ const CreateBrandPage: React.FC = () => {
         slogan: formData.slogan || null,
         category: formData.categories?.[0] || null,
         // subcategory can be added later
-        logo: logoBase64
+        logoObject: logoBase64
       };
 
       await initializeBrand(uninitializedBrandId, initData);
-      
+
       console.log('✅ [CreateBrand] Brand initialized!');
       setSubmitSuccess(true);
-      
+
       // Delay for success animation before redirect
       setTimeout(() => {
         navigate('/scheduler', { replace: true });
@@ -215,7 +269,7 @@ const CreateBrandPage: React.FC = () => {
       <div style={styles.container}>
         <SocialsBackground />
         <div style={{
-          display: 'flex', viewBox: '0 0 24 24',
+          display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
@@ -242,7 +296,7 @@ const CreateBrandPage: React.FC = () => {
   return (
     <div style={styles.container}>
       <SocialsBackground />
-      
+
       <div style={styles.content}>
         <div style={styles.header}>
           <h1 style={styles.title}>
@@ -256,120 +310,120 @@ const CreateBrandPage: React.FC = () => {
         <form style={styles.form} onSubmit={handleSubmit}>
           {/* Main Form Fields */}
           <div style={styles.mainContent}>
-              <div style={styles.row}>
-                {/* Left Side: Name and Slogan */}
-                <div style={styles.nameAndSloganColumn}>
-                  {/* Name Field */}
-                  <div style={styles.formGroupStacked}>
-                    <label style={styles.label}>
-                      Brand Name <span style={styles.required}>*</span>
-                    </label>
-                    <div style={styles.inputWrapper}>
-                      <input
-                        type="text"
-                        style={{
-                          ...styles.input,
-                          ...(nameError ? styles.inputError : {}),
-                          paddingRight: '60px',
-                        }}
-                        value={formData.name}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value.length <= 50) {
-                            setFormData({ ...formData, name: value });
-                            setNameError(false);
-                          }
-                        }}
-                        maxLength={50}
-                      />
-                      <span style={styles.charCountInside}>
-                        {formData.name.length}/50
-                      </span>
-                    </div>
-                    {nameError && (
-                      <span style={styles.errorText}>Brand name is required</span>
-                    )}
+            <div style={styles.row}>
+              {/* Left Side: Name and Slogan */}
+              <div style={styles.nameAndSloganColumn}>
+                {/* Name Field */}
+                <div style={styles.formGroupStacked}>
+                  <label style={styles.label}>
+                    Brand Name <span style={styles.required}>*</span>
+                  </label>
+                  <div style={styles.inputWrapper}>
+                    <input
+                      type="text"
+                      style={{
+                        ...styles.input,
+                        ...(nameError ? styles.inputError : {}),
+                        paddingRight: '60px',
+                      }}
+                      value={formData.name}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value.length <= 50) {
+                          setFormData({ ...formData, name: value });
+                          setNameError(false);
+                        }
+                      }}
+                      maxLength={50}
+                    />
+                    <span style={styles.charCountInside}>
+                      {formData.name.length}/50
+                    </span>
                   </div>
-
-                  {/* Slogan Field */}
-                  <div style={styles.formGroupStacked}>
-                    <label style={styles.label}>Slogan</label>
-                    <div style={styles.inputWrapper}>
-                      <input
-                        type="text"
-                        style={{ ...styles.input, paddingRight: '60px' }}
-                        value={formData.slogan}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value.length <= 60) setFormData({ ...formData, slogan: value });
-                        }}
-                        maxLength={60}
-                      />
-                      <span style={styles.charCountInside}>
-                        {formData.slogan?.length || 0}/60
-                      </span>
-                    </div>
-                  </div>
+                  {nameError && (
+                    <span style={styles.errorText}>Brand name is required</span>
+                  )}
                 </div>
 
-                {/* Logo Upload */}
-                <div style={styles.formGroupRight}>
-                  <label style={styles.logoCenterLabel}>Brand Logo</label>
-                  <div style={styles.logoUploadArea}>
-                    {logoPreview ? (
-                      <div style={styles.logoPreviewContainer}>
-                        <img src={logoPreview} alt="Logo preview" style={styles.logoPreview} />
-                        <button
-                          type="button"
-                          style={styles.removeLogoBtn}
-                          onClick={handleRemoveLogo}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          ...styles.logoUploadPlaceholder,
-                          ...(isLogoHovered ? styles.logoUploadPlaceholderHover : {}),
-                        }}
-                        onClick={() => fileInputRef.current?.click()}
-                        onMouseEnter={() => setIsLogoHovered(true)}
-                        onMouseLeave={() => setIsLogoHovered(false)}
-                      >
-                        <span style={styles.uploadIcon}>📷</span>
-                        <span style={styles.uploadText}>Upload</span>
-                      </div>
-                    )}
+                {/* Slogan Field */}
+                <div style={styles.formGroupStacked}>
+                  <label style={styles.label}>Slogan</label>
+                  <div style={styles.inputWrapper}>
                     <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      style={styles.hiddenInput}
-                      onChange={handleLogoUpload}
+                      type="text"
+                      style={{ ...styles.input, paddingRight: '60px' }}
+                      value={formData.slogan}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value.length <= 60) setFormData({ ...formData, slogan: value });
+                      }}
+                      maxLength={60}
                     />
+                    <span style={styles.charCountInside}>
+                      {formData.slogan?.length || 0}/60
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Category */}
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Category</label>
-                <select
-                  style={styles.categorySelect}
-                  value={formData.categories?.[0] || ''}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setFormData({ ...formData, categories: value ? [value] : [] });
-                  }}
-                >
-                  <option value="">-- Select a category --</option>
-                  {BRAND_CATEGORIES.map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
+              {/* Logo Upload */}
+              <div style={styles.formGroupRight}>
+                <label style={styles.logoCenterLabel}>Brand Logo</label>
+                <div style={styles.logoUploadArea}>
+                  {logoPreview ? (
+                    <div style={styles.logoPreviewContainer}>
+                      <img src={logoPreview} alt="Logo preview" style={styles.logoPreview} />
+                      <button
+                        type="button"
+                        style={styles.removeLogoBtn}
+                        onClick={handleRemoveLogo}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        ...styles.logoUploadPlaceholder,
+                        ...(isLogoHovered ? styles.logoUploadPlaceholderHover : {}),
+                      }}
+                      onClick={() => fileInputRef.current?.click()}
+                      onMouseEnter={() => setIsLogoHovered(true)}
+                      onMouseLeave={() => setIsLogoHovered(false)}
+                    >
+                      <span style={styles.uploadIcon}>📷</span>
+                      <span style={styles.uploadText}>Upload</span>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={styles.hiddenInput}
+                    onChange={handleLogoUpload}
+                  />
+                </div>
               </div>
             </div>
+
+            {/* Category */}
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Category</label>
+              <select
+                style={styles.categorySelect}
+                value={formData.categories?.[0] || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData({ ...formData, categories: value ? [value] : [] });
+                }}
+              >
+                <option value="">-- Select a category --</option>
+                {BRAND_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           {/* Social Media Connections - Pass uninitializedBrandUuid */}
           <div style={styles.socialSectionBottom}>
@@ -384,9 +438,8 @@ const CreateBrandPage: React.FC = () => {
                   key={platform}
                   platform={platform}
                   // Pass the uninitialized brand ID for connection
-                  // Note: CompactSocialButton needs to be updated to accept this prop if it doesn't already
-                  // Or we repurpose brandId prop if it just passes it to the query param
-                  brandId={uninitializedBrandId} 
+                  brandId={uninitializedBrandId || ''}
+                  isUninitialized={true}
                 />
               ))}
             </div>

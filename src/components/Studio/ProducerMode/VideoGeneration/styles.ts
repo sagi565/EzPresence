@@ -61,7 +61,7 @@ export const styles: Record<string, CSSProperties> = {
     inset: 0,
     background: 'rgba(0, 0, 0, 0.5)',
     zIndex: 3500,
-    backdropFilter: 'blur(4px)',  
+    backdropFilter: 'blur(4px)',
   },
   confirmDialog: {
     position: 'fixed',

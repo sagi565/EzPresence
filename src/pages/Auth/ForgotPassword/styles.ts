@@ -27,7 +27,8 @@ export const styles: S = {
   notice: {
     background: theme.colors.primaryLight,
     color: theme.colors.text,
-    border: '1px solid rgba(155, 93, 229, 0.25)',
+    border: '1px solid',
+    borderColor: 'rgba(155, 93, 229, 0.25)',
     borderRadius: 12,
     padding: '12px 14px',
     fontSize: 14,
@@ -35,7 +36,8 @@ export const styles: S = {
   error: {
     background: theme.colors.primaryLight,
     color: theme.colors.text,
-    border: '1px solid rgba(155, 93, 229, 0.2)',
+    border: '1px solid',
+    borderColor: 'rgba(155, 93, 229, 0.2)',
     borderRadius: 12,
     padding: '8px 12px',
     fontSize: 14,

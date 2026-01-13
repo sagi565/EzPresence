@@ -16,7 +16,8 @@ export const styles: S = {
   input: {
     height: 44,
     borderRadius: 12,
-    border: '1px solid rgba(0,0,0,0.08)',
+    border: '1px solid',
+    borderColor: 'rgba(0,0,0,0.08)',
     outline: 'none',
     padding: '0 12px',
     background: theme.colors.surface,

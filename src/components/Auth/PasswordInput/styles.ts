@@ -22,7 +22,8 @@ export const styles: S = {
     width: '100%',
     height: 44,
     borderRadius: 12,
-    border: '1px solid rgba(0,0,0,0.08)',
+    border: '1px solid',
+    borderColor: 'rgba(0,0,0,0.08)',
     outline: 'none',
     padding: '0 44px 0 12px', // Extra padding on right for eye button
     background: theme.colors.surface,

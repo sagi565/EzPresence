@@ -19,12 +19,12 @@ export const styles: Record<string, CSSProperties> = {
     zIndex: 900,
     display: 'flex',
     flexDirection: 'column',
-    transform: 'translateY(calc(100% - 48px))', 
+    transform: 'translateY(calc(100% - 48px))',
   },
   drawerOpen: {
     transform: 'translateY(0)',
   },
-  
+
   drawerHandle: {
     background: 'linear-gradient(180deg, #faf5ff 0%, #ffffff 100%)',
     padding: '12px',
@@ -52,7 +52,7 @@ export const styles: Record<string, CSSProperties> = {
   },
 
   drawerContent: {
-    height: '240px', 
+    height: '240px',
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
@@ -76,7 +76,8 @@ export const styles: Record<string, CSSProperties> = {
     width: '100%',
     maxWidth: '300px',
     padding: '8px 14px',
-    border: '2px solid #faf5ff',
+    border: '2px solid',
+    borderColor: '#faf5ff',
     borderRadius: '10px',
     fontSize: '14px',
     outline: 'none',
@@ -100,16 +101,17 @@ export const styles: Record<string, CSSProperties> = {
     borderLeft: '1px solid #f3f4f6',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0px', 
+    gap: '0px',
     overflowY: 'auto',
     maxHeight: '100%',
     paddingLeft: '0',
   },
-  
+
   listPill: {
     padding: '12px 16px',
     border: 'none',
-    borderBottom: '1px solid #f3f4f6', 
+    borderColor: 'transparent',
+    borderBottom: '1px solid #f3f4f6',
     background: 'transparent',
     fontSize: '13px',
     cursor: 'pointer',
@@ -121,12 +123,12 @@ export const styles: Record<string, CSSProperties> = {
     transition: 'all 0.2s',
     width: '100%',
     textAlign: 'left',
-    borderRadius: '0', 
+    borderRadius: '0',
   },
   listPillActive: {
-    background: '#faf5ff', 
-    color: '#9b5de5', 
-    borderLeft: '3px solid #9b5de5', 
+    background: '#faf5ff',
+    color: '#9b5de5',
+    borderLeft: '3px solid #9b5de5',
   },
   listPillIcon: {
     width: '20px',
@@ -147,7 +149,8 @@ export const styles: Record<string, CSSProperties> = {
     position: 'relative',
     borderRadius: '8px',
     boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-    border: '1px solid #f3f4f6',
+    border: '1px solid',
+    borderColor: '#f3f4f6',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     display: 'flex',
     alignItems: 'center',
@@ -175,7 +178,7 @@ export const styles: Record<string, CSSProperties> = {
     position: 'absolute',
     inset: 0,
   },
-  
+
   contentTitle: {
     position: 'absolute',
     bottom: 0,

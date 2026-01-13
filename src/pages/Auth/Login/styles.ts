@@ -77,7 +77,8 @@ export const styles: S = {
   error: {
     background: theme.colors.primaryLight,
     color: theme.colors.text,
-    border: '1px solid rgba(155,93,229,0.2)',
+    border: '1px solid',
+    borderColor: 'rgba(155,93,229,0.2)',
     borderRadius: 12,
     padding: '8px 12px',
     fontSize: 14,

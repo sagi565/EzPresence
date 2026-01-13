@@ -34,7 +34,7 @@ export const usePostBrand = () => {
     try {
       // Convert logo file to base64 if provided
       let logoBase64: string | null = null;
-      
+
       if (brandData.logo) {
         logoBase64 = await fileToBase64(brandData.logo);
         console.log('📷 Logo converted to base64, size:', logoBase64.length);
@@ -43,7 +43,7 @@ export const usePostBrand = () => {
       // Prepare the request body with logo as base64 bytes
       const requestBody: BrandCreateDto = {
         name: brandData.name,
-        logo: logoBase64,
+        logoObject: logoBase64,
         slogan: brandData.slogan || null,
         category: brandData.categories?.[0] || null,
         subcategory: null,
@@ -51,7 +51,7 @@ export const usePostBrand = () => {
 
       // POST /api/brands?setActive=true - Creates a new brand and sets it as active
       const brandUuid = await api.post<string>('/brands?setActive=true', requestBody);
-      
+
       if (!brandUuid) {
         throw new Error('No brand UUID returned from API');
       }
@@ -62,7 +62,7 @@ export const usePostBrand = () => {
       try {
         // GET /api/brands/{id}
         const createdBrand = await api.get<ApiBrandDto>(`/brands/${brandUuid}`);
-        
+
         if (createdBrand) {
           return convertApiBrandToBrand(createdBrand);
         }
@@ -80,7 +80,7 @@ export const usePostBrand = () => {
         categories: brandData.categories,
         isActive: true,
       };
-      
+
     } catch (err: any) {
       console.error('Failed to create brand:', err);
       const errorMessage = err.message || 'Failed to create brand';

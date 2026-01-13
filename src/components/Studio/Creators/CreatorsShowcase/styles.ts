@@ -135,6 +135,7 @@ export const styles: Record<string, CSSProperties> = {
     fontSize: '14px',
     fontWeight: 600,
     border: '2px solid',
+    borderColor: 'transparent',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
@@ -171,6 +172,7 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     border: '0px solid',
+    borderColor: 'transparent',
     background: theme.gradients.innovator,
     color: 'white',
     boxShadow: '0 8px 24px rgba(155, 93, 229, 0.3)',
@@ -191,6 +193,7 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     border: '2px solid',
+
     background: 'transparent',
     color: theme.colors.primary,
     borderColor: theme.colors.primary,

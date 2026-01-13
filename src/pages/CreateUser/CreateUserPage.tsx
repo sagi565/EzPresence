@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePostUser, CreateUserData } from '@/hooks/user/usePostUser';
 import { useUserProfile } from '@/hooks/user/useUserProfile';
@@ -87,9 +87,9 @@ if (!document.head.querySelector('style[data-create-user-animations]')) {
 
 const CreateUserPage: React.FC = () => {
   const navigate = useNavigate();
-  const { createUser, loading, error } = usePostUser(); 
-  const { refetchProfile, hasProfile } = useUserProfile();
-  
+  const { createUser, loading, error } = usePostUser();
+  const { refetchProfile } = useUserProfile();
+
   const [formData, setFormData] = useState<CreateUserData>({
     firstName: '',
     lastName: '',
@@ -97,37 +97,21 @@ const CreateUserPage: React.FC = () => {
     country: undefined,
     gender: undefined,
   });
-  
+
   const [errors, setErrors] = useState<{
     firstName?: string;
     lastName?: string;
     birthDate?: string;
   }>({});
-    
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  
-  // FIXED: Check if user already has a profile and redirect them
-  useEffect(() => {
-    console.log('🔍 [CreateUserPage] Checking if user already has profile...');
-    
-    // Small delay to ensure profile has loaded
-    const checkProfile = async () => {
-      // Wait a bit for profile to load
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (hasProfile()) {
-        console.log('⚠️ [CreateUserPage] User already has profile, redirecting to brand creation');
-        navigate('/create-your-first-brand', { replace: true });
-      }
-    };
-    
-    checkProfile();
-  }, [hasProfile, navigate]);
-  
+
+  // Check handled by RequireNoProfile wrapper in App.tsx
+
   const handleButtonClick = () => {
     if (!isSubmitting && !loading) {
       setShowRipple(true);
@@ -137,24 +121,24 @@ const CreateUserPage: React.FC = () => {
 
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
-    
+
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'First name is required';
     } else if (formData.firstName.length < 2) {
       newErrors.firstName = 'First name must be at least 2 characters';
     }
-    
+
     if (!formData.lastName.trim()) {
       newErrors.lastName = 'Last name is required';
     } else if (formData.lastName.length < 2) {
       newErrors.lastName = 'Last name must be at least 2 characters';
     }
-    
+
     const birthDateValidation = validateBirthDate(formData.birthDate);
     if (!birthDateValidation.isValid) {
       newErrors.birthDate = birthDateValidation.error;
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -162,36 +146,36 @@ const CreateUserPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       console.log('📤 [CreateUserPage] Creating user profile...');
       await createUser(formData);
       console.log('✅ [CreateUserPage] Profile created successfully');
-      
+
       setSubmitSuccess(true);
-      
+
       // Refetch profile to update the context
       console.log('🔄 [CreateUserPage] Refetching profile...');
       await refetchProfile();
-      
+
       setTimeout(() => {
         console.log('🔀 [CreateUserPage] Redirecting to brand creation...');
         navigate('/create-your-first-brand', { replace: true });
       }, 500);
-      
+
     } catch (err: any) {
       console.error('❌ [CreateUserPage] Failed to create profile:', err);
-      
+
       // FIXED: If the error is "user already exists", redirect to brand creation
       if (err.message && err.message.toLowerCase().includes('already exists')) {
         console.log('⚠️ [CreateUserPage] User already exists, redirecting to brand creation');
         setSubmitSuccess(true);
-        
+
         // Refetch to ensure we have the latest data
         await refetchProfile();
-        
+
         setTimeout(() => {
           navigate('/create-your-first-brand', { replace: true });
         }, 500);

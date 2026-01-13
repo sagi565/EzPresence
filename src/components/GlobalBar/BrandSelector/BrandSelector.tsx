@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Brand } from '@models/Brand';
+import { Brand, getLogoDataUrl } from '@models/Brand';
 import { styles } from './styles';
 import { theme } from '@theme/theme';
 
@@ -61,7 +61,7 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
   // Fixed selector style - explicitly set border and boxShadow in both states
   const selectorStyle = {
     ...styles.selector,
-    border: isHovered 
+    border: isHovered
       ? `2px solid ${theme.colors.primary}`
       : `2px solid ${theme.colors.secondary}`,
     boxShadow: isHovered
@@ -80,6 +80,8 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
     } : {}),
   };
 
+  const currentBrandLogo = getLogoDataUrl(currentBrand.logo);
+
   return (
     <div ref={selectorRef} style={styles.container}>
       <div
@@ -91,7 +93,17 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
         tabIndex={0}
       >
         <span style={styles.tenantName}>{currentBrand.name}</span>
-        <div style={styles.brandIcon}>{currentBrand.icon}</div>
+        <div style={styles.brandIcon}>
+          {currentBrandLogo ? (
+            <img
+              src={currentBrandLogo}
+              alt={`${currentBrand.name} logo`}
+              style={styles.logoImage}
+            />
+          ) : (
+            currentBrand.icon
+          )}
+        </div>
       </div>
 
       {isOpen && (
@@ -108,6 +120,8 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
               } : {}),
             };
 
+            const brandLogo = getLogoDataUrl(brand.logo);
+
             return (
               <button
                 key={brand.id}
@@ -116,7 +130,17 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
                 onMouseEnter={() => setHoveredOption(brand.id)}
                 onMouseLeave={() => setHoveredOption(null)}
               >
-                <span style={styles.optIcon}>{brand.icon}</span>
+                <span style={styles.optIcon}>
+                  {brandLogo ? (
+                    <img
+                      src={brandLogo}
+                      alt={`${brand.name} logo`}
+                      style={styles.logoImage}
+                    />
+                  ) : (
+                    brand.icon
+                  )}
+                </span>
                 <span>{brand.name}</span>
               </button>
             );

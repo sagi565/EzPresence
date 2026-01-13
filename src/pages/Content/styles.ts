@@ -27,8 +27,8 @@ export const styles: Record<string, CSSProperties> = {
     scrollSnapStop: 'normal',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: '60px 24px',
+    justifyContent: 'flex-start', // Align to left side
+    padding: '60px 48px 60px 80px', // Increased left padding to 80px
   },
   listWrapper: {
     width: '100%',
@@ -57,7 +57,8 @@ export const styles: Record<string, CSSProperties> = {
   addListButton: {
     padding: '16px 32px',
     background: 'rgba(255, 255, 255, 0.95)',
-    border: '2px dashed rgba(155, 93, 229, 0.3)',
+    border: '2px dashed',
+    borderColor: 'rgba(155, 93, 229, 0.3)',
     borderRadius: '12px',
     color: theme.colors.primary,
     fontWeight: 600,

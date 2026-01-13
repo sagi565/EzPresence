@@ -177,7 +177,7 @@ export const useContentLists = (brandId?: string) => {
         return newLists;
       });
 
-      await api.put(`/contents/${itemId}/list/${targetListId}`);
+      await api.put(`/contents/${itemId}/list/${targetListId.replace('nav-drop-', '')}`);
     } catch (err) {
       console.error("Failed to move item", err);
       await fetchLists();
@@ -301,7 +301,7 @@ export const useContentLists = (brandId?: string) => {
       }));
       // Assuming API structure for content update
       await api.put(`/contents/${itemId}`, {
-        updatedProperties: { ContentName: newName }
+        contentName: newName
       });
     } catch (err) {
       console.error("Failed to rename item", err);
@@ -323,9 +323,9 @@ export const useContentLists = (brandId?: string) => {
         }));
 
         // Send new order to server
-        const orderPayload = updatedLists.map((l, i) => ({ id: l.id, order: i }));
+        const orderPayload = updatedLists.map(l => l.id);
         // Using a fire-and-forget update or assuming generic update endpoint
-        api.put('/contentlists/reorder', { orders: orderPayload })
+        api.put('/contentlists/reorder', { orderedListUuids: orderPayload })
           .catch(err => console.error("Failed to reorder lists on server", err));
 
         return updatedLists;

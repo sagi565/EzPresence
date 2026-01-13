@@ -5,7 +5,8 @@ export const styles: Record<string, CSSProperties> = {
   nav: {
     background: 'rgba(255,255,255,0.95)',
     backdropFilter: 'blur(20px)',
-    borderBottom: '1px solid rgba(155, 93, 229, 0.1)',
+    borderBottom: '1px solid',
+    borderColor: 'rgba(155, 93, 229, 0.1)',
     padding: '12px 24px',
     display: 'flex',
     alignItems: 'center',
@@ -46,6 +47,7 @@ export const styles: Record<string, CSSProperties> = {
   navBtn: {
     padding: '12px 20px',
     border: 'none',
+    borderColor: 'transparent',
     borderRadius: '10px',
     fontWeight: 600,
     cursor: 'pointer',
@@ -69,6 +71,7 @@ export const styles: Record<string, CSSProperties> = {
     width: '44px',
     height: '44px',
     border: 'none',
+    borderColor: 'transparent',
     borderRadius: '50%',
     background: 'rgba(155, 93, 229, 0.08)',
     display: 'flex',
@@ -82,7 +85,8 @@ export const styles: Record<string, CSSProperties> = {
   secondaryNav: {
     background: 'rgba(255, 255, 255, 0.92)',
     backdropFilter: 'blur(15px)',
-    borderBottom: '1px solid rgba(155, 93, 229, 0.06)',
+    borderBottom: '1px solid',
+    borderColor: 'rgba(155, 93, 229, 0.06)',
     padding: 0,
     display: 'flex',
     alignItems: 'center',
@@ -116,6 +120,7 @@ export const styles: Record<string, CSSProperties> = {
     padding: '10px 18px',
     fontSize: '13px',
     border: 'none',
+    borderColor: 'transparent',
     borderRadius: '10px',
     fontWeight: 600,
     cursor: 'pointer',
@@ -133,7 +138,7 @@ export const styles: Record<string, CSSProperties> = {
     color: '#fff',
     boxShadow: '0 3px 10px rgba(155, 93, 229, 0.25)',
   },
-  
+
   // Updated Styles
   userName: {
     fontSize: '18px', // Increased size
@@ -151,7 +156,8 @@ export const styles: Record<string, CSSProperties> = {
     width: '42px',
     height: '42px',
     borderRadius: '12px',
-    border: '1px solid rgba(155, 93, 229, 0.15)', // Subtle border
+    border: '1px solid',
+    borderColor: 'rgba(155, 93, 229, 0.15)', // Subtle border
     background: 'rgba(255, 255, 255, 0.5)',
     color: '#6b7280',
     cursor: 'pointer',

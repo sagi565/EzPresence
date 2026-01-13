@@ -63,8 +63,8 @@ export const styles: Record<string, CSSProperties> = {
   },
   featureCard: {
     background: 'rgba(255, 255, 255, 0.9)',
-    border: '2px solid rgba(155, 93, 229, 0.1)', 
-    borderColor: 'rgba(155, 93, 229, 0.1)',    
+    border: '2px solid',
+    borderColor: 'rgba(155, 93, 229, 0.1)',
     borderRadius: '20px',
     padding: '32px',
     textAlign: 'center',
