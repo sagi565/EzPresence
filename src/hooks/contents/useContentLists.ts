@@ -177,7 +177,7 @@ export const useContentLists = (brandId?: string) => {
         return newLists;
       });
 
-      await api.put(`/contents/${itemId}/list/${targetListId.replace('nav-drop-', '')}`);
+      await api.put(`/contents/${itemId}/list/${targetListId}`);
     } catch (err) {
       console.error("Failed to move item", err);
       await fetchLists();

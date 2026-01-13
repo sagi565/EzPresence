@@ -4,23 +4,20 @@ import { theme } from '@theme/theme';
 export const styles: Record<string, CSSProperties> = {
   scrollNav: {
     position: 'fixed',
-    right: '10px', // Closer to right edge as requested
-    top: '48%', // Moved up slightly from 50%
+    right: '40px', // More centered from edge
+    top: '50%', // Perfect center
     transform: 'translateY(-50%)',
     display: 'flex',
     flexDirection: 'column',
-    display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center', // Center content vertically
-    width: '400px', // Increased width to accommodate longer tooltips
+    justifyContent: 'center',
+    width: 'auto', // Let content determine width
     gap: '0',
     zIndex: 1000,
     height: 'auto',
-    pointerEvents: 'none', // Allow clicks to pass through container
   },
   // ... (keeping dotsContainer as is or checking if it needs update? dotsContainer has alignItems: flex-end. If scrollNav is center, dotsContainer is centered in scrollNav. That's fine.)
 
-  // Update scrollIcon to be super visible
   scrollIcon: {
     position: 'absolute',
     fontSize: '18px',
@@ -29,21 +26,20 @@ export const styles: Record<string, CSSProperties> = {
     transform: 'scale(1)',
     pointerEvents: 'none',
     color: '#333',
-    zIndex: 2000, // Ensure it's on top
+    zIndex: 2000,
     visibility: 'visible',
   },
   dotsContainer: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center', // Align items to center
-    width: '400px', // Wide enough to hold the tooltip
-    paddingRight: '0', // Adjust if needed to align perfectly with arrows
+    alignItems: 'center',
+    width: 'auto', // Match scrollNav width
+    paddingRight: '0',
     gap: '0',
-    overflow: 'hidden', // Mask the list to 7 items
+    overflow: 'hidden',
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
     transition: 'transform 0.3s ease-out',
-    pointerEvents: 'auto', // Re-enable pointer events for contents
   },
   scrollItem: {
     position: 'relative',

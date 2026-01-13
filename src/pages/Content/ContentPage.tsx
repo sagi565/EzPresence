@@ -323,12 +323,22 @@ const ContentPage: React.FC = () => {
     }
 
     if (type === 'LIST') {
+      // Reordering lists in scroll navigation
       reorderLists(source.index, destination.index);
     } else if (type === 'ITEM') {
-      const sourceListId = source.droppableId;
-      const targetListId = destination.droppableId;
-      const itemId = result.draggableId;
+      // Moving content items between lists
+      let sourceListId = source.droppableId;
+      let targetListId = destination.droppableId;
 
+      // Extract list ID from nav-drop droppables
+      if (targetListId.startsWith('nav-drop-')) {
+        targetListId = targetListId.replace('nav-drop-', '');
+      }
+      if (sourceListId.startsWith('nav-drop-')) {
+        sourceListId = sourceListId.replace('nav-drop-', '');
+      }
+
+      const itemId = result.draggableId;
       moveItem(itemId, sourceListId, targetListId);
     }
   };

@@ -157,40 +157,37 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
               droppableId="list-navigation"
               type="LIST"
               direction="vertical"
-              renderClone={(provided, snapshot, rubric) => {
+              renderClone={(provided, _snapshot, rubric) => {
                 const list = lists[rubric.source.index];
                 return (
-
-                  <MouseTracker provided={provided} style={{}}>
-                    <div
-                      style={{
-                        ...styles.scrollItem,
-                        opacity: 1,
-                        zIndex: 9999,
-                        height: 'auto', // Changed to auto to fit MouseTracker
-                        marginBottom: '0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <div style={styles.scrollDotContainer}>
-                        <div
-                          style={{
-                            ...styles.scrollDot,
-                            ...(!list.isSystem ? styles.scrollDotDraggable : {}),
-                            ...styles.scrollDotActiveCustom,
-                            transform: 'scale(1.1)',
-                            boxShadow: '0 0 30px rgba(155, 93, 229, 0.6)',
-                          }}
-                        >
-                          <span style={{ ...styles.scrollIcon, opacity: 1, zIndex: 10 }}>
-                            {list.icon}
-                          </span>
-                        </div>
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    style={{
+                      ...provided.draggableProps.style,
+                      ...styles.scrollItem,
+                      transform: provided.draggableProps.style?.transform
+                        ? `${provided.draggableProps.style.transform} scale(1.2)`
+                        : 'scale(1.2)',
+                      opacity: 0.95,
+                      cursor: 'grabbing',
+                    }}
+                  >
+                    <div style={styles.scrollDotContainer}>
+                      <div
+                        style={{
+                          ...styles.scrollDot,
+                          ...styles.scrollDotActiveCustom,
+                          boxShadow: '0 0 30px rgba(155, 93, 229, 0.6)',
+                        }}
+                      >
+                        <span style={{ ...styles.scrollIcon, opacity: 1, zIndex: 10 }}>
+                          {list.icon}
+                        </span>
                       </div>
                     </div>
-                  </MouseTracker>
+                  </div>
                 );
               }}
             >
@@ -357,50 +354,6 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
         )
       }
     </>
-  );
-};
-
-// MouseTracker for forcing centered drag
-const MouseTracker = ({ provided, style, children }: any) => {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const update = (e: MouseEvent) => {
-      if (ref.current) {
-        ref.current.style.setProperty('position', 'fixed', 'important');
-        ref.current.style.setProperty('top', `${e.clientY}px`, 'important');
-        ref.current.style.setProperty('left', `${e.clientX}px`, 'important');
-
-        // Center on cursor. For icons we keep scale 1 or close to it.
-        // Center on cursor. For icons we keep scale 1 or close to it.
-        ref.current.style.setProperty('transform', 'translate3d(-50%, -50%, 0)', 'important');
-
-        ref.current.style.setProperty('z-index', '99999', 'important');
-        ref.current.style.setProperty('pointer-events', 'none', 'important');
-        ref.current.style.setProperty('margin', '0', 'important');
-      }
-    };
-    window.addEventListener('mousemove', update, { capture: true });
-    return () => window.removeEventListener('mousemove', update, { capture: true });
-  }, []);
-
-  return (
-    <div
-      ref={(el) => {
-        provided.innerRef(el);
-        (ref as any).current = el;
-      }}
-      {...provided.draggableProps}
-      {...provided.dragHandleProps}
-      style={{
-        ...style, // Do NOT spread draggableProps.style
-        position: 'fixed',
-        zIndex: 99999,
-        pointerEvents: 'none',
-      }}
-    >
-      {children}
-    </div>
   );
 };
 
