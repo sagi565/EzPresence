@@ -12,43 +12,8 @@ import AuthActionPage from './pages/Auth/AuthAction/AuthActionPage';
 import ResetPasswordPage from './pages/Auth/ResetPassword/ResetPAsswordPage';
 import CreateBrandPage from './pages/CreateBrand/CreateBrandPage';
 import CreateUserPage from './pages/CreateUser/CreateUserPage';
-import { useAuth } from '@auth/AuthProvider';
-import { useUserProfile } from '@/hooks/user/useUserProfile';
-import LoadingScreen from '@/components/LoadingScreen';
-
-// A special wrapper for pages that require auth but not full profile/brand setup
-function AuthOnlyRoute({ children }: { children: React.ReactElement }) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!user.emailVerified) {
-    return <Navigate to="/verify-email" replace />;
-  }
-
-  return children;
-}
-
-// Wrapper to prevent authenticated users with profiles from seeing the "Create User" page
-function RequireNoProfile({ children }: { children: React.ReactElement }) {
-  const { profile, loading } = useUserProfile();
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  if (profile) {
-    return <Navigate to="/scheduler" replace />;
-  }
-
-  return children;
-}
+import TermsOfServicePage from './pages/Legal/TermsOfServicePage';
+import PrivacyPolicyPage from './pages/Legal/PrivacyPolicyPage';
 
 function App() {
   return (
@@ -56,6 +21,10 @@ function App() {
       <style>{globalStyles}</style>
       <BrowserRouter>
         <Routes>
+          {/* public legal pages */}
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+
           {/* public auth routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
@@ -64,29 +33,24 @@ function App() {
           <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/auth/action" element={<AuthActionPage />} />
 
-          {/* User profile setup route - requires auth but allows users without profile */}
           <Route
             path="/tell-us-who-you-are"
             element={
-              <AuthOnlyRoute>
-                <RequireNoProfile>
+              <ProtectedRoute>
                   <CreateUserPage />
-                </RequireNoProfile>
-              </AuthOnlyRoute>
+              </ProtectedRoute>
             }
           />
 
-          {/* Brand creation route - requires auth and profile but allows users without brands */}
           <Route
             path="/create-your-first-brand"
             element={
-              <AuthOnlyRoute>
+              <ProtectedRoute>
                 <CreateBrandPage />
-              </AuthOnlyRoute>
+              </ProtectedRoute>
             }
           />
 
-          {/* protected app routes - requires auth, profile, AND at least one brand */}
           <Route
             path="/scheduler"
             element={
@@ -104,15 +68,7 @@ function App() {
             }
           />
           <Route
-            path="/studio/*"
-            element={
-              <ProtectedRoute>
-                <StudioPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/studio/:section"
+            path="/studio/:section?"
             element={
               <ProtectedRoute>
                 <StudioPage />
@@ -120,7 +76,6 @@ function App() {
             }
           />
 
-          {/* fallback */}
           <Route path="/" element={<Navigate to="/scheduler" replace />} />
           <Route path="*" element={<Navigate to="/scheduler" replace />} />
         </Routes>

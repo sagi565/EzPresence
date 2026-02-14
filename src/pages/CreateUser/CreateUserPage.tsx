@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePostUser, CreateUserData } from '@/hooks/user/usePostUser';
+import { useUpdateUser } from '@/hooks/user/usePutUser';
 import { useUserProfile } from '@/hooks/user/useUserProfile';
 import { Gender, validateBirthDate } from '@models/User';
 import SocialsBackground from '@components/Background/SocialsBackground';
@@ -87,8 +88,12 @@ if (!document.head.querySelector('style[data-create-user-animations]')) {
 
 const CreateUserPage: React.FC = () => {
   const navigate = useNavigate();
-  const { createUser, loading, error } = usePostUser();
-  const { refetchProfile } = useUserProfile();
+  const { createUser, loading: createLoading, error: createError } = usePostUser();
+  const { updateUser, loading: updateLoading, error: updateError } = useUpdateUser();
+  const { profile, refetchProfile } = useUserProfile();
+
+  const loading = createLoading || updateLoading;
+  const error = createError || updateError;
 
   const [formData, setFormData] = useState<CreateUserData>({
     firstName: '',
@@ -97,6 +102,20 @@ const CreateUserPage: React.FC = () => {
     country: undefined,
     gender: undefined,
   });
+
+  // Load existing profile data if available
+  useEffect(() => {
+    if (profile) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: profile.firstName || '',
+        lastName: profile.lastName || '',
+        birthDate: profile.birthDate ? new Date(profile.birthDate).toISOString().split('T')[0] : '',
+        country: profile.country || undefined,
+        gender: profile.gender || undefined,
+      }));
+    }
+  }, [profile]);
 
   const [errors, setErrors] = useState<{
     firstName?: string;
@@ -109,8 +128,6 @@ const CreateUserPage: React.FC = () => {
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-
-  // Check handled by RequireNoProfile wrapper in App.tsx
 
   const handleButtonClick = () => {
     if (!isSubmitting && !loading) {
@@ -150,13 +167,19 @@ const CreateUserPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('📤 [CreateUserPage] Creating user profile...');
-      await createUser(formData);
-      console.log('✅ [CreateUserPage] Profile created successfully');
+      if (profile) {
+        console.log('📝 [CreateUserPage] Updating existing profile...');
+        await updateUser(formData);
+        console.log('✅ [CreateUserPage] Profile updated successfully');
+      } else {
+        console.log('📤 [CreateUserPage] Creating user profile...');
+        await createUser(formData);
+        console.log('✅ [CreateUserPage] Profile created successfully');
+      }
 
       setSubmitSuccess(true);
 
-      // Refetch profile to update the context
+      // Refetch profile to update the context and confirm completion
       console.log('🔄 [CreateUserPage] Refetching profile...');
       await refetchProfile();
 
@@ -166,22 +189,25 @@ const CreateUserPage: React.FC = () => {
       }, 500);
 
     } catch (err: any) {
-      console.error('❌ [CreateUserPage] Failed to create profile:', err);
+      console.error('❌ [CreateUserPage] Failed to save profile:', err);
 
-      // FIXED: If the error is "user already exists", redirect to brand creation
+      // Fallback: If create failed because "user already exists", try update instead
       if (err.message && err.message.toLowerCase().includes('already exists')) {
-        console.log('⚠️ [CreateUserPage] User already exists, redirecting to brand creation');
-        setSubmitSuccess(true);
-
-        // Refetch to ensure we have the latest data
-        await refetchProfile();
-
-        setTimeout(() => {
-          navigate('/create-your-first-brand', { replace: true });
-        }, 500);
-      } else {
-        setIsSubmitting(false);
+        console.log('⚠️ [CreateUserPage] User already exists, trying update instead...');
+        try {
+          await updateUser(formData);
+          setSubmitSuccess(true);
+          await refetchProfile();
+          setTimeout(() => {
+            navigate('/create-your-first-brand', { replace: true });
+          }, 500);
+          return;
+        } catch (updateErr) {
+          console.error('❌ [CreateUserPage] Update fallback failed:', updateErr);
+        }
       }
+
+      setIsSubmitting(false);
     }
   };
 

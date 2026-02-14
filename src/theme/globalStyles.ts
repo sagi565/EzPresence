@@ -412,4 +412,29 @@ export const globalStyles = `
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
   }
+
+  /* Content-picking overlay — dedicated layer above modal, below drawer */
+  .content-pick-overlay {
+    position: fixed; inset: 0;
+    background: rgba(17, 24, 39, 0.55);
+    z-index: 1650;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  .content-pick-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Drawer elevated during content picking — always above the pick overlay */
+  .content-drawer.nsm-picking {
+    z-index: 1700 !important;
+  }
+  
+  /* Disable drawer handle interaction during content picking */
+  .content-drawer.nsm-picking .drawer-handle {
+    cursor: default;
+    pointer-events: none;
+  }
 `;

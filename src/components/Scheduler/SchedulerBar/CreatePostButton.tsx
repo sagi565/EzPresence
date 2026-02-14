@@ -2,7 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { styles } from './styles';
 import { theme } from '@theme/theme';
 
-const CreatePostButton: React.FC = () => {
+interface CreatePostButtonProps {
+  onCreateStory?: () => void;
+  onCreatePost?: () => void;
+}
+
+const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreateStory, onCreatePost }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [hoveredBtn, setHoveredBtn] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -25,6 +30,18 @@ const CreatePostButton: React.FC = () => {
   }, [showDropdown]);
 
   const handleCreatePost = (type: string) => {
+    if (type === 'story') {
+      onCreateStory?.();
+      setShowDropdown(false);
+      return;
+    }
+
+    if (type === 'single') {
+      onCreatePost?.();
+      setShowDropdown(false);
+      return;
+    }
+
     const message =
       type === 'ai'
         ? 'AI Series feature coming soon!'
@@ -37,7 +54,7 @@ const CreatePostButton: React.FC = () => {
     ...styles.createBtn,
     ...(hoveredBtn ? {
       transform: 'scale(1.07)',
-      boxShadow: '0 6px 20px rgba(251, 191, 36, 0.4)', 
+      boxShadow: '0 6px 20px rgba(251, 191, 36, 0.4)',
     } : {}),
   };
 
@@ -57,7 +74,7 @@ const CreatePostButton: React.FC = () => {
         onMouseEnter={() => setHoveredBtn(true)}
         onMouseLeave={() => setHoveredBtn(false)}
       >
-      Create
+        Create
       </button>
       {showDropdown && (
         <div style={styles.createDropdown}>
@@ -68,25 +85,44 @@ const CreatePostButton: React.FC = () => {
             onMouseLeave={() => setHoveredItem(null)}
           >
             <span>📤</span>
-            <span>Single Post</span>
+            <div style={styles.optionInfo}>
+              <span style={styles.optionLabel}>New Post</span>
+              <span style={styles.optionDesc}>Schedule a post for feed</span>
+            </div>
           </div>
           <div
-            style={dropdownItemStyle('repeat')}
-            onClick={() => handleCreatePost('repeat')}
-            onMouseEnter={() => setHoveredItem('repeat')}
+            style={dropdownItemStyle('story')}
+            onClick={() => handleCreatePost('story')}
+            onMouseEnter={() => setHoveredItem('story')}
             onMouseLeave={() => setHoveredItem(null)}
           >
-            <span>🔁</span>
-            <span>Repeat Post</span>
+            <span>📖</span>
+            <span>New Story</span>
           </div>
           <div
-            style={dropdownItemStyle('ai')}
+            style={{
+              ...dropdownItemStyle('ai'),
+              opacity: 0.6,
+              cursor: 'default',
+              position: 'relative' as const,
+            }}
             onClick={() => handleCreatePost('ai')}
             onMouseEnter={() => setHoveredItem('ai')}
             onMouseLeave={() => setHoveredItem(null)}
           >
             <span>🤖🔁</span>
             <span>AI Series</span>
+            <span style={{
+              fontSize: '9px',
+              fontWeight: 700,
+              color: theme.colors.secondary,
+              background: 'rgba(251, 191, 36, 0.15)',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              marginLeft: 'auto',
+            }}>
+              SOON
+            </span>
           </div>
         </div>
       )}

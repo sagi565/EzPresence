@@ -36,8 +36,8 @@ export const styles: Record<string, CSSProperties> = {
   },
 
   contentItemHover: {
-    transform: 'scale(1.05) translateY(-6px)',
-    boxShadow: '0 20px 30px rgba(0, 0, 0, 0.15)',
+    transform: 'scale(1.03) translateY(-4px)',
+    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
     zIndex: 10,
   },
 

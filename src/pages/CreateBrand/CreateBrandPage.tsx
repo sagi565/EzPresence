@@ -83,114 +83,8 @@ const CreateBrandPage: React.FC = () => {
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
-  const [userChecked, setUserChecked] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // 1. Check & Redirect Logic
-  useEffect(() => {
-    // Prevent multiple concurrent checks/redirects
-    if (isRedirecting) return;
-
-    const checkUserAndProceed = async () => {
-      try {
-        // Step 1: Check if user exists
-        if (!userChecked) {
-          console.log('🔍 [CreateBrand] Checking user existence...');
-          try {
-            await api.get('/users/me');
-            console.log('✅ [CreateBrand] User exists.');
-            setUserChecked(true);
-            // Continue to next checks in next render or immediately
-          } catch (err: any) {
-            if (err.status === 404) {
-              console.log('⚠️ [CreateBrand] User not found (404). Redirecting to creation...');
-              setIsRedirecting(true);
-              navigate('/tell-us-who-you-are', { replace: true });
-              return;
-            }
-            throw err; // Other errors handled below
-          }
-        }
-
-        // If user not checked yet (or just checked), we wait for state update to trigger effect again? 
-        // Or we can just proceed if we just set it true? 
-        // For safety/cleanliness, let's just proceed in this function if we confirmed user.
-
-        // Wait for brands loading to finish before making decisions about brands
-        if (brandsLoading) return;
-
-        // Step 2: Check Active Brand
-        // If we have a current active brand, we shouldn't be here -> Redirect
-        if (currentBrand) {
-          console.log('✅ [CreateBrand] Active brand exists, redirecting to scheduler...');
-          setIsRedirecting(true);
-          navigate('/scheduler', { replace: true });
-          return;
-        }
-
-        // Step 3: Check Brands List (but no active)
-        if (hasBrands && brands.length > 0) {
-          console.log('🔄 [CreateBrand] Has brands but none active. Setting active...');
-          setIsRedirecting(true);
-          // Try to set the first available brand as active
-          try {
-            await setActiveBrand(brands[0].id);
-            navigate('/scheduler', { replace: true });
-          } catch (err) {
-            console.error('❌ [CreateBrand] Failed to set active brand:', err);
-            setIsRedirecting(false);
-            setGlobalError('Failed to restore session. Please refresh.');
-          }
-          return;
-        }
-
-        // Step 4: Uninitialized Brand
-        // If we are here: User exists, No active brand, No initialized brands.
-        // We need an uninitialized brand to work with.
-        if (!uninitializedBrandId) {
-          console.log('🔍 [CreateBrand] Checking for uninitialized brand...');
-          try {
-            let uuid = await getUninitializedBrand();
-
-            if (!uuid) {
-              console.log('✨ [CreateBrand] Creating new uninitialized brand...');
-              uuid = await createUninitializedBrand(); // This should be POST /api/brands
-            }
-
-            if (uuid) {
-              console.log('🆔 [CreateBrand] Using uninitialized brand:', uuid);
-              setUninitializedBrandId(uuid);
-            }
-          } catch (err: any) {
-            console.error('❌ [CreateBrand] Failed to get/create uninitialized brand:', err);
-            // If create failed because one already exists (bad request), we should have caught it with get?
-            // But if we get here, something is wrong.
-            setGlobalError('Failed to initialize brand setup. Please refresh.');
-          }
-        }
-
-      } catch (err: any) {
-        console.error('❌ [CreateBrand] Global check failed:', err);
-        setGlobalError('An unexpected error occurred. Please refresh.');
-      }
-    };
-
-    checkUserAndProceed();
-  }, [
-    brandsLoading,
-    currentBrand,
-    hasBrands,
-    brands,
-    uninitializedBrandId,
-    getUninitializedBrand,
-    createUninitializedBrand,
-    setActiveBrand,
-    navigate,
-    isRedirecting,
-    userChecked
-  ]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -264,7 +158,7 @@ const CreateBrandPage: React.FC = () => {
   };
 
   // Loading State
-  if (brandsLoading || isRedirecting || !uninitializedBrandId) {
+  if (brandsLoading || !uninitializedBrandId) {
     return (
       <div style={styles.container}>
         <SocialsBackground />
@@ -285,9 +179,6 @@ const CreateBrandPage: React.FC = () => {
             animation: 'spin 0.8s linear infinite',
           }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          <p style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
-            {isRedirecting ? 'Redirecting...' : 'Setting up your experience...'}
-          </p>
         </div>
       </div>
     );

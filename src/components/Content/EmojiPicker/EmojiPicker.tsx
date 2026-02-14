@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { styles } from './styles';
 
 const EMOJIS = [
-  '🎨', '🚀', '✨', '🔥', '💡', 
+  '🎨', '🚀', '✨', '🔥', '💡',
   '🎯', '🌟', '💫', '🎪', '🎭',
   '🎸', '🎮', '🍕', '🌈', '⚡',
   '🦄', '🎉', '💎', '🏆', '🌺'
@@ -28,25 +28,25 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({
   useEffect(() => {
     if (isOpen && anchorElement && pickerRef.current) {
       const iconRect = anchorElement.getBoundingClientRect();
-      
+
       // Force a reflow to get accurate measurements
       const pickerRect = pickerRef.current.getBoundingClientRect();
       const pickerWidth = pickerRect.width || 280; // Use actual width or fallback
       const windowWidth = window.innerWidth;
-      
+
       // Center under icon
       let left = iconRect.left + (iconRect.width / 2) - (pickerWidth / 2);
-      
+
       // Ensure picker doesn't go off left edge
       if (left < 10) {
         left = 10;
       }
-      
+
       // Ensure picker doesn't go off right edge
       if (left + pickerWidth > windowWidth - 10) {
         left = windowWidth - pickerWidth - 10;
       }
-      
+
       setPosition({
         top: iconRect.bottom + 10,
         left,
@@ -58,14 +58,18 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({
     if (!isOpen) return;
 
     const handleClickOutside = (e: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(e.target as Node) &&
+        (!anchorElement || !anchorElement.contains(e.target as Node))
+      ) {
         onClose();
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, anchorElement]);
 
   if (!isOpen) return null;
 
@@ -75,34 +79,31 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({
   };
 
   return (
-    <>
-      <div style={styles.overlay} onClick={onClose} />
-      <div
-        ref={pickerRef}
-        style={{
-          ...styles.picker,
-          top: `${position.top}px`,
-          left: `${position.left}px`,
-        }}
-      >
-        <div style={styles.grid}>
-          {EMOJIS.map((emoji) => (
-            <div
-              key={emoji}
-              style={{
-                ...styles.option,
-                ...(hoveredEmoji === emoji ? styles.optionHover : {}),
-              }}
-              onClick={() => handleSelect(emoji)}
-              onMouseEnter={() => setHoveredEmoji(emoji)}
-              onMouseLeave={() => setHoveredEmoji(null)}
-            >
-              {emoji}
-            </div>
-          ))}
-        </div>
+    <div
+      ref={pickerRef}
+      style={{
+        ...styles.picker,
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+      }}
+    >
+      <div style={styles.grid}>
+        {EMOJIS.map((emoji) => (
+          <div
+            key={emoji}
+            style={{
+              ...styles.option,
+              ...(hoveredEmoji === emoji ? styles.optionHover : {}),
+            }}
+            onClick={() => handleSelect(emoji)}
+            onMouseEnter={() => setHoveredEmoji(emoji)}
+            onMouseLeave={() => setHoveredEmoji(null)}
+          >
+            {emoji}
+          </div>
+        ))}
       </div>
-    </>
+    </div>
   );
 };
 

@@ -19,7 +19,7 @@ export const styles: Record<string, CSSProperties> = {
     zIndex: 900,
     display: 'flex',
     flexDirection: 'column',
-    transform: 'translateY(calc(100% - 48px))',
+    transform: 'translateY(calc(100% - 70px))',
   },
   drawerOpen: {
     transform: 'translateY(0)',

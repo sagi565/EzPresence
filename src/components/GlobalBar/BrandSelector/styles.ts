@@ -27,10 +27,13 @@ export const styles: Record<string, CSSProperties> = {
     fontSize: '15px',
     flex: 1,
     textAlign: 'left',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
   },
   brandIcon: {
-    width: '36px',
-    height: '36px',
+    width: '44px',
+    height: '44px',
     borderRadius: '10px',
     background: theme.colors.secondary,
     display: 'flex',
@@ -121,7 +124,7 @@ export const styles: Record<string, CSSProperties> = {
   logoImage: {
     width: '100%',
     height: '100%',
-    objectFit: 'contain',
+    objectFit: 'cover',
     borderRadius: '8px',
   },
 };

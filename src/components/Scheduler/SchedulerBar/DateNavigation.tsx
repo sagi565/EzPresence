@@ -12,6 +12,8 @@ interface DateNavigationProps {
   onDayChange?: (direction: number) => void;
   onDateSelect: (date: Date) => void;
   onViewChange: (view: 'month' | '4days') => void;
+  onCreateStory?: () => void;
+  onCreatePost?: () => void;
 }
 
 const MONTH_NAMES = [
@@ -38,6 +40,8 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
   onDayChange,
   onDateSelect,
   onViewChange,
+  onCreateStory,
+  onCreatePost,
 }) => {
   const [showMiniCalendar, setShowMiniCalendar] = useState(false);
   const [currentView, setCurrentView] = useState<'month' | '4days'>(viewMode);
@@ -103,7 +107,7 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
   };
 
 
-  const displayText = currentView === '4days' 
+  const displayText = currentView === '4days'
     ? `${MONTH_NAMES[currentMonth]} ${currentYear}`
     : `${MONTH_NAMES[currentMonth]} ${currentYear}`;
 
@@ -118,7 +122,10 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
   return (
     <div style={styles.dateNav}>
       <div style={styles.dateLeft}>
-        <CreatePostButton />
+        <CreatePostButton
+          onCreateStory={onCreateStory}
+          onCreatePost={onCreatePost}
+        />
       </div>
 
       <div style={styles.dateControls}>

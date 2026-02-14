@@ -1,6 +1,6 @@
 import React from 'react';
 
-const LoadingScreen: React.FC = () => {
+const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => {
     return (
         <div style={{
             display: 'flex',
@@ -21,7 +21,7 @@ const LoadingScreen: React.FC = () => {
             }} />
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             <p style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
-                Loading...
+                {message}
             </p>
         </div>
     );

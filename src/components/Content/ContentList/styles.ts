@@ -80,7 +80,7 @@ export const styles: Record<string, CSSProperties> = {
     background: 'white',
     border: '2px dashed',
     borderColor: '#9b5de5',
-    boxShadow: '0 0 0 4px rgba(155, 93, 229, 0.1)',
+    boxShadow: '0 4px 20px rgba(155, 93, 229, 0.25)',
     transition: 'all 0.3s ease',
   },
   listSubtitle: {
@@ -182,8 +182,10 @@ export const styles: Record<string, CSSProperties> = {
     transition: 'all 0.3s ease',
   },
   listScrollWrapperDragOver: {
-    backgroundColor: 'rgba(155, 93, 229, 0.08)',
-    border: '2px dashed rgba(155, 93, 229, 0.4)',
+    backgroundColor: 'rgba(34, 197, 94, 0.08)',
+    border: '3px dashed rgba(34, 197, 94, 0.5)',
+    boxShadow: 'inset 0 0 30px rgba(34, 197, 94, 0.1)',
+    transform: 'scale(1.01)',
   },
   scrollArrow: {
     position: 'absolute',

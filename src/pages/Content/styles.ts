@@ -10,7 +10,10 @@ export const styles: Record<string, CSSProperties> = {
     overflow: 'hidden',
   },
   contentArea: {
-    height: '100%',
+    flex: 1, // Take remaining space after GlobalNav
+    height: 'auto', // Allow flex to control height
+    display: 'flex',      // Make it a flex container so children can use % height
+    flexDirection: 'column',
     overflowY: 'auto',
     overflowX: 'hidden',
     scrollSnapType: 'y proximity',
@@ -22,13 +25,14 @@ export const styles: Record<string, CSSProperties> = {
     paddingRight: '100px',
   },
   listSection: {
-    minHeight: '100vh',
+    minHeight: '100%', // Match the visible height of contentArea
     scrollSnapAlign: 'center',
     scrollSnapStop: 'normal',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-start', // Align to left side
     padding: '60px 48px 60px 80px', // Increased left padding to 80px
+    flexShrink: 0, // Prevent shrinking in flex container
   },
   listWrapper: {
     width: '100%',

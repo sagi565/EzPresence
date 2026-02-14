@@ -1,12 +1,7 @@
 import { CSSProperties } from 'react';
 
 export const styles: Record<string, CSSProperties> = {
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'transparent',
-    zIndex: 2000,
-  },
+
   picker: {
     position: 'fixed',
     background: 'white',

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { 
-  UserProfile, 
+import {
+  UserProfile,
   ApiUserProfileDto,
   UserUpdateDto,
   convertApiUserProfileToUserProfile,
@@ -21,7 +21,7 @@ export const useUpdateUser = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const updateUser = useCallback(async (data: UpdateUserData): Promise<UserProfile> => {
+  const updateUser = useCallback(async (data: UpdateUserData): Promise<UserProfile | void> => {
     setLoading(true);
     setError(null);
 
@@ -29,13 +29,16 @@ export const useUpdateUser = () => {
       const requestBody: UserUpdateDto = convertUserProfileToUpdateDto(data);
 
       // PUT /api/users
-      const response = await api.put<ApiUserProfileDto>('/users', requestBody);
-      
-      if (!response) throw new Error('No response returned from API');
+      // API returns 204 No Content on success, which apiClient converts to null
+      const response = await api.put<ApiUserProfileDto | null>('/users', requestBody);
 
       console.log('✅ User updated successfully');
-      return convertApiUserProfileToUserProfile(response);
-      
+
+      if (response) {
+        return convertApiUserProfileToUserProfile(response);
+      }
+      // If 204 (null), just return void
+
     } catch (err: any) {
       console.error('Failed to update user:', err);
       const errorMessage = err.message || 'Failed to update user';

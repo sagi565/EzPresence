@@ -143,6 +143,20 @@ export const styles: Record<string, CSSProperties> = {
     gap: '12px',
     transition: 'all 0.2s',
   },
+  optionInfo: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '2px',
+  },
+  optionLabel: {
+    fontWeight: 600,
+    fontSize: '14px',
+    color: theme.colors.text,
+  },
+  optionDesc: {
+    fontSize: '11px',
+    color: theme.colors.muted,
+  },
   miniCalendar: {
     position: 'absolute',
     top: '100%',

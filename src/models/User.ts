@@ -37,17 +37,14 @@ export interface UserCreateDto {
 }
 
 export interface UserUpdateDto {
-  firstName?: string | null;
-  lastName?: string | null;
-  birthDate?: string | null;
-  country?: string | null;
-  gender?: string | null;
+  UpdatedProperties: Record<string, any>;
 }
 
 export const GENDER_OPTIONS: { value: Gender; label: string }[] = [
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },
   { value: 'other', label: 'Other' },
+  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
 ];
 
 export const convertApiUserProfileToUserProfile = (apiProfile: ApiUserProfileDto): UserProfile => ({
@@ -87,13 +84,19 @@ export const convertUserProfileToUpdateDto = (data: Partial<{
   birthDate: string;
   country?: string;
   gender?: Gender;
-}>): UserUpdateDto => ({
-  firstName: data.firstName || null,
-  lastName: data.lastName || null,
-  birthDate: data.birthDate || null,
-  country: data.country || null,
-  gender: data.gender || null,
-});
+}>): UserUpdateDto => {
+  const props: Record<string, any> = {};
+
+  if (data.firstName !== undefined) props['FirstName'] = data.firstName;
+  if (data.lastName !== undefined) props['LastName'] = data.lastName;
+  if (data.birthDate !== undefined) props['Birthdate'] = data.birthDate;
+  if (data.country !== undefined) props['Country'] = data.country;
+  if (data.gender !== undefined) props['Gender'] = data.gender;
+
+  return {
+    UpdatedProperties: props
+  };
+};
 
 export const validateBirthDate = (birthDate: string): { isValid: boolean; error?: string } => {
   if (!birthDate) return { isValid: false, error: 'Birth date is required' };

@@ -104,6 +104,7 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
 
     if (isEditable) {
       setIsEditMode(true);
+      setIsIconHovered(false); // Reset hover state
       if (iconRef.current) {
         onIconClick(iconRef.current);
       }
@@ -113,6 +114,7 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
   const handleTitleClick = () => {
     if (isEditable && !isEditMode) {
       setIsEditMode(true);
+      setIsTitleHovered(false); // Reset hover state
     }
   };
 

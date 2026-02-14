@@ -33,6 +33,7 @@ const ItemDragPreview: React.FC<{ item: any }> = ({ item }) => {
         cursor: 'grabbing',
         background: '#2a2a2a',
         position: 'relative',
+        opacity: 0.7, // Semi-transparent so user can see icons underneath
       }}
     >
       {thumbnailSrc && (
@@ -132,6 +133,7 @@ interface ContentPageInnerProps {
   toggleFavorite: (itemId: string, listId: string) => void;
   uploadContent: (listId: string, file: File) => void;
   newlyCreatedListId: string | null;
+  onReorder: (fromIndex: number, toIndex: number) => void;
 }
 
 const ContentPageInner: React.FC<ContentPageInnerProps> = ({
@@ -149,7 +151,28 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
   toggleFavorite,
   uploadContent,
   newlyCreatedListId,
+  onReorder,
 }) => {
+  // Track if dragging to prevent scroll snap
+  const { isDragging } = useDndState();
+  const wasDragging = useRef(false);
+  const dragEndCooldown = useRef(false);
+
+  // Track when drag ends and add cooldown period
+  useEffect(() => {
+    if (isDragging) {
+      wasDragging.current = true;
+      dragEndCooldown.current = false;
+    } else if (wasDragging.current) {
+      // Drag just ended - start cooldown
+      wasDragging.current = false;
+      dragEndCooldown.current = true;
+      const timeout = setTimeout(() => {
+        dragEndCooldown.current = false;
+      }, 500); // 500ms cooldown after drag ends
+      return () => clearTimeout(timeout);
+    }
+  }, [isDragging]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -161,7 +184,17 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
   const scrollVelocity = useRef(0);
   const velocityCheckInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const prevListsLength = useRef(lists.length);
+
+
+
+  // Force scroll to top on mount to prevent unwanted auto-scroll/restoration
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, []);
+
+
 
   const [emojiPicker, setEmojiPicker] = useState<{
     isOpen: boolean;
@@ -194,17 +227,17 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
     });
   };
 
+  // Scroll to new list only when explicitly created
   useEffect(() => {
-    if (lists.length > prevListsLength.current) {
-      const newListIndex = lists.length - 1;
-      if (newListIndex >= 0) {
+    if (newlyCreatedListId) {
+      const index = lists.findIndex(l => l.id === newlyCreatedListId);
+      if (index !== -1) {
         setTimeout(() => {
-          scrollToList(newListIndex);
+          scrollToList(index);
         }, 100);
       }
     }
-    prevListsLength.current = lists.length;
-  }, [lists.length]);
+  }, [newlyCreatedListId, lists]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -264,7 +297,8 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
       }
 
       scrollTimeoutRef.current = setTimeout(() => {
-        if (!isScrolling) {
+        // Don't snap during drag, during cooldown, or while scrolling
+        if (!isScrolling && !isDragging && !dragEndCooldown.current) {
           const scrollTop = container.scrollTop;
           const scrollHeight = container.scrollHeight;
           const containerHeight = container.clientHeight;
@@ -312,7 +346,7 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       if (updateIndexTimeoutRef.current) clearTimeout(updateIndexTimeoutRef.current);
     };
-  }, [currentIndex, isScrolling, lists.length]);
+  }, [currentIndex, isScrolling, lists.length, isDragging]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -459,6 +493,7 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
         currentIndex={currentIndex}
         onNavigate={scrollToList}
         onDelete={(listId) => deleteList(listId)}
+        onReorder={onReorder}
       />
 
       <EmojiPicker
@@ -543,6 +578,7 @@ const ContentPageWithOverlay: React.FC = () => {
         toggleFavorite={toggleFavorite}
         uploadContent={uploadContent}
         newlyCreatedListId={newlyCreatedListId}
+        onReorder={reorderLists}
       />
     </DndProvider>
   );

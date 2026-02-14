@@ -58,9 +58,9 @@ const DraggableItem: React.FC<{
     <div
       ref={setNodeRef}
       style={{
-        opacity: isBeingDragged ? 0.3 : 1,
+        opacity: isBeingDragged ? 0 : 1,
         cursor: isDragging ? 'grabbing' : 'grab',
-        transition: 'opacity 0.2s ease',
+        transition: 'opacity 0.15s ease',
       }}
       {...listeners}
       {...attributes}

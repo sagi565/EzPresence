@@ -33,6 +33,11 @@ const SIZE_MAX = 32;
 const OPACITY_MIN = 0.10; // more transparent
 const OPACITY_MAX = 0.35;
 
+// Interaction settings
+const INTERACTION_RADIUS = 150;
+const REPULSION_FORCE = 2;
+const SWIRL_FORCE = 0.5;
+
 const SocialsBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -43,6 +48,10 @@ const SocialsBackground: React.FC = () => {
     cssH: 0,
     dpr: 1,
   });
+
+  // Track mouse position
+  const mouseRef = useRef<{ x: number; y: number }>({ x: -9999, y: -9999 });
+
 
   const loadIcons = (): Promise<HTMLImageElement[]> =>
     Promise.all(
@@ -146,6 +155,7 @@ const SocialsBackground: React.FC = () => {
   const animate = (imgs: HTMLImageElement[]) => {
     const ctx = ctxRef.current!;
     const { cssW: w, cssH: h } = sizeRef.current;
+    const { x: mX, y: mY } = mouseRef.current;
 
     // Clear in CSS pixel space (because setTransform maps 1:1 CSS:px)
     ctx.clearRect(0, 0, w, h);
@@ -157,8 +167,43 @@ const SocialsBackground: React.FC = () => {
       p.flutterPhase += p.flutterSpeed;
       const flutterOffset = Math.sin(p.flutterPhase) * p.flutterAmplitude;
 
-      p.x += p.speedX + flutterOffset * 0.2;
-      p.y += p.speedY;
+      // Basic movement
+      let dx = p.speedX + flutterOffset * 0.2;
+      let dy = p.speedY;
+
+      // --- Interaction: Repulsion / Attraction ---
+      // We calculate distance from particle center to mouse
+      const pCx = p.x + p.size / 2;
+      const pCy = p.y + p.size / 2;
+      const distX = pCx - mX;
+      const distY = pCy - mY;
+      const dist = Math.sqrt(distX * distX + distY * distY);
+
+      if (dist < INTERACTION_RADIUS && dist > 1) { // avoid divide by zero
+        // Normalize direction
+        const force = (INTERACTION_RADIUS - dist) / INTERACTION_RADIUS;
+        const mag = force * REPULSION_FORCE * (p.z + 0.5); // affects closer items more
+
+        const normX = distX / dist;
+        const normY = distY / dist;
+
+        // Tangential vector (perpendicular) for swirl
+        // Rotation (x,y) -> (-y, x) gives 90 deg rotation
+        const tanX = -normY;
+        const tanY = normX;
+
+        // REPULSION / HURRICANE MODE
+        // Push away
+        dx += normX * mag;
+        dy += normY * mag;
+
+        // Forceful Swirl (Hurricane)
+        dx += tanX * mag * SWIRL_FORCE * 2.5;
+        dy += tanY * mag * SWIRL_FORCE * 2.5;
+      }
+
+      p.x += dx;
+      p.y += dy;
       p.rotation += p.rotationSpeed;
 
       if (p.y > h + p.size || p.x > w + p.size) {
@@ -189,6 +234,28 @@ const SocialsBackground: React.FC = () => {
 
     let mounted = true;
     let ro: ResizeObserver | null = null;
+
+    // Mouse listener
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!canvasRef.current) return;
+      const rect = canvasRef.current.getBoundingClientRect();
+      // Mouse relative to the canvas
+      mouseRef.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    };
+
+    const handleMouseLeave = () => {
+      mouseRef.current = { x: -9999, y: -9999 };
+      isMouseDownRef.current = false; // Reset click on leave
+    };
+
+
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseout', handleMouseLeave); // Optional: reset when out of window
+    window.addEventListener('mouseout', handleMouseLeave); // Optional: reset when out of window
 
     loadIcons()
       .then((imgs) => {
@@ -228,6 +295,9 @@ const SocialsBackground: React.FC = () => {
       if (ro) ro.disconnect();
       window.removeEventListener('resize', configureCanvas);
       window.removeEventListener('orientationchange', configureCanvas);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseout', handleMouseLeave);
+
       if (typeof window.visualViewport !== 'undefined' && window.visualViewport !== null) {
         window.visualViewport.removeEventListener('resize', configureCanvas);
       }

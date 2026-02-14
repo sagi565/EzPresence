@@ -45,7 +45,7 @@ const UploadButton: React.FC<UploadButtonProps> = ({ listType, onUpload }) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept={listType === 'video' ? 'video/*' : 'image/*,video/*'}
+        accept={listType === 'video' ? 'video/*' : 'image/*'}
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />

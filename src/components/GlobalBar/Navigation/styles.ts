@@ -67,21 +67,6 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: '12px',
   },
-  navIcon: {
-    width: '44px',
-    height: '44px',
-    border: 'none',
-    borderColor: 'transparent',
-    borderRadius: '50%',
-    background: 'rgba(155, 93, 229, 0.08)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    fontSize: '20px',
-    color: theme.colors.muted,
-  },
   secondaryNav: {
     background: 'rgba(255, 255, 255, 0.92)',
     backdropFilter: 'blur(15px)',
@@ -138,29 +123,67 @@ export const styles: Record<string, CSSProperties> = {
     color: '#fff',
     boxShadow: '0 3px 10px rgba(155, 93, 229, 0.25)',
   },
-
-  // Updated Styles
-  userName: {
-    fontSize: '18px', // Increased size
-    fontWeight: 700,
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    marginRight: '12px',
-    letterSpacing: '-0.5px',
-  },
-  logoutBtn: {
+  // Unified Icon Button Style
+  iconBtn: {
+    width: '44px',
+    height: '44px',
+    border: 'none',
+    borderColor: 'transparent',
+    borderRadius: '50%',
+    background: 'transparent', // Default transparent
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '42px',
-    height: '42px',
-    borderRadius: '12px',
-    border: '1px solid',
-    borderColor: 'rgba(155, 93, 229, 0.15)', // Subtle border
-    background: 'rgba(255, 255, 255, 0.5)',
-    color: '#6b7280',
     cursor: 'pointer',
     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    fontSize: '20px',
+    color: theme.colors.muted,
+  },
+  // Active/Hover states for Icon Buttons
+  iconBtnHover: {
+    background: 'rgba(155, 93, 229, 0.08)',
+    transform: 'translateY(-1px)',
+    color: theme.colors.primary,
+  },
+  // Specific style for Logout (Danger)
+  iconBtnDangerHover: {
+    background: '#fee2e2',
+    color: '#ef4444',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 2px 4px rgba(239, 68, 68, 0.1)',
+  },
+  // Avatar Circle
+  avatar: {
+    width: '44px',
+    height: '44px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '18px',
+    fontWeight: 700,
+    color: '#fff',
+    border: '2px solid rgba(255, 255, 255, 0.8)',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+    textTransform: 'uppercase',
+  },
+  comingSoonBadge: {
+    position: 'absolute',
+    bottom: 'calc(100% - 2px)',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    padding: '3px 10px',
+    fontSize: '9px',
+    fontWeight: 700,
+    borderRadius: '6px',
+    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+    color: '#fff',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+    boxShadow: '0 3px 8px rgba(59, 130, 246, 0.35)',
+    whiteSpace: 'nowrap',
+    transition: 'opacity 0.3s ease, transform 0.3s ease',
+    pointerEvents: 'none',
+    border: 'none',
   },
 };

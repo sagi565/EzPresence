@@ -17,6 +17,7 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
+import { ContentList, SYSTEM_LIST_NAMES } from '@models/ContentList';
 
 // Types for drag and drop operations
 export type DragType = 'LIST' | 'ITEM';
@@ -50,27 +51,27 @@ interface DndProviderProps {
   children: ReactNode;
   onListReorder: (fromIndex: number, toIndex: number) => void;
   onItemMove: (itemId: string, sourceListId: string, targetListId: string) => void;
-  lists: Array<{ id: string; items: Array<{ id: string }> }>;
+  lists: ContentList[];
   dragOverlay?: React.ReactNode;
 }
 
 // Custom collision detection that prioritizes nav drops for items
 const customCollisionDetection: CollisionDetection = (args) => {
   const pointerCollisions = pointerWithin(args);
-  
+
   // Prioritize nav-drop targets when dragging items
   const navDropCollision = pointerCollisions.find(
     collision => collision.id.toString().startsWith('nav-drop-')
   );
-  
+
   if (navDropCollision) {
     return [navDropCollision];
   }
-  
+
   if (pointerCollisions.length > 0) {
     return pointerCollisions;
   }
-  
+
   return rectIntersection(args);
 };
 
@@ -119,7 +120,7 @@ export const DndProvider: React.FC<DndProviderProps> = ({
     const { active, over } = event;
 
     const activeDataCurrent = active.data.current as DragData;
-    
+
     // Reset state
     setActiveId(null);
     setActiveData(null);
@@ -136,7 +137,7 @@ export const DndProvider: React.FC<DndProviderProps> = ({
       if (overIdStr.startsWith('nav-drop-')) {
         overListId = overIdStr.replace('nav-drop-', '');
       }
-      
+
       const activeIndex = lists.findIndex(l => l.id === active.id);
       const overIndex = lists.findIndex(l => l.id === overListId);
 
@@ -167,6 +168,33 @@ export const DndProvider: React.FC<DndProviderProps> = ({
       }
 
       if (sourceListId && targetListId && sourceListId !== targetListId) {
+        // Validation for System Lists
+        const targetList = lists.find(l => l.id === targetListId);
+
+        // Find the item to check its type (video vs image)
+        let draggedItemType: string | undefined;
+        // Try to find in source list
+        const sourceList = lists.find(l => l.id === sourceListId);
+        if (sourceList) {
+          const item = sourceList.items.find(i => i.id === active.id);
+          draggedItemType = item?.type;
+        }
+
+        if (targetList && targetList.isSystem && draggedItemType) {
+          const isTargetVideo = targetList.title === SYSTEM_LIST_NAMES.UPLOADED_VIDEOS;
+          const isTargetImage = targetList.title === SYSTEM_LIST_NAMES.UPLOADED_IMAGES;
+
+          // Prevent Video -> Image List
+          if (isTargetImage && draggedItemType === 'video') {
+            return;
+          }
+
+          // Prevent Image -> Video List
+          if (isTargetVideo && draggedItemType === 'image') {
+            return;
+          }
+        }
+
         onItemMove(active.id as string, sourceListId, targetListId);
       }
     }

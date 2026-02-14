@@ -7,23 +7,30 @@ export const styles: S = {
   shell: {
     height: '100vh',
     display: 'flex',
-    flexDirection: 'row',
+    flexDirection: 'column',
     overflow: 'hidden',
     position: 'relative',
   },
+  contentContainer: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'row',
+    overflow: 'hidden',
+  },
   centerPane: {
-    flex: '0 1 110%',  
+    position: 'relative',
+    flex: '0 1 110%',
     display: 'flex',
     zIndex: 10000,
     alignItems: 'center',
     justifyContent: 'center',
   },
   imagePane: {
-    flex: '0 1 75%', 
+    flex: '0 1 75%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    
+
     overflow: 'hidden',
   },
   card: {

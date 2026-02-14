@@ -5,12 +5,15 @@ import { useContentLists } from '@/hooks/contents/useContentLists'; // Ensure co
 
 interface ContentDrawerProps {
   brandId: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onToggle: () => void;
+  isPicking?: boolean;
 }
 
-const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId, isOpen, onClose, onToggle, isPicking }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedListId, setSelectedListId] = useState<string>('videos'); 
+  const [selectedListId, setSelectedListId] = useState<string>('videos');
 
   // Pass brandId to hook (Argument 1, which caused the error previously)
   const { lists } = useContentLists(brandId);
@@ -32,7 +35,7 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId }) => {
     }
 
     if (searchQuery) {
-      return itemsToFilter.filter(item => 
+      return itemsToFilter.filter(item =>
         (item.title || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
@@ -41,20 +44,23 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId }) => {
   }, [selectedListId, allContent, lists, searchQuery]);
 
   return (
-    <div style={{ ...styles.drawer, ...(isOpen ? styles.drawerOpen : {}) }}>
+    <div
+      className={`content-drawer ${isPicking ? 'nsm-picking' : ''}`}
+      style={{ ...styles.drawer, ...(isOpen ? styles.drawerOpen : {}) }}
+    >
       {/* Handle */}
-      <div style={styles.drawerHandle} onClick={() => setIsOpen(!isOpen)}>
+      <div style={styles.drawerHandle} onClick={onToggle}>
         <span style={{ ...styles.drawerArrow, ...(isOpen ? styles.drawerArrowOpen : {}) }}>
           ▲
         </span>
         <span style={styles.drawerTitle}>
-          My Content {isOpen ? '' : `(${allContent.length})`}
+          My Content
         </span>
       </div>
 
       <div style={styles.drawerContent}>
         <div style={styles.drawerInner}>
-          
+
           {/* Controls & Grid */}
           <div style={styles.drawerControls}>
             <input
@@ -64,7 +70,7 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            
+
             <div style={styles.contentList}>
               {filteredContent.length === 0 ? (
                 <div style={{ padding: '20px', fontSize: '13px', color: '#6b7280' }}>
@@ -72,10 +78,10 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId }) => {
                 </div>
               ) : (
                 filteredContent.map((item) => (
-                  <ContentCard 
-                    key={item.id} 
-                    content={item} 
-                    brandId={brandId} 
+                  <ContentCard
+                    key={item.id}
+                    content={item}
+                    brandId={brandId}
                   />
                 ))
               )}
@@ -84,15 +90,15 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId }) => {
 
           {/* List Sidebar */}
           <div style={styles.listsContainer}>
-            <button 
+            <button
               style={{ ...styles.listPill, ...(selectedListId === 'videos' ? styles.listPillActive : {}) }}
               onClick={() => setSelectedListId('videos')}
             >
               <span style={styles.listPillIcon}>🎥</span>
               <span>My Videos</span>
             </button>
-            
-            <button 
+
+            <button
               style={{ ...styles.listPill, ...(selectedListId === 'images' ? styles.listPillActive : {}) }}
               onClick={() => setSelectedListId('images')}
             >
@@ -103,7 +109,7 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId }) => {
             {lists.length > 0 && <div style={{ height: '1px', background: '#e5e7eb', margin: '4px 0' }} />}
 
             {lists.map(list => (
-              <button 
+              <button
                 key={list.id}
                 style={{ ...styles.listPill, ...(selectedListId === list.id ? styles.listPillActive : {}) }}
                 onClick={() => setSelectedListId(list.id)}

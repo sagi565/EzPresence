@@ -7,6 +7,10 @@ import SchedulerBar from '@components/Scheduler/SchedulerBar/DateNavigation';
 import CalendarGrid from '@components/Scheduler/Calendar/GridView/CalendarGrid';
 import FourDaysView from '@components/Scheduler/Calendar/FourDaysView/FourDaysView';
 import ContentDrawer from '@components/Scheduler/ContentDrawer/ContentDrawer';
+import NewStoryModal from '@components/Scheduler/CreateModals/NewStoryModal';
+import NewPostModal from '@components/Scheduler/CreateModals/NewPostModal';
+import { StoryFormData } from '@/models/StorySchedule';
+import { PostFormData } from '@/models/ScheduleFormData';
 import { styles } from './styles';
 
 const SchedulerPage: React.FC = () => {
@@ -15,23 +19,29 @@ const SchedulerPage: React.FC = () => {
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentDay, setCurrentDay] = useState(today.getDate());
   const [viewMode, setViewMode] = useState<'month' | '4days'>('month');
+  const [showNewStoryModal, setShowNewStoryModal] = useState(false);
+  const [showNewPostModal, setShowNewPostModal] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isPicking, setIsPicking] = useState(false);
 
   const { brands, currentBrand, switchBrand, loading: brandsLoading, error: brandsError } = useBrands();
-  
+
   console.log('🏢 [SchedulerPage] Current brand:', currentBrand?.id, currentBrand?.name);
-  
+
+
+
   // Use useSchedules instead of usePosts
-  const { 
-    posts, 
-    loading: schedulesLoading, 
-    error: schedulesError 
+  const {
+    posts,
+    loading: schedulesLoading,
+    error: schedulesError
   } = useSchedules(currentBrand?.id || '');
-  
+
   // Use useMediaContents instead of useContent
-  const { 
-    content, 
-    loading: contentLoading, 
-    error: contentError 
+  const {
+    content,
+    loading: contentLoading,
+    error: contentError
   } = useMediaContents(currentBrand?.id || '');
 
   console.log('📦 [SchedulerPage] Content state:', {
@@ -110,12 +120,13 @@ const SchedulerPage: React.FC = () => {
     );
   }
 
-  // Show message if no brand selected
+  // Show loading while auto-selecting brand
   if (!currentBrand) {
     return (
       <div style={styles.container}>
-        <div style={styles.errorContainer}>
-          <p style={styles.errorText}>No brand selected</p>
+        <div style={styles.loadingContainer}>
+          <div style={styles.spinner}></div>
+          <p style={styles.loadingText}>Setting up your workspace...</p>
         </div>
       </div>
     );
@@ -134,8 +145,10 @@ const SchedulerPage: React.FC = () => {
           onDayChange={handleDayChange}
           onDateSelect={handleDateSelect}
           onViewChange={handleViewChange}
+          onCreateStory={() => setShowNewStoryModal(true)}
+          onCreatePost={() => setShowNewPostModal(true)}
         />
-        
+
         {schedulesLoading ? (
           <div style={styles.calendarLoadingContainer}>
             <div style={styles.spinner}></div>
@@ -146,28 +159,91 @@ const SchedulerPage: React.FC = () => {
             <p style={styles.errorText}>{schedulesError}</p>
           </div>
         ) : viewMode === 'month' ? (
-          <CalendarGrid 
-            currentYear={currentYear} 
-            currentMonth={currentMonth} 
-            posts={posts} 
-            today={today} 
-            onDrop={handleDrop} 
+          <CalendarGrid
+            currentYear={currentYear}
+            currentMonth={currentMonth}
+            posts={posts}
+            today={today}
+            onDrop={handleDrop}
           />
         ) : (
-          <FourDaysView 
-            currentYear={currentYear} 
-            currentMonth={currentMonth} 
-            currentDay={currentDay} 
-            posts={posts} 
-            onDayChange={handleDayChange} 
-            onDrop={handleFourDaysViewDrop} 
+          <FourDaysView
+            currentYear={currentYear}
+            currentMonth={currentMonth}
+            currentDay={currentDay}
+            posts={posts}
+            onDayChange={handleDayChange}
+            onDrop={handleFourDaysViewDrop}
           />
         )}
       </div>
-      
-      <ContentDrawer 
-        content={content || []} 
-        brandId={currentBrand.id} 
+
+      <div className={`content-pick-overlay ${isDrawerOpen && isPicking ? 'active' : ''}`} onClick={() => {
+        if (isPicking) {
+          setIsPicking(false);
+          setIsDrawerOpen(false); // Close drawer on cancel
+        }
+      }} />
+
+      <ContentDrawer
+        brandId={currentBrand.id}
+        isOpen={isDrawerOpen}
+        onClose={() => {
+          setIsDrawerOpen(false);
+          setIsPicking(false);
+        }}
+        onToggle={() => setIsDrawerOpen(!isDrawerOpen)}
+        isPicking={isPicking}
+      />
+
+      <NewStoryModal
+        isOpen={showNewStoryModal}
+        onClose={() => {
+          setShowNewStoryModal(false);
+          setIsPicking(false);
+        }}
+        brandId={currentBrand?.id || ''}
+        onSchedule={(formData: StoryFormData) => {
+          console.log('📅 Scheduling story:', formData);
+          alert('Story scheduled! (Mock implementation)');
+          setShowNewStoryModal(false);
+        }}
+        onSaveDraft={(formData: StoryFormData) => {
+          console.log('💾 Saving story draft:', formData);
+          alert('Story saved as draft! (Mock implementation)');
+          setShowNewStoryModal(false);
+        }}
+        content={content || []}
+        onOpenDrawer={(pickingMode?: boolean) => {
+          setIsDrawerOpen(true);
+          if (pickingMode) setIsPicking(true);
+        }}
+        onCancelPicking={() => setIsPicking(false)}
+      />
+
+      <NewPostModal
+        isOpen={showNewPostModal}
+        onClose={() => {
+          setShowNewPostModal(false);
+          setIsPicking(false);
+        }}
+        brandId={currentBrand?.id || ''}
+        onSchedule={(formData: PostFormData) => {
+          console.log('📅 Scheduling post:', formData);
+          alert('Post scheduled! (Mock implementation)');
+          setShowNewPostModal(false);
+        }}
+        onSaveDraft={(formData: PostFormData) => {
+          console.log('💾 Saving post draft:', formData);
+          alert('Post saved as draft! (Mock implementation)');
+          setShowNewPostModal(false);
+        }}
+        content={content || []}
+        onOpenDrawer={(pickingMode?: boolean) => {
+          setIsDrawerOpen(true);
+          if (pickingMode) setIsPicking(true);
+        }}
+        onCancelPicking={() => setIsPicking(false)}
       />
     </div>
   );
