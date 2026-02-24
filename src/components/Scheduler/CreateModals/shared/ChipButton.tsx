@@ -24,6 +24,7 @@ const ChipButton: React.FC<ChipButtonProps> = ({
 }) => {
     return (
         <div
+            className={`chip-button ${small ? 'chip-button-small' : ''}`}
             style={{
                 ...styles.chip,
                 ...(small ? styles.chipSmall : {}),

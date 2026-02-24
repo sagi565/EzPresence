@@ -21,6 +21,7 @@ interface ContentListProps {
   onToggleFavorite: (itemId: string) => void;
   onUpload: (file: File) => void;
   onItemClick: (itemId: string) => void;
+  onItemDoubleClick?: (itemId: string) => void;
   onSaveChanges?: () => void;
 }
 
@@ -29,10 +30,11 @@ const DraggableItem: React.FC<{
   item: any;
   listId: string;
   onItemClick: (itemId: string) => void;
+  onItemDoubleClick?: (itemId: string) => void;
   onItemDelete: (itemId: string) => void;
   onItemRename: (itemId: string, newName: string) => void;
   onToggleFavorite: (itemId: string) => void;
-}> = ({ item, listId, onItemClick, onItemDelete, onItemRename, onToggleFavorite }) => {
+}> = ({ item, listId, onItemClick, onItemDoubleClick, onItemDelete, onItemRename, onToggleFavorite }) => {
   const { activeId } = useDndState();
 
   const {
@@ -70,6 +72,7 @@ const DraggableItem: React.FC<{
         listType="video"
         isDragging={isBeingDragged}
         onClick={() => !isDragging && onItemClick(item.id)}
+        onDoubleClick={() => !isDragging && onItemDoubleClick?.(item.id)}
         onDelete={() => onItemDelete(item.id)}
         onRename={(newName) => onItemRename(item.id, newName)}
         onToggleFavorite={() => onToggleFavorite(item.id)}
@@ -89,6 +92,7 @@ const ContentList: React.FC<ContentListProps> = ({
   onToggleFavorite,
   onUpload,
   onItemClick,
+  onItemDoubleClick,
   onSaveChanges,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -243,6 +247,7 @@ const ContentList: React.FC<ContentListProps> = ({
               item={item}
               listId={list.id}
               onItemClick={onItemClick}
+              onItemDoubleClick={onItemDoubleClick}
               onItemDelete={setItemToDelete}
               onItemRename={onItemRename}
               onToggleFavorite={onToggleFavorite}

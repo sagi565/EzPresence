@@ -9,32 +9,42 @@ export interface ConnectedPlatform {
     accountId?: string;
 }
 
-export interface ApiPlatformAccountDto {
-    platform?: string | null;
-    username?: string | null;
+export interface ApiPlatformAccountDetails {
+    accountId?: string | number | null;
     displayName?: string | null;
-    profilePicture?: string | null;
-    accountId?: string | null;
+    username?: string | null;
+    thumbnailUrl?: string | null;
 }
+
+export type ApiPlatformAccountDto = Record<string, ApiPlatformAccountDetails>;
 
 // Helper to convert API response to ConnectedPlatform
 export const convertApiPlatformToConnected = (
     apiPlatform: ApiPlatformAccountDto
 ): ConnectedPlatform | null => {
-    if (!apiPlatform.platform || !apiPlatform.username) return null;
+    // The object typically has one key, e.g. "INSTAGRAM"
+    const keys = Object.keys(apiPlatform);
+    if (keys.length === 0) return null;
 
-    const platform = apiPlatform.platform.toLowerCase() as SocialPlatform;
+    const platformKey = keys[0];
+    const details = apiPlatform[platformKey];
+
+    // Normalize platform key to lower case to match SocialPlatform type
+    const platform = platformKey.toLowerCase() as SocialPlatform;
+
     if (!['instagram', 'facebook', 'youtube', 'tiktok'].includes(platform)) {
         return null;
     }
 
+    if (!details || !details.username) return null;
+
     return {
         platform,
-        username: apiPlatform.username,
-        displayName: apiPlatform.displayName || apiPlatform.username,
-        profilePicture: apiPlatform.profilePicture || undefined,
+        username: details.username,
+        displayName: details.displayName || details.username,
+        profilePicture: details.thumbnailUrl || undefined,
         isConnected: true,
-        accountId: apiPlatform.accountId || undefined,
+        accountId: details.accountId?.toString() || undefined,
     };
 };
 

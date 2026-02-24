@@ -10,6 +10,7 @@ interface CalendarDayProps {
   isToday: boolean;
   posts: Post[];
   onDrop: (date: Date, contentId: string) => void;
+  onPostClick: (post: Post) => void;
 }
 
 const CalendarDay: React.FC<CalendarDayProps> = ({
@@ -19,6 +20,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
   isToday,
   posts,
   onDrop,
+  onPostClick,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -36,7 +38,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    const contentId = e.dataTransfer.getData('content');
+    const contentId = e.dataTransfer.getData('contentId');
     onDrop(date, contentId);
   };
 
@@ -66,7 +68,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
     >
       <div style={isToday ? styles.dayNumberToday : styles.dayNumber}>{day}</div>
       {visiblePosts.map((post) => (
-        <PostItem key={post.id} post={post} />
+        <PostItem key={post.id} post={post} onClick={onPostClick} />
       ))}
       {hasOverflow && (
         <div style={styles.overflowIndicator}>+{posts.length - maxVisible}</div>

@@ -10,7 +10,7 @@ const ChipArrow: React.FC = () => {
 
 const styles = {
     chipArrow: {
-        fontSize: '10px',
+        fontSize: '14px',
         color: theme.colors.muted,
         marginLeft: '10px',
         flexShrink: 0,

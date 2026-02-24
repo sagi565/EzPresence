@@ -415,25 +415,27 @@ export const globalStyles = `
 
   /* Content-picking overlay — dedicated layer above modal, below drawer */
   .content-pick-overlay {
-    position: fixed; inset: 0;
-    background: rgba(17, 24, 39, 0.55);
-    z-index: 1650;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1550; /* Lower than modal (1600) so drop zones work */
     opacity: 0;
     pointer-events: none;
-    transition: opacity .25s ease;
+    transition: opacity .3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+
   .content-pick-overlay.active {
     opacity: 1;
     pointer-events: auto;
   }
 
   /* Drawer elevated during content picking — always above the pick overlay */
-  .content-drawer.nsm-picking {
-    z-index: 1700 !important;
+  #contentDrawer.nsm-picking {
+    z-index: 2000 !important;
   }
   
   /* Disable drawer handle interaction during content picking */
-  .content-drawer.nsm-picking .drawer-handle {
+  #contentDrawer.nsm-picking .content-drawer-handle {
     cursor: default;
     pointer-events: none;
   }

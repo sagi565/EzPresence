@@ -5,9 +5,10 @@ import { styles } from './styles';
 interface FourDaysViewPostProps {
   post: Post;
   isHalf?: boolean;
+  onClick?: (post: Post) => void;
 }
 
-const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = false }) => {
+const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = false, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isStatusHovered, setIsStatusHovered] = useState(false);
   const mediaEmoji = post.media === 'video' ? '🎥' : '🖼️';
@@ -23,6 +24,8 @@ const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = fals
         return 'Failed';
       case 'scheduled':
         return 'Scheduled';
+      case 'draft':
+        return 'Draft';
       default:
         return status;
     }
@@ -35,7 +38,7 @@ const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = fals
   };
 
   return (
-    <div style={postStyle} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    <div style={{ ...postStyle, cursor: onClick ? 'pointer' : undefined }} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} onClick={() => onClick?.(post)}>
       <div style={styles.postHeader}>
         <div style={styles.postLeft}>
           <div
@@ -51,6 +54,7 @@ const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = fals
                 ...(post.status === 'success' ? styles.statusSuccess : {}),
                 ...(post.status === 'failed' ? styles.statusFailed : {}),
                 ...(post.status === 'scheduled' ? styles.statusScheduled : {}),
+                ...(post.status === 'draft' ? styles.statusDraft : {}),
               }}
               onMouseEnter={() => setIsStatusHovered(true)}
               onMouseLeave={() => setIsStatusHovered(false)}
@@ -78,7 +82,7 @@ const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = fals
               {isMediaHovered && (
                 <div style={styles.blackTooltip}>{mediaText}</div>
               )}
-              
+
             </span>
           </div>
         </div>

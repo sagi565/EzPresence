@@ -4,18 +4,20 @@ import { CSSProperties } from 'react';
 export const styles: Record<string, CSSProperties> = {
     container: {
         position: 'absolute' as const,
-        top: 'calc(100% + 4px)',
+        top: 'calc(100% + 6px)',
         left: 0,
-        width: '260px', // Reduced width
-        maxHeight: '280px', // Reduced max height
-        background: '#fff',
-        borderRadius: '10px', // Slightly smaller radius
-        boxShadow: '0 6px 20px rgba(0, 0, 0, .12), 0 0 0 1px rgba(0, 0, 0, .04)',
+        width: '280px',
+        maxHeight: '300px',
+        background: theme.colors.surface,
+        borderRadius: '12px',
+        boxShadow: '0 12px 40px rgba(0, 0, 0, .14)',
+        border: '1px solid rgba(0, 0, 0, .06)',
         zIndex: 1000,
         display: 'flex',
         flexDirection: 'column' as const,
         overflow: 'hidden',
-        fontSize: '13px', // Base font size smaller
+        fontSize: '13px',
+        padding: '8px 0', // Add some vertical padding internally
     },
 
     searchBox: {

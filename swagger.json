@@ -285,6 +285,19 @@
         }
       }
     },
+    "/api/brands/delete-all-brands": {
+      "delete": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Deletes all brands associated with the currently authenticated user.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/contentlists": {
       "get": {
         "tags": [
@@ -724,6 +737,36 @@
         }
       }
     },
+    "/api/platforms": {
+      "get": {
+        "tags": [
+          "Platforms"
+        ],
+        "summary": "Retrieves a list of connected social accounts for the active brand.\r\nOptional query param 'platform' to filter by specific platform (e.g. 'tiktok').",
+        "parameters": [
+          {
+            "name": "platform",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uninitializedBrandUuid",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/platforms/connect": {
       "get": {
         "tags": [
@@ -847,6 +890,34 @@
             "description": "OK"
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "Deletes schedules or specific occurrences based on the CalendarItemId and deleteOccurrenceOnly flag.",
+        "parameters": [
+          {
+            "name": "calendarItemId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deleteOccurrenceOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/schedules": {
@@ -914,7 +985,7 @@
           "Schedules"
         ],
         "summary": "Partially updates an existing schedule using a set of updated properties.",
-        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>ScheduleName</b> (string) – Logical name of the schedule</li>\r\n  <li>\r\n    <b>ScheduleTitle</b> (string) – Display title of the schedule</li>\r\n  <li>\r\n    <b>ScheduleDescription</b> (string) – Description of the schedule</li>\r\n  <li>\r\n    <b>PostType</b> (string) – Post type (e.g. \"Post\", \"Story\")</li>\r\n  <li>\r\n    <b>RruleText</b> (string, optional) – RRULE for recurring schedules</li>\r\n  <li>\r\n    <b>StartDate</b> (date, optional) – Start date for recurring schedules</li>\r\n  <li>\r\n    <b>EndDate</b> (date, optional) – End date for recurring schedules</li>\r\n  <li>\r\n    <b>PlannedAtUtc</b> (datetime, optional) – UTC time for one-time schedules</li>\r\n  <li>\r\n    <b>Targets</b> (string[]) – Target platforms (e.g. INSTAGRAM, FACEBOOK)</li>\r\n  <li>\r\n    <b>ContentUuids</b> (uuid[]) – Media content public IDs for this schedule</li>\r\n</ul>",
+        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>ScheduleName</b> (string) – Logical name of the schedule</li>\r\n  <li>\r\n    <b>ScheduleTitle</b> (string) – Display title of the schedule</li>\r\n  <li>\r\n    <b>ScheduleDescription</b> (string) – Description of the schedule</li>\r\n  <li>\r\n    <b>PostType</b> (string) – Post type (e.g. \"Post\", \"Story\")</li>\r\n  <li>\r\n    <b>RruleText</b> (string, optional) – RRULE for recurring schedules</li>\r\n  <li>\r\n    <b>StartDate</b> (date, optional) – Start date for recurring schedules</li>\r\n  <li>\r\n    <b>EndDate</b> (date, optional) – End date for recurring schedules</li>\r\n  <li>\r\n    <b>PlannedAtUtc</b> (datetime, optional) – UTC time for one-time schedules</li>\r\n  <li>\r\n    <b>Targets</b> (string[]) – Target platforms (e.g. INSTAGRAM, FACEBOOK)</li>\r\n  <li>\r\n    <b>ContentUuids</b> (uuid[]) – Media content public IDs for this schedule</li>\r\n  <li>\r\n    <b>Status</b> (string) – Status of the schedule posts</li>\r\n</ul>",
         "requestBody": {
           "content": {
             "application/json": {
@@ -934,29 +1005,6 @@
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/schedules/scheduleId": {
-      "get": {
-        "tags": [
-          "Schedules"
-        ],
-        "summary": "Retrieves all calendar items associated with a specific schedule public ID.",
-        "parameters": [
-          {
-            "name": "scheduleUuid",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1109,6 +1157,96 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/studio/showtime-lineup": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Generates a lineup of media scenes based on the provided text.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShowtimeLineupRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShowtimeLineupRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShowtimeLineupRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TextMediaLineupDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TextMediaLineupDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TextMediaLineupDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/run-creator": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Starts a creator process (e.g., Showtime).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatorRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatorRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatorRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -1324,6 +1462,16 @@
         },
         "additionalProperties": false
       },
+      "ContentStatus": {
+        "enum": [
+          "Uploading",
+          "Ready",
+          "Deleted",
+          "Aborted",
+          "Error"
+        ],
+        "type": "string"
+      },
       "CreateUploadPlanRequestDto": {
         "type": "object",
         "properties": {
@@ -1342,6 +1490,36 @@
           "isEzGenerated": {
             "type": "boolean",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreatorParamsDto": {
+        "type": "object",
+        "properties": {
+          "props": {
+            "type": "object",
+            "additionalProperties": { },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreatorRequestDto": {
+        "type": "object",
+        "properties": {
+          "creatorName": {
+            "type": "string",
+            "nullable": true
+          },
+          "videoMetadata": {
+            "$ref": "#/components/schemas/VideoMetadataDto"
+          },
+          "creatorParams": {
+            "$ref": "#/components/schemas/CreatorParamsDto"
+          },
+          "wizardParams": {
+            "$ref": "#/components/schemas/WizardParamsDto"
           }
         },
         "additionalProperties": false
@@ -1391,8 +1569,7 @@
             "nullable": true
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "$ref": "#/components/schemas/ContentStatus"
           },
           "softDeleteUntil": {
             "type": "string",
@@ -1544,6 +1721,10 @@
               "format": "uuid"
             },
             "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1562,6 +1743,37 @@
           },
           "updateOccurrenceOnly": {
             "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ShowtimeLineupRequestDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "subject": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TextMediaLineupDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "srcs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
             "nullable": true
           }
         },
@@ -1602,6 +1814,45 @@
         "type": "object",
         "properties": {
           "updatedProperties": {
+            "type": "object",
+            "additionalProperties": { },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "VideoMetadataDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WizardParamsDto": {
+        "type": "object",
+        "properties": {
+          "captionsTheme": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarConfig": {
+            "type": "object",
+            "additionalProperties": { },
+            "nullable": true
+          },
+          "signatureConfig": {
+            "type": "object",
+            "additionalProperties": { },
+            "nullable": true
+          },
+          "voiceConfig": {
             "type": "object",
             "additionalProperties": { },
             "nullable": true

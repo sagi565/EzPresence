@@ -70,7 +70,7 @@ const mapBackendIcon = (iconKey: string | null | undefined, listName: string | n
   if (name.includes('uploaded images') || key.includes('upload') && name.includes('image')) return '🖼️';
   if (name.includes('producer') || key.includes('producer')) return '🎯';
   if (name.includes('creators') || key.includes('creators')) return '👥';
-  
+
   return iconKey; // Fallback to original if it's already an emoji
 };
 
@@ -89,7 +89,7 @@ const isSystemListName = (name: string | null | undefined): boolean => {
 
 export const convertApiContentListToContentList = (apiList: ApiContentListDto): ContentList => {
   const listName = apiList.listName || 'Untitled List';
-  
+
   // All lists now use vertical (video) format - no more horizontal images
   const listType: 'video' | 'image' = 'video';
 

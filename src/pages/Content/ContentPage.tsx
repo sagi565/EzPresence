@@ -79,14 +79,18 @@ const ListDragPreview: React.FC<{ list: any }> = ({ list }) => {
         width: '48px',
         height: '48px',
         borderRadius: '50%',
-        background: 'white',
+        background: list.title?.includes('Made by Creators')
+          ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%)'
+          : 'white',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
         fontSize: '20px',
         cursor: 'grabbing',
-        border: '2px solid rgba(155, 93, 229, 0.4)',
+        border: list.title?.includes('Made by Creators')
+          ? '2px solid rgba(168, 85, 247, 0.5)'
+          : '2px solid rgba(155, 93, 229, 0.4)',
       }}
     >
       {list.icon}
@@ -122,7 +126,7 @@ interface ContentPageInnerProps {
   brands: any[];
   currentBrand: any;
   switchBrand: (brandId: string) => void;
-  lists: any[];
+  lists: any[]; // Using any to avoid circular dependency/type issues with ContentList component vs model
   addNewList: () => void;
   clearNewListFlag: () => void;
   deleteList: (listId: string) => void;
@@ -218,6 +222,15 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
 
   const [deleteFromModal, setDeleteFromModal] = useState(false);
   const [hoveredAddButton, setHoveredAddButton] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDeleteListWithAnimation = (listId: string) => {
+    setDeletingId(listId);
+    setTimeout(() => {
+      deleteList(listId);
+      setDeletingId(null);
+    }, 500);
+  };
 
   const handleIconClick = (listId: string, element: HTMLElement) => {
     setEmojiPicker({
@@ -386,23 +399,50 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
     };
   }, [currentIndex, isScrolling, lists.length]);
 
+  const animateScroll = (element: HTMLElement, target: number, duration: number) => {
+    const start = element.scrollTop;
+    const change = target - start;
+    const startTime = performance.now();
+
+    // Easing function: easeInOutCubic for a strong fast start/end
+    const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      const ease = easeInOutCubic(progress);
+      element.scrollTop = start + change * ease;
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setIsScrolling(false);
+      }
+    };
+
+    setIsScrolling(true);
+    requestAnimationFrame(animate);
+  };
+
   const scrollToList = (index: number) => {
     const targetList = listsRef.current[index];
     const container = containerRef.current;
 
     if (targetList && container) {
-      setIsScrolling(true);
+      // Clear any auto-scroll timeouts
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
 
       const containerHeight = container.clientHeight;
       const listTop = targetList.offsetTop;
       const listHeight = targetList.offsetHeight;
       const scrollPosition = listTop - (containerHeight - listHeight) / 2;
 
-      container.scrollTo({ top: scrollPosition, behavior: 'smooth' });
-      setCurrentIndex(index);
+      // Use custom animation instead of native smooth scroll
+      // 500ms duration gives a "fast" but clearly visible scroll
+      animateScroll(container, scrollPosition, 500);
 
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = setTimeout(() => setIsScrolling(false), 600);
+      setCurrentIndex(index);
     }
   };
 
@@ -414,7 +454,7 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
 
   const handleItemClick = (itemId: string, listId: string) => {
     const list = lists.find(l => l.id === listId);
-    const item = list?.items.find(i => i.id === itemId);
+    const item = list?.items.find((i: ContentItem) => i.id === itemId);
     if (item) {
       setDetailModal({ isOpen: true, item, listId });
     }
@@ -472,7 +512,7 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
               <ContentList
                 list={list}
                 isNewList={newlyCreatedListId === list.id}
-                onDelete={() => deleteList(list.id)}
+                onDelete={() => handleDeleteListWithAnimation(list.id)}
                 onTitleChange={(newTitle) => updateListTitle(list.id, newTitle)}
                 onIconClick={(element: HTMLElement) => handleIconClick(list.id, element)}
                 onItemMove={() => { }}
@@ -492,8 +532,9 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
         lists={lists}
         currentIndex={currentIndex}
         onNavigate={scrollToList}
-        onDelete={(listId) => deleteList(listId)}
+        onDelete={(listId) => handleDeleteListWithAnimation(listId)}
         onReorder={onReorder}
+        deletingId={deletingId}
       />
 
       <EmojiPicker

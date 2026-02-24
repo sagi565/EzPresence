@@ -85,10 +85,7 @@ const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreateStory, onCr
             onMouseLeave={() => setHoveredItem(null)}
           >
             <span>📤</span>
-            <div style={styles.optionInfo}>
-              <span style={styles.optionLabel}>New Post</span>
-              <span style={styles.optionDesc}>Schedule a post for feed</span>
-            </div>
+            <span>New Post</span>
           </div>
           <div
             style={dropdownItemStyle('story')}

@@ -102,30 +102,41 @@ export const useConnectPlatform = (
 
       // Wait for popup to close
       await new Promise<void>((resolve, reject) => {
+        let isSuccess = false;
+
+        const messageHandler = (event: MessageEvent) => {
+          if (event.data?.type === 'oauth_success') {
+            isSuccess = true;
+            window.removeEventListener('message', messageHandler);
+            resolve();
+          } else if (event.data?.type === 'oauth_error') {
+            window.removeEventListener('message', messageHandler);
+            reject(new Error(event.data.error));
+          }
+        };
+
+        window.addEventListener('message', messageHandler);
+
         const pollInterval = setInterval(() => {
           if (popup.closed) {
             clearInterval(pollInterval);
-            resolve();
+            window.removeEventListener('message', messageHandler);
+            if (isSuccess) {
+              // Already resolved
+            } else {
+              // Closed without success message
+              reject(new Error('Connection cancelled or failed'));
+            }
           }
         }, 500);
 
+        // Safety timeout
         setTimeout(() => {
           clearInterval(pollInterval);
-          popup.close();
-          reject(new Error('Timeout'));
+          window.removeEventListener('message', messageHandler);
+          if (!popup.closed) popup.close();
+          if (!isSuccess) reject(new Error('Timeout'));
         }, 5 * 60 * 1000);
-
-        window.addEventListener('message', (event) => {
-          if (event.data?.type === 'oauth_success') {
-            clearInterval(pollInterval);
-            popup.close();
-            resolve();
-          } else if (event.data?.type === 'oauth_error') {
-            clearInterval(pollInterval);
-            popup.close();
-            reject(new Error(event.data.error));
-          }
-        });
       });
 
       // Set connected account
@@ -152,7 +163,12 @@ export const useConnectPlatform = (
     setError(null);
 
     try {
-      await api.delete(`/platforms/disconnect?platform=${platform}`);
+      let url = `/platforms/disconnect?platform=${platform}`;
+      if (brandId && isUninitialized) {
+        url += `&uninitializedBrandUuid=${brandId}`;
+      }
+
+      await api.delete(url);
       setAccount(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Disconnect failed';
@@ -160,7 +176,7 @@ export const useConnectPlatform = (
     } finally {
       setLoading(false);
     }
-  }, [platform]);
+  }, [platform, brandId, isUninitialized]);
 
   return {
     isConnected: account !== null && account.isConnected,

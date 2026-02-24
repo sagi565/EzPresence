@@ -54,9 +54,11 @@ const DatePicker: React.FC<DatePickerProps> = ({
     const handleDayClick = (day: number) => {
         const newDate = new Date(viewYear, viewMonth, day);
 
-        // Check if date is in the past
-        if (minDate && newDate < minDate) {
-            return;
+        // Normalize minDate to start of day for fair comparison
+        if (minDate) {
+            const minDateStart = new Date(minDate);
+            minDateStart.setHours(0, 0, 0, 0);
+            if (newDate < minDateStart) return;
         }
 
         onChange(newDate);
@@ -73,6 +75,10 @@ const DatePicker: React.FC<DatePickerProps> = ({
 
         const selectedDateNormalized = new Date(selectedDate);
         selectedDateNormalized.setHours(0, 0, 0, 0);
+
+        // Normalize minDate for rendering disabled state
+        const minDateStart = minDate ? new Date(minDate) : null;
+        if (minDateStart) minDateStart.setHours(0, 0, 0, 0);
 
         const days: JSX.Element[] = [];
 
@@ -97,7 +103,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
 
             const isToday = date.getTime() === today.getTime();
             const isSelected = date.getTime() === selectedDateNormalized.getTime();
-            const isPast = minDate && date < minDate;
+            const isPast = minDateStart && date < minDateStart;
 
             const dayStyle = {
                 ...styles.day,
@@ -106,12 +112,19 @@ const DatePicker: React.FC<DatePickerProps> = ({
                 ...(isPast ? styles.dayDisabled : {}),
             };
 
+            const dayClass = `nsm-dp-day ${isSelected ? 'selected' : ''}`;
+
             days.push(
                 <button
                     key={`current-${day}`}
+                    className={dayClass}
                     style={dayStyle}
-                    onClick={() => handleDayClick(day)}
-                    disabled={isPast}
+                    type="button"
+                    onMouseDown={(e) => {
+                        e.preventDefault(); // Prevent focus loss/blur
+                        handleDayClick(day);
+                    }}
+                    disabled={!!isPast}
                 >
                     {day}
                 </button>
@@ -123,6 +136,18 @@ const DatePicker: React.FC<DatePickerProps> = ({
 
     return (
         <div style={styles.container} className="date-picker" onClick={(e) => e.stopPropagation()}>
+            <style>
+                {`
+                    .nsm-dp-day:hover:not(:disabled) {
+                        background-color: rgba(155, 93, 229, 0.1) !important;
+                        font-weight: 600;
+                    }
+                    .nsm-dp-day.selected:hover {
+                        background-color: var(--color-primary, #9b5de5) !important;
+                        color: #fff !important;
+                    }
+                `}
+            </style>
             <div style={styles.header}>
                 <button style={styles.arrow} onClick={() => navigate(-1)}>
                     ‹

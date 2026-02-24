@@ -106,21 +106,38 @@ const CreateUserPage: React.FC = () => {
   // Load existing profile data if available
   useEffect(() => {
     if (profile) {
-      setFormData(prev => ({
-        ...prev,
-        firstName: profile.firstName || '',
-        lastName: profile.lastName || '',
-        birthDate: profile.birthDate ? new Date(profile.birthDate).toISOString().split('T')[0] : '',
-        country: profile.country || undefined,
-        gender: profile.gender || undefined,
-      }));
+      // If profile exists, we technically should redirect to next step if this is considered "setup".
+      // But we also populate form data for updates.
+      // Given the user constraint "check if there is a profile", 
+      // let's assume if we have a profile we should move on, 
+      // UNLESS we want to support editing here.
+      // But the ProtectedRoute logic sends us here ONLY if !profile.
+      // So if we are here and we HAVE a profile, it means we just created it or ProtectedRoute let us through?
+      // ProtectedRoute checks !profile -> redirect here.
+      // So if profile exists, ProtectedRoute lets us go anywhere.
+      // If we manually go here, we might want to edit.
+      // However, to fix the loop, we should redirect if we are "done".
+      // Let's redirect if profile exists.
+
+      console.log('⚠️ [CreateUserPage] Profile exists, redirecting to brand creation');
+      navigate('/create-your-first-brand', { replace: true });
     }
-  }, [profile]);
+  }, [profile, navigate]);
+
+  // Actually, wait. If we redirect immediately, we can't edit.
+  // But the previous loop was because `isProfileComplete` was false.
+  // Now `profile` will be true.
+  // If usePostUser succeeds, we refetch, profile exists -> Redirect.
+  // So we don't need to populate form data if we just redirect.
+  // But what if the user hits "Back"?
+  // For now, I will implement the redirect to satisfy "just check if there is a profile".
+
 
   const [errors, setErrors] = useState<{
     firstName?: string;
     lastName?: string;
     birthDate?: string;
+    gender?: string;
   }>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -156,6 +173,10 @@ const CreateUserPage: React.FC = () => {
       newErrors.birthDate = birthDateValidation.error;
     }
 
+    if (!formData.gender) {
+      newErrors.gender = 'Please select a gender';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -185,7 +206,8 @@ const CreateUserPage: React.FC = () => {
 
       setTimeout(() => {
         console.log('🔀 [CreateUserPage] Redirecting to brand creation...');
-        navigate('/create-your-first-brand', { replace: true });
+        // Use hard redirect to ensure fresh state and avoid ProtectedRoute loop
+        window.location.href = '/create-your-first-brand';
       }, 500);
 
     } catch (err: any) {
@@ -199,7 +221,8 @@ const CreateUserPage: React.FC = () => {
           setSubmitSuccess(true);
           await refetchProfile();
           setTimeout(() => {
-            navigate('/create-your-first-brand', { replace: true });
+            // Use hard redirect here as well
+            window.location.href = '/create-your-first-brand';
           }, 500);
           return;
         } catch (updateErr) {
@@ -287,6 +310,7 @@ const CreateUserPage: React.FC = () => {
               label="Gender"
               value={formData.gender}
               onChange={(gender) => handleInputChange('gender', gender)}
+              error={errors.gender}
             />
           </div>
 

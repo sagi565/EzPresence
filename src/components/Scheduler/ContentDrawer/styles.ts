@@ -16,7 +16,7 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '24px 24px 0 0',
     boxShadow: '0 -4px 20px rgba(155, 93, 229, 0.1)',
     transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
-    zIndex: 900,
+    zIndex: 2000, /* Ensure it is above the modal (1600) and overlay (1650) */
     display: 'flex',
     flexDirection: 'column',
     transform: 'translateY(calc(100% - 70px))',

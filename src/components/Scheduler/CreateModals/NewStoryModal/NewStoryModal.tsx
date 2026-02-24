@@ -1,17 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { getDefaultStoryFormData } from '@/models/ScheduleFormData';
+import React, { useState, useEffect, useMemo } from 'react';
+import { getDefaultStoryFormData, DEFAULT_INSTAGRAM_CONFIG, DEFAULT_FACEBOOK_CONFIG } from '@/models/ScheduleFormData';
 import { StoryFormData } from '@/models/StorySchedule';
 import DatePicker from '../shared/DatePicker';
 import TimePicker from '../shared/TimePicker';
 import RepeatSelector from '../shared/RepeatSelector';
-import TimezoneSelector, { TIMEZONES, TimezoneOption } from '../shared/TimezoneSelector';
+import TimezoneSelector, { TIMEZONES, TimezoneOption, getTimezoneLabel } from '../shared/TimezoneSelector';
 import { ContentItem } from '@/models/ContentList';
 import { useConnectedPlatforms } from '@/hooks/platforms/useConnectedPlatforms';
 import { useUserProfile } from '@/hooks/user/useUserProfile';
+import { useBrands } from '@/hooks/brands/useBrands';
+import { useSchedules } from '@/hooks/useSchedules';
 import { theme } from '@/theme/theme';
 import { useContentPicking } from '../shared/useContentPicking';
 
 import ScheduleModalLayout from '../shared/ScheduleModalLayout';
+import ConfirmDialog from '../shared/ConfirmDialog';
 import ContentPreview from '../shared/ContentPreview';
 import ChipButton from '../shared/ChipButton';
 import ChipArrow from '../shared/ChipArrow';
@@ -27,26 +30,86 @@ interface NewStoryModalProps {
     content: ContentItem[];
     onOpenDrawer: (pickingMode?: boolean) => void;
     onCancelPicking?: () => void;
+    onContentDrop?: () => void;
+    lastPickedContent?: ContentItem | null;
+    status?: string;
 }
 
 const NewStoryModal: React.FC<NewStoryModalProps> = ({
     isOpen,
     onClose,
-    onSchedule,
+    onSchedule: onScheduleProp,
     onSaveDraft,
     brandId,
     initialData,
     content,
     onOpenDrawer,
-    onCancelPicking
+    onCancelPicking,
+    onContentDrop,
+    lastPickedContent,
+    status
 }) => {
+    const { currentBrand } = useBrands();
+    const { createSchedule, updateSchedule, deleteSchedule } = useSchedules(currentBrand?.id || '');
+
     const [formData, setFormData] = useState<StoryFormData>(getDefaultStoryFormData() as StoryFormData);
+
+    // Determine if the story is read-only (in the past or already published)
+    const isPast = useMemo(() => {
+        if (!formData.date) return false;
+        try {
+            const { hours, minutes } = parseTimeString(formData.time);
+            const scheduledDate = new Date(formData.date);
+            scheduledDate.setHours(hours, minutes, 0, 0);
+            return scheduledDate < new Date();
+        } catch (e) {
+            return false;
+        }
+    }, [formData.date, formData.time]);
+
+    const isPublished = status === 'success';
+    const isReadOnly = (isPast || isPublished) && !!formData.calendarItemId;
+
+    // Listen for external picks (drawer double-click)
+    useEffect(() => {
+        if (lastPickedContent) {
+            handleContentSelect(lastPickedContent);
+        }
+    }, [lastPickedContent]);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [showRepeatSelector, setShowRepeatSelector] = useState(false);
     const [showTimezoneSelector, setShowTimezoneSelector] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
-    const [expandedPlatform, setExpandedPlatform] = useState<'instagram' | 'facebook' | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<{ title?: string; platform?: string; date?: string; content?: string }>({});
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    const handleDelete = () => {
+        if (!formData.scheduleUuid && !formData.calendarItemId) return;
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        setShowDeleteConfirm(false);
+        try {
+            setIsSubmitting(true);
+
+            // Construct the planned date using formData.date and formData.time
+            const { hours, minutes } = parseTimeString(formData.time);
+            const plannedDate = new Date(formData.date);
+            plannedDate.setHours(hours, minutes, 0, 0);
+
+            await deleteSchedule(formData.scheduleUuid || '', plannedDate);
+            onClose();
+            if (onScheduleProp) onScheduleProp(formData);
+        } catch (error) {
+            console.error('Failed to delete story:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
 
     // Fetch connected platforms
     const { platforms } = useConnectedPlatforms(brandId);
@@ -55,19 +118,15 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     const { profile } = useUserProfile();
 
     // Content Picking Hook
-    const contentPreviewRef = useRef<HTMLDivElement>(null);
 
     const handleContentPick = (item: any) => {
         const contentItem = content.find(c => c.id === item.id) || item;
         handleContentSelect(contentItem);
     };
 
-    const { startPicking } = useContentPicking({
-        contentPreviewRef,
-        onCancel: () => {
-            if (onCancelPicking) onCancelPicking();
-        },
-        onPick: handleContentPick
+    const { startPicking, cancelPicking } = useContentPicking({
+        onPick: handleContentPick,
+        targetType: 'story'
     });
 
     // Auto-detect timezone based on user country
@@ -89,14 +148,67 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     useEffect(() => {
         if (isOpen) {
             const defaultData = getDefaultStoryFormData() as StoryFormData;
-            setFormData({
+
+            // Handle platform mapping from Post model (array) to Form data (object)
+            const initialPlatforms = initialData?.platforms;
+            let formattedPlatforms = defaultData.platforms;
+
+            if (Array.isArray(initialPlatforms)) {
+                // If coming from Post model (array of strings)
+                initialPlatforms.forEach((p: any) => {
+                    const platformKey = p.toLowerCase() as 'instagram' | 'facebook';
+                    if (formattedPlatforms[platformKey]) {
+                        formattedPlatforms[platformKey] = {
+                            ...formattedPlatforms[platformKey]!,
+                            enabled: true
+                        };
+                    }
+                });
+            } else if (initialPlatforms && typeof initialPlatforms === 'object') {
+                // If it's already in the correct format (e.g. from draft)
+                formattedPlatforms = { ...formattedPlatforms, ...initialPlatforms };
+            }
+
+            let newFormData = {
                 ...defaultData,
                 ...initialData,
-            });
-        }
-    }, [isOpen, initialData]);
+                platforms: formattedPlatforms
+            };
 
-    // Handle escape key
+            // Hydrate content details if ID is present
+            // NEW: Take first element from contents/contentUuids if contentId is not yet set
+            if (!newFormData.contentId) {
+                const firstContentId = initialData?.contents?.[0] || initialData?.contentUuids?.[0];
+                if (firstContentId) {
+                    newFormData.contentId = firstContentId;
+                }
+            }
+
+            if (newFormData.contentId && content.length > 0) {
+                const foundContent = content.find(c => c.id === newFormData.contentId);
+                // Only override if missing or explicit sync needed. For now, trust initialData if present, else fallback to content list
+                if (foundContent) {
+                    newFormData = {
+                        ...newFormData,
+                        contentTitle: newFormData.contentTitle || foundContent.title || 'Untitled',
+                        contentThumbnail: newFormData.contentThumbnail || foundContent.thumbnail || ''
+                    };
+                }
+            }
+
+            setFormData(newFormData);
+        } else {
+            console.log('🚪 [NewStoryModal] Not open, cleaning up or resetting state.');
+            // Ensure picking is cancelled if modal closes externally
+            if (onCancelPicking) {
+                console.log('🧹 [NewStoryModal] Calling onCancelPicking via state reset effect');
+                onCancelPicking();
+            }
+            cancelPicking(); // Explicitly cancel local picking state
+        }
+    }, [isOpen, initialData, cancelPicking, content]);
+
+    // Handle escape key and custom selection events
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && isOpen) {
@@ -106,7 +218,9 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
 
         if (isOpen) {
             document.addEventListener('keydown', handleKeyDown);
-            return () => document.removeEventListener('keydown', handleKeyDown);
+            return () => {
+                document.removeEventListener('keydown', handleKeyDown);
+            };
         }
     }, [isOpen, onClose]);
 
@@ -117,7 +231,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
 
             // Check if click is inside any picker or chip button
             const isInsidePicker = target.closest('.date-picker, .time-picker, .timezone-selector, .repeat-selector');
-            const isInsideChip = target.closest('[role="button"]') || target.closest('button');
+            const isInsideChip = target.closest('.chip-button') || target.closest('[role="button"]') || target.closest('button');
 
             // If clicked outside all pickers and chips, close all pickers
             if (!isInsidePicker && !isInsideChip) {
@@ -149,34 +263,38 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     };
 
     const handleDateChange = (date: Date) => {
-        setFormData({ ...formData, date });
+        setFormData(prev => ({ ...prev, date }));
         setShowDatePicker(false);
     };
 
     const handleTimeChange = (time: string) => {
-        setFormData({ ...formData, time });
+        setFormData(prev => ({ ...prev, time }));
+        // Don't close time picker automatically, let user click outside or close
     };
 
-    const handlePlatformToggle = (platform: 'instagram' | 'facebook') => {
-        setFormData({
-            ...formData,
-            platforms: {
-                ...formData.platforms,
-                [platform]: {
-                    ...formData.platforms[platform],
-                    enabled: !formData.platforms[platform]?.enabled,
-                },
-            },
-        });
-    };
-
-    const toggleExpand = (platform: 'instagram' | 'facebook') => {
-        setExpandedPlatform(expandedPlatform === platform ? null : platform);
-    };
-
-    const togglePlatform = (e: React.MouseEvent, platform: 'instagram' | 'facebook') => {
+    const handlePlatformToggle = (e: React.MouseEvent, platform: 'instagram' | 'facebook') => {
         e.stopPropagation();
-        handlePlatformToggle(platform);
+        setValidationErrors(prev => ({ ...prev, platform: undefined }));
+        setFormData(prev => {
+            const currentPlatform = prev.platforms[platform];
+            const isEnabled = !currentPlatform?.enabled;
+
+            // Get default config based on platform
+            const defaultConfig = platform === 'instagram'
+                ? { ...DEFAULT_INSTAGRAM_CONFIG }
+                : { ...DEFAULT_FACEBOOK_CONFIG };
+
+            return {
+                ...prev,
+                platforms: {
+                    ...prev.platforms,
+                    [platform]: {
+                        ...(currentPlatform || defaultConfig),
+                        enabled: isEnabled,
+                    }
+                }
+            };
+        });
     };
 
     const getPlatformColor = (platform: 'instagram' | 'facebook'): string => {
@@ -187,50 +305,158 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         }
     };
 
-    const handleSchedule = () => {
-        // Validate
-        const hasInstagram = formData.platforms.instagram?.enabled;
-        const hasFacebook = formData.platforms.facebook?.enabled;
 
-        if (!hasInstagram && !hasFacebook) {
-            alert('Please select at least one platform');
-            return;
+    const handleSchedule = async () => {
+        if (isReadOnly) return;
+        try {
+            // Validate all fields
+            const errors: { title?: string; platform?: string; date?: string; content?: string } = {};
+
+            if (!formData.title.trim()) {
+                errors.title = 'Title is required';
+            }
+
+            const selectedPlatforms = (Object.keys(formData.platforms) as Array<'instagram' | 'facebook'>).filter(
+                (platformKey) => formData.platforms[platformKey]?.enabled
+            );
+
+            if (selectedPlatforms.length === 0) {
+                errors.platform = 'Please select at least one platform';
+            }
+
+            const now = new Date();
+            const { hours, minutes } = parseTimeString(formData.time);
+            const scheduledDate = new Date(formData.date);
+            scheduledDate.setHours(hours, minutes, 0, 0);
+
+            if (scheduledDate < now) {
+                errors.date = 'Cannot schedule a story in the past';
+            }
+
+            if (!formData.contentId) {
+                errors.content = 'Please add content to your story';
+            }
+
+            if (Object.keys(errors).length > 0) {
+                setValidationErrors(errors);
+                return;
+            }
+
+            setValidationErrors({});
+
+            setIsSubmitting(true);
+
+            // Determine media type based on content
+            const selectedContent = getSelectedContent();
+            console.log('🚀 [NewStoryModal] Selected Content for media type:', selectedContent);
+            const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
+            console.log('🚀 [NewStoryModal] Determined Media Type:', mediaType);
+
+            if (formData.calendarItemId) {
+                // UPDATE existing schedule
+                await updateSchedule(formData.calendarItemId, {
+                    date: formData.date,
+                    time: formData.time,
+                    platforms: selectedPlatforms,
+                    media: mediaType,
+                    title: formData.contentTitle || 'Story',
+                    status: 'Pending',
+                });
+            } else {
+                // Create schedule via API
+                await createSchedule({
+                    date: formData.date,
+                    time: formData.time,
+                    platforms: selectedPlatforms,
+                    media: mediaType,
+                    title: formData.contentTitle || 'Story',
+                    contentUuids: formData.contentId ? [formData.contentId] : undefined,
+                    type: 'Story',
+                    // Pass rruleText and endDate if they exist, otherwise they will be null
+                    rruleText: formData.repeat.rruleText,
+                    endDate: formData.repeat.endDate || undefined,
+                    status: 'Pending',
+                });
+            }
+
+            // Done — close modal and refresh
+            if (onScheduleProp) onScheduleProp(formData);
+            if (!isReadOnly) onClose();
+
+        } catch (error) {
+            console.error('Failed to schedule story:', error);
+            alert('Failed to schedule story. Please try again.');
+        } finally {
+            setIsSubmitting(false);
         }
-
-        if (!formData.contentId) {
-            alert('Please select content first');
-            return;
-        }
-
-        onSchedule(formData);
-        onClose();
     };
 
-    const handleSaveDraft = () => {
-        onSaveDraft(formData);
-        alert('Story draft saved!');
+    const handleSaveDraft = async () => {
+        try {
+            setIsSubmitting(true);
+            const selectedPlatforms = (Object.keys(formData.platforms) as Array<'instagram' | 'facebook'>).filter(
+                (platformKey) => formData.platforms[platformKey]?.enabled
+            );
+
+            const selectedContent = getSelectedContent();
+            const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
+
+            if (formData.calendarItemId) {
+                await updateSchedule(formData.calendarItemId, {
+                    date: formData.date,
+                    time: formData.time,
+                    platforms: selectedPlatforms,
+                    media: mediaType,
+                    title: formData.contentTitle || 'Story Draft',
+                    status: 'Draft',
+                });
+            } else {
+                await createSchedule({
+                    date: formData.date,
+                    time: formData.time,
+                    platforms: selectedPlatforms,
+                    media: mediaType,
+                    title: formData.contentTitle || 'Story Draft',
+                    contentUuids: formData.contentId ? [formData.contentId] : undefined,
+                    type: 'Story',
+                    status: 'Draft',
+                });
+            }
+
+            if (onSaveDraft) onSaveDraft(formData);
+            onClose();
+        } catch (error) {
+            console.error('Failed to save story draft:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const getPlatformIconPath = (platform: 'instagram' | 'facebook'): string => {
-        switch (platform) {
-            case 'instagram': return '/icons/instagram.svg';
-            case 'facebook': return '/icons/facebook.svg';
-            default: return '';
-        }
+        return `/icons/social/${platform}.png`;
     };
 
-    // Render platform section with accordion
+    // Helper for parsing time since we need it for validation locally
+    const parseTimeString = (time: string): { hours: number; minutes: number } => {
+        const [timePart, period] = time.split(' ');
+        const [hourStr, minuteStr] = timePart.split(':');
+        let hours = parseInt(hourStr);
+        const minutes = parseInt(minuteStr);
+
+        if (period?.toUpperCase() === 'PM' && hours !== 12) {
+            hours += 12;
+        } else if (period?.toUpperCase() === 'AM' && hours === 12) {
+            hours = 0;
+        }
+
+        return { hours, minutes };
+    };
+
+    // Render platform section (Selection Only)
     const renderPlatformSection = (platform: 'instagram' | 'facebook') => {
-        const isExpanded = expandedPlatform === platform;
         const account = platforms.find(p => p.platform === platform);
         const platformColor = getPlatformColor(platform);
         const isSelected = formData.platforms[platform]?.enabled || false;
-
-        const DEFAULT_INSTAGRAM_CONFIG = { enabled: false, caption: '', shareToFeed: true };
-        const DEFAULT_FACEBOOK_CONFIG = { enabled: false, postText: '' };
-
-        const igConfig = formData.platforms.instagram || DEFAULT_INSTAGRAM_CONFIG;
-        const fbConfig = formData.platforms.facebook || DEFAULT_FACEBOOK_CONFIG;
 
         return (
             <div
@@ -238,120 +464,98 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                 style={{
                     ...platformSectionStyle,
                     borderLeftColor: isSelected ? platformColor : 'rgba(0,0,0,0.1)',
-                    ...(isExpanded ? { boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } : {})
+                    cursor: 'pointer', // Make the whole card clickable
                 }}
+                onClick={(e) => handlePlatformToggle(e, platform)}
             >
                 <div
                     style={{
                         ...platformHeaderStyle,
                         ...(isSelected ? { background: `${platformColor}08` } : {})
                     }}
-                    onClick={() => toggleExpand(platform)}
                 >
                     <div style={platformHeaderContentStyle}>
-                        <div
-                            style={{
-                                ...platformToggleStyle,
-                                ...(isSelected ? { ...platformToggleSelectedStyle, background: platformColor, borderColor: platformColor } : {})
-                            }}
-                            onClick={(e) => togglePlatform(e, platform)}
-                        >
-                            {isSelected && <span>✓</span>}
+                        {/* Combined Profile & Selection Indicator */}
+                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                            {/* Profile Picture (or Placeholder) */}
+                            {account && account.profilePicture ? (
+                                <img
+                                    src={account.profilePicture}
+                                    alt={account.username}
+                                    style={{
+                                        width: '40px',
+                                        height: '40px',
+                                        borderRadius: '12px',
+                                        objectFit: 'cover',
+                                        border: isSelected ? `2px solid ${platformColor}` : '2px solid transparent',
+                                        transition: 'border-color 0.2s',
+                                    }}
+                                />
+                            ) : (
+                                <div style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '12px',
+                                    background: '#f3f4f6',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: isSelected ? `2px solid ${platformColor}` : '2px solid transparent',
+                                    color: '#9ca3af',
+                                    fontSize: '18px'
+                                }}>
+                                    {platform.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+
+                            {/* Platform Logo Badge (Bottom Right) */}
+                            <div style={{
+                                position: 'absolute',
+                                bottom: '-4px',
+                                right: '-4px',
+                                width: '18px',
+                                height: '18px',
+                                borderRadius: '50%',
+                                background: '#fff',
+                                border: '2px solid #fff',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}>
+                                <img
+                                    src={getPlatformIconPath(platform)}
+                                    alt=""
+                                    style={{ width: '14px', height: '14px' }}
+                                />
+                            </div>
+
+                            {/* Selection Checkmark Overlay (Optional) */}
+
                         </div>
 
-                        <div style={{ ...platformIconSmallStyle, background: platformColor }}>
-                            <img src={getPlatformIconPath(platform)} alt="" style={{ width: '14px', height: '14px', filter: 'brightness(0) invert(1)' }} />
-                        </div>
-
-                        <div style={platformInfoStyle}>
+                        <div style={{ ...platformInfoStyle, marginLeft: '12px' }}>
                             <span style={platformNameStyle}>
                                 {platform.charAt(0).toUpperCase() + platform.slice(1)}
                             </span>
                             {account && (
-                                <span style={platformUsernameStyle}>@{account.username}</span>
+                                <span style={platformUsernameStyle}>{account.username.startsWith('@') ? account.username : `@${account.username}`}</span>
                             )}
                         </div>
                     </div>
-
-                    <div style={{
-                        transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
-                        transition: 'transform 0.2s',
-                        color: theme.colors.muted,
-                        fontSize: '12px'
-                    }}>▼</div>
                 </div>
-
-                {isExpanded && isSelected && (
-                    <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        {platform === 'instagram' && (
-                            <>
-                                <div>
-                                    <div style={{ fontSize: '12px', fontWeight: 600, color: theme.colors.muted, marginBottom: '5px' }}>Caption</div>
-                                    <textarea
-                                        style={{
-                                            width: '100%',
-                                            padding: '8px 12px',
-                                            border: '1.5px solid rgba(0, 0, 0, .1)',
-                                            borderRadius: '8px',
-                                            fontSize: '13px',
-                                            fontFamily: 'inherit',
-                                            color: theme.colors.text,
-                                            background: '#fff',
-                                            resize: 'vertical',
-                                            minHeight: '60px'
-                                        }}
-                                        value={igConfig.caption || ''}
-                                        onChange={e => setFormData(prev => ({
-                                            ...prev,
-                                            platforms: { ...prev.platforms, instagram: { ...igConfig, caption: e.target.value } }
-                                        }))}
-                                        placeholder="Write a caption..."
-                                        rows={3}
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                        {platform === 'facebook' && (
-                            <>
-                                <div>
-                                    <div style={{ fontSize: '12px', fontWeight: 600, color: theme.colors.muted, marginBottom: '5px' }}>Post Text</div>
-                                    <textarea
-                                        style={{
-                                            width: '100%',
-                                            padding: '8px 12px',
-                                            border: '1.5px solid rgba(0, 0, 0, .1)',
-                                            borderRadius: '8px',
-                                            fontSize: '13px',
-                                            fontFamily: 'inherit',
-                                            color: theme.colors.text,
-                                            background: '#fff',
-                                            resize: 'vertical',
-                                            minHeight: '60px'
-                                        }}
-                                        value={fbConfig.postText || ''}
-                                        onChange={e => setFormData(prev => ({
-                                            ...prev,
-                                            platforms: { ...prev.platforms, facebook: { ...fbConfig, postText: e.target.value } }
-                                        }))}
-                                        placeholder="What's on your mind?"
-                                        rows={3}
-                                    />
-                                </div>
-                            </>
-                        )}
-                    </div>
-                )}
             </div>
         );
     };
     const handleContentSelect = (selectedContent: ContentItem) => {
-        setFormData({
-            ...formData,
+        setFormData(prev => ({
+            ...prev,
             contentId: selectedContent.id,
             contentTitle: selectedContent.title || 'Untitled',
             contentThumbnail: selectedContent.thumbnail || ''
-        });
+        }));
+        if (validationErrors.content) setValidationErrors(prev => ({ ...prev, content: undefined }));
+        if (onCancelPicking) onCancelPicking();
     };
 
     // Manual drop for standard drag-and-drop
@@ -363,6 +567,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
             const droppedContent = content.find(c => c.id === contentId);
             if (droppedContent) {
                 handleContentSelect(droppedContent);
+                if (onContentDrop) onContentDrop();
             }
         }
     };
@@ -375,6 +580,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
             contentTitle: '',
             contentThumbnail: ''
         }));
+        if (onCancelPicking) onCancelPicking();
     };
 
     const formatDateLabel = (date: Date): string => {
@@ -387,13 +593,20 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         if (!formData.contentId) return null;
         // Try to find in content list first for full details
         const found = content.find(c => c.id === formData.contentId);
-        if (found) return found;
+        if (found) {
+            // Map Content.mediaType to ContentItem.type for ContentPreview compatibility
+            return {
+                ...found,
+                type: (found as any).type || (found as any).mediaType || 'video',
+            };
+        }
         // Fallback to formData details
         return {
             id: formData.contentId,
             title: formData.contentTitle || '',
             thumbnail: formData.contentThumbnail || '',
-            type: 'image' as const // Default fallback
+            type: 'video' as const,
+            mediaType: 'video'
         };
     };
 
@@ -451,36 +664,6 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         gap: '10px',
     };
 
-    const platformToggleStyle: React.CSSProperties = {
-        width: '18px',
-        height: '18px',
-        borderRadius: '5px',
-        border: '1.5px solid rgba(0,0,0,.15)',
-        background: '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all .18s',
-    };
-
-    const platformToggleSelectedStyle: React.CSSProperties = {
-        background: theme.colors.primary,
-        borderColor: theme.colors.primary,
-        color: '#fff',
-    };
-
-    const platformIconSmallStyle: React.CSSProperties = {
-        width: '22px',
-        height: '22px',
-        borderRadius: '5px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '10px',
-        fontWeight: 900,
-        color: '#fff',
-    };
-
     const platformInfoStyle: React.CSSProperties = {
         display: 'flex',
         flexDirection: 'column',
@@ -520,154 +703,231 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         color: '#fff',
         fontSize: '14px',
         fontWeight: 700,
-        cursor: 'pointer',
+        cursor: isSubmitting ? 'not-allowed' : 'pointer',
         transition: 'all .2s',
         boxShadow: '0 3px 12px rgba(155, 93, 229, .25)',
+        opacity: isSubmitting ? 0.7 : 1,
     };
 
     return (
-        <ScheduleModalLayout
-            isOpen={isOpen}
-            onClose={onClose}
-            title="New Story"
-            icon="📖"
-            beforeBody={
-                <input
-                    type="text"
-                    style={titleInputStyle}
-                    placeholder="New story"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    maxLength={80}
-                />
-            }
-            rightColumn={
-                <div ref={contentPreviewRef} style={{ position: 'relative' }}>
-                    <ContentPreview
-                        content={getSelectedContent()}
-                        isDragOver={isDragOver}
-                        onRemove={handleRemoveContent}
-                        onOpenDrawer={() => {
-                            startPicking();
-                            onOpenDrawer(true);
-                        }}
-                        onDrop={handleManualDrop}
-                        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-                        onDragLeave={(e) => { e.preventDefault(); setIsDragOver(false); }}
-                        placeholderText="Drop Content Here"
-                    />
-                </div>
-            }
-            footer={
-                <>
-                    <button style={draftBtnStyle} onClick={handleSaveDraft}>Save as Draft</button>
-                    <button style={scheduleBtnStyle} onClick={handleSchedule}>Schedule Story</button>
-                </>
-            }
-        >
-            {/* Time Section */}
-            <SectionContainer icon="🕐">
-                <div style={chipRowStyle}>
-                    {/* Date Chip */}
-                    <ChipButton
-                        minWidth="200px"
-                        onClick={() => {
-                            closeAllPickers();
-                            setShowDatePicker(true);
-                        }}
-                    >
-                        <span>{formatDateLabel(formData.date)}</span>
-                        <ChipArrow />
-                        <DatePicker
-                            selectedDate={formData.date}
-                            onChange={handleDateChange}
-                            minDate={new Date()}
-                            show={showDatePicker}
-                            onClose={() => setShowDatePicker(false)}
-                        />
-                    </ChipButton>
-
-                    {/* Time Chip */}
-                    <ChipButton
-                        minWidth="120px"
-                        onClick={() => {
-                            closeAllPickers();
-                            setShowTimePicker(true);
-                        }}
-                    >
-                        <span>{formData.time}</span>
-                        <ChipArrow />
-                        <TimePicker
-                            selectedTime={formData.time}
-                            onChange={handleTimeChange}
-                            show={showTimePicker}
-                            onClose={() => setShowTimePicker(false)}
-                        />
-                    </ChipButton>
-
-                    {/* Timezone Chip */}
-                    <ChipButton
-                        small
-                        style={{ position: 'relative' }}
-                        onClick={() => {
-                            closeAllPickers();
-                            setShowTimezoneSelector(true);
-                        }}
-                    >
-                        <span>{formData.timezone || 'Timezone'}</span>
-                        <ChipArrow />
-                        <TimezoneSelector
-                            selectedTimezone={formData.timezone || 'America/New_York'}
-                            onChange={(tz) => {
-                                setFormData({ ...formData, timezone: tz });
-                                setShowTimezoneSelector(false);
+        <>
+            <ScheduleModalLayout
+                isOpen={isOpen}
+                onClose={onClose}
+                onDelete={formData.calendarItemId ? handleDelete : undefined}
+                isDeleting={isSubmitting}
+                title=""
+                icon="📖"
+                beforeBody={
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <input
+                            type="text"
+                            style={{
+                                ...titleInputStyle,
+                                ...(validationErrors.title ? { borderBottomColor: '#EF4444' } : {})
                             }}
-                            show={showTimezoneSelector}
-                            onClose={() => setShowTimezoneSelector(false)}
-                        />
-                    </ChipButton>
-                </div>
-
-                {/* Repeat Chip */}
-                <div style={chipRowStyle}>
-                    <ChipButton
-                        minWidth="260px"
-                        maxWidth="260px"
-                        style={{ position: 'relative' }}
-                        onClick={() => {
-                            closeAllPickers();
-                            setShowRepeatSelector(true);
-                        }}
-                    >
-                        <span>{formData.repeat.label}</span>
-                        <ChipArrow />
-                        <RepeatSelector
-                            selectedRepeat={formData.repeat}
-                            onChange={(repeat) => {
-                                setFormData({ ...formData, repeat });
-                                setShowRepeatSelector(false);
+                            placeholder={formData.calendarItemId ? (isReadOnly ? "View story" : "Edit story") : "New story"}
+                            value={formData.title}
+                            readOnly={isReadOnly}
+                            onChange={(e) => {
+                                if (isReadOnly) return;
+                                setFormData({ ...formData, title: e.target.value });
+                                if (validationErrors.title) setValidationErrors(prev => ({ ...prev, title: undefined }));
                             }}
-                            baseDate={formData.date}
-                            show={showRepeatSelector}
-                            onClose={() => setShowRepeatSelector(false)}
+                            maxLength={80}
                         />
-                    </ChipButton>
-                </div>
-            </SectionContainer>
-
-            {/* Platforms Section */}
-            <SectionContainer icon="📲">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {platforms.filter(p => (p.platform === 'instagram' || p.platform === 'facebook') && p.isConnected).length === 0 && (
-                        <div style={{ padding: '20px', textAlign: 'center', color: theme.colors.muted, fontSize: '13px' }}>
-                            No connected platforms. Please connect Instagram or Facebook to create stories.
+                        {validationErrors.title && (
+                            <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginLeft: '28px', marginTop: '4px' }}>
+                                {validationErrors.title}
+                            </span>
+                        )}
+                    </div>
+                }
+                rightColumn={
+                    <div style={{ position: 'relative' }}>
+                        <ContentPreview
+                            id="nsmContentPreview"
+                            content={getSelectedContent()}
+                            isDragOver={isDragOver}
+                            onRemove={handleRemoveContent}
+                            onOpenDrawer={() => {
+                                console.log('🖱️ [NewStoryModal] Click on ContentPreview, starting picking');
+                                startPicking();
+                                onOpenDrawer(true);
+                            }}
+                            onDrop={handleManualDrop}
+                            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                            onDragLeave={(e) => { e.preventDefault(); setIsDragOver(false); }}
+                            placeholderText="Click to add content"
+                        />
+                        {validationErrors.content && (
+                            <div style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, textAlign: 'center', marginTop: '8px' }}>
+                                {validationErrors.content}
+                            </div>
+                        )}
+                    </div>
+                }
+                footer={
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <button
+                            style={{
+                                ...draftBtnStyle,
+                                opacity: (isSubmitting || isReadOnly) ? 0.5 : 1,
+                                cursor: (isSubmitting || isReadOnly) ? 'not-allowed' : 'pointer'
+                            }}
+                            onClick={handleSaveDraft}
+                            disabled={isSubmitting || isReadOnly}
+                        >
+                            Save as Draft
+                        </button>
+                        <button
+                            style={{
+                                ...scheduleBtnStyle,
+                                opacity: (isSubmitting || isReadOnly) ? 0.7 : 1,
+                                cursor: (isSubmitting || isReadOnly) ? 'not-allowed' : 'pointer'
+                            }}
+                            onClick={handleSchedule}
+                            disabled={isSubmitting || isReadOnly}
+                        >
+                            {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update Story' : 'Schedule Story'))}
+                        </button>
+                    </div>
+                }
+            >
+                {/* Time Section */}
+                <SectionContainer icon="🕐">
+                    <div style={chipRowStyle}>
+                        {/* Date Chip */}
+                        <div style={{ position: 'relative' }}>
+                            <ChipButton
+                                minWidth="200px"
+                                onClick={() => {
+                                    closeAllPickers();
+                                    setShowDatePicker(true);
+                                }}
+                            >
+                                <span>{formatDateLabel(formData.date)}</span>
+                                <ChipArrow />
+                            </ChipButton>
+                            <DatePicker
+                                selectedDate={formData.date}
+                                onChange={handleDateChange}
+                                minDate={new Date()}
+                                show={showDatePicker}
+                                onClose={() => setShowDatePicker(false)}
+                            />
                         </div>
-                    )}
-                    {platforms.some(p => p.platform === 'instagram' && p.isConnected) && renderPlatformSection('instagram')}
-                    {platforms.some(p => p.platform === 'facebook' && p.isConnected) && renderPlatformSection('facebook')}
-                </div>
-            </SectionContainer>
-        </ScheduleModalLayout>
+
+                        {/* Time Chip */}
+                        <div style={{ position: 'relative' }}>
+                            <ChipButton
+                                minWidth="120px"
+                                onClick={() => {
+                                    closeAllPickers();
+                                    setShowTimePicker(true);
+                                }}
+                            >
+                                <span>{formData.time}</span>
+                                <ChipArrow />
+                            </ChipButton>
+                            <TimePicker
+                                selectedTime={formData.time}
+                                onChange={handleTimeChange}
+                                show={showTimePicker}
+                                onClose={() => setShowTimePicker(false)}
+                            />
+                        </div>
+
+                        {/* Timezone Chip */}
+                        <div style={{ position: 'relative' }}>
+                            <ChipButton
+                                minWidth="120px"
+                                onClick={() => {
+                                    closeAllPickers();
+                                    setShowTimezoneSelector(true);
+                                }}
+                            >
+                                <span style={{ minWidth: '80px', display: 'inline-block' }}>
+                                    {formData.timezone ? getTimezoneLabel(formData.timezone) : 'Timezone'}
+                                </span>
+                                <ChipArrow />
+                            </ChipButton>
+                            <TimezoneSelector
+                                selectedTimezone={formData.timezone || 'America/New_York'}
+                                onChange={(tz) => {
+                                    setFormData(prev => ({ ...prev, timezone: tz }));
+                                    setShowTimezoneSelector(false);
+                                }}
+                                show={showTimezoneSelector}
+                                onClose={() => setShowTimezoneSelector(false)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Repeat Chip */}
+                    <div style={chipRowStyle}>
+                        <div style={{ position: 'relative' }}>
+                            <ChipButton
+                                minWidth="260px"
+                                maxWidth="260px"
+                                style={{ position: 'relative' }}
+                                onClick={() => {
+                                    closeAllPickers();
+                                    setShowRepeatSelector(true);
+                                }}
+                            >
+                                <span>{formData.repeat.label}</span>
+                                <ChipArrow />
+                            </ChipButton>
+                            <RepeatSelector
+                                selectedRepeat={formData.repeat}
+                                onChange={(repeat) => {
+                                    setFormData({ ...formData, repeat });
+                                    setShowRepeatSelector(false);
+                                }}
+                                baseDate={formData.date}
+                                show={showRepeatSelector}
+                                onClose={() => setShowRepeatSelector(false)}
+                            />
+                        </div>
+                    </div>
+                </SectionContainer>
+
+                {/* Platforms Section */}
+                <SectionContainer icon="📲">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {platforms.filter(p => (p.platform === 'instagram' || p.platform === 'facebook') && p.isConnected).length === 0 && (
+                            <div style={{ padding: '20px', textAlign: 'center', color: theme.colors.muted, fontSize: '13px' }}>
+                                No connected platforms. Please connect Instagram or Facebook to create stories.
+                            </div>
+                        )}
+                        {platforms.some(p => p.platform === 'instagram' && p.isConnected) && renderPlatformSection('instagram')}
+                        {platforms.some(p => p.platform === 'facebook' && p.isConnected) && renderPlatformSection('facebook')}
+                        {validationErrors.platform && (
+                            <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginTop: '-4px' }}>
+                                {validationErrors.platform}
+                            </span>
+                        )}
+                    </div>
+                </SectionContainer>
+                {validationErrors.date && (
+                    <div style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginLeft: '42px', marginTop: '-16px' }}>
+                        {validationErrors.date}
+                    </div>
+                )}
+            </ScheduleModalLayout>
+
+            <ConfirmDialog
+                isOpen={showDeleteConfirm}
+                title="Delete Story"
+                message="Are you sure you want to delete this story? This action cannot be undone."
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                danger
+                onConfirm={confirmDelete}
+                onCancel={() => setShowDeleteConfirm(false)}
+            />
+        </>
     );
 };
 

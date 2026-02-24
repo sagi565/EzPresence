@@ -1,25 +1,30 @@
 import React, { ReactNode, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { theme } from '@/theme/theme';
+import TrashButton from './TrashButton';
 
 interface ScheduleModalLayoutProps {
     isOpen: boolean;
     onClose: () => void;
+    onDelete?: () => void;
+    isDeleting?: boolean;
     title: string;
     icon?: string;
-    headerContent?: ReactNode; // For extra header items like "New Post" title input if needed, or just use title
-    beforeBody?: ReactNode; // Content between header and body (e.g. Title Input)
-    children: ReactNode; // Left column content usually
-    rightColumn?: ReactNode; // Content Preview
+    headerContent?: ReactNode;
+    beforeBody?: ReactNode;
+    children: ReactNode;
+    rightColumn?: ReactNode;
     footer?: ReactNode;
     width?: string;
-    height?: string; // For Post modal (680px)
-    scrollableBody?: boolean; // Enable scrollable body for Post modal
+    height?: string;
+    scrollableBody?: boolean;
 }
 
 const ScheduleModalLayout: React.FC<ScheduleModalLayoutProps> = ({
     isOpen,
     onClose,
+    onDelete,
+    isDeleting,
     title,
     icon,
     headerContent,
@@ -27,7 +32,7 @@ const ScheduleModalLayout: React.FC<ScheduleModalLayoutProps> = ({
     children,
     rightColumn,
     footer,
-    width = '820px',
+    width = '920px',
     height,
     scrollableBody = false
 }) => {
@@ -50,25 +55,40 @@ const ScheduleModalLayout: React.FC<ScheduleModalLayoutProps> = ({
     return ReactDOM.createPortal(
         <>
             <div style={styles.overlay} onClick={onClose} />
-            <div style={{
-                ...styles.modal,
-                width,
-                ...(height ? { height, maxHeight: '92vh' } : {}),
-                ...(scrollableBody ? { overflow: 'hidden' } : {})
-            }}>
+            <div
+                className="schedule-modal-layout"
+                style={{
+                    ...styles.modal,
+                    width,
+                    ...(height ? { height, maxHeight: '92vh' } : {}),
+                    ...(scrollableBody ? { overflow: 'hidden' } : {})
+                }}
+            >
                 {/* Header */}
                 <div style={styles.header}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         {icon && <span style={styles.typeLabel}>{icon}</span>}
                         {headerContent || <span style={styles.title}>{title}</span>}
                     </div>
-                    <button
-                        style={styles.closeBtn}
-                        className="modal-close-btn"
-                        onClick={onClose}
-                    >
-                        ✕
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {onDelete && (
+                            <TrashButton
+                                onClick={onDelete}
+                                disabled={isDeleting}
+                                title="Delete"
+                            />
+                        )}
+                        <button
+                            style={styles.closeBtn}
+                            className="modal-close-btn"
+                            onClick={onClose}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Scrollable wrapper for Post modal */}
@@ -191,6 +211,7 @@ const styles = {
         width: '200px',
         display: 'flex',
         flexDirection: 'column' as const,
+        height: '100%',
     },
     footer: {
         display: 'flex',

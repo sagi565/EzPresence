@@ -14,7 +14,7 @@ export const styles: Record<string, CSSProperties> = {
   contentItem: {
     position: 'relative',
     backgroundColor: 'white',
-    borderRadius: '16px',
+    borderRadius: '32px',
     overflow: 'hidden',
     cursor: 'pointer',
     transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-radius 0.3s ease, box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease',
@@ -36,8 +36,8 @@ export const styles: Record<string, CSSProperties> = {
   },
 
   contentItemHover: {
-    transform: 'scale(1.03) translateY(-4px)',
-    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+    transform: 'scale(1.05) translateY(-6px)',
+    boxShadow: '0 20px 30px rgba(0, 0, 0, 0.15)',
     zIndex: 10,
   },
 
@@ -46,7 +46,7 @@ export const styles: Record<string, CSSProperties> = {
     cursor: 'grabbing',
     // width: '56px', // Relied on scale
     // height: '96px', // Relied on scale
-    borderRadius: '16px', // Keep original radius so it scales down smoothly
+    borderRadius: '32px', // Keep original radius so it scales down smoothly
     boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
     zIndex: 9999,
     backgroundColor: 'transparent',

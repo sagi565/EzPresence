@@ -115,6 +115,15 @@ const TimezoneSelector: React.FC<TimezoneSelectorProps> = ({
         };
     }, [show, onClose]);
 
+    useEffect(() => {
+        if (show && selectedTimezone && dropdownRef.current) {
+            const selectedItem = dropdownRef.current.querySelector('.ntz-item[data-selected="true"]');
+            if (selectedItem) {
+                selectedItem.scrollIntoView({ block: 'center', behavior: 'auto' });
+            }
+        }
+    }, [show, selectedTimezone]);
+
     const filteredTimezones = TIMEZONES.filter((tz) => {
         const query = searchQuery.toLowerCase();
         return (
@@ -124,18 +133,20 @@ const TimezoneSelector: React.FC<TimezoneSelectorProps> = ({
         );
     });
 
-    const handleSelect = (timezone: string) => {
+    const handleSelect = (timezone: string, e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         onChange(timezone);
         setSearchQuery('');
         onClose();
     };
 
-    const selectedTz = TIMEZONES.find((tz) => tz.value === selectedTimezone);
-
     if (!show) return null;
 
     return (
-        <div ref={dropdownRef} style={styles.container} className="timezone-selector" onClick={(e) => e.stopPropagation()}>
+        <div ref={dropdownRef} style={styles.container} className="timezone-selector" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
             <div style={styles.searchBox}>
                 <span style={styles.searchIcon}>🔍</span>
                 <input
@@ -156,12 +167,13 @@ const TimezoneSelector: React.FC<TimezoneSelectorProps> = ({
                         <div
                             key={tz.value}
                             className="ntz-item"
+                            data-selected={tz.value === selectedTimezone}
                             style={{
                                 ...styles.item,
                                 ...(hoveredIndex === index ? styles.itemHovered : {}),
                                 ...(tz.value === selectedTimezone ? styles.itemSelected : {}),
                             }}
-                            onClick={() => handleSelect(tz.value)}
+                            onMouseDown={(e) => handleSelect(tz.value, e)}
                             onMouseEnter={() => setHoveredIndex(index)}
                             onMouseLeave={() => setHoveredIndex(null)}
                         >
@@ -180,8 +192,13 @@ const TimezoneSelector: React.FC<TimezoneSelectorProps> = ({
                     ))
                 )}
             </div>
-        </div>
+        </div >
     );
+};
+
+export const getTimezoneLabel = (value: string): string => {
+    const tz = TIMEZONES.find((t) => t.value === value);
+    return tz ? `(UTC${tz.offset}) ${tz.label}` : value;
 };
 
 export default TimezoneSelector;

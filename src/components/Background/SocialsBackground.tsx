@@ -248,13 +248,9 @@ const SocialsBackground: React.FC = () => {
 
     const handleMouseLeave = () => {
       mouseRef.current = { x: -9999, y: -9999 };
-      isMouseDownRef.current = false; // Reset click on leave
     };
 
-
-
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseout', handleMouseLeave); // Optional: reset when out of window
     window.addEventListener('mouseout', handleMouseLeave); // Optional: reset when out of window
 
     loadIcons()

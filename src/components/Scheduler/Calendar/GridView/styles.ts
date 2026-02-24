@@ -149,6 +149,9 @@ export const styles: Record<string, CSSProperties> = {
     border: '1px solid',
     borderColor: theme.colors.text,
   },
+  statusDraft: {
+    background: theme.colors.secondary,
+  },
   blackTooltip: {
     position: 'absolute',
     top: '-30px',

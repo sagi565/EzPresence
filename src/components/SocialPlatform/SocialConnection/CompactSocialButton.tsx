@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SocialPlatform, PLATFORM_COLORS, PLATFORM_NAMES } from '@models/SocialAccount';
+import { ConnectedPlatform } from '@/models/Platform';
 import { useConnectPlatform } from '@/hooks/platforms/useConnectPlatform';
 
 // Add CSS animation for gradient shift
@@ -47,15 +48,26 @@ interface CompactSocialButtonProps {
   platform: SocialPlatform;
   brandId: string;
   isUninitialized?: boolean;
+  connectedPlatform?: ConnectedPlatform;
+  onConnectionChange?: () => void;
 }
 
 export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
   platform,
   brandId,
   isUninitialized = false,
+  connectedPlatform,
+  onConnectionChange,
 }) => {
-  const { isConnected, account, loading, connect, disconnect } = useConnectPlatform(platform, brandId, isUninitialized);
+  const { isConnected: _hookIsConnected, account: _hookAccount, loading, connect, disconnect } = useConnectPlatform(platform, brandId, isUninitialized);
   const [isHovered, setIsHovered] = useState(false);
+
+  // Rely strictly on connectedPlatform prop for truth
+  const isConnected = connectedPlatform?.isConnected ?? false;
+
+  // Display info only from connectedPlatform (which comes from API list)
+  const displayUsername = connectedPlatform?.username || connectedPlatform?.displayName;
+  const displayProfilePic = connectedPlatform?.profilePicture;
 
   const platformColors = PLATFORM_COLORS[platform];
   const platformName = PLATFORM_NAMES[platform];
@@ -67,6 +79,10 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
         await disconnect();
       } else {
         await connect();
+      }
+      // Notify parent to refetch
+      if (onConnectionChange) {
+        onConnectionChange();
       }
     } catch (error) {
       console.error(`Failed to ${isConnected ? 'disconnect' : 'connect'} ${platform}:`, error);
@@ -111,22 +127,44 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
       width: '100%',
     },
     iconContainer: {
-      width: '36px',
-      height: '36px',
-      borderRadius: '8px',
+      width: isConnected ? '48px' : '36px',
+      height: isConnected ? '48px' : '36px',
+      borderRadius: '50%', // Make it circular for profile pics
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: platformColors.gradient,
+      background: displayProfilePic ? 'white' : platformColors.gradient,
       transition: 'all 0.3s',
       flexShrink: 0,
-      transform: isHovered && !loading ? 'rotate(5deg) scale(1.1)' : 'rotate(0) scale(1)',
+      transform: isHovered && !loading ? 'rotate(5deg) scale(1.05)' : 'rotate(0) scale(1)',
       position: 'relative' as const,
       zIndex: 1,
+      // overflow: 'hidden', // Allow badge to overflow
+      border: displayProfilePic ? '2px solid white' : 'none',
     },
     icon: {
-      width: '20px',
-      height: '20px',
+      width: '100%',
+      height: '100%',
+      borderRadius: '50%',
+      objectFit: displayProfilePic ? 'cover' as const : 'contain' as const,
+    },
+    platformOverlay: {
+      position: 'absolute' as const,
+      bottom: '-2px',
+      right: '-2px',
+      width: '16px',
+      height: '16px',
+      borderRadius: '50%',
+      background: 'white',
+      padding: '2px',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    platformOverlayIcon: {
+      width: '100%',
+      height: '100%',
       objectFit: 'contain' as const,
     },
     iconEmoji: {
@@ -142,20 +180,16 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
       zIndex: 1,
       textShadow: isConnected ? '0 1px 2px rgba(0, 0, 0, 0.1)' : 'none',
     },
-    connectedBadge: {
-      fontSize: '11px',
-      fontWeight: 600,
-      color: 'white',
-      background: 'rgba(255, 255, 255, 0.25)',
-      padding: '4px 8px',
-      borderRadius: '6px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '4px',
-      position: 'relative' as const,
-      zIndex: 1,
-      backdropFilter: 'blur(8px)',
-      lineHeight: '1',
+    connectedDot: {
+      width: '8px',
+      height: '8px',
+      borderRadius: '50%',
+      backgroundColor: '#4ade80', // Green-400
+      boxShadow: '0 0 8px rgba(74, 222, 128, 0.6)',
+      position: 'absolute' as const,
+      top: '12px',
+      right: '12px',
+      zIndex: 2,
     },
     spinner: {
       width: '18px',
@@ -179,7 +213,23 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       <div style={styles.iconContainer}>
-        {!iconError ? (
+        {displayProfilePic ? (
+          <>
+            <img
+              src={displayProfilePic}
+              alt={displayUsername || platformName}
+              style={styles.icon}
+            />
+            {/* Small platform logo overlay */}
+            <div style={styles.platformOverlay}>
+              <img
+                src={getIconPath()}
+                alt={platformName}
+                style={styles.platformOverlayIcon}
+              />
+            </div>
+          </>
+        ) : !iconError ? (
           <img
             src={getIconPath()}
             alt={platformName}
@@ -190,18 +240,16 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
           <span style={styles.iconEmoji}>{getIconEmoji()}</span>
         )}
       </div>
+
       {loading ? (
         <div style={styles.spinner} />
       ) : (
         <>
           <span style={styles.text}>
-            {isConnected && account?.accountName ? account.accountName : `Connect to ${platformName}`}
+            {isConnected && displayUsername ? displayUsername : `Connect to ${platformName}`}
           </span>
           {isConnected && (
-            <div style={styles.connectedBadge}>
-              {/* Show disconnect hint on hover */}
-              {isHovered ? '✕ Disconnect' : '● Connected'}
-            </div>
+            <div style={styles.connectedDot} title="Connected" />
           )}
         </>
       )}

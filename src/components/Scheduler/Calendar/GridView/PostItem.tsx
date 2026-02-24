@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Post, PLATFORM_BADGES } from '@models/Post';
+import { Post } from '@models/Post';
 import { styles } from './styles';
 
 interface PostItemProps {
   post: Post;
+  onClick: (post: Post) => void;
 }
 
-const PostItem: React.FC<PostItemProps> = ({ post }) => {
+const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isStatusHovered, setIsStatusHovered] = useState(false);
   const [isMediaHovered, setIsMediaHovered] = useState(false);
@@ -20,6 +21,8 @@ const PostItem: React.FC<PostItemProps> = ({ post }) => {
         return 'Failed';
       case 'scheduled':
         return 'Scheduled';
+      case 'draft':
+        return 'Draft';
       default:
         return status;
     }
@@ -30,6 +33,7 @@ const PostItem: React.FC<PostItemProps> = ({ post }) => {
     ...(isHovered ? {
       transform: 'translateX(2px)',
       boxShadow: '0 2px 6px rgba(155, 93, 229, 0.15)',
+      cursor: 'pointer'
     } : {}),
   };
 
@@ -38,6 +42,10 @@ const PostItem: React.FC<PostItemProps> = ({ post }) => {
       style={postStyle}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick(post);
+      }}
     >
       <div style={styles.postFirstLine}>
         <div style={styles.postLeft}>
@@ -54,6 +62,7 @@ const PostItem: React.FC<PostItemProps> = ({ post }) => {
                 ...(post.status === 'success' ? styles.statusSuccess : {}),
                 ...(post.status === 'failed' ? styles.statusFailed : {}),
                 ...(post.status === 'scheduled' ? styles.statusScheduled : {}),
+                ...(post.status === 'draft' ? styles.statusDraft : {}),
               }}
               onMouseEnter={() => setIsStatusHovered(true)}
               onMouseLeave={() => setIsStatusHovered(false)}

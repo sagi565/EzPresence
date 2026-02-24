@@ -2,12 +2,15 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ContentItem as ContentItemType } from '@models/ContentList';
 import { styles } from './styles';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
+import { DraggableProvided } from '@hello-pangea/dnd';
 
 interface ContentItemProps {
   item: ContentItemType;
   listType: 'video' | 'image';
+  provided?: DraggableProvided;
   isDragging?: boolean;
   onClick: () => void;
+  onDoubleClick?: () => void;
   onDelete: () => void;
   onRename: (newName: string) => void;
   onToggleFavorite: () => void;
@@ -15,13 +18,17 @@ interface ContentItemProps {
 
 const ContentItem: React.FC<ContentItemProps> = ({
   item,
+  // listType,
+  provided,
   isDragging = false,
   onClick,
+  onDoubleClick,
   onDelete,
   onRename,
   onToggleFavorite,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  // const [isDragging, setIsDragging] = useState(false); // Managed by parent now
   const [showMenu, setShowMenu] = useState(false);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -37,6 +44,8 @@ const ContentItem: React.FC<ContentItemProps> = ({
   const isUploading = item.status === 'uploading';
 
   const isVideo = item.type === 'video';
+
+  // Preview delay in milliseconds (1 second)
   const PREVIEW_DELAY = 1000;
 
   const getThumbnailSrc = () => {
@@ -52,8 +61,21 @@ const ContentItem: React.FC<ContentItemProps> = ({
 
   const thumbnailSrc = getThumbnailSrc();
 
+  // Legacy handler fallback
+  // const handleDragStart = (e: React.DragEvent) => {
+  //   if (isUploading) { e.preventDefault(); return; }
+  //   // setIsDragging(true); // Parent handles state
+  //   setShowMenu(false);
+  //   if (onDragStart) onDragStart(e);
+  // };
+
+  // const handleDragEnd = () => {
+  //   // setIsDragging(false);
+  //   if (onDragEnd) onDragEnd();
+  // };
+
+  // Handle hover with delay for video preview
   const handleMouseEnter = useCallback(() => {
-    if (isDragging) return;
     setIsHovered(true);
 
     if (isVideo && !isUploading && item.id && !item.id.startsWith('temp-')) {
@@ -65,7 +87,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
         setShowPreview(true);
       }, PREVIEW_DELAY);
     }
-  }, [isVideo, isUploading, item.id, fetchedUrl, fetchUrl, isDragging]);
+  }, [isVideo, isUploading, item.id, fetchedUrl, fetchUrl]);
 
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
@@ -77,6 +99,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
     }
   }, []);
 
+  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
@@ -85,6 +108,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
     };
   }, []);
 
+  // Video autoplay logic
   useEffect(() => {
     if (isVideo && videoRef.current) {
       if (showPreview && fetchedUrl) {
@@ -99,6 +123,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
     }
   }, [isVideo, showPreview, fetchedUrl]);
 
+  // Click outside menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -109,6 +134,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
 
+  // Focus rename input when renaming
   useEffect(() => {
     if (isRenaming && renameInputRef.current) {
       renameInputRef.current.focus();
@@ -231,14 +257,24 @@ const ContentItem: React.FC<ContentItemProps> = ({
     );
   };
 
+  // Mouse tracking removed
+
   return (
     <div
+      ref={provided?.innerRef}
+      {...provided?.draggableProps}
+      {...provided?.dragHandleProps}
       onClick={onClick}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        if (onDoubleClick) onDoubleClick();
+      }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
         ...styles.contentItem,
         ...styles.contentItemVideo,
+        ...provided?.draggableProps.style,
         ...(isHovered && !isUploading && !isDragging ? styles.contentItemHover : {}),
         ...(isDragging ? styles.contentItemDragging : {}),
       }}

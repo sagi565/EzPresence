@@ -14,6 +14,7 @@ import CreateBrandPage from './pages/CreateBrand/CreateBrandPage';
 import CreateUserPage from './pages/CreateUser/CreateUserPage';
 import TermsOfServicePage from './pages/Legal/TermsOfServicePage';
 import PrivacyPolicyPage from './pages/Legal/PrivacyPolicyPage';
+import HomePage from './pages/Home/HomePage';
 
 function App() {
   return (
@@ -37,7 +38,7 @@ function App() {
             path="/tell-us-who-you-are"
             element={
               <ProtectedRoute>
-                  <CreateUserPage />
+                <CreateUserPage />
               </ProtectedRoute>
             }
           />
@@ -76,7 +77,14 @@ function App() {
             }
           />
 
-          <Route path="/" element={<Navigate to="/scheduler" replace />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <HomePage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/scheduler" replace />} />
         </Routes>
       </BrowserRouter>

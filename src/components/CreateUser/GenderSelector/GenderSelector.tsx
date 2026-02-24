@@ -6,12 +6,14 @@ interface GenderSelectorProps {
   label: string;
   value: Gender | undefined;
   onChange: (gender: Gender | undefined) => void;
+  error?: string;
 }
 
 const GenderSelector: React.FC<GenderSelectorProps> = ({
   label,
   value,
   onChange,
+  error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -49,7 +51,7 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setHighlightedIndex(prev => 
+        setHighlightedIndex(prev =>
           prev < GENDER_OPTIONS.length - 1 ? prev + 1 : prev
         );
         break;
@@ -73,11 +75,12 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({
   return (
     <div style={styles.container} ref={containerRef}>
       <label style={styles.label}>{label}</label>
-      
+
       <div
         style={{
           ...styles.selectBox,
           ...(isOpen ? styles.selectBoxFocused : {}),
+          ...(error ? { borderColor: '#ef4444' } : {}),
         }}
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
@@ -109,6 +112,11 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({
             ))}
           </div>
         </div>
+      )}
+      {error && (
+        <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+          {error}
+        </span>
       )}
     </div>
   );

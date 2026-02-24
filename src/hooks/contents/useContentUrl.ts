@@ -4,16 +4,21 @@ import { api } from '@utils/apiClient';
 export const useContentUrl = () => {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [currentId, setCurrentId] = useState<string | null>(null);
 
   const fetchUrl = useCallback(async (contentId: string) => {
-    // Return cached url if available
-    if (url) return;
+    if (!contentId) return;
+
+    // If we're already fetching or have the URL for THIS specific id, skip
+    if (currentId === contentId && (url || loading)) return;
 
     try {
       setLoading(true);
-      // We use 'any' here to inspect the response structure dynamically
+      setCurrentId(contentId);
+      setUrl(null); // Clear previous URL while loading new one
+
       const response = await api.get<any>(`/storage/${contentId}/download-url`);
-      
+
       // Handle different response formats
       let downloadUrl = null;
 

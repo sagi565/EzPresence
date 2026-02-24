@@ -9,6 +9,7 @@ interface CalendarGridProps {
   posts: Post[];
   today: Date;
   onDrop: (date: Date, contentId: string) => void;
+  onPostClick: (post: Post) => void;
 }
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({
@@ -17,6 +18,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   posts,
   today,
   onDrop,
+  onPostClick,
 }) => {
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -56,6 +58,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         isToday={isToday}
         posts={dayPosts}
         onDrop={onDrop}
+        onPostClick={onPostClick}
       />
     );
   }

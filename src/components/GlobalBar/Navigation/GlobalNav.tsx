@@ -95,12 +95,12 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
             style={styles.navItemWrapper}
           >
             <a
-              href={['dashboard', 'home'].includes(btn.id) ? '#' : btn.path}
+              href={['dashboard'].includes(btn.id) ? '#' : btn.path}
               style={getButtonStyle(btn.id, btn.active)}
               onMouseEnter={() => setHoveredBtn(btn.id)}
               onMouseLeave={() => setHoveredBtn(null)}
               onClick={(e) => {
-                if (['dashboard', 'home'].includes(btn.id)) {
+                if (['dashboard'].includes(btn.id)) {
                   e.preventDefault();
                   return;
                 }
@@ -110,7 +110,7 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
               {btn.label}
             </a>
 
-            {['dashboard', 'home'].includes(btn.id) && (
+            {['dashboard'].includes(btn.id) && (
               <span style={{
                 ...styles.comingSoonBadge,
                 opacity: hoveredBtn === btn.id ? 1 : 0,

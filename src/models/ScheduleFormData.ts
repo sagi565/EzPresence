@@ -61,6 +61,8 @@ export interface ScheduleFormData {
     // Basic info
     title: string;
     type: 'post' | 'story';
+    scheduleUuid?: string;
+    calendarItemId?: string;
 
     // Scheduling
     date: Date;
@@ -72,6 +74,8 @@ export interface ScheduleFormData {
     contentId?: string;
     contentThumbnail?: string;
     contentTitle?: string;
+    contents?: string[];     // Optional: For hydration from API
+    contentUuids?: string[]; // Optional: For hydration from API
 
     // Platform configurations
     platforms: {

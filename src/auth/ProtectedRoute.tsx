@@ -76,12 +76,17 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
   if (profileLoading) return <LoadingScreen message="Loading user profile..." />;
 
   // 3. Profile Completion Check
-  // Allow access to profile setup page if profile is incomplete
   if (!isProfileSetupPage) {
-    if (!profile || !profile.isProfileComplete) {
-      console.log('🛑 [ProtectedRoute] Profile incomplete. Redirecting to tell-us-who-you-are.');
+    if (!profile) {
+      console.log('🛑 [ProtectedRoute] No profile found. Redirecting to tell-us-who-you-are.');
       return <Navigate to="/tell-us-who-you-are" replace />;
     }
+  }
+
+  // If on profile setup page, stop checks here and render the page
+  // The CreateUserPage component handles redirection if profile already exists
+  if (isProfileSetupPage) {
+    return children;
   }
 
   // 4. Brand Checks
@@ -98,6 +103,13 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
 
     if (hasBrands && !currentBrand && !isActivating) {
       return <LoadingScreen message="Selecting brand..." />;
+    }
+  } else {
+    // If we ARE on brand setup page, but we HAVE brands, we should probably move on or allow creating new?
+    // User complaint "stuck on loading" implies they are stuck here when they should be at scheduler.
+    if (hasBrands) {
+      console.log('✅ [ProtectedRoute] Brand already exists. Redirecting to Scheduler.');
+      return <Navigate to="/scheduler" replace />;
     }
   }
 

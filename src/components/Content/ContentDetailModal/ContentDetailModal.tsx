@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { ContentItem } from '@models/ContentList';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
 import { styles } from './styles';
+import TrashButton from '@/components/Scheduler/CreateModals/shared/TrashButton';
 
 interface ContentDetailModalProps {
   isOpen: boolean;
@@ -298,18 +299,19 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
               >
                 ⬇️ Download
               </button>
-              <button
-                style={{
-                  ...styles.actionBtn,
-                  ...styles.deleteBtn,
-                  ...(hoveredBtn === 'delete' ? styles.deleteBtnHover : {}),
-                }}
+              <TrashButton
                 onClick={onDelete}
-                onMouseEnter={() => setHoveredBtn('delete')}
-                onMouseLeave={() => setHoveredBtn(null)}
+                title="Delete"
+                style={{
+                  padding: '14px 20px',
+                  height: 'auto',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  width: '100%',
+                }}
               >
-                🗑️ Delete
-              </button>
+                Delete
+              </TrashButton>
             </div>
           </div>
         </div>

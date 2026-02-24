@@ -6,7 +6,7 @@ export interface UserProfile {
   birthDate: string;
   country?: string;
   gender?: Gender;
-  isProfileComplete: boolean;
+  // isProfileComplete removed
   createdAt?: string;
   updatedAt?: string;
 }
@@ -54,7 +54,6 @@ export const convertApiUserProfileToUserProfile = (apiProfile: ApiUserProfileDto
   birthDate: apiProfile.birthDate || '',
   country: apiProfile.country || undefined,
   gender: (apiProfile.gender?.toLowerCase() as Gender) || undefined,
-  isProfileComplete: apiProfile.isProfileComplete || false,
   createdAt: apiProfile.createdAt || undefined,
   updatedAt: apiProfile.updatedAt || undefined,
 });

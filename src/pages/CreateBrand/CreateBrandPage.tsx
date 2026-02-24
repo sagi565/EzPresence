@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBrands } from '@hooks/brands/useBrands';
-import { api } from '@utils/apiClient';
+import { useConnectedPlatforms } from '@hooks/platforms/useConnectedPlatforms';
 import { styles } from './styles';
-import { SocialPlatform } from '@models/SocialAccount';
 import SocialsBackground from '@components/Background/SocialsBackground';
-import { CompactSocialButton } from '@components/SocialPlatform/SocialConnection/CompactSocialButton';
+import { ConnectedPlatformsGrid } from '@components/SocialPlatform/ConnectedPlatformsGrid';
 import { BrandInitializeDto } from '@models/Brand';
 
 const BRAND_CATEGORIES = [
@@ -50,14 +49,10 @@ const fileToBase64 = (file: File): Promise<string> => {
 const CreateBrandPage: React.FC = () => {
   const navigate = useNavigate();
   const {
-    currentBrand,
-    brands,
-    hasBrands,
     loading: brandsLoading,
     getUninitializedBrand,
     createUninitializedBrand,
     initializeBrand,
-    setActiveBrand
   } = useBrands();
 
   const [formData, setFormData] = useState<{
@@ -72,6 +67,10 @@ const CreateBrandPage: React.FC = () => {
   });
 
   const [uninitializedBrandId, setUninitializedBrandId] = useState<string | null>(null);
+
+  // Fetch connected platforms
+  const { platforms: connectedPlatforms, refetch: refetchPlatforms } = useConnectedPlatforms(uninitializedBrandId, true);
+
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [nameError, setNameError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,6 +84,32 @@ const CreateBrandPage: React.FC = () => {
   const [isLogoHovered, setIsLogoHovered] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const init = async () => {
+      try {
+        let id = await getUninitializedBrand();
+        if (!id) {
+          id = await createUninitializedBrand();
+        }
+        if (mounted) {
+          setUninitializedBrandId(id);
+        }
+      } catch (err: any) {
+        if (mounted) {
+          setGlobalError(err.message || 'Failed to initialize brand session.');
+        }
+      }
+    };
+
+    if (!uninitializedBrandId && !brandsLoading) {
+      init();
+    }
+
+    return () => { mounted = false; };
+  }, [getUninitializedBrand, createUninitializedBrand, brandsLoading, uninitializedBrandId]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -317,24 +342,12 @@ const CreateBrandPage: React.FC = () => {
           </div>
 
           {/* Social Media Connections - Pass uninitializedBrandUuid */}
-          <div style={styles.socialSectionBottom}>
-            <div style={styles.socialHeaderBottom}>
-              <h2 style={styles.socialTitleBottom}>Connect Social Medias</h2>
-              <p style={styles.socialSubtitleBottom}>Link your social accounts to grow your presence</p>
-            </div>
-
-            <div style={styles.socialGridBottom}>
-              {(['instagram', 'facebook', 'tiktok', 'youtube'] as SocialPlatform[]).map((platform) => (
-                <CompactSocialButton
-                  key={platform}
-                  platform={platform}
-                  // Pass the uninitialized brand ID for connection
-                  brandId={uninitializedBrandId || ''}
-                  isUninitialized={true}
-                />
-              ))}
-            </div>
-          </div>
+          <ConnectedPlatformsGrid
+            connectedPlatforms={connectedPlatforms}
+            onConnectionChange={refetchPlatforms}
+            isUninitializedBrand={true}
+            uninitializedBrandId={uninitializedBrandId!}
+          />
 
           {/* Messages */}
           {errorError && (

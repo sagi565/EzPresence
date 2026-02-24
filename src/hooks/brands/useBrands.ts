@@ -52,11 +52,9 @@ export const useBrands = () => {
     switchBrand,
     loading,
     error,
-    // Alias context method to match old hook API
     refetchBrands: refreshBrands,
     fetchActiveBrand,
     hasBrands: brands.length > 0,
-    // New methods
     getUninitializedBrand,
     createUninitializedBrand,
     initializeBrand,

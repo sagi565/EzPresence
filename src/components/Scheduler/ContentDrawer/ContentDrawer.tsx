@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import ReactDOM from 'react-dom';
+import { ContentItem } from '@/models/ContentList';
 import ContentCard from './ContentCard';
 import { styles } from './styles';
 import { useContentLists } from '@/hooks/contents/useContentLists'; // Ensure correct import path
@@ -6,12 +8,14 @@ import { useContentLists } from '@/hooks/contents/useContentLists'; // Ensure co
 interface ContentDrawerProps {
   brandId: string;
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   onToggle: () => void;
   isPicking?: boolean;
+  onContentDragStart?: () => void;
+  onSelect?: (content: ContentItem) => void;
 }
 
-const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId, isOpen, onClose, onToggle, isPicking }) => {
+const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId, isOpen, onToggle, isPicking, onContentDragStart, onSelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedListId, setSelectedListId] = useState<string>('videos');
 
@@ -43,13 +47,15 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId, isOpen, onClose,
     return itemsToFilter;
   }, [selectedListId, allContent, lists, searchQuery]);
 
-  return (
+  const drawerContent = (
     <div
+      id="contentDrawer"
       className={`content-drawer ${isPicking ? 'nsm-picking' : ''}`}
       style={{ ...styles.drawer, ...(isOpen ? styles.drawerOpen : {}) }}
     >
       {/* Handle */}
-      <div style={styles.drawerHandle} onClick={onToggle}>
+      {/* ... */}
+      <div className="content-drawer-handle" style={styles.drawerHandle} onClick={onToggle}>
         <span style={{ ...styles.drawerArrow, ...(isOpen ? styles.drawerArrowOpen : {}) }}>
           ▲
         </span>
@@ -81,6 +87,8 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId, isOpen, onClose,
                   <ContentCard
                     key={item.id}
                     content={item}
+                    onDragStart={onContentDragStart}
+                    onSelect={onSelect}
                     brandId={brandId}
                   />
                 ))
@@ -124,6 +132,8 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({ brandId, isOpen, onClose,
       </div>
     </div>
   );
+
+  return ReactDOM.createPortal(drawerContent, document.body);
 };
 
 export default ContentDrawer;

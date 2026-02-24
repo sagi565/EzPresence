@@ -10,6 +10,7 @@ interface FourDaysViewProps {
   posts: Post[];
   onDayChange: (direction: number) => void;
   onDrop: (date: Date, time: string, contentId: string) => void;
+  onPostClick?: (post: Post) => void;
 }
 
 const FourDaysView: React.FC<FourDaysViewProps> = ({
@@ -19,6 +20,7 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
   posts,
   onDayChange,
   onDrop,
+  onPostClick,
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
@@ -80,7 +82,7 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
       const postHour = parseInt(post.time.split(':')[0]);
       const postPeriod = post.time.includes('PM') ? 'PM' : 'AM';
       let adjustedPostHour = postHour;
-      
+
       if (postPeriod === 'PM' && postHour !== 12) {
         adjustedPostHour = postHour + 12;
       } else if (postPeriod === 'AM' && postHour === 12) {
@@ -114,7 +116,7 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
   const handleDrop = (e: React.DragEvent, date: Date, hour: number) => {
     e.preventDefault();
     setHoveredCell(null);
-    const contentId = e.dataTransfer.getData('content');
+    const contentId = e.dataTransfer.getData('contentId');
     const time = formatHour(hour);
     onDrop(date, time, contentId);
   };
@@ -179,10 +181,11 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
                   >
                     <div style={styles.postContainer}>
                       {visiblePosts.map((post, idx) => (
-                        <FourDaysViewPost 
-                          key={post.id} 
-                          post={post} 
+                        <FourDaysViewPost
+                          key={post.id}
+                          post={post}
                           isHalf={visiblePosts.length === 2}
+                          onClick={onPostClick}
                         />
                       ))}
                     </div>
