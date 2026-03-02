@@ -31,19 +31,23 @@ async function getAuthToken(): Promise<string | null> {
   }
 }
 
+export interface ApiRequestOptions extends RequestInit {
+  silentStatuses?: number[];
+}
+
 export async function apiRequest<T = any>(
   endpoint: string,
-  options: RequestInit = {},
+  options: ApiRequestOptions = {},
   requireAuth: boolean = true
 ): Promise<T> {
   const token = await getAuthToken();
-  
+
   // If auth is required but no token, throw an error
   if (requireAuth && !token) {
     console.warn('⚠️ [API CLIENT] Auth required but no token available');
     throw new ApiError(401, 'Authentication required. Please log in.');
   }
-  
+
   const headers = new Headers(options.headers as HeadersInit);
   headers.set('Content-Type', 'application/json');
   headers.set('Accept', 'application/json');
@@ -54,13 +58,20 @@ export async function apiRequest<T = any>(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
+  // Prevent aggressive browser caching for GET requests (especially 404s)
+  if (!options.method || options.method.toUpperCase() === 'GET') {
+    headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    headers.set('Pragma', 'no-cache');
+    headers.set('Expires', '0');
+  }
+
   // Ensure endpoint starts with /
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = `${API_BASE_URL}${cleanEndpoint}`;
-  
+
   console.log('🔵 [API CLIENT] Making request:', options.method || 'GET', url);
   console.log('🔵 [API CLIENT] Has token:', !!token);
-  
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -74,7 +85,7 @@ export async function apiRequest<T = any>(
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
       let errorData;
-      
+
       try {
         const text = await response.text();
         if (text) {
@@ -84,20 +95,24 @@ export async function apiRequest<T = any>(
       } catch {
         errorMessage = response.statusText || errorMessage;
       }
-      
-      console.error('❌ [API CLIENT] HTTP Error:', response.status, errorMessage);
+
+      const isSilentError = options.silentStatuses?.includes(response.status);
+
+      if (!isSilentError) {
+        console.error('❌ [API CLIENT] HTTP Error:', response.status, errorMessage);
+      }
       throw new ApiError(response.status, errorMessage, errorData);
     }
 
     // Handle empty responses (204 No Content, etc.)
     const contentLength = response.headers.get('content-length');
     const contentType = response.headers.get('content-type');
-    
+
     if (response.status === 204 || contentLength === '0') {
       console.log('✅ [API CLIENT] Empty response (success):', url);
       return null as T;
     }
-    
+
     if (!contentType || !contentType.includes('application/json')) {
       console.log('⚠️ [API CLIENT] Non-JSON response, content-type:', contentType);
       const text = await response.text();
@@ -115,9 +130,9 @@ export async function apiRequest<T = any>(
     if (error instanceof ApiError) {
       throw error;
     }
-    
+
     console.error('❌ [API CLIENT] Network error:', error);
-    
+
     let errorMessage = 'Network error occurred';
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
       errorMessage = 'Unable to connect to server. Please check:\n' +
@@ -127,47 +142,50 @@ export async function apiRequest<T = any>(
     } else if (error instanceof Error) {
       errorMessage = error.message;
     }
-    
+
     throw new ApiError(0, errorMessage);
   }
 }
 
 // Convenience methods
 export const api = {
-  get: <T = any>(endpoint: string, options?: RequestInit & { requireAuth?: boolean }) => {
-    const { requireAuth = true, ...restOptions } = options || {};
-    return apiRequest<T>(endpoint, { ...restOptions, method: 'GET' }, requireAuth);
+  get: <T = any>(endpoint: string, options?: ApiRequestOptions & { requireAuth?: boolean }) => {
+    const { requireAuth = true, silentStatuses, ...restOptions } = options || {};
+    return apiRequest<T>(endpoint, { ...restOptions, silentStatuses, method: 'GET' }, requireAuth);
   },
-  
-  post: <T = any>(endpoint: string, data?: any, options?: RequestInit & { requireAuth?: boolean }) => {
-    const { requireAuth = true, ...restOptions } = options || {};
+
+  post: <T = any>(endpoint: string, data?: any, options?: ApiRequestOptions & { requireAuth?: boolean }) => {
+    const { requireAuth = true, silentStatuses, ...restOptions } = options || {};
     return apiRequest<T>(endpoint, {
       ...restOptions,
+      silentStatuses,
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     }, requireAuth);
   },
-  
-  put: <T = any>(endpoint: string, data?: any, options?: RequestInit & { requireAuth?: boolean }) => {
-    const { requireAuth = true, ...restOptions } = options || {};
+
+  put: <T = any>(endpoint: string, data?: any, options?: ApiRequestOptions & { requireAuth?: boolean }) => {
+    const { requireAuth = true, silentStatuses, ...restOptions } = options || {};
     return apiRequest<T>(endpoint, {
       ...restOptions,
+      silentStatuses,
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     }, requireAuth);
   },
-  
-  patch: <T = any>(endpoint: string, data?: any, options?: RequestInit & { requireAuth?: boolean }) => {
-    const { requireAuth = true, ...restOptions } = options || {};
+
+  patch: <T = any>(endpoint: string, data?: any, options?: ApiRequestOptions & { requireAuth?: boolean }) => {
+    const { requireAuth = true, silentStatuses, ...restOptions } = options || {};
     return apiRequest<T>(endpoint, {
       ...restOptions,
+      silentStatuses,
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
     }, requireAuth);
   },
-  
-  delete: <T = any>(endpoint: string, options?: RequestInit & { requireAuth?: boolean }) => {
-    const { requireAuth = true, ...restOptions } = options || {};
-    return apiRequest<T>(endpoint, { ...restOptions, method: 'DELETE' }, requireAuth);
+
+  delete: <T = any>(endpoint: string, options?: ApiRequestOptions & { requireAuth?: boolean }) => {
+    const { requireAuth = true, silentStatuses, ...restOptions } = options || {};
+    return apiRequest<T>(endpoint, { ...restOptions, silentStatuses, method: 'DELETE' }, requireAuth);
   },
 };

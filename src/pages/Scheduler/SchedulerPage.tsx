@@ -9,7 +9,7 @@ import FourDaysView from '@components/Scheduler/Calendar/FourDaysView/FourDaysVi
 import ContentDrawer from '@components/Scheduler/ContentDrawer/ContentDrawer';
 import NewStoryModal from '@components/Scheduler/CreateModals/NewStoryModal/NewStoryModal';
 import NewPostModal from '@components/Scheduler/CreateModals/NewPostModal/NewPostModal';
-import DropActionModal from '@components/Scheduler/DropActionModal/DropActionModal';
+import CreateDropdown from '@components/Scheduler/SchedulerBar/CreateDropdown';
 import { StoryFormData } from '@/models/StorySchedule';
 import { PostFormData } from '@/models/ScheduleFormData';
 import { styles } from './styles';
@@ -37,7 +37,8 @@ const DragPreview: React.FC<{ item: any; position: { x: number; y: number } }> =
         borderRadius: '12px',
         overflow: 'hidden',
         boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-        transform: `translate(${position.x - 60}px, ${position.y - 80}px) rotate(-2deg) scale(1.05)`,
+        // Move the preview *up* so it doesn't block the mouse
+        transform: `translate(${position.x - 60}px, ${position.y - 170}px) rotate(-2deg) scale(1.05)`,
         pointerEvents: 'none',
         zIndex: 10000,
         backgroundColor: '#2a2a2a',
@@ -84,6 +85,7 @@ const SchedulerPage: React.FC = () => {
   const [showNewPostModal, setShowNewPostModal] = useState(false);
   const [showDropActionModal, setShowDropActionModal] = useState(false);
   const [dropData, setDropData] = useState<{ date: Date; time?: string; contentId: string } | null>(null);
+  const [dropAnchorPos, setDropAnchorPos] = useState<{ x: number; y: number } | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isPicking, setIsPicking] = useState(false);
   const [lastPickedContent, setLastPickedContent] = useState<ContentItem | null>(null);
@@ -101,6 +103,42 @@ const SchedulerPage: React.FC = () => {
     error: schedulesError,
     refetchSchedules
   } = useSchedules(currentBrand?.id || '');
+
+  // Calculate visible date range based on view mode and current dates
+  const visibleRange = useMemo(() => {
+    if (viewMode === 'month') {
+      // For month view, get the first day of the grid (often in previous month)
+      // and last day of the grid (often in next month)
+      const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+      const startOffset = firstDayOfMonth.getDay(); // 0 (Sun) to 6 (Sat)
+      const startDate = new Date(currentYear, currentMonth, 1 - startOffset);
+      startDate.setHours(0, 0, 0, 0);
+
+      // Grid is 6 weeks (42 days)
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 42);
+      endDate.setHours(23, 59, 59, 999);
+
+      return { startDate, endDate };
+    } else {
+      // For 4-day view
+      const startDate = new Date(currentYear, currentMonth, currentDay);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 4);
+      endDate.setHours(23, 59, 59, 999);
+
+      return { startDate, endDate };
+    }
+  }, [currentYear, currentMonth, currentDay, viewMode]);
+
+  // Fetch schedules when brand or visible date range changes
+  useEffect(() => {
+    if (currentBrand?.id) {
+      refetchSchedules(visibleRange.startDate, visibleRange.endDate);
+    }
+  }, [currentBrand?.id, visibleRange, refetchSchedules]);
 
   // Use useMediaContents instead of useContent
   const {
@@ -193,6 +231,7 @@ const SchedulerPage: React.FC = () => {
         console.log('❌ [SchedulerPage] Click outside detected. Closing drawer.');
         setIsDrawerOpen(false);
         setIsPicking(false);
+        window.dispatchEvent(new Event('cancel-pick-content'));
       }
     };
 
@@ -239,15 +278,35 @@ const SchedulerPage: React.FC = () => {
     setViewMode(view);
   };
 
-  const handleDrop = (date: Date, contentId: string) => {
+  const handleDrop = (date: Date, contentId: string, position: { x: number; y: number }) => {
     setDropData({ date, contentId });
+    setDropAnchorPos(position);
     setShowDropActionModal(true);
     setIsDrawerOpen(false);
     setIsPicking(false);
   };
 
-  const handleFourDaysViewDrop = (date: Date, time: string, contentId: string) => {
+  const handleFourDaysViewDrop = (date: Date, time: string, contentId: string, position: { x: number; y: number }) => {
     setDropData({ date, time, contentId });
+    setDropAnchorPos(position);
+    setShowDropActionModal(true);
+    setIsDrawerOpen(false);
+    setIsPicking(false);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, date: Date) => {
+    e.preventDefault();
+    setDropData({ date, contentId: '' });
+    setDropAnchorPos({ x: e.clientX, y: e.clientY });
+    setShowDropActionModal(true);
+    setIsDrawerOpen(false);
+    setIsPicking(false);
+  };
+
+  const handleFourDaysContextMenu = (e: React.MouseEvent, date: Date, time: string) => {
+    e.preventDefault();
+    setDropData({ date, time, contentId: '' });
+    setDropAnchorPos({ x: e.clientX, y: e.clientY });
     setShowDropActionModal(true);
     setIsDrawerOpen(false);
     setIsPicking(false);
@@ -298,7 +357,12 @@ const SchedulerPage: React.FC = () => {
       scheduleUuid: post.scheduleUuid,
       calendarItemId: post.calendarItemId,
       id: post.id,
-      status: post.status
+      status: post.status,
+      repeat: post.isRecurring ? {
+        frequency: 'custom',
+        rruleText: post.rruleText,
+        label: 'Custom'
+      } : { frequency: 'none', label: 'Does not repeat' }
     };
 
     if (post.type === 'Story') {
@@ -396,6 +460,8 @@ const SchedulerPage: React.FC = () => {
             today={today}
             onDrop={handleDrop}
             onPostClick={handlePostClick}
+            activeDropDate={showDropActionModal ? dropData?.date : null}
+            onContextMenu={handleContextMenu}
           />
         ) : (
           <FourDaysView
@@ -406,6 +472,7 @@ const SchedulerPage: React.FC = () => {
             onDayChange={handleDayChange}
             onDrop={handleFourDaysViewDrop}
             onPostClick={handlePostClick}
+            onContextMenu={handleFourDaysContextMenu}
           />
         )}
       </div>
@@ -414,6 +481,7 @@ const SchedulerPage: React.FC = () => {
         if (isPicking) {
           setIsPicking(false);
           setIsDrawerOpen(false); // Close drawer on cancel
+          window.dispatchEvent(new Event('cancel-pick-content'));
         }
       }} />
 
@@ -423,10 +491,15 @@ const SchedulerPage: React.FC = () => {
         onClose={() => {
           setIsDrawerOpen(false);
           setIsPicking(false);
+          window.dispatchEvent(new Event('cancel-pick-content'));
         }}
         onToggle={() => {
           console.log('🔃 [SchedulerPage] Drawer toggle clicked. New state:', !isDrawerOpen);
           setIsDrawerOpen(!isDrawerOpen);
+          if (isDrawerOpen) {
+            setIsPicking(false); // If we are closing, cancel picking
+            window.dispatchEvent(new Event('cancel-pick-content'));
+          }
         }}
         isPicking={isPicking}
         onContentDragStart={() => setIsDrawerOpen(false)}
@@ -463,6 +536,7 @@ const SchedulerPage: React.FC = () => {
           setIsPicking(false);
           setIsDrawerOpen(false);
           setLastPickedContent(null);
+          window.dispatchEvent(new Event('cancel-pick-content'));
         }}
         onContentDrop={() => setIsDrawerOpen(false)}
         lastPickedContent={lastPickedContent}
@@ -499,18 +573,21 @@ const SchedulerPage: React.FC = () => {
           setIsPicking(false);
           setIsDrawerOpen(false);
           setLastPickedContent(null);
+          window.dispatchEvent(new Event('cancel-pick-content'));
         }}
         onContentDrop={() => setIsDrawerOpen(false)}
         lastPickedContent={lastPickedContent}
       />
 
-      <DropActionModal
+      <CreateDropdown
         isOpen={showDropActionModal}
         onClose={() => {
           setShowDropActionModal(false);
           setDropData(null);
+          setDropAnchorPos(null);
         }}
         onSelect={handleDropActionSelect}
+        anchorPos={dropAnchorPos || undefined}
       />
 
       {dragProgress && (

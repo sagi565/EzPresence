@@ -40,8 +40,8 @@ export const useBrandAuthRedirect = (isProtectedPage: boolean = false) => {
                 if (activeBrand) {
                     if (!isProtectedPage) {
                         // If we are on Create Brand Page (not protected), redirect to Scheduler
-                        console.log('✅ [BrandAuth] Active brand found, redirecting to scheduler');
-                        navigate('/scheduler', { replace: true });
+                        console.log('✅ [BrandAuth] Active brand found, redirecting to home');
+                        navigate('/', { replace: true });
                     } else {
                         // Protected page, and we have active brand: OK
                         setCheckingStatus(false);

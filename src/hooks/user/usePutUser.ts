@@ -8,6 +8,7 @@ import {
   Gender
 } from '@models/User';
 import { api } from '@utils/apiClient';
+import { auth } from '@lib/firebase';
 
 export interface UpdateUserData {
   firstName?: string;
@@ -26,13 +27,21 @@ export const useUpdateUser = () => {
     setError(null);
 
     try {
-      const requestBody: UserUpdateDto = convertUserProfileToUpdateDto(data);
+      console.log('📡 [useUpdateUser] Starting update call with data:', data);
+
+      const user = auth.currentUser;
+      console.log('📡 [useUpdateUser] Current Firebase user:', user ? user.uid : 'No user');
+      const email = user?.email || undefined;
+      console.log('📡 [useUpdateUser] Email from Firebase user:', email);
+
+      const requestBody: UserUpdateDto = convertUserProfileToUpdateDto(data, email);
+      console.log('📡 [useUpdateUser] Request body prepared:', JSON.stringify(requestBody, null, 2));
 
       // PUT /api/users
-      // API returns 204 No Content on success, which apiClient converts to null
+      console.log('📡 [useUpdateUser] Executing PUT /api/users...');
       const response = await api.put<ApiUserProfileDto | null>('/users', requestBody);
 
-      console.log('✅ User updated successfully');
+      console.log('✅ [useUpdateUser] User updated successfully. Response:', response);
 
       if (response) {
         return convertApiUserProfileToUserProfile(response);

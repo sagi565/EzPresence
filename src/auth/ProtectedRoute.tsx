@@ -84,7 +84,7 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
   }
 
   // If on profile setup page, stop checks here and render the page
-  // The CreateUserPage component handles redirection if profile already exists
+  // We want users to be able to reach this page to edit their profile.
   if (isProfileSetupPage) {
     return children;
   }
@@ -108,8 +108,8 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
     // If we ARE on brand setup page, but we HAVE brands, we should probably move on or allow creating new?
     // User complaint "stuck on loading" implies they are stuck here when they should be at scheduler.
     if (hasBrands) {
-      console.log('✅ [ProtectedRoute] Brand already exists. Redirecting to Scheduler.');
-      return <Navigate to="/scheduler" replace />;
+      console.log('✅ [ProtectedRoute] Brand already exists. Redirecting to Home.');
+      return <Navigate to="/" replace />;
     }
   }
 

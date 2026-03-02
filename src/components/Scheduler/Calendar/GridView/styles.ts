@@ -50,14 +50,11 @@ export const styles: Record<string, CSSProperties> = {
     border: '1px solid',
     borderColor: 'transparent',
   },
+  calendarDayOtherMonth: {
+    background: 'rgba(245, 245, 250, 0.6)',
+  },
   calendarDayPast: {
-    background: `repeating-linear-gradient(
-      -45deg,
-      ${theme.colors.surface},
-      ${theme.colors.bg} 8px,
-      hsla(221, 13%, 66%, 0.06) 8px,
-      hsla(221, 13%, 66%, 0.06) 16px
-    )`,
+    background: 'rgba(249, 250, 251, 0.5)',
   },
   calendarDayToday: {
     background: 'rgba(155, 93, 229, 0.05)',
@@ -87,6 +84,23 @@ export const styles: Record<string, CSSProperties> = {
     color: theme.colors.primary,
     textAlign: 'center',
     marginBottom: '6px',
+  },
+  dayNumberOtherMonth: {
+    fontSize: '14px',
+    fontWeight: 600,
+    color: '#c0c0c8',
+    textAlign: 'center',
+    marginBottom: '4px',
+  },
+  monthLabel: {
+    display: 'block',
+    fontSize: '10px',
+    fontWeight: 500,
+    color: '#b0b0bc',
+    textAlign: 'center',
+    letterSpacing: '0.02em',
+    marginTop: '1px',
+    lineHeight: 1.2,
   },
   overflowIndicator: {
     position: 'absolute',
@@ -139,18 +153,18 @@ export const styles: Record<string, CSSProperties> = {
     cursor: 'pointer',
   },
   statusSuccess: {
-    background: theme.colors.teal,
+    background: '#22c55e',
   },
   statusFailed: {
-    background: theme.colors.pink,
+    background: '#ef4444',
   },
   statusScheduled: {
-    background: 'transparent',
-    border: '1px solid',
-    borderColor: theme.colors.text,
+    background: theme.colors.blue,
   },
   statusDraft: {
-    background: theme.colors.secondary,
+    background: 'white',
+    border: '1.5px dashed #4b5563',
+    boxSizing: 'border-box',
   },
   blackTooltip: {
     position: 'absolute',

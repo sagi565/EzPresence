@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SocialPlatform, PLATFORM_COLORS, PLATFORM_NAMES } from '@models/SocialAccount';
 import { useConnectPlatform } from '@/hooks/platforms/useConnectPlatform';
+import ConfirmDialog from '@/components/Scheduler/CreateModals/ConfirmDialog/ConfirmDialog';
 import { socialCardStyles as styles } from './styles';
 
 interface SocialConnectionCardProps {
@@ -15,24 +16,38 @@ export const SocialConnectionCard: React.FC<SocialConnectionCardProps> = ({
   const { isConnected, account, loading, connect, disconnect } = useConnectPlatform(platform, brandId);
   const [isHovered, setIsHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   const platformColors = PLATFORM_COLORS[platform];
   const platformName = PLATFORM_NAMES[platform];
 
   const handleAction = async () => {
     if (loading) return;
-    
+
+    if (isConnected) {
+      setShowDisconnectConfirm(true);
+      return;
+    }
+
     setIsAnimating(true);
     setTimeout(() => setIsAnimating(false), 600);
 
     try {
-      if (isConnected) {
-        await disconnect();
-      } else {
-        await connect();
-      }
+      await connect();
     } catch (error) {
-      console.error(`Failed to ${isConnected ? 'disconnect' : 'connect'} ${platform}:`, error);
+      console.error(`Failed to connect ${platform}:`, error);
+    }
+  };
+
+  const confirmDisconnect = async () => {
+    setShowDisconnectConfirm(false);
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 600);
+
+    try {
+      await disconnect();
+    } catch (error) {
+      console.error(`Failed to disconnect ${platform}:`, error);
     }
   };
 
@@ -123,7 +138,7 @@ export const SocialConnectionCard: React.FC<SocialConnectionCardProps> = ({
         {loading ? (
           <span style={styles.spinner} />
         ) : isConnected ? (
-          'Disconnect'
+          isHovered ? 'Disconnect' : 'Connected'
         ) : (
           'Connect'
         )}
@@ -138,6 +153,17 @@ export const SocialConnectionCard: React.FC<SocialConnectionCardProps> = ({
           }}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={showDisconnectConfirm}
+        title="Disconnect Platform"
+        message={`Are you sure you want to disconnect ${platformName}?`}
+        confirmLabel="Disconnect"
+        cancelLabel="Cancel"
+        danger={true}
+        onConfirm={confirmDisconnect}
+        onCancel={() => setShowDisconnectConfirm(false)}
+      />
     </div>
   );
 };

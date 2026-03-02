@@ -111,14 +111,8 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
             </a>
 
             {['dashboard'].includes(btn.id) && (
-              <span style={{
-                ...styles.comingSoonBadge,
-                opacity: hoveredBtn === btn.id ? 1 : 0,
-                transform: hoveredBtn === btn.id ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(3px)',
-              }}>Coming Soon</span>
+              <span style={styles.comingSoonBadge}>Coming Soon</span>
             )}
-
-
           </div>
         ))}
       </div>

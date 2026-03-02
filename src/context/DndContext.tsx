@@ -17,7 +17,7 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
-import { ContentList, SYSTEM_LIST_NAMES } from '@models/ContentList';
+import { ContentList } from '@models/ContentList';
 
 // Types for drag and drop operations
 export type DragType = 'LIST' | 'ITEM';
@@ -29,6 +29,7 @@ export interface DragData {
   icon?: string;
   title?: string;
   thumbnail?: string;
+  mediaType?: 'video' | 'image';
 }
 
 interface DndContextValue {
@@ -171,30 +172,26 @@ export const DndProvider: React.FC<DndProviderProps> = ({
         // Validation for System Lists
         const targetList = lists.find(l => l.id === targetListId);
 
-        // Find the item to check its type (video vs image)
-        let draggedItemType: string | undefined;
-        // Try to find in source list
-        const sourceList = lists.find(l => l.id === sourceListId);
-        if (sourceList) {
-          const item = sourceList.items.find(i => i.id === active.id);
-          draggedItemType = item?.type;
-        }
+        // Use activeData.mediaType for strict validation
+        const draggedItemMediaType = activeDataCurrent.mediaType;
 
-        if (targetList && targetList.isSystem && draggedItemType) {
-          const isTargetVideo = targetList.title === SYSTEM_LIST_NAMES.UPLOADED_VIDEOS;
-          const isTargetImage = targetList.title === SYSTEM_LIST_NAMES.UPLOADED_IMAGES;
+        if (targetList && targetList.isSystem && draggedItemMediaType) {
+          const targetTitle = (targetList.title || '').toLowerCase();
+          const isTargetVideo = targetTitle.includes('video') && targetTitle.includes('upload');
+          const isTargetImage = targetTitle.includes('image') && targetTitle.includes('upload');
 
           // Prevent Video -> Image List
-          if (isTargetImage && draggedItemType === 'video') {
+          if (isTargetImage && draggedItemMediaType === 'video') {
             return;
           }
 
           // Prevent Image -> Video List
-          if (isTargetVideo && draggedItemType === 'image') {
+          if (isTargetVideo && draggedItemMediaType === 'image') {
             return;
           }
         }
 
+        // Call onItemMove if validation passes
         onItemMove(active.id as string, sourceListId, targetListId);
       }
     }
@@ -222,6 +219,9 @@ export const DndProvider: React.FC<DndProviderProps> = ({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
+        accessibility={{
+          restoreFocus: false,
+        }}
       >
         {children}
         <DragOverlay dropAnimation={dropAnimation} modifiers={[snapCenterToCursor]}>

@@ -1,0 +1,78 @@
+import { CSSProperties } from 'react';
+import { theme } from '@/theme/theme';
+
+export const styles: Record<string, CSSProperties> = {
+    overlay: {
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(4px)',
+        zIndex: 10000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    dialog: {
+        background: '#fff',
+        borderRadius: '16px',
+        padding: '28px 32px',
+        maxWidth: '400px',
+        width: '90%',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+        animation: 'confirmDialogFadeIn 0.2s ease-out',
+    },
+    titleRow: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        marginBottom: '12px',
+    },
+    dangerIcon: {
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        background: 'rgba(239, 68, 68, 0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+    },
+    title: {
+        margin: 0,
+        fontSize: '17px',
+        fontWeight: 700,
+        color: theme.colors.text,
+    },
+    message: {
+        margin: '0 0 24px 0',
+        fontSize: '14px',
+        color: theme.colors.muted,
+        lineHeight: 1.5,
+    },
+    actions: {
+        display: 'flex',
+        justifyContent: 'flex-end',
+        gap: '10px',
+    },
+    cancelBtn: {
+        padding: '9px 20px',
+        borderRadius: '10px',
+        border: '1px solid #E5E7EB',
+        background: '#fff',
+        color: theme.colors.text,
+        fontSize: '14px',
+        fontWeight: 600,
+        cursor: 'pointer',
+        transition: 'all 0.15s',
+    },
+    confirmBtn: {
+        padding: '9px 20px',
+        borderRadius: '10px',
+        border: 'none',
+        color: '#fff',
+        fontSize: '14px',
+        fontWeight: 600,
+        cursor: 'pointer',
+        transition: 'all 0.15s',
+    },
+};

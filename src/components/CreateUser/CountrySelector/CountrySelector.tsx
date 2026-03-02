@@ -44,18 +44,21 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Find selected country object based on the CODE stored in 'value'
+  // Find selected country object based on the CODE or NAME stored in 'value'
   const selectedCountry = useMemo(() => {
     if (!value) return null;
-    // Updated: Look for the country where the CODE matches the value
-    return allCountries.find(c => c.code === value) || null;
+    const searchVal = value.toLowerCase();
+    return allCountries.find(c =>
+      c.code.toLowerCase() === searchVal ||
+      c.name.toLowerCase() === searchVal
+    ) || null;
   }, [value]);
 
   // Filter countries based on search
   const filteredCountries = useMemo(() => {
     if (!searchTerm.trim()) return allCountries;
     const term = searchTerm.toLowerCase();
-    return allCountries.filter(c => 
+    return allCountries.filter(c =>
       c.name.toLowerCase().includes(term)
     );
   }, [searchTerm]);
@@ -124,7 +127,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setHighlightedIndex(prev => 
+        setHighlightedIndex(prev =>
           prev < filteredCountries.length - 1 ? prev + 1 : prev
         );
         break;
@@ -148,7 +151,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
   return (
     <div style={styles.container} ref={containerRef}>
       <label style={styles.label}>{label}</label>
-      
+
       <div
         style={{
           ...styles.inputContainer,
@@ -162,8 +165,8 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
         {selectedCountry && !isOpen ? (
           <div style={styles.selectedValue}>
             <span style={styles.countryName}>{selectedCountry.name}</span>
-            <img 
-              src={getFlagUrl(selectedCountry.code)} 
+            <img
+              src={getFlagUrl(selectedCountry.code)}
               alt={selectedCountry.name}
               style={styles.flagImage}
               onError={(e) => {
@@ -206,8 +209,8 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
                   onMouseEnter={() => setHighlightedIndex(index)}
                 >
                   <span style={styles.optionName}>{country.name}</span>
-                  <img 
-                    src={getFlagUrl(country.code)} 
+                  <img
+                    src={getFlagUrl(country.code)}
                     alt={country.name}
                     style={styles.optionFlag}
                     onError={(e) => {

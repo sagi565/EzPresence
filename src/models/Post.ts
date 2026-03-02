@@ -17,6 +17,7 @@ export interface Post {
   calendarItemId?: string;
   contentUuids?: string[];
   isRecurring?: boolean;
+  rruleText?: string | null;
 }
 
 export interface PlatformBadge {
@@ -40,6 +41,7 @@ export interface ApiScheduleDto {
   targets?: string[];       // ['INSTAGRAM', 'FACEBOOK', etc.]
   plannedAtLocalTime?: string; // ISO 8601
   failReason?: Record<string, any>;
+  Status?: string;
   status?: string;
   postStatus?: string; // New field for draft/pending
 
@@ -125,13 +127,14 @@ export const convertApiScheduleToPost = (apiSchedule: ApiScheduleDto, index: num
     date: date,
     time: formatTimeString(date),
     platforms: convertTargetsToPlatforms(apiSchedule.targets),
-    status: (apiSchedule.status?.toLowerCase() === 'pending' ? 'scheduled' : apiSchedule.status?.toLowerCase() as PostStatus) || 'scheduled',
+    status: ((apiSchedule.status || apiSchedule.Status)?.toLowerCase() === 'pending' ? 'scheduled' : (apiSchedule.status || apiSchedule.Status)?.toLowerCase() as PostStatus) || 'scheduled',
     media: convertPostTypeToMediaType(apiSchedule.postType),
     type: isStory ? 'Story' : 'Post',
     title: apiSchedule.scheduleTitle || apiSchedule.calendarItemName || apiSchedule.scheduleName || 'Untitled Post',
     description: apiSchedule.scheduleDescription || undefined,
     contentUuids: contentUuids,
-    isRecurring: !!apiSchedule.rruleText || apiSchedule.scheduleType === 'Recurring',
+    isRecurring: !!apiSchedule.rruleText || apiSchedule.scheduleType === 'Policy',
+    rruleText: apiSchedule.rruleText,
     scheduleUuid: apiSchedule.scheduleId,
     calendarItemId: apiSchedule.calendarItemId
   };
@@ -172,6 +175,7 @@ export const convertPostToApiSchedule = (post: {
     scheduleDescription: post.description || null,
 
     postType: post.type === 'Story' ? 'STORY' : 'POST',
+    scheduleType: isRecurring ? 'Policy' : 'OneTime',
 
     plannedAtUtc: isRecurring ? null : scheduledDate.toISOString(),
 
@@ -181,6 +185,6 @@ export const convertPostToApiSchedule = (post: {
 
     targets: convertPlatformsToTargets(post.platforms),
     contentUuids: post.contentUuids || null,
-    status: post.status || undefined,
+    Status: post.status || undefined,
   };
 };

@@ -1,4 +1,5 @@
-import { Content } from './Content';
+// Removed unused import
+
 
 export type ContentItemType = 'video' | 'image' | 'upload';
 export type ContentStatus = 'success' | 'failed' | 'scheduled' | 'uploading';
@@ -55,8 +56,7 @@ export interface ApiContentListUpdateDto {
 export const SYSTEM_LIST_NAMES = {
   UPLOADED_VIDEOS: 'Uploaded Videos',
   UPLOADED_IMAGES: 'Uploaded Images',
-  MADE_BY_CREATORS: 'Made by Creators',
-  MADE_BY_PRODUCER: 'Made by Producer Mode',
+  MADE_BY_EZPRESENCE: 'Made by Studio',
 };
 
 // Maps backend string keywords to frontend Emojis
@@ -68,8 +68,10 @@ const mapBackendIcon = (iconKey: string | null | undefined, listName: string | n
   // System list icons
   if (name.includes('uploaded videos') || key.includes('upload') && name.includes('video')) return '🎬';
   if (name.includes('uploaded images') || key.includes('upload') && name.includes('image')) return '🖼️';
-  if (name.includes('producer') || key.includes('producer')) return '🎯';
-  if (name.includes('creators') || key.includes('creators')) return '👥';
+  if (name.includes('ezpresence') || key.includes('ezpresence')) return '✨';
+  if (name.includes('producer') || key.includes('producer')) return '✨';
+  if (name.includes('creators') || key.includes('creators')) return '✨';
+  if (name.includes('studio') || key.includes('studio')) return '✨';
 
   return iconKey; // Fallback to original if it's already an emoji
 };
@@ -81,6 +83,8 @@ const isSystemListName = (name: string | null | undefined): boolean => {
   return (
     lowerName.includes('uploaded videos') ||
     lowerName.includes('uploaded images') ||
+    lowerName.includes('made by ezpresence') ||
+    lowerName.includes('made by studio') ||
     lowerName.includes('made by creators') ||
     lowerName.includes('made by producer') ||
     lowerName.includes('producer mode')
@@ -88,10 +92,20 @@ const isSystemListName = (name: string | null | undefined): boolean => {
 };
 
 export const convertApiContentListToContentList = (apiList: ApiContentListDto): ContentList => {
-  const listName = apiList.listName || 'Untitled List';
+  let listName = apiList.listName || 'Untitled List';
 
-  // All lists now use vertical (video) format - no more horizontal images
-  const listType: 'video' | 'image' = 'video';
+  // Normalize system list titles — also merge old Creators/Producer into Studio
+  const lowerName = listName.toLowerCase();
+  if (lowerName.includes('made by creators') || lowerName.includes('made by producer') || lowerName.includes('producer mode') || lowerName.includes('ezpresence') || lowerName.includes('studio')) {
+    listName = 'Made by Studio';
+  } else if (lowerName.includes('uploaded videos')) {
+    listName = 'Uploaded Videos';
+  } else if (lowerName.includes('uploaded images')) {
+    listName = 'Uploaded Images';
+  }
+
+  // Determine list format based on name - 'Uploaded Images' should use images
+  const listType: 'video' | 'image' = lowerName.includes('images') ? 'image' : 'video';
 
   return {
     id: apiList.uuid,
@@ -106,11 +120,8 @@ export const convertApiContentListToContentList = (apiList: ApiContentListDto): 
 
 // Helper to format system list titles with gradient
 export const formatSystemListTitle = (title: string): { prefix: string; gradient: string } | null => {
-  if (title.includes('Made by Creators')) {
-    return { prefix: 'Made by ', gradient: 'Creators' };
-  }
-  if (title.includes('Made by Producer Mode') || title.includes('Producer Mode')) {
-    return { prefix: 'Made by ', gradient: 'Producer Mode' };
+  if (title.includes('Made by Studio')) {
+    return { prefix: 'Made by ', gradient: 'Studio' };
   }
   return null;
 };

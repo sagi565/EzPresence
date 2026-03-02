@@ -72,12 +72,12 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({
   for (let day = 1; day <= daysInMonth; day++) {
     const isTodayDay = isToday(day);
     const isHovered = hoveredDay === day;
-    
+
     const dayStyle = {
       ...styles.miniCalDay,
       ...(isTodayDay ? styles.miniCalDayToday : {}),
       ...(isHovered && !isTodayDay ? {
-        background: theme.colors.blue,
+        background: theme.colors.secondary,
         color: 'white',
       } : {}),
     };

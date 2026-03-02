@@ -433,10 +433,4 @@ export const globalStyles = `
   #contentDrawer.nsm-picking {
     z-index: 2000 !important;
   }
-  
-  /* Disable drawer handle interaction during content picking */
-  #contentDrawer.nsm-picking .content-drawer-handle {
-    cursor: default;
-    pointer-events: none;
-  }
 `;

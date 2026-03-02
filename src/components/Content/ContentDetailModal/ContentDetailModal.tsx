@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { ContentItem } from '@models/ContentList';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
 import { styles } from './styles';
-import TrashButton from '@/components/Scheduler/CreateModals/shared/TrashButton';
+import TrashButton from '@/components/Scheduler/CreateModals/TrashButton/TrashButton';
 
 interface ContentDetailModalProps {
   isOpen: boolean;
@@ -86,6 +86,8 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   };
 
   const mediaSrc = fetchedUrl || getThumbnailSrc();
+  // For images, always prefer thumbnail for inline display (download URLs may not render inline)
+  const displaySrc = isVideo ? mediaSrc : (getThumbnailSrc() || fetchedUrl);
 
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return 'Unknown';
@@ -170,29 +172,31 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
         <button
           style={{
             ...styles.closeBtn,
-            ...(hoveredBtn === 'close' ? styles.closeBtnHover : {}),
+            // Keep specific hover if needed, but rely on global class for primary rotation effect
           }}
+          className="modal-close-btn"
           onClick={onClose}
-          onMouseEnter={() => setHoveredBtn('close')}
-          onMouseLeave={() => setHoveredBtn(null)}
         >
-          ×
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
 
         <div style={styles.content}>
           {/* Media Section */}
           <div style={styles.mediaSection}>
-            {isVideo && mediaSrc ? (
+            {isVideo && displaySrc ? (
               <video
                 ref={videoRef}
-                src={mediaSrc}
+                src={displaySrc}
                 controls
                 autoPlay
                 loop
                 style={styles.media}
               />
-            ) : mediaSrc ? (
-              <img src={mediaSrc} alt={item.title} style={styles.media} />
+            ) : !isVideo && displaySrc ? (
+              <img src={displaySrc} alt={item.title} style={styles.media} />
             ) : (
               <div style={styles.mediaPlaceholder}>
                 <span style={{ fontSize: '64px' }}>{isVideo ? '🎬' : '🖼️'}</span>
@@ -217,14 +221,14 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
                   />
                   <button
                     onClick={handleRenameSubmit}
-                    style={{ ...styles.editBtn, background: '#22c55e', color: 'white' }}
+                    style={{ ...styles.editBtn, background: 'rgba(34, 197, 94, 0.15)', color: '#16a34a' }}
                     title="Save"
                   >
                     ✓
                   </button>
                   <button
                     onClick={handleEditCancel}
-                    style={{ ...styles.editBtn, background: '#ef4444', color: 'white' }}
+                    style={{ ...styles.editBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#dc2626' }}
                     title="Cancel"
                   >
                     ×

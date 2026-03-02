@@ -98,7 +98,7 @@ export const styles: Record<string, CSSProperties> = {
     overflow: 'visible',
   },
   dayCellPast: {
-    background: theme.colors.bg,
+    background: 'rgba(249, 250, 251, 0.5)',
     cursor: 'default',
   },
   dayCellToday: {
@@ -215,18 +215,18 @@ export const styles: Record<string, CSSProperties> = {
     cursor: 'pointer',
   },
   statusSuccess: {
-    background: theme.colors.teal,
+    background: '#22c55e',
   },
   statusFailed: {
-    background: theme.colors.pink,
+    background: '#ef4444',
   },
   statusScheduled: {
-    background: 'transparent',
-    border: '1px solid',
-    borderColor: theme.colors.text,
+    background: theme.colors.blue,
   },
   statusDraft: {
-    background: theme.colors.secondary,
+    background: 'white',
+    border: '1.5px dashed #4b5563',
+    boxSizing: 'border-box',
   },
   blackTooltip: {
     position: 'absolute',

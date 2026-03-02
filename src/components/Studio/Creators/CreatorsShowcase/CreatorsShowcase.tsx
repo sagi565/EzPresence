@@ -65,9 +65,12 @@ const CreatorsShowcase: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const slidesRef = useRef<HTMLElement[]>([]);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastScrollTop = useRef(0);
-  const scrollVelocity = useRef(0);
-  const velocityCheckInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentIndexRef = useRef(0);
+
+  // Keep ref in sync to avoid constant listener re-attachment
+  useEffect(() => {
+    currentIndexRef.current = currentIndex;
+  }, [currentIndex]);
 
   // Update current index based on scroll position
   const updateCurrentIndex = useCallback(() => {
@@ -95,29 +98,12 @@ const CreatorsShowcase: React.FC = () => {
       }
     });
 
-    if (closestIndex !== currentIndex) {
+    if (closestIndex !== currentIndexRef.current) {
       setCurrentIndex(closestIndex);
     }
-  }, [currentIndex, isScrolling]);
+  }, [isScrolling]);
 
-  // Track scroll velocity for hard scrolling detection
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
 
-    velocityCheckInterval.current = setInterval(() => {
-      const currentScrollTop = container.scrollTop;
-      const delta = currentScrollTop - lastScrollTop.current;
-      scrollVelocity.current = Math.abs(delta);
-      lastScrollTop.current = currentScrollTop;
-    }, 50);
-
-    return () => {
-      if (velocityCheckInterval.current) {
-        clearInterval(velocityCheckInterval.current);
-      }
-    };
-  }, []);
 
   // Handle scroll event
   useEffect(() => {
@@ -125,58 +111,12 @@ const CreatorsShowcase: React.FC = () => {
     if (!container) return;
 
     const handleScroll = () => {
-      // Clear existing timeout
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
-
-      // Update index immediately
-      updateCurrentIndex();
-
-      // Check for hard scrolling (velocity > 100 pixels per 50ms)
-      const isHardScroll = scrollVelocity.current > 100;
-
-      // Set timeout to snap to closest section after scrolling stops
       scrollTimeoutRef.current = setTimeout(() => {
-        if (!isScrolling) {
-          const scrollTop = container.scrollTop;
-          const scrollHeight = container.scrollHeight;
-          const containerHeight = container.clientHeight;
-          const scrollCenter = scrollTop + containerHeight / 2;
-
-          // If hard scrolling and near top, snap to top
-          if (isHardScroll && scrollTop < containerHeight * 0.3) {
-            scrollToCreator(0);
-            return;
-          }
-
-          // If hard scrolling and near bottom, snap to bottom
-          if (isHardScroll && scrollTop > scrollHeight - containerHeight * 1.3) {
-            scrollToCreator(CREATORS.length - 1);
-            return;
-          }
-
-          // Otherwise, snap to closest section
-          let closestIndex = 0;
-          let closestDistance = Infinity;
-
-          slidesRef.current.forEach((slide, index) => {
-            if (!slide) return;
-            const slideTop = slide.offsetTop;
-            const slideHeight = slide.offsetHeight;
-            const slideCenter = slideTop + slideHeight / 2;
-            const distance = Math.abs(scrollCenter - slideCenter);
-
-            if (distance < closestDistance) {
-              closestDistance = distance;
-              closestIndex = index;
-            }
-          });
-
-          // Snap to the closest section
-          scrollToCreator(closestIndex);
-        }
-      }, 150);
+        updateCurrentIndex();
+      }, 50);
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
@@ -223,59 +163,6 @@ const CreatorsShowcase: React.FC = () => {
       observer.disconnect();
     };
   }, [isScrolling, currentIndex]);
-
-// Wheel event handler with direct deltaY strength detection
-useEffect(() => {
-  const container = containerRef.current;
-  if (!container) return;
-
-  let accumulated = 0;
-  let scrollTimer: ReturnType<typeof setTimeout> | null = null;
-  let direction = 1;
-
-  const handleWheel = (e: WheelEvent) => {
-    if (isScrolling || showNotesModal) {
-      e.preventDefault();
-      return;
-    }
-
-    e.preventDefault();
-
-    direction = e.deltaY > 0 ? 1 : -1;
-    accumulated += e.deltaY;
-
-    if (scrollTimer) clearTimeout(scrollTimer);
-    scrollTimer = setTimeout(() => {
-      const total = Math.abs(accumulated);
-      console.log("Total scroll in burst:", total);
-
-      let step = 0;
-      if (total > 3500) step = 4;
-      else if (total > 2000) step = 3;
-      else if (total > 900) step = 2;
-      else if (total > 200) step = 1;
-
-      console.log("→ Jump step:", step);
-
-      if (step > 0) {
-        const nextIndex = Math.max(
-          0,
-          Math.min(CREATORS.length - 1, currentIndex + step * direction)
-        );
-        scrollToCreator(nextIndex);
-      }
-
-      accumulated = 0;
-      scrollTimer = null;
-    }, 30);
-  };
-
-  container.addEventListener("wheel", handleWheel, { passive: false });
-  return () => {
-    container.removeEventListener("wheel", handleWheel);
-    if (scrollTimer) clearTimeout(scrollTimer);
-  };
-}, [currentIndex, isScrolling, showNotesModal]);
 
 
   // Keyboard navigation
@@ -343,8 +230,7 @@ useEffect(() => {
 
   const handleLearnMore = (creatorId: string) => {
     alert(
-      `Loading more information about ${
-        creatorId.charAt(0).toUpperCase() + creatorId.slice(1)
+      `Loading more information about ${creatorId.charAt(0).toUpperCase() + creatorId.slice(1)
       }...`
     );
   };

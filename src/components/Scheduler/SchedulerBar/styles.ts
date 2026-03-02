@@ -156,7 +156,7 @@ export const styles: Record<string, CSSProperties> = {
     padding: '16px',
     zIndex: 100,
     border: '1px solid',
-    borderColor: theme.colors.blue,
+    borderColor: theme.colors.secondary,
     minWidth: '280px',
   },
   miniCalHeader: {

@@ -60,7 +60,7 @@ const DropActionModal: React.FC<DropActionModalProps> = ({ isOpen, onClose, onSe
                     // I will make it clickable but it will likely just alert "Coming Soon" in the parent.
                     >
                         <span style={styles.icon}>✨</span>
-                        <span style={styles.label}>AI Series <span style={styles.soonBadge}>Soon</span></span>
+                        <span style={styles.label}>AI Series <span style={styles.soonBadge}>Coming Soon</span></span>
                     </button>
                 </div>
             </div>
@@ -156,15 +156,16 @@ const styles = {
         background: '#fafafa',
     },
     soonBadge: {
-        fontSize: '10px',
+        fontSize: '9px',
         fontWeight: 700,
-        background: '#f3f4f6',
-        color: '#6b7280',
-        padding: '2px 6px',
-        borderRadius: '99px',
+        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+        color: '#fff',
+        padding: '3px 8px',
+        borderRadius: '6px',
         marginLeft: '8px',
         textTransform: 'uppercase' as const,
-        letterSpacing: '0.5px',
+        letterSpacing: '1px',
+        boxShadow: '0 3px 8px rgba(59, 130, 246, 0.2)',
     }
 };
 

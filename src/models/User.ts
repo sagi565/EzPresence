@@ -30,14 +30,23 @@ export interface ApiUserProfileDto {
 export interface UserCreateDto {
   firstName: string;
   lastName: string;
-  birthDate: string;
-  country?: string | null;
-  gender?: string | null;
+  birthdate: string;
+  country: string;
+  gender: string;
   email: string;
 }
 
 export interface UserUpdateDto {
-  UpdatedProperties: Record<string, any>;
+  updatedProperties: {
+    FirstName?: string;
+    LastName?: string;
+    Birthdate?: string;
+    Country?: string;
+    Gender?: string;
+    Email?: string;
+    Phone?: string;
+    PreferredLanguage?: string;
+  };
 }
 
 export const GENDER_OPTIONS: { value: Gender; label: string }[] = [
@@ -71,29 +80,35 @@ export const convertUserProfileToCreateDto = (
 ): UserCreateDto => ({
   firstName: data.firstName,
   lastName: data.lastName,
-  birthDate: data.birthDate,
-  country: data.country || null,
-  gender: data.gender || null,
+  birthdate: data.birthDate, // Map birthDate (YYYY-MM-DD) to birthdate
+  country: data.country || '',
+  gender: data.gender || '',
   email: email,
 });
 
-export const convertUserProfileToUpdateDto = (data: Partial<{
-  firstName: string;
-  lastName: string;
-  birthDate: string;
-  country?: string;
-  gender?: Gender;
-}>): UserUpdateDto => {
-  const props: Record<string, any> = {};
+export const convertUserProfileToUpdateDto = (
+  data: Partial<{
+    firstName: string;
+    lastName: string;
+    birthDate: string;
+    country?: string;
+    gender?: Gender;
+  }>,
+  email?: string
+): UserUpdateDto => {
+  const props: UserUpdateDto['updatedProperties'] = {};
 
-  if (data.firstName !== undefined) props['FirstName'] = data.firstName;
-  if (data.lastName !== undefined) props['LastName'] = data.lastName;
-  if (data.birthDate !== undefined) props['Birthdate'] = data.birthDate;
-  if (data.country !== undefined) props['Country'] = data.country;
-  if (data.gender !== undefined) props['Gender'] = data.gender;
+  if (data.firstName !== undefined) props.FirstName = data.firstName;
+  if (data.lastName !== undefined) props.LastName = data.lastName;
+  if (data.birthDate !== undefined) props.Birthdate = data.birthDate;
+  if (data.country !== undefined) props.Country = data.country;
+  if (data.gender !== undefined) props.Gender = data.gender;
+  if (email !== undefined) props.Email = email;
+
+  console.log('📦 [User Model] Prepared Update Props:', props);
 
   return {
-    UpdatedProperties: props
+    updatedProperties: props
   };
 };
 

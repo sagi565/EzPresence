@@ -41,10 +41,10 @@ const CustomDropdown: React.FC<DropdownProps> = ({
 
   // Filter options based on search
   const filteredOptions = searchTerm.trim()
-    ? options.filter(opt => 
-        opt.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        opt.value.includes(searchTerm)
-      )
+    ? options.filter(opt =>
+      opt.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      opt.value.includes(searchTerm)
+    )
     : options;
 
   useEffect(() => {
@@ -85,7 +85,7 @@ const CustomDropdown: React.FC<DropdownProps> = ({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setHighlightedIndex(prev => 
+        setHighlightedIndex(prev =>
           prev < filteredOptions.length - 1 ? prev + 1 : prev
         );
         break;
@@ -184,26 +184,69 @@ const DatePicker: React.FC<DatePickerProps> = ({
   const [day, setDay] = useState('');
   const [year, setYear] = useState('');
 
-  // Parse initial value
+  // Parse external value changes (like when profile loads)
   useEffect(() => {
     if (value) {
-      const [y, m, d] = value.split('-');
-      setYear(y || '');
-      setMonth(m || '');
-      setDay(d ? String(parseInt(d, 10)) : '');
-    }
-  }, []);
+      console.log(`🔌 [DatePicker] Received external value for parsing: "${value}"`);
+      let y = '', m = '', d = '';
 
-  // Update parent when all fields are filled
+      // Try splitting by common delimiters (dash, slash, T for ISO, space)
+      const dateParts = value.split(/[-/T ]/).filter(Boolean);
+
+      if (dateParts.length >= 3) {
+        // Check if first part is a 4-digit year (YYYY-MM-DD)
+        if (dateParts[0].length === 4) {
+          y = dateParts[0];
+          m = dateParts[1];
+          d = dateParts[2];
+        }
+        // Check if last part is a 4-digit year (DD-MM-YYYY)
+        else if (dateParts[2].length === 4) {
+          y = dateParts[2];
+          m = dateParts[1];
+          d = dateParts[0];
+        }
+      } else {
+        // Fallback to native Date object if splitting failed
+        const dateObj = new Date(value);
+        if (!isNaN(dateObj.getTime())) {
+          y = String(dateObj.getFullYear());
+          m = String(dateObj.getMonth() + 1);
+          d = String(dateObj.getDate());
+        }
+      }
+
+      // Sync state with extracted values using normalized formats
+      if (y && y !== year) {
+        console.log(`📅 [DatePicker] Setting Year state to: "${y}"`);
+        setYear(y);
+      }
+
+      const normalizedMonth = m ? m.padStart(2, '0') : '';
+      if (normalizedMonth && normalizedMonth !== month) {
+        console.log(`📅 [DatePicker] Setting Month state to: "${normalizedMonth}"`);
+        setMonth(normalizedMonth);
+      }
+
+      const normalizedDay = d ? String(parseInt(d, 10)) : '';
+      if (normalizedDay && normalizedDay !== day) {
+        console.log(`📅 [DatePicker] Setting Day state to: "${normalizedDay}"`);
+        setDay(normalizedDay);
+      }
+    }
+  }, [value]); // Only run when the external value changes manually or via profile load
+
+  // Update parent when user fills all fields
   useEffect(() => {
     if (year && month && day) {
       const paddedDay = day.padStart(2, '0');
       const newValue = `${year}-${month}-${paddedDay}`;
+      // Only notify parent if our internal date differs from external value
       if (newValue !== value) {
         onChange(newValue);
       }
     }
-  }, [year, month, day]);
+  }, [year, month, day]); // Run when internal fields change
 
   // Generate options
   const days = Array.from({ length: 31 }, (_, i) => ({

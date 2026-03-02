@@ -27,6 +27,33 @@ styleSheet.textContent = `
   select option:checked { background: linear-gradient(135deg, rgba(155, 93, 229, 0.15), rgba(155, 93, 229, 0.08)); color: #9B5DE5; font-weight: 600; }
   select:hover { border-color: rgba(155, 93, 229, 0.5); }
   select:focus { border-color: #9B5DE5; box-shadow: 0 0 0 3px rgba(155, 93, 229, 0.1); }
+
+  /* Back Button */
+  .back-btn {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: transparent;
+    border: none;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9b5de5;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 50;
+    border-radius: 50%;
+  }
+
+  .back-btn:hover {
+    background: rgba(155, 93, 229, 0.1);
+    transform: scale(1.1);
+  }
+
+  .back-btn:active {
+    transform: scale(0.95);
+  }
 `;
 if (!document.head.querySelector('style[data-create-brand-animations]')) {
   styleSheet.setAttribute('data-create-brand-animations', 'true');
@@ -104,7 +131,7 @@ const CreateBrandPage: React.FC = () => {
       }
     };
 
-    if (!uninitializedBrandId && !brandsLoading) {
+    if (!uninitializedBrandId && !brandsLoading && !errorError) {
       init();
     }
 
@@ -172,7 +199,7 @@ const CreateBrandPage: React.FC = () => {
 
       // Delay for success animation before redirect
       setTimeout(() => {
-        navigate('/scheduler', { replace: true });
+        navigate('/', { replace: true });
       }, 500);
 
     } catch (err: any) {
@@ -182,8 +209,8 @@ const CreateBrandPage: React.FC = () => {
     }
   };
 
-  // Loading State
-  if (brandsLoading || !uninitializedBrandId) {
+  // Loading State - don't show loader if there's an error
+  if ((brandsLoading || !uninitializedBrandId) && !errorError) {
     return (
       <div style={styles.container}>
         <SocialsBackground />
@@ -204,6 +231,7 @@ const CreateBrandPage: React.FC = () => {
             animation: 'spin 0.8s linear infinite',
           }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <p style={{ color: '#9B5DE5', fontWeight: 500 }}>Initializing your brand session...</p>
         </div>
       </div>
     );
@@ -214,6 +242,18 @@ const CreateBrandPage: React.FC = () => {
       <SocialsBackground />
 
       <div style={styles.content}>
+        {/* Back Button */}
+        <button
+          className="back-btn"
+          onClick={() => navigate('/tell-us-who-you-are')}
+          title="Back to profile setup"
+          type="button"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ overflow: 'visible' }}>
+            <path className="arrow-group" d="M19 12H5m0 0l7 7m-7-7l7-7" />
+          </svg>
+        </button>
+
         <div style={styles.header}>
           <h1 style={styles.title}>
             Create Your <span style={styles.titleHighlight}>First Brand</span>

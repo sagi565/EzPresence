@@ -16,9 +16,10 @@ export const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     overflowY: 'auto',
     overflowX: 'hidden',
-    scrollSnapType: 'y proximity',
+    scrollSnapType: 'y mandatory',
     scrollBehavior: 'smooth',
     WebkitOverflowScrolling: 'touch',
+    overscrollBehaviorY: 'none',
     scrollbarWidth: 'thin',
     scrollbarColor: 'rgba(155, 93, 229, 0.3) transparent',
     msOverflowStyle: 'auto',
@@ -27,7 +28,7 @@ export const styles: Record<string, CSSProperties> = {
   listSection: {
     minHeight: '100%', // Match the visible height of contentArea
     scrollSnapAlign: 'center',
-    scrollSnapStop: 'normal',
+    scrollSnapStop: 'always',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-start', // Align to left side

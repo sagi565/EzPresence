@@ -14,6 +14,11 @@ interface Particle {
   flutterPhase: number;
   flutterSpeed: number;
   flutterAmplitude: number;
+  swayXAmplitude: number;
+  swayYAmplitude: number;
+  isExtra?: boolean;
+  markedForDeletion?: boolean;
+  baseRotationSpeed: number;
 }
 
 const ICON_PATHS = [
@@ -23,15 +28,14 @@ const ICON_PATHS = [
   '/icons/social/instagram.png',
 ];
 
-// Tuned (your last requested settings)
+// Tuned parameter (slightly faster wind for realism)
 const COUNT = 50;
-const WIND = 1.2; // stronger wind
-const GRAVITY_MIN = 0.6;
-const GRAVITY_MAX = 1.6;
+const WIND = 1.6; // Faster wind to cross screen sooner
+const GRAVITY_MIN = 1.5; // Stronger drift down
 const SIZE_MIN = 14;
 const SIZE_MAX = 32;
-const OPACITY_MIN = 0.10; // more transparent
-const OPACITY_MAX = 0.35;
+const OPACITY_MIN = 0.15; // slightly more visible
+const OPACITY_MAX = 0.40;
 
 // Interaction settings
 const INTERACTION_RADIUS = 150;
@@ -52,47 +56,82 @@ const SocialsBackground: React.FC = () => {
   // Track mouse position
   const mouseRef = useRef<{ x: number; y: number }>({ x: -9999, y: -9999 });
 
+  // Burst configuration
+  const BURST_DURATION = 8000;
+  const burstRef = useRef<{ active: boolean; platform: string | null; endTime: number; extrasSpawned: boolean }>({
+    active: false,
+    platform: null,
+    endTime: 0,
+    extrasSpawned: false,
+  });
 
-  const loadIcons = (): Promise<HTMLImageElement[]> =>
+  const loadIcons = (): Promise<Record<string, HTMLImageElement>> =>
     Promise.all(
       ICON_PATHS.map(
         (path) =>
-          new Promise<HTMLImageElement>((resolve, reject) => {
+          new Promise<{ name: string; img: HTMLImageElement }>((resolve, reject) => {
             const img = new Image();
             img.src = path;
-            img.onload = () => resolve(img);
+            img.onload = () => {
+              const name = path.split('/').pop()?.replace('.png', '') || '';
+              resolve({ name, img });
+            };
             img.onerror = reject;
           })
       )
-    );
+    ).then((results) => {
+      const dict: Record<string, HTMLImageElement> = {};
+      results.forEach((r) => { dict[r.name] = r.img; });
+      return dict;
+    });
 
-  const makeParticle = (img: HTMLImageElement, w: number, h: number): Particle => {
+  const makeParticle = (img: HTMLImageElement, w: number, h: number, isExtra = false): Particle => {
     const z = 0.2 + Math.random() * 0.6;
     const size = SIZE_MIN + z * (SIZE_MAX - SIZE_MIN);
 
-    const fromLeft = Math.random() < 0.5;
-    const x = fromLeft ? -Math.random() * w * 0.3 : Math.random() * w;
-    const y = fromLeft ? Math.random() * h : -Math.random() * h * 0.3;
+    // Spawn from top or left to move bottom-right
+    let x, y;
+    if (isExtra) {
+      // Spawn OFF-SCREEN so they drift into view
+      const fromTop = Math.random() < 0.5;
+      x = fromTop ? Math.random() * w : -size * 2;
+      y = fromTop ? -size * 2 : Math.random() * h;
+    } else {
+      const fromTop = Math.random() < 0.5;
+      x = fromTop ? Math.random() * w : -Math.random() * w * 0.2;
+      y = fromTop ? -Math.random() * h * 0.2 : Math.random() * h * 0.6;
+    }
 
-    const speedY = GRAVITY_MIN + z * (GRAVITY_MAX - GRAVITY_MIN);
-    const speedX = WIND * (0.6 + Math.random());
+    // Consistent wind speeds (+- 10-20%)
+    const speedY = GRAVITY_MIN * (0.9 + Math.random() * 0.3) + z * 0.2;
+    const speedX = WIND * (0.9 + Math.random() * 0.3) + z * 0.2;
+
     const rotation = Math.random() * Math.PI * 2;
-    const rotationSpeed = (Math.random() - 0.5) * 0.02;
+    const baseRotationSpeed = (Math.random() - 0.5) * 0.04; // slightly faster base spin
+    const rotationSpeed = baseRotationSpeed;
     const opacity = OPACITY_MIN + z * (OPACITY_MAX - OPACITY_MIN);
 
     const flutterPhase = Math.random() * Math.PI * 2;
-    const flutterSpeed = Math.random() * 0.08 + 0.02;
-    const flutterAmplitude = Math.random() < 0.3 ? Math.random() * 2 + 1 : 0;
+    const flutterSpeed = Math.random() * 0.04 + 0.02; // Uneven flutter speed
+    const flutterAmplitude = 0;
+
+    // Much smaller ellipses, consistent across all particles
+    const swayXAmplitude = Math.random() * 3 + 1; // 1 to 4 px
+    const swayYAmplitude = Math.random() * 1.5 + 0.5; // 0.5 to 2 px
 
     return {
       x, y, z, size,
       speedY, speedX, rotation, rotationSpeed, opacity,
-      img, flutterPhase, flutterSpeed, flutterAmplitude
+      img, flutterPhase, flutterSpeed, flutterAmplitude,
+      swayXAmplitude, swayYAmplitude,
+      isExtra, markedForDeletion: false,
+      baseRotationSpeed
     };
   };
 
-  const initParticles = (imgs: HTMLImageElement[], w: number, h: number) => {
+  const initParticles = (dict: Record<string, HTMLImageElement>, w: number, h: number) => {
     const arr: Particle[] = [];
+    const imgs = Object.values(dict);
     for (let i = 0; i < COUNT; i++) {
       const img = imgs[Math.floor(Math.random() * imgs.length)];
       arr.push(makeParticle(img, w, h));
@@ -100,8 +139,15 @@ const SocialsBackground: React.FC = () => {
     particlesRef.current = arr;
   };
 
-  const respawn = (p: Particle, imgs: HTMLImageElement[], w: number, h: number) => {
-    const img = imgs[Math.floor(Math.random() * imgs.length)];
+  const respawn = (p: Particle, dict: Record<string, HTMLImageElement>, w: number, h: number) => {
+    const burstContext = burstRef.current;
+    let img: HTMLImageElement;
+    if (burstContext.active && burstContext.platform && dict[burstContext.platform]) {
+      img = dict[burstContext.platform];
+    } else {
+      const imgs = Object.values(dict);
+      img = imgs[Math.floor(Math.random() * imgs.length)];
+    }
     const np = makeParticle(img, w, h);
     // mutate in place to avoid churn
     Object.assign(p, np);
@@ -152,10 +198,28 @@ const SocialsBackground: React.FC = () => {
     }
   };
 
-  const animate = (imgs: HTMLImageElement[]) => {
+  const animate = (dict: Record<string, HTMLImageElement>) => {
     const ctx = ctxRef.current!;
     const { cssW: w, cssH: h } = sizeRef.current;
     const { x: mX, y: mY } = mouseRef.current;
+
+    const now = Date.now();
+    if (burstRef.current.active && now > burstRef.current.endTime) {
+      burstRef.current.active = false;
+      burstRef.current.platform = null;
+      burstRef.current.extrasSpawned = false;
+    }
+    const isBursting = burstRef.current.active;
+    const burstPlatform = burstRef.current.platform;
+
+    // Spawn 40 extra particles of the connected platform
+    if (isBursting && !burstRef.current.extrasSpawned && burstPlatform && dict[burstPlatform]) {
+      burstRef.current.extrasSpawned = true;
+      for (let i = 0; i < 40; i++) {
+        // We set `isExtra` to true so it can be discarded after burst ends
+        particlesRef.current.push(makeParticle(dict[burstPlatform], w, h, true));
+      }
+    }
 
     // Clear in CSS pixel space (because setTransform maps 1:1 CSS:px)
     ctx.clearRect(0, 0, w, h);
@@ -164,12 +228,15 @@ const SocialsBackground: React.FC = () => {
     particles.sort((a, b) => a.z - b.z);
 
     for (const p of particles) {
-      p.flutterPhase += p.flutterSpeed;
-      const flutterOffset = Math.sin(p.flutterPhase) * p.flutterAmplitude;
+      // Flutter speed increases slightly during burst
+      p.flutterPhase += isBursting ? p.flutterSpeed * 1.5 : p.flutterSpeed;
 
-      // Basic movement
-      let dx = p.speedX + flutterOffset * 0.2;
-      let dy = p.speedY;
+      // Realistic "leaves in the fall": Use particle-specific amplitudes
+      const swayX = Math.cos(p.flutterPhase * 0.8) * p.swayXAmplitude;
+      const swayY = Math.sin(p.flutterPhase * 0.8) * p.swayYAmplitude;
+
+      let dx = p.speedX + swayX;
+      let dy = p.speedY + swayY;
 
       // --- Interaction: Repulsion / Attraction ---
       // We calculate distance from particle center to mouse
@@ -200,6 +267,13 @@ const SocialsBackground: React.FC = () => {
         // Forceful Swirl (Hurricane)
         dx += tanX * mag * SWIRL_FORCE * 2.5;
         dy += tanY * mag * SWIRL_FORCE * 2.5;
+
+        // Cause chaotic spinning when disrupted
+        p.rotationSpeed = p.baseRotationSpeed * 5;
+      } else {
+        // Return to natural uneven spin
+        // Spin faster when moving faster horizontally to simulate drag
+        p.rotationSpeed = p.baseRotationSpeed + (Math.sin(p.flutterPhase) * 0.01);
       }
 
       p.x += dx;
@@ -207,21 +281,34 @@ const SocialsBackground: React.FC = () => {
       p.rotation += p.rotationSpeed;
 
       if (p.y > h + p.size || p.x > w + p.size) {
-        respawn(p, imgs, w, h);
+        if (p.isExtra && !isBursting) {
+          // Retire this extra particle gracefully
+          p.markedForDeletion = true;
+        } else {
+          respawn(p, dict, w, h);
+        }
       }
 
       ctx.save();
       ctx.globalAlpha = p.opacity;
+
+      // Translate to center point for transforms
       ctx.translate(p.x + p.size / 2, p.y + p.size / 2);
       ctx.rotate(p.rotation);
+
+      // Never override existing icons to burst icons.
       ctx.drawImage(p.img, -p.size / 2, -p.size / 2, p.size, p.size);
+
       ctx.restore();
     }
+
+    // Clean up extra particles that have moved off screen, retaining density limits
+    particlesRef.current = particlesRef.current.filter((p) => !p.markedForDeletion);
 
     // If user zoomed mid-frame, reconfigure on the next frame
     checkDprAndResizeIfNeeded();
 
-    rafRef.current = requestAnimationFrame(() => animate(imgs));
+    rafRef.current = requestAnimationFrame(() => animate(dict));
   };
 
   useEffect(() => {
@@ -253,18 +340,29 @@ const SocialsBackground: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseout', handleMouseLeave); // Optional: reset when out of window
 
+    const handlePlatformConnected = (e: Event) => {
+      const customEvent = e as CustomEvent<{ platform: string }>;
+      burstRef.current = {
+        active: true,
+        platform: customEvent.detail.platform,
+        endTime: Date.now() + BURST_DURATION,
+        extrasSpawned: false,
+      };
+    };
+    window.addEventListener('ezp:platformConnected', handlePlatformConnected);
+
     loadIcons()
-      .then((imgs) => {
+      .then((dict) => {
         if (!mounted) return;
 
         // Initial sizing (handles current DPR & element size)
         configureCanvas();
 
         // Init particles using CSS pixel space
-        initParticles(imgs, sizeRef.current.cssW, sizeRef.current.cssH);
+        initParticles(dict, sizeRef.current.cssW, sizeRef.current.cssH);
 
         // Start animation loop
-        animate(imgs);
+        animate(dict);
 
         // React to element size changes precisely
         ro = new ResizeObserver(() => {
@@ -293,6 +391,7 @@ const SocialsBackground: React.FC = () => {
       window.removeEventListener('orientationchange', configureCanvas);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseout', handleMouseLeave);
+      window.removeEventListener('ezp:platformConnected', handlePlatformConnected);
 
       if (typeof window.visualViewport !== 'undefined' && window.visualViewport !== null) {
         window.visualViewport.removeEventListener('resize', configureCanvas);

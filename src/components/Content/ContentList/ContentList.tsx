@@ -23,6 +23,8 @@ interface ContentListProps {
   onItemClick: (itemId: string) => void;
   onItemDoubleClick?: (itemId: string) => void;
   onSaveChanges?: () => void;
+  /** When provided, the '+' button navigates instead of opening a file dialog */
+  onAddNavigate?: () => void;
 }
 
 // Draggable wrapper for content items
@@ -34,7 +36,8 @@ const DraggableItem: React.FC<{
   onItemDelete: (itemId: string) => void;
   onItemRename: (itemId: string, newName: string) => void;
   onToggleFavorite: (itemId: string) => void;
-}> = ({ item, listId, onItemClick, onItemDoubleClick, onItemDelete, onItemRename, onToggleFavorite }) => {
+  listType: 'video' | 'image';
+}> = ({ item, listId, onItemClick, onItemDoubleClick, onItemDelete, onItemRename, onToggleFavorite, listType }) => {
   const { activeId } = useDndState();
 
   const {
@@ -50,6 +53,7 @@ const DraggableItem: React.FC<{
       listId: listId,
       title: item.title,
       thumbnail: item.thumbnail,
+      mediaType: item.type, // Explicitly pass 'video' or 'image'
     } as DragData,
   });
 
@@ -69,7 +73,7 @@ const DraggableItem: React.FC<{
     >
       <ContentItem
         item={item}
-        listType="video"
+        listType={listType}
         isDragging={isBeingDragged}
         onClick={() => !isDragging && onItemClick(item.id)}
         onDoubleClick={() => !isDragging && onItemDoubleClick?.(item.id)}
@@ -94,6 +98,7 @@ const ContentList: React.FC<ContentListProps> = ({
   onItemClick,
   onItemDoubleClick,
   onSaveChanges,
+  onAddNavigate,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -109,6 +114,21 @@ const ContentList: React.FC<ContentListProps> = ({
   const isItemDragging = isDragging && activeData?.type === 'ITEM';
   const isDraggingFromOtherList = isItemDragging && activeData?.listId !== list.id;
 
+  // Validation: Check if the dragged item is compatible with this list
+  const isInvalidDropTarget = (() => {
+    if (!isItemDragging || !list.isSystem) return false;
+    const targetTitle = (list.title || '').toLowerCase();
+    const isTargetVideo = targetTitle.includes('video') && targetTitle.includes('upload');
+    const isTargetImage = targetTitle.includes('image') && targetTitle.includes('upload');
+
+    // Use the explicit mediaType from activeData
+    const actualType = activeData?.mediaType;
+
+    if (isTargetImage && actualType === 'video') return true;
+    if (isTargetVideo && actualType === 'image') return true;
+    return false;
+  })();
+
   // Droppable for accepting items from other lists
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `list-drop-${list.id}`,
@@ -116,7 +136,10 @@ const ContentList: React.FC<ContentListProps> = ({
       type: 'LIST',
       id: list.id,
     } as DragData,
+    disabled: isInvalidDropTarget, // Disable dropping on incompatible lists
   });
+
+  const isDropTarget = isOver && isDraggingFromOtherList && !isInvalidDropTarget;
 
   const updateArrows = () => {
     const container = scrollRef.current;
@@ -236,16 +259,18 @@ const ContentList: React.FC<ContentListProps> = ({
           ref={setRefs}
           style={{
             ...styles.listScrollWrapper,
-            ...(isOver && isDraggingFromOtherList ? styles.listScrollWrapperDragOver : {}),
+            ...(isDropTarget ? styles.listScrollWrapperDragOver : {}),
+            ...(isInvalidDropTarget ? { opacity: 0.5, filter: 'grayscale(0.5)', cursor: 'not-allowed' } : {}),
           }}
         >
-          <UploadButton listType="video" onUpload={onUpload} />
+          <UploadButton listType={list.listType} onUpload={onUpload} onNavigate={onAddNavigate} />
 
           {list.items.map((item) => (
             <DraggableItem
               key={item.id}
               item={item}
               listId={list.id}
+              listType={list.listType}
               onItemClick={onItemClick}
               onItemDoubleClick={onItemDoubleClick}
               onItemDelete={setItemToDelete}

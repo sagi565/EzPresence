@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Post,
   Platform,
@@ -31,13 +31,17 @@ export const useSchedules = (brandId: string) => {
       setError(null);
 
       // Build query params for date range filtering
-      let queryParams = '';
-      if (startTime || endTime) {
-        const params = new URLSearchParams();
-        if (startTime) params.append('start_time', startTime.toISOString());
-        if (endTime) params.append('end_time', endTime.toISOString());
-        queryParams = `?${params.toString()}`;
-      }
+      const params = new URLSearchParams();
+
+      // If startTime/endTime are not passed, default to a broad window 
+      // (e.g., 2 years back to 2 years forward) to prevent unbounded RRULE evaluation exceptions.
+      const start = startTime || new Date(new Date().setFullYear(new Date().getFullYear() - 2));
+      const end = endTime || new Date(new Date().setFullYear(new Date().getFullYear() + 2));
+
+      params.append('start_time', start.toISOString());
+      params.append('end_time', end.toISOString());
+
+      const queryParams = `?${params.toString()}`;
 
       // GET /api/schedules - Retrieves all schedules for the active brand
       const response = await api.get<ApiScheduleDto[]>(`/schedules${queryParams}`);
@@ -93,10 +97,8 @@ export const useSchedules = (brandId: string) => {
     }
   }, [brandId]);
 
-  // Fetch schedules when brandId changes
-  useEffect(() => {
-    fetchSchedules();
-  }, [fetchSchedules]);
+  // Fetch schedules is now controlled by the component (e.g. SchedulerPage)
+  // which passes explicit start/end dates so we do not fetch here on mount.
 
   // Create a new schedule
   const createSchedule = useCallback(async (scheduleData: {
@@ -150,6 +152,9 @@ export const useSchedules = (brandId: string) => {
       title: string;
       description?: string;
       status?: string;
+      rruleText?: string | null;
+      startDate?: string | null;
+      endDate?: string | null;
     }>,
     updateOccurrenceOnly: boolean = false
   ) => {
@@ -161,19 +166,29 @@ export const useSchedules = (brandId: string) => {
         const { hours, minutes } = parseTimeString(updates.time);
         const scheduledDate = new Date(updates.date);
         scheduledDate.setHours(hours, minutes, 0, 0);
-        updatedProperties.plannedAtUtc = scheduledDate.toISOString();
+        updatedProperties.PlannedAtUtc = scheduledDate.toISOString();
       }
 
-      if (updates.platforms) updatedProperties.targets = updates.platforms;
-      if (updates.media) updatedProperties.postType = updates.media;
+      if (updates.platforms) updatedProperties.Targets = updates.platforms;
+      if (updates.media) updatedProperties.PostType = updates.media;
       if (updates.title) {
-        updatedProperties.scheduleName = updates.title;
-        updatedProperties.scheduleTitle = updates.title;
+        updatedProperties.ScheduleName = updates.title;
+        updatedProperties.ScheduleTitle = updates.title;
       }
       if (updates.description !== undefined) {
-        updatedProperties.scheduleDescription = updates.description;
+        updatedProperties.ScheduleDescription = updates.description;
       }
-      if (updates.status) updatedProperties.status = updates.status;
+      if (updates.status) updatedProperties.Status = updates.status;
+      if (updates.rruleText !== undefined) {
+        updatedProperties.RruleText = updates.rruleText;
+        if (updates.rruleText) {
+          updatedProperties.ScheduleType = 'Policy';
+        } else if (!calendarItemId) {
+          updatedProperties.ScheduleType = 'OneTime';
+        }
+      }
+      if (updates.startDate !== undefined) updatedProperties.StartDate = updates.startDate;
+      if (updates.endDate !== undefined) updatedProperties.EndDate = updates.endDate;
 
       // PUT /api/schedules - Partially updates an existing schedule
       await api.put('/schedules', {
@@ -191,17 +206,26 @@ export const useSchedules = (brandId: string) => {
   }, [fetchSchedules]);
 
   // Delete a schedule
-  const deleteSchedule = useCallback(async (scheduleUuid: string, plannedDate: Date, deleteOccurrenceOnly: boolean = false) => {
+  const deleteSchedule = useCallback(async (scheduleUuidOrCalendarItemId: string, plannedDate: Date, deleteOccurrenceOnly: boolean = false) => {
     try {
-      // The back-end expects calendarItemId = Base64(scheduleId + "|" + plannedAtDate)
-      // plannedAtDate format: 2026-02-22T15:42:00.0000000Z (Microseconds included)
-      const d = new Date(plannedDate);
-      d.setMilliseconds(0);
-      const isoString = d.toISOString(); // YYYY-MM-DDTHH:mm:ss.000Z
-      const formattedDate = isoString.replace('.000Z', '.0000000Z');
+      let calendarItemId = '';
 
-      const rawId = `${scheduleUuid}|${formattedDate}`;
-      const calendarItemId = btoa(rawId);
+      // If it looks like a calendarItemId (base64 encoded usually has no | and is a single string)
+      // Actually, it's safer to check if it contains a pipe.
+      if (scheduleUuidOrCalendarItemId.includes('|')) {
+        calendarItemId = btoa(scheduleUuidOrCalendarItemId);
+      } else if (scheduleUuidOrCalendarItemId.length > 20 && !scheduleUuidOrCalendarItemId.includes('-')) {
+        // Looks like an already encoded calendarItemId
+        calendarItemId = scheduleUuidOrCalendarItemId;
+      } else {
+        // Treat as scheduleUuid and construct calendarItemId
+        const d = new Date(plannedDate);
+        d.setMilliseconds(0);
+        const isoString = d.toISOString(); // YYYY-MM-DDTHH:mm:ss.000Z
+        const formattedDate = isoString.replace('.000Z', '.0000000Z');
+        const rawId = `${scheduleUuidOrCalendarItemId}|${formattedDate}`;
+        calendarItemId = btoa(rawId);
+      }
 
       const params = new URLSearchParams();
       params.append('calendarItemId', calendarItemId);
@@ -217,7 +241,7 @@ export const useSchedules = (brandId: string) => {
       // If endpoint doesn't exist yet (404), still remove from local state
       if (err?.response?.status === 404 || err?.status === 404) {
         console.warn('Delete endpoint not found, removing from local state only');
-        setPosts(prev => prev.filter(p => (p.scheduleUuid || p.id) !== scheduleUuid));
+        setPosts(prev => prev.filter(p => (p.scheduleUuid || p.id) !== scheduleUuidOrCalendarItemId));
       } else {
         throw err;
       }

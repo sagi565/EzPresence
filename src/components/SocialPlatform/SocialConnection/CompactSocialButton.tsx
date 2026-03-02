@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SocialPlatform, PLATFORM_COLORS, PLATFORM_NAMES } from '@models/SocialAccount';
 import { ConnectedPlatform } from '@/models/Platform';
 import { useConnectPlatform } from '@/hooks/platforms/useConnectPlatform';
+import ConfirmDialog from '@/components/Scheduler/CreateModals/ConfirmDialog/ConfirmDialog';
 
 // Add CSS animation for gradient shift
 const styleSheet = document.createElement('style');
@@ -61,6 +62,7 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
 }) => {
   const { isConnected: _hookIsConnected, account: _hookAccount, loading, connect, disconnect } = useConnectPlatform(platform, brandId, isUninitialized);
   const [isHovered, setIsHovered] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   // Rely strictly on connectedPlatform prop for truth
   const isConnected = connectedPlatform?.isConnected ?? false;
@@ -72,20 +74,44 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
   const platformColors = PLATFORM_COLORS[platform];
   const platformName = PLATFORM_NAMES[platform];
 
-  const handleAction = async () => {
+  const handleAction = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (loading) return;
+
+    if (isConnected) {
+      setShowDisconnectConfirm(true);
+      return;
+    }
+
     try {
-      if (isConnected) {
-        await disconnect();
-      } else {
-        await connect();
-      }
+      await connect();
+
+      // Dispatch custom event for background animation
+      window.dispatchEvent(new CustomEvent('ezp:platformConnected', {
+        detail: { platform }
+      }));
+
       // Notify parent to refetch
       if (onConnectionChange) {
         onConnectionChange();
       }
     } catch (error) {
-      console.error(`Failed to ${isConnected ? 'disconnect' : 'connect'} ${platform}:`, error);
+      console.error(`Failed to connect ${platform}:`, error);
+    }
+  };
+
+  const confirmDisconnect = async () => {
+    setShowDisconnectConfirm(false);
+    try {
+      await disconnect();
+      // Notify parent to refetch
+      if (onConnectionChange) {
+        onConnectionChange();
+      }
+    } catch (error) {
+      console.error(`Failed to disconnect ${platform}:`, error);
     }
   };
 
@@ -179,6 +205,17 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
       position: 'relative' as const,
       zIndex: 1,
       textShadow: isConnected ? '0 1px 2px rgba(0, 0, 0, 0.1)' : 'none',
+      display: 'flex',
+      alignItems: 'center',
+    },
+    disconnectBadge: {
+      background: '#FEE2E2',
+      color: '#EF4444',
+      padding: '4px 10px',
+      borderRadius: '8px',
+      fontSize: '13px',
+      fontWeight: 700,
+      textShadow: 'none',
     },
     connectedDot: {
       width: '8px',
@@ -205,54 +242,70 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
   };
 
   return (
-    <button
-      style={styles.button}
-      onClick={handleAction}
-      disabled={loading}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div style={styles.iconContainer}>
-        {displayProfilePic ? (
-          <>
-            <img
-              src={displayProfilePic}
-              alt={displayUsername || platformName}
-              style={styles.icon}
-            />
-            {/* Small platform logo overlay */}
-            <div style={styles.platformOverlay}>
+    <>
+      <button
+        type="button"
+        style={styles.button}
+        onClick={handleAction}
+        disabled={loading}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div style={styles.iconContainer}>
+          {displayProfilePic ? (
+            <>
               <img
-                src={getIconPath()}
-                alt={platformName}
-                style={styles.platformOverlayIcon}
+                src={displayProfilePic}
+                alt={displayUsername || platformName}
+                style={styles.icon}
               />
-            </div>
-          </>
-        ) : !iconError ? (
-          <img
-            src={getIconPath()}
-            alt={platformName}
-            style={styles.icon}
-            onError={() => setIconError(true)}
-          />
-        ) : (
-          <span style={styles.iconEmoji}>{getIconEmoji()}</span>
-        )}
-      </div>
-
-      {loading ? (
-        <div style={styles.spinner} />
-      ) : (
-        <>
-          <span style={styles.text}>
-            {isConnected && displayUsername ? displayUsername : `Connect to ${platformName}`}
-          </span>
-          {isConnected && (
-            <div style={styles.connectedDot} title="Connected" />
+              {/* Small platform logo overlay */}
+              <div style={styles.platformOverlay}>
+                <img
+                  src={getIconPath()}
+                  alt={platformName}
+                  style={styles.platformOverlayIcon}
+                />
+              </div>
+            </>
+          ) : !iconError ? (
+            <img
+              src={getIconPath()}
+              alt={platformName}
+              style={styles.icon}
+              onError={() => setIconError(true)}
+            />
+          ) : (
+            <span style={styles.iconEmoji}>{getIconEmoji()}</span>
           )}
-        </>
-      )}
-    </button>
+        </div>
+
+        {loading ? (
+          <div style={styles.spinner} />
+        ) : (
+          <>
+            <span style={styles.text}>
+              {isConnected
+                ? (isHovered ? <span style={styles.disconnectBadge}>Disconnect</span> : (displayUsername || 'Connected'))
+                : `Connect to ${platformName}`}
+            </span>
+            {isConnected && (
+              <div style={styles.connectedDot} title="Connected" />
+            )}
+          </>
+        )}
+      </button>
+
+      <ConfirmDialog
+        isOpen={showDisconnectConfirm}
+        title="Disconnect Platform"
+        message={`Are you sure you want to disconnect ${platformName}?`}
+        confirmLabel="Disconnect"
+        cancelLabel="Cancel"
+        danger={true}
+        onConfirm={confirmDisconnect}
+        onCancel={() => setShowDisconnectConfirm(false)}
+      />
+    </>
   );
 };

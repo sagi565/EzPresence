@@ -51,11 +51,21 @@ export const useContentLists = (brandId?: string) => {
       const convertedLists = listsResponse.map(convertApiContentListToContentList);
       convertedLists.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
 
+      // Deduplicate system lists by title (keep first occurrence of each title)
+      const seenSystemTitles = new Set<string>();
+      const deduplicatedLists = convertedLists.filter(list => {
+        if (list.isSystem) {
+          if (seenSystemTitles.has(list.title)) return false;
+          seenSystemTitles.add(list.title);
+        }
+        return true;
+      });
+
       // 2. Fetch Content (Backend filters by the Active Brand set in session)
       const allContentsResponse = await api.get<ApiMediaContentDto[]>('/contents?count=100');
 
       if (Array.isArray(allContentsResponse)) {
-        convertedLists.forEach(list => {
+        deduplicatedLists.forEach(list => {
           list.items = allContentsResponse
             .filter((c) => c.listUuid === list.id)
             .map((c) => {
@@ -76,7 +86,7 @@ export const useContentLists = (brandId?: string) => {
         });
       }
 
-      setLists(convertedLists);
+      setLists(deduplicatedLists);
     } catch (err: any) {
       console.error('Failed to fetch lists:', err);
       setError(err.message);
@@ -158,6 +168,7 @@ export const useContentLists = (brandId?: string) => {
   }, [lists]);
 
   const moveItem = useCallback(async (itemId: string, sourceListId: string, targetListId: string) => {
+    console.log(`[DEBUG] moveItem called: itemId=${itemId}, sourceListId=${sourceListId}, targetListId=${targetListId}`);
     try {
       setLists(prevLists => {
         const newLists = prevLists.map(l => ({ ...l, items: [...l.items] }));
@@ -177,7 +188,7 @@ export const useContentLists = (brandId?: string) => {
         return newLists;
       });
 
-      await api.put(`/contents/${itemId}/list/${targetListId}`);
+      await api.put(`/contents/${itemId}/list/${targetListId}`, {});
     } catch (err) {
       console.error("Failed to move item", err);
       await fetchLists();

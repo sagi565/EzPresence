@@ -1,24 +1,31 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getDefaultStoryFormData, DEFAULT_INSTAGRAM_CONFIG, DEFAULT_FACEBOOK_CONFIG } from '@/models/ScheduleFormData';
+import {
+    getDefaultStoryFormData,
+    DEFAULT_INSTAGRAM_CONFIG,
+    DEFAULT_FACEBOOK_CONFIG,
+    generateRepeatLabel,
+    generateRruleText
+} from '@/models/ScheduleFormData';
 import { StoryFormData } from '@/models/StorySchedule';
-import DatePicker from '../shared/DatePicker';
-import TimePicker from '../shared/TimePicker';
-import RepeatSelector from '../shared/RepeatSelector';
-import TimezoneSelector, { TIMEZONES, TimezoneOption, getTimezoneLabel } from '../shared/TimezoneSelector';
+import DatePicker from '../DatePicker/DatePicker';
+import TimePicker from '../TimePicker/TimePicker';
+import RepeatSelector from '../RepeatSelector/RepeatSelector';
+import TimezoneSelector, { TIMEZONES, TimezoneOption, getTimezoneLabel } from '../TimezoneSelector/TimezoneSelector';
 import { ContentItem } from '@/models/ContentList';
 import { useConnectedPlatforms } from '@/hooks/platforms/useConnectedPlatforms';
 import { useUserProfile } from '@/hooks/user/useUserProfile';
 import { useBrands } from '@/hooks/brands/useBrands';
 import { useSchedules } from '@/hooks/useSchedules';
 import { theme } from '@/theme/theme';
-import { useContentPicking } from '../shared/useContentPicking';
+import { useContentPicking } from '../useContentPicking';
 
-import ScheduleModalLayout from '../shared/ScheduleModalLayout';
-import ConfirmDialog from '../shared/ConfirmDialog';
-import ContentPreview from '../shared/ContentPreview';
-import ChipButton from '../shared/ChipButton';
-import ChipArrow from '../shared/ChipArrow';
-import SectionContainer from '../shared/SectionContainer';
+import ScheduleModalLayout from '../ScheduleModalLayout/ScheduleModalLayout';
+import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
+import ContentPreview from '../ContentPreview';
+import ChipButton from '../ChipButton/ChipButton';
+import ChipArrow from '../ChipArrow/ChipArrow';
+import SectionContainer from '../SectionContainer/SectionContainer';
+import RecurringActionDialog from '../RecurringActionDialog/RecurringActionDialog';
 
 interface NewStoryModalProps {
     isOpen: boolean;
@@ -34,6 +41,22 @@ interface NewStoryModalProps {
     lastPickedContent?: ContentItem | null;
     status?: string;
 }
+
+// Helper for parsing time since we need it for validation locally
+const parseTimeString = (time: string): { hours: number; minutes: number } => {
+    const [timePart, period] = time.split(' ');
+    const [hourStr, minuteStr] = timePart.split(':');
+    let hours = parseInt(hourStr);
+    const minutes = parseInt(minuteStr);
+
+    if (period?.toUpperCase() === 'PM' && hours !== 12) {
+        hours += 12;
+    } else if (period?.toUpperCase() === 'AM' && hours === 12) {
+        hours = 0;
+    }
+
+    return { hours, minutes };
+};
 
 const NewStoryModal: React.FC<NewStoryModalProps> = ({
     isOpen,
@@ -84,27 +107,58 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationErrors, setValidationErrors] = useState<{ title?: string; platform?: string; date?: string; content?: string }>({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showRecurringDialog, setShowRecurringDialog] = useState(false);
+    const [recurringDialogMode, setRecurringDialogMode] = useState<'edit' | 'delete'>('edit');
+    const [isShattering, setIsShattering] = useState(false);
+    const [isDraftHovered, setIsDraftHovered] = useState(false);
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (!formData.scheduleUuid && !formData.calendarItemId) return;
-        setShowDeleteConfirm(true);
+
+        if (formData.repeat.frequency && formData.repeat.frequency !== 'none') {
+            setRecurringDialogMode('delete');
+            setShowRecurringDialog(true);
+        } else {
+            setShowDeleteConfirm(true);
+        }
+    };
+
+    const handleRecurringConfirm = async (option: 'this' | 'following' | 'all') => {
+        setShowRecurringDialog(false);
+        const occurrenceOnly = option === 'this';
+
+        if (recurringDialogMode === 'delete') {
+            await executeDelete(occurrenceOnly);
+        } else {
+            await executeSchedule(occurrenceOnly);
+        }
     };
 
     const confirmDelete = async () => {
         setShowDeleteConfirm(false);
+        await executeDelete(false);
+    };
+
+    const executeDelete = async (occurrenceOnly: boolean) => {
         try {
             setIsSubmitting(true);
-
-            // Construct the planned date using formData.date and formData.time
             const { hours, minutes } = parseTimeString(formData.time);
             const plannedDate = new Date(formData.date);
             plannedDate.setHours(hours, minutes, 0, 0);
 
-            await deleteSchedule(formData.scheduleUuid || '', plannedDate);
+            if (!occurrenceOnly) {
+                setIsShattering(true);
+                await new Promise(resolve => setTimeout(resolve, 600));
+            }
+
+            await deleteSchedule(formData.calendarItemId || formData.scheduleUuid || '', plannedDate, occurrenceOnly);
+
+            setIsShattering(false);
             onClose();
             if (onScheduleProp) onScheduleProp(formData);
         } catch (error) {
-            console.error('Failed to delete story:', error);
+            console.error('Failed to delete schedule:', error);
+            setIsShattering(false);
         } finally {
             setIsSubmitting(false);
         }
@@ -124,7 +178,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         handleContentSelect(contentItem);
     };
 
-    const { startPicking, cancelPicking } = useContentPicking({
+    const { startPicking, cancelPicking, isPicking } = useContentPicking({
         onPick: handleContentPick,
         targetType: 'story'
     });
@@ -252,6 +306,29 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         }
     }, [isOpen, showDatePicker, showTimePicker, showTimezoneSelector, showRepeatSelector]);
 
+    const isFormValid = useMemo(() => {
+        if (!formData.title?.trim()) return false;
+
+        const selectedPlatforms = (Object.keys(formData.platforms) as Array<'instagram' | 'facebook'>).filter(
+            (platformKey) => formData.platforms[platformKey]?.enabled
+        );
+        if (selectedPlatforms.length === 0) return false;
+
+        if (!formData.contentId) return false;
+
+        try {
+            const now = new Date();
+            const { hours, minutes } = parseTimeString(formData.time);
+            const scheduledDate = new Date(formData.date);
+            scheduledDate.setHours(hours, minutes, 0, 0);
+            if (scheduledDate < now) return false;
+        } catch (e) {
+            return false;
+        }
+
+        return true;
+    }, [formData]);
+
     if (!isOpen) return null;
 
     // Helper to close all pickers
@@ -263,7 +340,18 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     };
 
     const handleDateChange = (date: Date) => {
-        setFormData(prev => ({ ...prev, date }));
+        setFormData(prev => {
+            const nextRepeat = { ...prev.repeat };
+            if (nextRepeat.frequency !== 'none' && nextRepeat.frequency !== 'custom') {
+                nextRepeat.label = generateRepeatLabel(nextRepeat.frequency, date);
+                nextRepeat.rruleText = generateRruleText(nextRepeat.frequency, date);
+            }
+            return {
+                ...prev,
+                date,
+                repeat: nextRepeat
+            };
+        });
         setShowDatePicker(false);
     };
 
@@ -344,13 +432,35 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
 
             setValidationErrors({});
 
+            // If editing a recurring post, ask for scope
+            if (formData.calendarItemId && formData.repeat.frequency !== 'none' && !isReadOnly) {
+                setRecurringDialogMode('edit');
+                setShowRecurringDialog(true);
+            } else {
+                await executeSchedule(false);
+            }
+        } catch (error) {
+            console.error('Failed to trigger schedule flow:', error);
+        }
+    };
+
+    const executeSchedule = async (occurrenceOnly: boolean) => {
+        try {
             setIsSubmitting(true);
+
+            const selectedPlatforms = (Object.keys(formData.platforms) as Array<'instagram' | 'facebook'>).filter(
+                (platformKey) => formData.platforms[platformKey]?.enabled
+            );
 
             // Determine media type based on content
             const selectedContent = getSelectedContent();
             console.log('🚀 [NewStoryModal] Selected Content for media type:', selectedContent);
             const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
             console.log('🚀 [NewStoryModal] Determined Media Type:', mediaType);
+
+            const isRecurring = !!formData.repeat.rruleText;
+            const startDateStr = isRecurring ? `${formData.date.getFullYear()}-${String(formData.date.getMonth() + 1).padStart(2, '0')}-${String(formData.date.getDate()).padStart(2, '0')}` : null;
+            const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
 
             if (formData.calendarItemId) {
                 // UPDATE existing schedule
@@ -360,8 +470,11 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     platforms: selectedPlatforms,
                     media: mediaType,
                     title: formData.contentTitle || 'Story',
+                    rruleText: formData.repeat.rruleText || null,
+                    startDate: startDateStr,
+                    endDate: endDateStr,
                     status: 'Pending',
-                });
+                }, occurrenceOnly);
             } else {
                 // Create schedule via API
                 await createSchedule({
@@ -401,6 +514,10 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
             const selectedContent = getSelectedContent();
             const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
 
+            const isRecurring = !!formData.repeat.rruleText;
+            const startDateStr = isRecurring ? `${formData.date.getFullYear()}-${String(formData.date.getMonth() + 1).padStart(2, '0')}-${String(formData.date.getDate()).padStart(2, '0')}` : null;
+            const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
+
             if (formData.calendarItemId) {
                 await updateSchedule(formData.calendarItemId, {
                     date: formData.date,
@@ -408,6 +525,9 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     platforms: selectedPlatforms,
                     media: mediaType,
                     title: formData.contentTitle || 'Story Draft',
+                    rruleText: formData.repeat.rruleText || null,
+                    startDate: startDateStr,
+                    endDate: endDateStr,
                     status: 'Draft',
                 });
             } else {
@@ -419,6 +539,8 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     title: formData.contentTitle || 'Story Draft',
                     contentUuids: formData.contentId ? [formData.contentId] : undefined,
                     type: 'Story',
+                    rruleText: formData.repeat.rruleText,
+                    endDate: formData.repeat.endDate || undefined,
                     status: 'Draft',
                 });
             }
@@ -432,25 +554,18 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         }
     };
 
+    const handleOverlayClick = () => {
+        if (isPicking) {
+            cancelPicking();
+        } else {
+            onClose();
+        }
+    };
+
     const getPlatformIconPath = (platform: 'instagram' | 'facebook'): string => {
         return `/icons/social/${platform}.png`;
     };
 
-    // Helper for parsing time since we need it for validation locally
-    const parseTimeString = (time: string): { hours: number; minutes: number } => {
-        const [timePart, period] = time.split(' ');
-        const [hourStr, minuteStr] = timePart.split(':');
-        let hours = parseInt(hourStr);
-        const minutes = parseInt(minuteStr);
-
-        if (period?.toUpperCase() === 'PM' && hours !== 12) {
-            hours += 12;
-        } else if (period?.toUpperCase() === 'AM' && hours === 12) {
-            hours = 0;
-        }
-
-        return { hours, minutes };
-    };
 
     // Render platform section (Selection Only)
     const renderPlatformSection = (platform: 'instagram' | 'facebook') => {
@@ -475,34 +590,48 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     }}
                 >
                     <div style={platformHeaderContentStyle}>
-                        {/* Combined Profile & Selection Indicator */}
-                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                            {/* Profile Picture (or Placeholder) */}
+                        {/* Checkbox Toggle */}
+                        <div
+                            style={{
+                                width: '18px', height: '18px', borderRadius: '5px',
+                                border: '1.5px solid', borderColor: isSelected ? platformColor : 'rgba(0,0,0,0.15)',
+                                background: isSelected ? platformColor : '#fff',
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'all .18s', flexShrink: 0, marginRight: '10px'
+                            }}
+                            title={isSelected ? "Click to disable" : "Click to enable"}
+                        >
+                            {isSelected && <span style={{ color: '#fff', fontSize: '11px', fontWeight: 700, lineHeight: 1 }}>✓</span>}
+                        </div>
+
+                        {/* Profile Picture (or Placeholder) */}
+                        <div style={{ position: 'relative', width: '34px', height: '34px' }}>
                             {account && account.profilePicture ? (
                                 <img
                                     src={account.profilePicture}
                                     alt={account.username}
                                     style={{
-                                        width: '40px',
-                                        height: '40px',
-                                        borderRadius: '12px',
+                                        width: '34px',
+                                        height: '34px',
+                                        borderRadius: '9px',
                                         objectFit: 'cover',
-                                        border: isSelected ? `2px solid ${platformColor}` : '2px solid transparent',
-                                        transition: 'border-color 0.2s',
+                                        border: '1.5px solid rgba(255,255,255,.4)',
+                                        boxShadow: '0 1px 4px rgba(251, 191, 36, 0.15)',
                                     }}
                                 />
                             ) : (
                                 <div style={{
-                                    width: '40px',
-                                    height: '40px',
-                                    borderRadius: '12px',
+                                    width: '34px',
+                                    height: '34px',
+                                    borderRadius: '9px',
                                     background: '#f3f4f6',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    border: isSelected ? `2px solid ${platformColor}` : '2px solid transparent',
+                                    border: '1.5px solid rgba(255,255,255,.4)',
+                                    boxShadow: '0 1px 4px rgba(251, 191, 36, 0.15)',
                                     color: '#9ca3af',
-                                    fontSize: '18px'
+                                    fontSize: '17px'
                                 }}>
                                     {platform.charAt(0).toUpperCase()}
                                 </div>
@@ -517,11 +646,12 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                                 height: '18px',
                                 borderRadius: '50%',
                                 background: '#fff',
-                                border: '2px solid #fff',
+                                border: '1.5px solid #fff',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                overflow: 'hidden'
                             }}>
                                 <img
                                     src={getPlatformIconPath(platform)}
@@ -529,17 +659,16 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                                     style={{ width: '14px', height: '14px' }}
                                 />
                             </div>
-
-                            {/* Selection Checkmark Overlay (Optional) */}
-
                         </div>
 
-                        <div style={{ ...platformInfoStyle, marginLeft: '12px' }}>
-                            <span style={platformNameStyle}>
+                        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '10px', gap: '1px' }}>
+                            <span style={{ fontSize: '13.5px', fontWeight: 400, color: theme.colors.text, letterSpacing: '0.02em' }}>
                                 {platform.charAt(0).toUpperCase() + platform.slice(1)}
                             </span>
                             {account && (
-                                <span style={platformUsernameStyle}>{account.username.startsWith('@') ? account.username : `@${account.username}`}</span>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: theme.colors.muted }}>
+                                    {account.username.startsWith('@') ? account.username : `@${account.username}`}
+                                </span>
                             )}
                         </div>
                     </div>
@@ -664,23 +793,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         gap: '10px',
     };
 
-    const platformInfoStyle: React.CSSProperties = {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1px',
-    };
 
-    const platformNameStyle: React.CSSProperties = {
-        fontSize: '13.5px',
-        fontWeight: 600,
-        color: theme.colors.text,
-    };
-
-    const platformUsernameStyle: React.CSSProperties = {
-        fontSize: '11px',
-        fontWeight: 600,
-        color: theme.colors.muted,
-    };
 
     const draftBtnStyle: React.CSSProperties = {
         padding: '10px 22px',
@@ -709,11 +822,14 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         opacity: isSubmitting ? 0.7 : 1,
     };
 
+
+
     return (
-        <>
+        <div className={`new-story-modal-wrapper ${isShattering ? 'shatter-animation' : ''}`}>
             <ScheduleModalLayout
                 isOpen={isOpen}
                 onClose={onClose}
+                onOverlayClick={handleOverlayClick}
                 onDelete={formData.calendarItemId ? handleDelete : undefined}
                 isDeleting={isSubmitting}
                 title=""
@@ -756,8 +872,12 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                                 onOpenDrawer(true);
                             }}
                             onDrop={handleManualDrop}
-                            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-                            onDragLeave={(e) => { e.preventDefault(); setIsDragOver(false); }}
+                            onDragOver={(e: React.DragEvent) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'copy';
+                                setIsDragOver(true);
+                            }}
+                            onDragLeave={() => setIsDragOver(false)}
                             placeholderText="Click to add content"
                         />
                         {validationErrors.content && (
@@ -770,24 +890,31 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                 footer={
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                         <button
+                            onClick={handleSaveDraft}
+                            disabled={isSubmitting || isReadOnly}
+                            onMouseEnter={() => setIsDraftHovered(true)}
+                            onMouseLeave={() => setIsDraftHovered(false)}
                             style={{
                                 ...draftBtnStyle,
                                 opacity: (isSubmitting || isReadOnly) ? 0.5 : 1,
-                                cursor: (isSubmitting || isReadOnly) ? 'not-allowed' : 'pointer'
+                                cursor: (isSubmitting || isReadOnly) ? 'not-allowed' : 'pointer',
+                                ...((isDraftHovered && !isSubmitting && !isReadOnly) ? {
+                                    background: 'rgba(155, 93, 229, 0.1)',
+                                    color: '#9b5de5',
+                                    boxShadow: '0 2px 8px rgba(155, 93, 229, 0.2)'
+                                } : {})
                             }}
-                            onClick={handleSaveDraft}
-                            disabled={isSubmitting || isReadOnly}
                         >
                             Save as Draft
                         </button>
                         <button
+                            onClick={handleSchedule}
+                            disabled={isSubmitting || isReadOnly || !isFormValid}
                             style={{
                                 ...scheduleBtnStyle,
-                                opacity: (isSubmitting || isReadOnly) ? 0.7 : 1,
-                                cursor: (isSubmitting || isReadOnly) ? 'not-allowed' : 'pointer'
+                                opacity: (isSubmitting || isReadOnly || !isFormValid) ? 0.7 : 1,
+                                cursor: (isSubmitting || isReadOnly || !isFormValid) ? 'not-allowed' : 'pointer'
                             }}
-                            onClick={handleSchedule}
-                            disabled={isSubmitting || isReadOnly}
                         >
                             {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update Story' : 'Schedule Story'))}
                         </button>
@@ -921,13 +1048,17 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                 isOpen={showDeleteConfirm}
                 title="Delete Story"
                 message="Are you sure you want to delete this story? This action cannot be undone."
-                confirmLabel="Delete"
-                cancelLabel="Cancel"
-                danger
                 onConfirm={confirmDelete}
                 onCancel={() => setShowDeleteConfirm(false)}
             />
-        </>
+
+            <RecurringActionDialog
+                isOpen={showRecurringDialog}
+                mode={recurringDialogMode}
+                onConfirm={handleRecurringConfirm}
+                onCancel={() => setShowRecurringDialog(false)}
+            />
+        </div>
     );
 };
 

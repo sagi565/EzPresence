@@ -2,6 +2,15 @@ import { useBrandContext } from '../../context/BrandContext';
 import { api } from '@utils/apiClient';
 import { BrandInitializeDto } from '@models/Brand';
 
+const extractUuid = (data: any): string | null => {
+  if (!data) return null;
+  if (typeof data === 'string') return data;
+  if (typeof data === 'object') {
+    return data.uuid || data.BrandUuid || data.brandUuid || data.id || null;
+  }
+  return null;
+};
+
 export const useBrands = () => {
   const {
     brands,
@@ -17,19 +26,38 @@ export const useBrands = () => {
 
   const getUninitializedBrand = async (): Promise<string | null> => {
     try {
-      // Returns UUID string directly
-      return await api.get<string>('/brands/uninitialized');
+      // Returns UUID string directly or an object containing it
+      const response = await api.get<any>('/brands/uninitialized', { silentStatuses: [404] });
+      return extractUuid(response);
     } catch (err: any) {
       if (err.status === 404) {
         return null; // No uninitialized brand found
       }
-      throw err;
+      console.warn('⚠️ [useBrands] Failed to get uninitialized brand (likely not created yet):', err);
+      // We don't throw here to allow the initialization flow to continue to 'create' stage
+      return null;
     }
   };
 
   const createUninitializedBrand = async (): Promise<string> => {
-    // POST /brands with empty body to create uninitialized brand
-    return await api.post<string>('/brands', {});
+    try {
+      // POST /brands with empty body to create uninitialized brand
+      // silentStatuses: [409] to prevent global error reporting when handling strict-mode dual calls
+      const response = await api.post<any>('/brands', {}, { silentStatuses: [409] });
+      const uuid = extractUuid(response);
+      if (!uuid) {
+        throw new Error('Failed to create uninitialized brand: No UUID returned');
+      }
+      await refreshBrands();
+      return uuid;
+    } catch (err: any) {
+      if (err.status === 409 || err.response?.status === 409) {
+        console.warn('⚠️ [useBrands] 409 Conflict: Brand already exists. Fetching it...');
+        const existingId = await getUninitializedBrand();
+        if (existingId) return existingId;
+      }
+      throw err;
+    }
   };
 
   const initializeBrand = async (brandUuid: string, data: BrandInitializeDto): Promise<void> => {

@@ -33,7 +33,8 @@ export const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     gap: '4px',
-    borderBottom: '1px solid rgba(0,0,0,0.05)',
+    borderBottom: '1px solid',
+    borderColor: 'rgba(0,0,0,0.05)',
     borderRadius: '24px 24px 0 0',
   },
   drawerArrow: {
@@ -52,7 +53,7 @@ export const styles: Record<string, CSSProperties> = {
   },
 
   drawerContent: {
-    height: '240px',
+    height: '340px',
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
@@ -98,7 +99,8 @@ export const styles: Record<string, CSSProperties> = {
     width: '280px', // Wider
     flexShrink: 0,
     background: '#ffffff',
-    borderLeft: '1px solid #f3f4f6',
+    borderLeft: '1px solid',
+    borderLeftColor: ' #f3f4f6',
     display: 'flex',
     flexDirection: 'column',
     gap: '0px',
@@ -128,7 +130,15 @@ export const styles: Record<string, CSSProperties> = {
   listPillActive: {
     background: '#faf5ff',
     color: '#9b5de5',
-    borderLeft: '3px solid #9b5de5',
+    borderLeft: '3px solid',
+    borderLeftColor: ' #9b5de5',
+  },
+  listPillAllActive: {
+    background: 'linear-gradient(135deg, #fbcfe8 0%, #ddd6fe 100%)',
+    color: '#6d28d9',
+    borderLeft: '4px solid',
+    borderLeftColor: '#6d28d9',
+    fontWeight: 700,
   },
   listPillIcon: {
     width: '20px',
@@ -141,13 +151,13 @@ export const styles: Record<string, CSSProperties> = {
 
   contentCard: {
     flexShrink: 0,
-    width: '152px',
-    height: '92px',
+    width: '120px',
+    height: '213px',
     background: '#ffffff',
     padding: '6px',
     cursor: 'pointer',
     position: 'relative',
-    borderRadius: '8px',
+    borderRadius: '12px',
     boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
     border: '1px solid',
     borderColor: '#f3f4f6',

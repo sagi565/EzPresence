@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { styles } from './styles';
-import { theme } from '@theme/theme';
+import CreateDropdown from './CreateDropdown';
 
 interface CreatePostButtonProps {
   onCreateStory?: () => void;
@@ -10,44 +10,16 @@ interface CreatePostButtonProps {
 const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreateStory, onCreatePost }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [hoveredBtn, setHoveredBtn] = useState(false);
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-
-    if (showDropdown) {
-      document.addEventListener('click', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, [showDropdown]);
-
-  const handleCreatePost = (type: string) => {
+  const handleSelect = (type: 'post' | 'story' | 'ai') => {
+    setShowDropdown(false);
     if (type === 'story') {
       onCreateStory?.();
-      setShowDropdown(false);
-      return;
-    }
-
-    if (type === 'single') {
+    } else if (type === 'post') {
       onCreatePost?.();
-      setShowDropdown(false);
-      return;
+    } else {
+      alert('AI Series feature coming soon!');
     }
-
-    const message =
-      type === 'ai'
-        ? 'AI Series feature coming soon!'
-        : `Creating ${type} post...`;
-    alert(message);
-    setShowDropdown(false);
   };
 
   const buttonStyle = {
@@ -58,16 +30,8 @@ const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreateStory, onCr
     } : {}),
   };
 
-  const dropdownItemStyle = (itemId: string) => ({
-    ...styles.dropdownItem,
-    ...(hoveredItem === itemId ? {
-      background: theme.gradients.balance,
-      color: 'white',
-    } : {}),
-  });
-
   return (
-    <div ref={dropdownRef} style={styles.createButton}>
+    <div style={styles.createButton}>
       <button
         style={buttonStyle}
         onClick={() => setShowDropdown(!showDropdown)}
@@ -76,53 +40,11 @@ const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreateStory, onCr
       >
         Create
       </button>
-      {showDropdown && (
-        <div style={styles.createDropdown}>
-          <div
-            style={dropdownItemStyle('single')}
-            onClick={() => handleCreatePost('single')}
-            onMouseEnter={() => setHoveredItem('single')}
-            onMouseLeave={() => setHoveredItem(null)}
-          >
-            <span>📤</span>
-            <span>New Post</span>
-          </div>
-          <div
-            style={dropdownItemStyle('story')}
-            onClick={() => handleCreatePost('story')}
-            onMouseEnter={() => setHoveredItem('story')}
-            onMouseLeave={() => setHoveredItem(null)}
-          >
-            <span>📖</span>
-            <span>New Story</span>
-          </div>
-          <div
-            style={{
-              ...dropdownItemStyle('ai'),
-              opacity: 0.6,
-              cursor: 'default',
-              position: 'relative' as const,
-            }}
-            onClick={() => handleCreatePost('ai')}
-            onMouseEnter={() => setHoveredItem('ai')}
-            onMouseLeave={() => setHoveredItem(null)}
-          >
-            <span>🤖🔁</span>
-            <span>AI Series</span>
-            <span style={{
-              fontSize: '9px',
-              fontWeight: 700,
-              color: theme.colors.secondary,
-              background: 'rgba(251, 191, 36, 0.15)',
-              padding: '2px 6px',
-              borderRadius: '4px',
-              marginLeft: 'auto',
-            }}>
-              SOON
-            </span>
-          </div>
-        </div>
-      )}
+      <CreateDropdown
+        isOpen={showDropdown}
+        onClose={() => setShowDropdown(false)}
+        onSelect={handleSelect}
+      />
     </div>
   );
 };

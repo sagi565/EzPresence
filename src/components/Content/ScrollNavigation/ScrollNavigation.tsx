@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ContentList } from '@models/ContentList';
+import { formatSystemListTitle } from '@models/ContentList';
 import { styles } from './styles';
 import { useDroppable } from '@dnd-kit/core';
 
@@ -29,6 +30,26 @@ const NavItem: React.FC<{
   const [isCelebrating, setIsCelebrating] = useState(false);
   const { activeData, isDragging: isDndKitDragging } = useDndState();
   const prevIsOver = useRef(false);
+  const lastDragEndTime = useRef<number>(0);
+
+  const isActive = currentIndex === index;
+  const isItemBeingDragged = isDndKitDragging && activeData?.type === 'ITEM';
+  const isDraggingFromOtherList = isItemBeingDragged && activeData?.listId !== list.id;
+
+  // Validation: Check if the dragged item is compatible with this list
+  const isInvalidDropTarget = (() => {
+    if (!isItemBeingDragged || !list.isSystem) return false;
+    const targetTitle = (list.title || '').toLowerCase();
+    const isTargetVideo = targetTitle.includes('video') && targetTitle.includes('upload');
+    const isTargetImage = targetTitle.includes('image') && targetTitle.includes('upload');
+
+    // Use the explicit mediaType from activeData
+    const actualType = activeData?.mediaType;
+
+    if (isTargetImage && actualType === 'video') return true;
+    if (isTargetVideo && actualType === 'image') return true;
+    return false;
+  })();
 
   // Dnd-kit droppable for accepting content items
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -37,11 +58,10 @@ const NavItem: React.FC<{
       type: 'LIST',
       id: list.id,
     },
+    disabled: isInvalidDropTarget, // Disable dropping on incompatible lists
   });
 
-  const isActive = currentIndex === index;
-  const isItemBeingDragged = isDndKitDragging && activeData?.type === 'ITEM';
-  const isDropTarget = isOver && isItemBeingDragged;
+  const isDropTarget = isOver && isDraggingFromOtherList && !isInvalidDropTarget;
 
   // Detect when drop happens - when isOver goes from true to false while dragging
   useEffect(() => {
@@ -53,6 +73,13 @@ const NavItem: React.FC<{
     }
     prevIsOver.current = isOver;
   }, [isOver, isDndKitDragging]);
+
+  // Track exactly when drag ends to prevent click-through
+  useEffect(() => {
+    if (!isDndKitDragging) {
+      lastDragEndTime.current = Date.now();
+    }
+  }, [isDndKitDragging]);
 
   const shouldShowLabel = isHovered || showAllLabels || isDropTarget;
 
@@ -81,14 +108,28 @@ const NavItem: React.FC<{
       }
     }
 
-    // Active/Selected state - GREEN (overrides default colors)
+    // Active/Selected state - matches list's own color (overrides default colors)
     if (isActive) {
-      Object.assign(baseStyles, styles.scrollDotActive);
+      if (list.isSystem) {
+        Object.assign(baseStyles, styles.scrollDotActiveSystem);
+      } else {
+        Object.assign(baseStyles, styles.scrollDotActiveCustom);
+      }
     }
 
     // Drop target state (when content item is hovering over)
     if (isDropTarget) {
       Object.assign(baseStyles, styles.scrollDotDropTarget);
+      if (list.isSystem) {
+        Object.assign(baseStyles, styles.scrollDotDropTargetSystem);
+      } else {
+        Object.assign(baseStyles, styles.scrollDotDropTargetCustom);
+      }
+    }
+
+    // Disabled state for invalid drop targets
+    if (isInvalidDropTarget) {
+      Object.assign(baseStyles, styles.scrollDotDisabled);
     }
 
     // Celebration animation after drop
@@ -119,21 +160,36 @@ const NavItem: React.FC<{
           }}
         >
           {/* Label on the LEFT of the icon */}
-          <span
-            style={{
-              ...styles.scrollLabel,
-              ...(shouldShowLabel ? styles.scrollLabelVisible : {}),
-            }}
-          >
-            {list.title}
-          </span>
+          {(() => {
+            const gradientParts = formatSystemListTitle(list.title);
+            return (
+              <span
+                style={{
+                  ...styles.scrollLabel,
+                  ...(shouldShowLabel ? styles.scrollLabelVisible : {}),
+                }}
+              >
+                {gradientParts ? (
+                  <>
+                    <span>{gradientParts.prefix}</span>
+                    <span className="nav-grad-text">{gradientParts.gradient}</span>
+                  </>
+                ) : (
+                  list.title
+                )}
+              </span>
+            );
+          })()}
 
           {/* Icon dot - drag handle is HERE */}
           <div
             ref={setDroppableRef} // Dnd-kit ref
             style={getDotStyles(snapshot)}
             onClick={(e) => {
-              if (!snapshot.isDragging) {
+              const timeSinceDragEnd = Date.now() - lastDragEndTime.current;
+              // Block click if drag is active, celebrating, or drag ended < 1000ms ago
+              // This prevents accidental navigation after moving an item to a list
+              if (!snapshot.isDragging && !isCelebrating && !isDndKitDragging && timeSinceDragEnd > 1000) {
                 e.stopPropagation();
                 onNavigate(index);
               }
@@ -146,8 +202,13 @@ const NavItem: React.FC<{
             <span style={styles.scrollIcon}>{list.icon}</span>
           </div>
 
-          {!snapshot.isDragging && !hideLines && index < totalLists - 1 && (
-            <div style={styles.scrollLine} />
+          {index < totalLists - 1 && (
+            <div
+              style={{
+                ...styles.scrollLine,
+                ...(snapshot.isDragging || hideLines ? styles.scrollLineHidden : {})
+              }}
+            />
           )}
         </div>
       )}
@@ -207,6 +268,13 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     const el = scrollContainerRef.current;
     if (!el) return;
 
+    // Never show arrows when all lists fit without scrolling
+    if (lists.length <= MAX_VISIBLE) {
+      setShowTopArrow(false);
+      setShowBottomArrow(false);
+      return;
+    }
+
     // Allow a small tolerance (1px) for floating point rendering differences
     const isAtTop = el.scrollTop <= 1;
     const isAtBottom = Math.abs(el.scrollHeight - el.clientHeight - el.scrollTop) <= 1;
@@ -263,9 +331,15 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     setIsListDragging(false);
 
     if (!result.destination) return;
-    if (result.destination.index === result.source.index) return;
 
-    onReorder(result.source.index, result.destination.index);
+    const sourceIndex = result.source.index;
+    const destIndex = result.destination.index;
+
+    if (destIndex === sourceIndex) return;
+
+    onReorder(sourceIndex, destIndex);
+
+    // Removed automatic navigation on reorder to keep view stable
   };
 
   // Auto-scroll on hover arrows
@@ -287,11 +361,33 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   };
 
   const MAX_VISIBLE = 7;
-  const ITEM_HEIGHT = 92;
+  const ITEM_HEIGHT = 108; // 32px top padding + 44px dot + 32px bottom padding
 
   return (
     <>
       <nav style={styles.scrollNav}>
+        <style>{`
+          .nav-grad-text {
+            display: inline-block;
+            font-weight: 800;
+            background: linear-gradient(135deg, #9b5de5 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+          }
+        `}</style>
+        {isListDragging && (
+          <style>{`
+            /* Hide all scrollbar thumbs transparently while dragging a list */
+            *::-webkit-scrollbar-thumb {
+              background-color: transparent !important;
+              border-color: transparent !important;
+            }
+            * {
+              scrollbar-color: transparent transparent !important;
+            }
+          `}</style>
+        )}
         {/* Up Arrow */}
         <div
           style={{
@@ -322,7 +418,8 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
           style={{
             ...styles.dotsContainer,
             height: `${Math.min(lists.length, MAX_VISIBLE) * ITEM_HEIGHT}px`,
-            overflowY: 'auto',
+            overflowY: lists.length > MAX_VISIBLE ? 'auto' : 'visible',
+            overflowX: 'visible',
             scrollbarWidth: 'none', // Firefox
             msOverflowStyle: 'none', // IE/Edge
           }}

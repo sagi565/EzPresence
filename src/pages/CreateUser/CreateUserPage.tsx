@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { usePostUser, CreateUserData } from '@/hooks/user/usePostUser';
 import { useUpdateUser } from '@/hooks/user/usePutUser';
 import { useUserProfile } from '@/hooks/user/useUserProfile';
+import { api } from '@utils/apiClient';
 import { Gender, validateBirthDate } from '@models/User';
 import SocialsBackground from '@components/Background/SocialsBackground';
 import { DatePicker, CountrySelector, GenderSelector, FormInput } from '@components/CreateUser';
 import { styles } from './styles';
+import { LogOut } from 'lucide-react';
+import { useFirebaseAuth } from '@/hooks/auth/useFirebaseAuth';
 
 // Add CSS animations and dropdown styling
 const styleSheet = document.createElement('style');
@@ -80,6 +83,27 @@ styleSheet.textContent = `
   .create-user-form [style*="overflow"]::-webkit-scrollbar-thumb:hover {
     background: rgba(155, 93, 229, 0.5);
   }
+
+  /* Logout Button */
+  .logout-btn {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: transparent;
+    border: none;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ef4444;
+    cursor: pointer;
+    z-index: 50;
+    border-radius: 50%;
+  }
+
+  .logout-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
 `;
 if (!document.head.querySelector('style[data-create-user-animations]')) {
   styleSheet.setAttribute('data-create-user-animations', 'true');
@@ -88,12 +112,15 @@ if (!document.head.querySelector('style[data-create-user-animations]')) {
 
 const CreateUserPage: React.FC = () => {
   const navigate = useNavigate();
+  const { logout } = useFirebaseAuth();
   const { createUser, loading: createLoading, error: createError } = usePostUser();
   const { updateUser, loading: updateLoading, error: updateError } = useUpdateUser();
-  const { profile, refetchProfile } = useUserProfile();
+  const { profile, loading: profileLoading, refetchProfile } = useUserProfile();
 
-  const loading = createLoading || updateLoading;
+  const loading = createLoading || updateLoading || profileLoading;
   const error = createError || updateError;
+
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const [formData, setFormData] = useState<CreateUserData>({
     firstName: '',
@@ -102,36 +129,6 @@ const CreateUserPage: React.FC = () => {
     country: undefined,
     gender: undefined,
   });
-
-  // Load existing profile data if available
-  useEffect(() => {
-    if (profile) {
-      // If profile exists, we technically should redirect to next step if this is considered "setup".
-      // But we also populate form data for updates.
-      // Given the user constraint "check if there is a profile", 
-      // let's assume if we have a profile we should move on, 
-      // UNLESS we want to support editing here.
-      // But the ProtectedRoute logic sends us here ONLY if !profile.
-      // So if we are here and we HAVE a profile, it means we just created it or ProtectedRoute let us through?
-      // ProtectedRoute checks !profile -> redirect here.
-      // So if profile exists, ProtectedRoute lets us go anywhere.
-      // If we manually go here, we might want to edit.
-      // However, to fix the loop, we should redirect if we are "done".
-      // Let's redirect if profile exists.
-
-      console.log('⚠️ [CreateUserPage] Profile exists, redirecting to brand creation');
-      navigate('/create-your-first-brand', { replace: true });
-    }
-  }, [profile, navigate]);
-
-  // Actually, wait. If we redirect immediately, we can't edit.
-  // But the previous loop was because `isProfileComplete` was false.
-  // Now `profile` will be true.
-  // If usePostUser succeeds, we refetch, profile exists -> Redirect.
-  // So we don't need to populate form data if we just redirect.
-  // But what if the user hits "Back"?
-  // For now, I will implement the redirect to satisfy "just check if there is a profile".
-
 
   const [errors, setErrors] = useState<{
     firstName?: string;
@@ -144,12 +141,53 @@ const CreateUserPage: React.FC = () => {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Pre-fill form data if profile already exists
+  useEffect(() => {
+    if (profile && !hasInitialized) {
+      console.log('📦 [CreateUserPage] Profile data loaded, pre-filling form:', profile);
+      setFormData({
+        firstName: profile.firstName || '',
+        lastName: profile.lastName || '',
+        birthDate: profile.birthDate || '',
+        country: profile.country || undefined,
+        gender: profile.gender || undefined,
+      });
+      setHasInitialized(true);
+    }
+  }, [profile, hasInitialized]);
+
+  // Log current formData to debug pre-filling
+  useEffect(() => {
+    console.log('📝 [CreateUserPage] Current formData:', formData);
+  }, [formData]);
 
   const handleButtonClick = () => {
     if (!isSubmitting && !loading) {
       setShowRipple(true);
       setTimeout(() => setShowRipple(false), 600);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+
+      // Make API call to delete user before Firebase logout
+      console.log('🗑️ [CreateUserPage] Deleting user from database...');
+      try {
+        await api.delete('/users');
+      } catch (deleteErr) {
+        console.error('Failed to delete user from database:', deleteErr);
+      }
+
+      await logout();
+      navigate('/login', { replace: true });
+    } catch (err) {
+      console.error('Logout failed:', err);
+      setIsLoggingOut(false);
     }
   };
 
@@ -188,27 +226,25 @@ const CreateUserPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('🚀 [CreateUserPage] HandleSubmit triggered. Profile state:', profile ? 'EXISTS' : 'NULL');
+      console.log('🚀 [CreateUserPage] FormData to save:', formData);
+
       if (profile) {
-        console.log('📝 [CreateUserPage] Updating existing profile...');
+        console.log('📝 [CreateUserPage] Profile exists, calling updateUser...');
         await updateUser(formData);
-        console.log('✅ [CreateUserPage] Profile updated successfully');
       } else {
-        console.log('📤 [CreateUserPage] Creating user profile...');
+        console.log('📤 [CreateUserPage] Profile null, calling createUser...');
         await createUser(formData);
-        console.log('✅ [CreateUserPage] Profile created successfully');
       }
 
-      setSubmitSuccess(true);
+      console.log('✅ [CreateUserPage] API call completed successfully');
 
       // Refetch profile to update the context and confirm completion
       console.log('🔄 [CreateUserPage] Refetching profile...');
       await refetchProfile();
 
-      setTimeout(() => {
-        console.log('🔀 [CreateUserPage] Redirecting to brand creation...');
-        // Use hard redirect to ensure fresh state and avoid ProtectedRoute loop
-        window.location.href = '/create-your-first-brand';
-      }, 500);
+      console.log('🔀 [CreateUserPage] Redirecting to brand creation...');
+      navigate('/create-your-first-brand', { replace: true });
 
     } catch (err: any) {
       console.error('❌ [CreateUserPage] Failed to save profile:', err);
@@ -218,12 +254,8 @@ const CreateUserPage: React.FC = () => {
         console.log('⚠️ [CreateUserPage] User already exists, trying update instead...');
         try {
           await updateUser(formData);
-          setSubmitSuccess(true);
           await refetchProfile();
-          setTimeout(() => {
-            // Use hard redirect here as well
-            window.location.href = '/create-your-first-brand';
-          }, 500);
+          navigate('/create-your-first-brand', { replace: true });
           return;
         } catch (updateErr) {
           console.error('❌ [CreateUserPage] Update fallback failed:', updateErr);
@@ -235,16 +267,30 @@ const CreateUserPage: React.FC = () => {
   };
 
   const handleInputChange = (field: keyof CreateUserData, value: string | Gender | undefined) => {
-    setFormData({ ...formData, [field]: value || undefined });
+    setFormData(prev => ({ ...prev, [field]: value || undefined }));
     if (errors[field as keyof typeof errors]) {
-      setErrors({ ...errors, [field]: undefined });
+      setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
 
   return (
     <div style={styles.container}>
       <SocialsBackground />
+
       <div style={styles.content}>
+        {/* Logout Button */}
+        <button
+          className="logout-btn"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          title="Logout"
+        >
+          {isLoggingOut ? (
+            <span style={{ ...styles.spinner, borderColor: 'rgba(239, 68, 68, 0.3)', borderTopColor: '#ef4444' }} />
+          ) : (
+            <LogOut className="door-icon" size={24} color="#ef4444" strokeWidth={2.5} />
+          )}
+        </button>
         <div style={styles.header}>
           <h1 style={styles.title}>Tell Us Who You Are</h1>
           <p style={styles.subtitle}>Help us set up your profile in just a few steps</p>
@@ -322,25 +368,17 @@ const CreateUserPage: React.FC = () => {
             </div>
           )}
 
-          {/* Success Message */}
-          {submitSuccess && (
-            <div style={styles.successMessage}>
-              <span style={styles.successIcon}>✅</span>
-              <span>Profile created successfully! Redirecting...</span>
-            </div>
-          )}
-
           {/* Action Button */}
           <div style={styles.actions}>
             <button
               type="submit"
               style={{
                 ...styles.submitBtn,
-                ...(isSubmitting || submitSuccess ? styles.submitBtnLoading : {}),
+                ...(isSubmitting ? styles.submitBtnLoading : {}),
                 ...(isButtonHovered && !isSubmitting ? styles.submitBtnHover : {}),
                 ...(isButtonActive && !isSubmitting ? styles.submitBtnActive : {}),
               }}
-              disabled={loading || isSubmitting || submitSuccess}
+              disabled={loading || isSubmitting}
               onMouseEnter={() => setIsButtonHovered(true)}
               onMouseLeave={() => {
                 setIsButtonHovered(false);
@@ -356,15 +394,10 @@ const CreateUserPage: React.FC = () => {
               {isSubmitting ? (
                 <>
                   <span style={styles.spinner} />
-                  Creating...
-                </>
-              ) : submitSuccess ? (
-                <>
-                  <span>✅</span>
-                  Success!
+                  {profile ? 'Updating...' : 'Creating...'}
                 </>
               ) : (
-                'Create Profile'
+                profile ? 'Update Profile' : 'Create Profile'
               )}
             </button>
           </div>

@@ -247,6 +247,32 @@ export const generateRepeatLabel = (frequency: RepeatFrequency, date: Date): str
 };
 
 /**
+ * Generate standard iCal RRULE text based on selected date and frequency
+ */
+export const generateRruleText = (frequency: RepeatFrequency, date: Date): string | undefined => {
+    const daysStr = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+    const byDay = daysStr[date.getDay()];
+
+    switch (frequency) {
+        case 'none':
+            return undefined;
+        case 'daily':
+            return 'FREQ=DAILY';
+        case 'weekly':
+            return `FREQ=WEEKLY;BYDAY=${byDay}`;
+        case 'monthly':
+            const weekOfMonth = Math.ceil(date.getDate() / 7);
+            return `FREQ=MONTHLY;BYDAY=${weekOfMonth}${byDay}`;
+        case 'annually':
+            return 'FREQ=YEARLY';
+        case 'custom':
+            return undefined; // Handled by custom UI
+        default:
+            return undefined;
+    }
+};
+
+/**
  * Validate that at least one platform is enabled
  */
 export const hasEnabledPlatform = (formData: ScheduleFormData): boolean => {

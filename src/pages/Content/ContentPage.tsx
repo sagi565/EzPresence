@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useBrands } from '@/hooks/brands/useBrands';
 import { useContentLists } from '@hooks/contents/useContentLists';
 import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
@@ -10,6 +10,77 @@ import ConfirmDialog from '@components/Content/ConfirmDialog/ConfirmDialog';
 import { ContentItem } from '@models/ContentList';
 import { styles } from './styles';
 import { DndProvider, useDndState } from '@/context/DndContext';
+
+// ---------------------------------------------------------------------------
+// Poof particle burst component — particles span entire list width
+// ---------------------------------------------------------------------------
+const POOF_COLORS = [
+  'rgba(168,85,247,0.32)',
+  'rgba(232,121,249,0.26)',
+  'rgba(129,140,248,0.28)',
+  'rgba(255,255,255,0.22)',
+  'rgba(96,165,250,0.25)',
+];
+
+const PARTICLE_COUNT = 36;
+
+const PoofParticles: React.FC = () => {
+  const particles = useMemo(() => {
+    return Array.from({ length: PARTICLE_COUNT }, (_) => {
+      // Spawn at a random position across the full list area
+      const originX = 5 + Math.random() * 90;  // % along width
+      const originY = 10 + Math.random() * 80; // % along height
+
+      // Each particle drifts in a random upward-ish direction
+      const angle = -60 + Math.random() * 300; // mostly upward and sideways
+      const distance = 80 + Math.random() * 140; // px
+      const rad = (angle * Math.PI) / 180;
+      const dx = Math.cos(rad) * distance;
+      const dy = Math.sin(rad) * distance;
+
+      const size = 5 + Math.random() * 7;       // slightly bigger
+      const color = POOF_COLORS[Math.floor(Math.random() * POOF_COLORS.length)];
+      const delay = Math.random() * 120;         // ms
+      const duration = 650 + Math.random() * 450; // slow drift
+      return { originX, originY, dx, dy, size, color, delay, duration };
+    });
+  }, []);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      inset: 0,
+      pointerEvents: 'none',
+      zIndex: 99,
+      overflow: 'visible',
+    }}>
+      {particles.map((p, i) => (
+        <div
+          key={i}
+          style={{
+            position: 'absolute',
+            top: `${p.originY}%`,
+            left: `${p.originX}%`,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            marginLeft: `-${p.size / 2}px`,
+            marginTop: `-${p.size / 2}px`,
+            borderRadius: '50%',
+            background: p.color,
+            animationName: 'poofParticle',
+            animationDuration: `${p.duration}ms`,
+            animationDelay: `${p.delay}ms`,
+            animationTimingFunction: 'ease-out',
+            animationFillMode: 'both',
+            ['--pdx' as any]: `${p.dx}px`,
+            ['--pdy' as any]: `${p.dy}px`,
+            zIndex: 101,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 // Drag overlay for content items
 const ItemDragPreview: React.FC<{ item: any }> = ({ item }) => {
@@ -79,17 +150,17 @@ const ListDragPreview: React.FC<{ list: any }> = ({ list }) => {
         width: '48px',
         height: '48px',
         borderRadius: '50%',
-        background: list.title?.includes('Made by Creators')
-          ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%)'
-          : 'white',
+        background: list.isSystem
+          ? 'rgba(251, 191, 36, 0.1)'
+          : 'rgba(155, 93, 229, 0.1)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
         fontSize: '20px',
         cursor: 'grabbing',
-        border: list.title?.includes('Made by Creators')
-          ? '2px solid rgba(168, 85, 247, 0.5)'
+        border: list.isSystem
+          ? '2px solid rgba(251, 191, 36, 0.4)'
           : '2px solid rgba(155, 93, 229, 0.4)',
       }}
     >
@@ -158,37 +229,50 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
   onReorder,
 }) => {
   // Track if dragging to prevent scroll snap
-  const { isDragging } = useDndState();
+  const { isDragging, activeData } = useDndState();
   const wasDragging = useRef(false);
   const dragEndCooldown = useRef(false);
 
   // Track when drag ends and add cooldown period
+  // Use a ref to track drag type for the cleanup effect
+  const activeDragTypeRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (isDragging) {
       wasDragging.current = true;
+      activeDragTypeRef.current = activeData?.type || null;
       dragEndCooldown.current = false;
     } else if (wasDragging.current) {
-      // Drag just ended - start cooldown
+      const type = activeDragTypeRef.current;
       wasDragging.current = false;
-      dragEndCooldown.current = true;
-      const timeout = setTimeout(() => {
-        dragEndCooldown.current = false;
-      }, 500); // 500ms cooldown after drag ends
-      return () => clearTimeout(timeout);
+      activeDragTypeRef.current = null;
+
+      // Only apply reorder cooldown (snap disable) for LIST reordering
+      // Item movement should keep snap enabled for a stable experience
+      if (type === 'LIST') {
+        setIsReorderScrolling(true);
+        const timeout = setTimeout(() => {
+          setIsReorderScrolling(false);
+        }, 1200);
+        return () => clearTimeout(timeout);
+      }
     }
-  }, [isDragging]);
+  }, [isDragging, activeData?.type]);
+
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const listsRef = useRef<HTMLDivElement[]>([]);
-  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const updateIndexTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastScrollTop = useRef(0);
-  const scrollVelocity = useRef(0);
-  const velocityCheckInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentIndexRef = useRef(0);
+  const [deletingListIds, setDeletingListIds] = useState<Set<string>>(new Set());
+  const [isReorderScrolling, setIsReorderScrolling] = useState(false);
 
 
+  // Keep ref in sync with state for use in the scroll listener without triggering re-attachments
+  useEffect(() => {
+    currentIndexRef.current = currentIndex;
+  }, [currentIndex]);
 
 
   // Force scroll to top on mount to prevent unwanted auto-scroll/restoration
@@ -222,14 +306,20 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
 
   const [deleteFromModal, setDeleteFromModal] = useState(false);
   const [hoveredAddButton, setHoveredAddButton] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+
 
   const handleDeleteListWithAnimation = (listId: string) => {
-    setDeletingId(listId);
+    // Mark list as deleting to trigger CSS animation
+    setDeletingListIds(prev => new Set(prev).add(listId));
+    // After animation completes, actually remove the list
     setTimeout(() => {
       deleteList(listId);
-      setDeletingId(null);
-    }, 500);
+      setDeletingListIds(prev => {
+        const next = new Set(prev);
+        next.delete(listId);
+        return next;
+      });
+    }, 750);
   };
 
   const handleIconClick = (listId: string, element: HTMLElement) => {
@@ -250,25 +340,9 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
         }, 100);
       }
     }
-  }, [newlyCreatedListId, lists]);
+  }, [newlyCreatedListId]);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
 
-    velocityCheckInterval.current = setInterval(() => {
-      const currentScrollTop = container.scrollTop;
-      const delta = currentScrollTop - lastScrollTop.current;
-      scrollVelocity.current = delta;
-      lastScrollTop.current = currentScrollTop;
-    }, 50);
-
-    return () => {
-      if (velocityCheckInterval.current) {
-        clearInterval(velocityCheckInterval.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -280,6 +354,12 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
       }
 
       updateIndexTimeoutRef.current = setTimeout(() => {
+        // CRITICAL: Don't update the active list highlight while dragging a content item
+        // This keeps the user anchored to their current list context
+        if (isDragging && activeData?.type === 'ITEM') {
+          return;
+        }
+
         const scrollTop = container.scrollTop;
         const containerHeight = container.clientHeight;
         const scrollCenter = scrollTop + containerHeight / 2;
@@ -300,147 +380,38 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
           }
         });
 
-        if (closestIndex !== currentIndex) {
+        if (closestIndex !== currentIndexRef.current) {
           setCurrentIndex(closestIndex);
         }
       }, 50);
-
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-
-      scrollTimeoutRef.current = setTimeout(() => {
-        // Don't snap during drag, during cooldown, or while scrolling
-        if (!isScrolling && !isDragging && !dragEndCooldown.current) {
-          const scrollTop = container.scrollTop;
-          const scrollHeight = container.scrollHeight;
-          const containerHeight = container.clientHeight;
-
-          const absVelocity = Math.abs(scrollVelocity.current);
-          const isHardScroll = absVelocity > 100;
-
-          if (isHardScroll && scrollTop < containerHeight * 0.3) {
-            scrollToList(0);
-            return;
-          }
-
-          const distanceFromBottom = scrollHeight - scrollTop - containerHeight;
-          if (isHardScroll && distanceFromBottom < containerHeight * 0.3 && scrollVelocity.current > 0) {
-            scrollToList(lists.length - 1);
-            return;
-          }
-
-          const scrollCenter = scrollTop + containerHeight / 2;
-          let closestIndex = 0;
-          let closestDistance = Infinity;
-
-          listsRef.current.forEach((list, index) => {
-            if (!list) return;
-            const listTop = list.offsetTop;
-            const listHeight = list.offsetHeight;
-            const listCenter = listTop + listHeight / 2;
-            const distance = Math.abs(scrollCenter - listCenter);
-
-            if (distance < closestDistance) {
-              closestDistance = distance;
-              closestIndex = index;
-            }
-          });
-
-          scrollToList(closestIndex);
-        }
-      }, 150);
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       container.removeEventListener('scroll', handleScroll);
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       if (updateIndexTimeoutRef.current) clearTimeout(updateIndexTimeoutRef.current);
     };
-  }, [currentIndex, isScrolling, lists.length, isDragging]);
+  }, [lists.length]); // Dependency on lists.length to re-attach if lists change, but not on currentIndex state
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
 
-    let accumulated = 0;
-    let scrollTimer: ReturnType<typeof setTimeout> | null = null;
-    let direction = 1;
 
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      direction = e.deltaY > 0 ? 1 : -1;
-      accumulated += e.deltaY;
 
-      if (scrollTimer) clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => {
-        const total = Math.abs(accumulated);
-        let step = 0;
-        if (total > 3500) step = 4;
-        else if (total > 2000) step = 3;
-        else if (total > 900) step = 2;
-        else if (total > 200) step = 1;
-
-        if (step > 0) {
-          const nextIndex = Math.max(0, Math.min(lists.length - 1, currentIndex + step * direction));
-          scrollToList(nextIndex);
-        }
-        accumulated = 0;
-        scrollTimer = null;
-      }, 30);
-    };
-
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-      if (scrollTimer) clearTimeout(scrollTimer);
-    };
-  }, [currentIndex, isScrolling, lists.length]);
-
-  const animateScroll = (element: HTMLElement, target: number, duration: number) => {
-    const start = element.scrollTop;
-    const change = target - start;
-    const startTime = performance.now();
-
-    // Easing function: easeInOutCubic for a strong fast start/end
-    const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      const ease = easeInOutCubic(progress);
-      element.scrollTop = start + change * ease;
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        setIsScrolling(false);
-      }
-    };
-
-    setIsScrolling(true);
-    requestAnimationFrame(animate);
-  };
 
   const scrollToList = (index: number) => {
     const targetList = listsRef.current[index];
     const container = containerRef.current;
 
     if (targetList && container) {
-      // Clear any auto-scroll timeouts
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-
       const containerHeight = container.clientHeight;
       const listTop = targetList.offsetTop;
       const listHeight = targetList.offsetHeight;
       const scrollPosition = listTop - (containerHeight - listHeight) / 2;
 
-      // Use custom animation instead of native smooth scroll
-      // 500ms duration gives a "fast" but clearly visible scroll
-      animateScroll(container, scrollPosition, 500);
+      container.scrollTo({
+        top: scrollPosition,
+        behavior: 'smooth'
+      });
 
       setCurrentIndex(index);
     }
@@ -497,35 +468,81 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
     ...(hoveredAddButton ? styles.addListButtonHover : {}),
   };
 
+  const dynamicContentAreaStyle: React.CSSProperties = {
+    ...styles.contentArea,
+    // Only disable snap during LIST reordering or its cooldown.
+    // Keeping snap enabled during ITEM dragging ensures the view stays stable.
+    scrollSnapType: (isDragging && activeData?.type === 'LIST' || isReorderScrolling) ? 'none' : 'y mandatory',
+    overscrollBehavior: 'none',
+    WebkitOverflowScrolling: 'touch',
+  };
+
   return (
     <div style={styles.container}>
+      <style>{`
+        /* ---- DISSOLVE: list gently fades out ---- */
+        @keyframes poofImplode {
+          0%   { opacity: 1;   transform: scale(1);    filter: blur(0px);  max-height: 100vh; }
+          40%  { opacity: 0.6; transform: scale(0.97); filter: blur(1px);  max-height: 100vh; }
+          75%  { opacity: 0.1; transform: scale(0.93); filter: blur(3px);  max-height: 100vh; }
+          90%  { opacity: 0;   transform: scale(0.90); filter: blur(4px);  max-height: 100vh; }
+          100% { opacity: 0;   transform: scale(0.90); filter: blur(4px);  max-height: 0; padding-top: 0; padding-bottom: 0; }
+        }
+        .list-section-deleting {
+          animation: poofImplode 0.85s ease-in-out forwards;
+          overflow: visible;
+          pointer-events: none;
+          position: relative;
+          transform-origin: center center;
+        }
+        /* ---- POOF: particles drift out slowly ---- */
+        @keyframes poofParticle {
+          0%   { transform: translate(0, 0) scale(1);                                              opacity: 0; }
+          10%  { opacity: 1; }
+          80%  { transform: translate(var(--pdx), var(--pdy)) scale(0.5);                          opacity: 0.3; }
+          100% { transform: translate(calc(var(--pdx)*1.05), calc(var(--pdy)*1.05)) scale(0);      opacity: 0; }
+        }
+      `}</style>
       <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
 
-      <div ref={containerRef} style={styles.contentArea} key={currentBrand?.id || 'no-brand'}>
-        {lists.map((list, index) => (
-          <div
-            key={list.id}
-            ref={(el) => { if (el) listsRef.current[index] = el; }}
-            style={styles.listSection}
-          >
-            <div style={styles.listWrapper}>
-              <ContentList
-                list={list}
-                isNewList={newlyCreatedListId === list.id}
-                onDelete={() => handleDeleteListWithAnimation(list.id)}
-                onTitleChange={(newTitle) => updateListTitle(list.id, newTitle)}
-                onIconClick={(element: HTMLElement) => handleIconClick(list.id, element)}
-                onItemMove={() => { }}
-                onItemDelete={(itemId) => deleteItem(itemId, list.id)}
-                onItemRename={(itemId, newName) => renameItem(itemId, list.id, newName)}
-                onToggleFavorite={(itemId) => toggleFavorite(itemId, list.id)}
-                onUpload={(file) => uploadContent(list.id, file)}
-                onItemClick={(itemId) => handleItemClick(itemId, list.id)}
-                onSaveChanges={() => clearNewListFlag()}
-              />
+      <div ref={containerRef} style={dynamicContentAreaStyle} key={currentBrand?.id || 'no-brand'}>
+        {lists.map((list, index) => {
+          const isDeleting = deletingListIds.has(list.id);
+          return (
+            <div
+              key={list.id}
+              ref={(el) => { if (el) listsRef.current[index] = el; }}
+              style={{ ...styles.listSection, position: 'relative' }}
+              className={isDeleting ? 'list-section-deleting' : undefined}
+            >
+              {/* Poof particles rendered on top during deletion */}
+              {isDeleting && <PoofParticles />}
+              <div style={styles.listWrapper}>
+                <ContentList
+                  list={list}
+                  isNewList={newlyCreatedListId === list.id}
+                  onDelete={() => handleDeleteListWithAnimation(list.id)}
+                  onTitleChange={(newTitle) => updateListTitle(list.id, newTitle)}
+                  onIconClick={(element: HTMLElement) => handleIconClick(list.id, element)}
+                  onItemMove={(_itemId) => {
+                    /* 
+                       Note: DnD kit handles dropping between lists at the Provider level 
+                       via the `onItemMove` passed to DndProvider. 
+                       This specific prop might be for a dedicated move button. 
+                    */
+                  }}
+                  onItemDelete={(itemId) => deleteItem(itemId, list.id)}
+                  onItemRename={(itemId, newName) => renameItem(itemId, list.id, newName)}
+                  onToggleFavorite={(itemId) => toggleFavorite(itemId, list.id)}
+                  onUpload={(file) => uploadContent(list.id, file)}
+                  onItemClick={(itemId) => handleItemClick(itemId, list.id)}
+                  onSaveChanges={() => clearNewListFlag()}
+                  onAddNavigate={undefined}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <ScrollNavigation
@@ -534,7 +551,6 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
         onNavigate={scrollToList}
         onDelete={(listId) => handleDeleteListWithAnimation(listId)}
         onReorder={onReorder}
-        deletingId={deletingId}
       />
 
       <EmojiPicker

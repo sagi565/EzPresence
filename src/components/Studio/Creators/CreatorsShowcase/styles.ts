@@ -6,9 +6,10 @@ export const styles: Record<string, CSSProperties> = {
     height: '100%',
     overflowY: 'auto',
     overflowX: 'hidden',
-    scrollSnapType: 'y proximity',
+    scrollSnapType: 'y mandatory',
     scrollBehavior: 'smooth',
     WebkitOverflowScrolling: 'touch',
+    overscrollBehaviorY: 'none',
     scrollbarWidth: 'thin',
     scrollbarColor: 'rgba(155, 93, 229, 0.3) transparent',
     msOverflowStyle: 'auto',
@@ -19,7 +20,7 @@ export const styles: Record<string, CSSProperties> = {
     height: 'calc(100vh - 76px)',
     minHeight: '600px',
     scrollSnapAlign: 'center', // Changed from 'start' to 'center' for better centering
-    scrollSnapStop: 'normal', // Allows smoother scrolling through multiple sections
+    scrollSnapStop: 'always', // Allows smoother scrolling through multiple sections
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

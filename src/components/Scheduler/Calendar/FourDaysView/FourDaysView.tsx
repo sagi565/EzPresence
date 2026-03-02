@@ -9,8 +9,9 @@ interface FourDaysViewProps {
   currentDay: number;
   posts: Post[];
   onDayChange: (direction: number) => void;
-  onDrop: (date: Date, time: string, contentId: string) => void;
+  onDrop: (date: Date, time: string, contentId: string, position: { x: number; y: number }) => void;
   onPostClick?: (post: Post) => void;
+  onContextMenu?: (e: React.MouseEvent, date: Date, time: string) => void;
 }
 
 const FourDaysView: React.FC<FourDaysViewProps> = ({
@@ -21,6 +22,7 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
   onDayChange,
   onDrop,
   onPostClick,
+  onContextMenu,
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
@@ -103,6 +105,7 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
   };
 
   const handleDragOver = (e: React.DragEvent, date: Date, hour: number) => {
+    if (isPastCell(date, hour)) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
     const cellId = `${date.toISOString()}-${hour}`;
@@ -116,9 +119,10 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
   const handleDrop = (e: React.DragEvent, date: Date, hour: number) => {
     e.preventDefault();
     setHoveredCell(null);
+    if (isPastCell(date, hour)) return;
     const contentId = e.dataTransfer.getData('contentId');
     const time = formatHour(hour);
-    onDrop(date, time, contentId);
+    onDrop(date, time, contentId, { x: e.clientX, y: e.clientY });
   };
 
   const handleMouseEnter = (date: Date, hour: number) => {
@@ -178,6 +182,11 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
                     onDrop={(e) => handleDrop(e, day, hour)}
                     onMouseEnter={() => handleMouseEnter(day, hour)}
                     onMouseLeave={handleMouseLeave}
+                    onContextMenu={(e) => {
+                      if (!isPast) {
+                        onContextMenu?.(e, day, formatHour(hour));
+                      }
+                    }}
                   >
                     <div style={styles.postContainer}>
                       {visiblePosts.map((post, idx) => (

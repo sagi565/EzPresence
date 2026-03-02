@@ -333,6 +333,18 @@ if (typeof document !== 'undefined') {
         transform: translateY(-1px) !important;
         box-shadow: 0 5px 18px rgba(155, 93, 229, .35) !important;
       }
+      .new-story-modal-wrapper {
+        transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease, filter 0.5s ease;
+      }
+      .shatter-animation .schedule-modal-layout {
+        animation: shatter 0.6s forwards;
+      }
+      @keyframes shatter {
+        0% { transform: scale(1) translate(0, 0) rotate(0); opacity: 1; filter: blur(0); }
+        20% { transform: scale(1.02) translate(2px, -2px) rotate(1deg); filter: blur(1px); opacity: 0.9; }
+        40% { transform: scale(0.95) translate(-4px, 4px) rotate(-2deg); filter: blur(2px); opacity: 0.7; }
+        100% { transform: scale(0.6) translate(0, 50px) rotate(5deg); opacity: 0; filter: blur(10px); }
+      }
     `;
         document.head.appendChild(style);
     }
