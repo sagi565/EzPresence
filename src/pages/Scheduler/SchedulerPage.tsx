@@ -13,67 +13,7 @@ import CreateDropdown from '@components/Scheduler/SchedulerBar/CreateDropdown';
 import { StoryFormData } from '@/models/StorySchedule';
 import { PostFormData } from '@/models/ScheduleFormData';
 import { styles } from './styles';
-import { getDragItem } from '@/utils/dragState';
 import { ContentItem } from '@/models/ContentList';
-
-// --- CUSTOM DRAG PREVIEW COMPONENT ---
-const DragPreview: React.FC<{ item: any; position: { x: number; y: number } }> = ({ item, position }) => {
-  if (!item) return null;
-
-  const thumbnailSrc = item.thumbnail?.startsWith('http') || item.thumbnail?.startsWith('data:')
-    ? item.thumbnail
-    : item.thumbnail
-      ? `data:image/jpeg;base64,${item.thumbnail.replace(/[\n\r\s]/g, '')}`
-      : null;
-
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '120px',
-        height: '160px',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-        // Move the preview *up* so it doesn't block the mouse
-        transform: `translate(${position.x - 60}px, ${position.y - 170}px) rotate(-2deg) scale(1.05)`,
-        pointerEvents: 'none',
-        zIndex: 10000,
-        backgroundColor: '#2a2a2a',
-        opacity: 0.7,
-        cursor: 'grabbing',
-      }}
-    >
-      {thumbnailSrc && (
-        <img
-          src={thumbnailSrc}
-          alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
-      )}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: '8px',
-          background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
-          color: 'white',
-          fontSize: '11px',
-          fontWeight: 600,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}
-      >
-        {item.title}
-      </div>
-    </div>
-  );
-};
 
 const SchedulerPage: React.FC = () => {
   const today = new Date();
@@ -88,11 +28,11 @@ const SchedulerPage: React.FC = () => {
   const [dropAnchorPos, setDropAnchorPos] = useState<{ x: number; y: number } | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isPicking, setIsPicking] = useState(false);
+  const isPickingRef = React.useRef(isPicking);
+  useEffect(() => {
+    isPickingRef.current = isPicking;
+  }, [isPicking]);
   const [lastPickedContent, setLastPickedContent] = useState<ContentItem | null>(null);
-
-  // --- DRAG PREVIEW STATE ---
-  const [dragProgress, setDragProgress] = useState<{ x: number, y: number } | null>(null);
-  const [dragItem, setDragItemState] = useState<any>(null);
 
   const { brands, currentBrand, switchBrand, loading: brandsLoading, error: brandsError } = useBrands();
 
@@ -176,28 +116,22 @@ const SchedulerPage: React.FC = () => {
     });
   }, [posts, contentItems]);
 
-  // --- DRAG EVENT LISTENERS ---
+  // --- DRAG END LISTENER (for picking state cleanup only) ---
   useEffect(() => {
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      const item = getDragItem();
-      if (item) {
-        setDragItemState(item);
-        setDragProgress({ x: e.clientX, y: e.clientY });
+    const handleDragEnd = () => {
+      // If we were picking and the drag ended outside a valid drop target,
+      // reset the picking state cleanly.
+      if (isPickingRef.current) {
+        setIsPicking(false);
+        setIsDrawerOpen(false);
+        window.dispatchEvent(new Event('cancel-pick-content'));
       }
     };
 
-    const handleDragEnd = () => {
-      setDragProgress(null);
-      setDragItemState(null);
-    };
-
-    window.addEventListener('dragover', handleDragOver);
     window.addEventListener('dragend', handleDragEnd);
     window.addEventListener('drop', handleDragEnd);
 
     return () => {
-      window.removeEventListener('dragover', handleDragOver);
       window.removeEventListener('dragend', handleDragEnd);
       window.removeEventListener('drop', handleDragEnd);
     };
@@ -213,8 +147,6 @@ const SchedulerPage: React.FC = () => {
 
       // Check if click is inside the drawer
       const isInsideDrawer = target.closest('.content-drawer');
-      // Check if click is inside a modal
-      const isInsideModal = target.closest('.schedule-modal-layout');
       // Check if click is on the handle
       const isInsideHandle = target.closest('.content-drawer-handle');
       // Check if click is on the "Pick Clone" (Direct DOM manipulation item)
@@ -222,8 +154,8 @@ const SchedulerPage: React.FC = () => {
       // Check if click is on the overlay (to prevent closing when clicking the picking overlay itself)
       const isInsideOverlay = target.id === 'contentPickOverlay';
 
-      if (isInsideDrawer || isInsideModal || isInsideHandle || isInsidePickClone || isInsideOverlay) {
-        console.log('✅ [SchedulerPage] Click inside safe area. isInsideDrawer:', !!isInsideDrawer, 'isInsideModal:', !!isInsideModal, 'isInsidePickClone:', !!isInsidePickClone);
+      if (isInsideDrawer || isInsideHandle || isInsidePickClone || isInsideOverlay) {
+        console.log('✅ [SchedulerPage] Click inside safe area. isInsideDrawer:', !!isInsideDrawer, 'isInsidePickClone:', !!isInsidePickClone);
         return;
       }
 
@@ -359,10 +291,13 @@ const SchedulerPage: React.FC = () => {
       id: post.id,
       status: post.status,
       repeat: post.isRecurring ? {
-        frequency: 'custom',
-        rruleText: post.rruleText,
-        label: 'Custom'
-      } : { frequency: 'none', label: 'Does not repeat' }
+        frequency: 'custom' as const,
+        // Use actual rruleText if available; fall back to a non-empty marker so
+        // !!formData.repeat.rruleText is truthy for Policy schedules even when
+        // the API doesn't return an rruleText for that occurrence.
+        rruleText: post.rruleText || 'POLICY',
+        label: 'Recurring'
+      } : { frequency: 'none' as const, label: 'Does not repeat' }
     };
 
     if (post.type === 'Story') {
@@ -541,6 +476,7 @@ const SchedulerPage: React.FC = () => {
         onContentDrop={() => setIsDrawerOpen(false)}
         lastPickedContent={lastPickedContent}
         status={(dropData as any)?.status}
+
       />
 
       <NewPostModal
@@ -577,6 +513,7 @@ const SchedulerPage: React.FC = () => {
         }}
         onContentDrop={() => setIsDrawerOpen(false)}
         lastPickedContent={lastPickedContent}
+
       />
 
       <CreateDropdown
@@ -590,9 +527,6 @@ const SchedulerPage: React.FC = () => {
         anchorPos={dropAnchorPos || undefined}
       />
 
-      {dragProgress && (
-        <DragPreview item={dragItem} position={dragProgress} />
-      )}
     </div>
   );
 };

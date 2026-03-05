@@ -40,6 +40,7 @@ interface NewStoryModalProps {
     onContentDrop?: () => void;
     lastPickedContent?: ContentItem | null;
     status?: string;
+
 }
 
 // Helper for parsing time since we need it for validation locally
@@ -70,7 +71,8 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     onCancelPicking,
     onContentDrop,
     lastPickedContent,
-    status
+    status,
+
 }) => {
     const { currentBrand } = useBrands();
     const { createSchedule, updateSchedule, deleteSchedule } = useSchedules(currentBrand?.id || '');
@@ -115,7 +117,9 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     const handleDelete = async () => {
         if (!formData.scheduleUuid && !formData.calendarItemId) return;
 
-        if (formData.repeat.frequency && formData.repeat.frequency !== 'none') {
+        // If the story has an rruleText it is a recurring policy — show the recurring choice dialog.
+        // Otherwise just show the simple "are you sure?" confirmation.
+        if (!!formData.repeat.rruleText) {
             setRecurringDialogMode('delete');
             setShowRecurringDialog(true);
         } else {
@@ -459,7 +463,6 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
             console.log('🚀 [NewStoryModal] Determined Media Type:', mediaType);
 
             const isRecurring = !!formData.repeat.rruleText;
-            const startDateStr = isRecurring ? `${formData.date.getFullYear()}-${String(formData.date.getMonth() + 1).padStart(2, '0')}-${String(formData.date.getDate()).padStart(2, '0')}` : null;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
 
             if (formData.calendarItemId) {
@@ -471,7 +474,6 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     media: mediaType,
                     title: formData.contentTitle || 'Story',
                     rruleText: formData.repeat.rruleText || null,
-                    startDate: startDateStr,
                     endDate: endDateStr,
                     status: 'Pending',
                 }, occurrenceOnly);
@@ -515,7 +517,6 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
             const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
 
             const isRecurring = !!formData.repeat.rruleText;
-            const startDateStr = isRecurring ? `${formData.date.getFullYear()}-${String(formData.date.getMonth() + 1).padStart(2, '0')}-${String(formData.date.getDate()).padStart(2, '0')}` : null;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
 
             if (formData.calendarItemId) {
@@ -526,7 +527,6 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     media: mediaType,
                     title: formData.contentTitle || 'Story Draft',
                     rruleText: formData.repeat.rruleText || null,
-                    startDate: startDateStr,
                     endDate: endDateStr,
                     status: 'Draft',
                 });
@@ -879,6 +879,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                             }}
                             onDragLeave={() => setIsDragOver(false)}
                             placeholderText="Click to add content"
+
                         />
                         {validationErrors.content && (
                             <div style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, textAlign: 'center', marginTop: '8px' }}>
@@ -916,7 +917,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                                 cursor: (isSubmitting || isReadOnly || !isFormValid) ? 'not-allowed' : 'pointer'
                             }}
                         >
-                            {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update Story' : 'Schedule Story'))}
+                            {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update' : 'Schedule'))}
                         </button>
                     </div>
                 }

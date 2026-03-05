@@ -17,8 +17,8 @@ if (typeof document !== 'undefined') {
         z-index: 1700 !important;
       }
       .content-drawer.nsm-picking .content-drawer-handle {
-        cursor: default;
-        pointer-events: none;
+        cursor: pointer;
+        pointer-events: auto;
       }
     `;
     document.head.appendChild(s);

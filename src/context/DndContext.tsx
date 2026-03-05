@@ -37,6 +37,8 @@ interface DndContextValue {
   activeData: DragData | null;
   overId: UniqueIdentifier | null;
   isDragging: boolean;
+  lastDropTime: number;
+  lastDropTimeRef: React.MutableRefObject<number>;
 }
 
 const DndContextState = createContext<DndContextValue>({
@@ -44,6 +46,8 @@ const DndContextState = createContext<DndContextValue>({
   activeData: null,
   overId: null,
   isDragging: false,
+  lastDropTime: 0,
+  lastDropTimeRef: { current: 0 },
 });
 
 export const useDndState = () => useContext(DndContextState);
@@ -97,6 +101,8 @@ export const DndProvider: React.FC<DndProviderProps> = ({
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [activeData, setActiveData] = useState<DragData | null>(null);
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
+  const [lastDropTime, setLastDropTime] = useState<number>(0);
+  const lastDropTimeRef = React.useRef<number>(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -122,7 +128,12 @@ export const DndProvider: React.FC<DndProviderProps> = ({
 
     const activeDataCurrent = active.data.current as DragData;
 
+    // Synchronously update the ref to block clicks in the next event loop tick (like browser clicks)
+    const now = Date.now();
+    lastDropTimeRef.current = now;
+
     // Reset state
+    setLastDropTime(now);
     setActiveId(null);
     setActiveData(null);
     setOverId(null);
@@ -208,6 +219,8 @@ export const DndProvider: React.FC<DndProviderProps> = ({
     activeData,
     overId,
     isDragging: activeId !== null,
+    lastDropTime,
+    lastDropTimeRef,
   };
 
   return (

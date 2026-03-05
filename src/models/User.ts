@@ -19,6 +19,7 @@ export interface ApiUserProfileDto {
   firstName?: string | null;
   lastName?: string | null;
   birthDate?: string | null;
+  birthdate?: string | null; // Handle both camelCase and lowercase versions from API
   country?: string | null;
   gender?: string | null;
   isProfileComplete?: boolean | null;
@@ -60,7 +61,7 @@ export const convertApiUserProfileToUserProfile = (apiProfile: ApiUserProfileDto
   id: apiProfile.uuid,
   firstName: apiProfile.firstName || '',
   lastName: apiProfile.lastName || '',
-  birthDate: apiProfile.birthDate || '',
+  birthDate: apiProfile.birthDate || apiProfile.birthdate || '', // Support both names
   country: apiProfile.country || undefined,
   gender: (apiProfile.gender?.toLowerCase() as Gender) || undefined,
   createdAt: apiProfile.createdAt || undefined,

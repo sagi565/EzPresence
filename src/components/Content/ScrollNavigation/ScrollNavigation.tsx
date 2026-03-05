@@ -28,9 +28,8 @@ const NavItem: React.FC<{
 }> = ({ list, index, totalLists, currentIndex, showAllLabels, hideLines, onNavigate, onContextMenu }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isCelebrating, setIsCelebrating] = useState(false);
-  const { activeData, isDragging: isDndKitDragging } = useDndState();
+  const { activeData, isDragging: isDndKitDragging, lastDropTimeRef } = useDndState();
   const prevIsOver = useRef(false);
-  const lastDragEndTime = useRef<number>(0);
 
   const isActive = currentIndex === index;
   const isItemBeingDragged = isDndKitDragging && activeData?.type === 'ITEM';
@@ -74,12 +73,14 @@ const NavItem: React.FC<{
     prevIsOver.current = isOver;
   }, [isOver, isDndKitDragging]);
 
-  // Track exactly when drag ends to prevent click-through
+  // No longer need local lastDragEndTime ref since we use global lastDropTime from context
+  /*
   useEffect(() => {
     if (!isDndKitDragging) {
       lastDragEndTime.current = Date.now();
     }
   }, [isDndKitDragging]);
+  */
 
   const shouldShowLabel = isHovered || showAllLabels || isDropTarget;
 
@@ -186,10 +187,11 @@ const NavItem: React.FC<{
             ref={setDroppableRef} // Dnd-kit ref
             style={getDotStyles(snapshot)}
             onClick={(e) => {
-              const timeSinceDragEnd = Date.now() - lastDragEndTime.current;
-              // Block click if drag is active, celebrating, or drag ended < 1000ms ago
-              // This prevents accidental navigation after moving an item to a list
-              if (!snapshot.isDragging && !isCelebrating && !isDndKitDragging && timeSinceDragEnd > 1000) {
+              const timeSinceDrop = Date.now() - lastDropTimeRef.current;
+
+              // Synchronously block click if drag just ended < 1000ms ago
+              // This ensures that the "mouse up" part of a drop doesn't trigger navigation
+              if (!snapshot.isDragging && !isCelebrating && !isDndKitDragging && timeSinceDrop > 1000) {
                 e.stopPropagation();
                 onNavigate(index);
               }

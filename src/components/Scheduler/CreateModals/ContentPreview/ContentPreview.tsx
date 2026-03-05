@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { ContentItem } from '@/models/ContentList';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
 import './styles';
@@ -16,6 +16,13 @@ export interface ContentPreviewProps {
     placeholderText?: string;
 }
 
+/**
+ * ContentPreview — matches the HTML demo (Scheduler_Create_Modals.html) exactly.
+ *
+ * Placeholder state: 🎞️ icon + "Click to add content" text.
+ * Filled state:      thumbnail/video fills the entire card; title overlaid at bottom.
+ * Drag-over state:   only border/bg changes (no overlay panel), matching the demo.
+ */
 const ContentPreview: React.FC<ContentPreviewProps> = ({
     id,
     content,
@@ -28,10 +35,8 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     onDragEnter,
     placeholderText = 'Click to add content',
 }) => {
-    // We only use state for the video playback url
     const isVideo = content?.type === 'video';
     const { url: videoUrl, fetchUrl } = useContentUrl();
-    const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
         if (content?.id && isVideo) {
@@ -39,7 +44,6 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
         }
     }, [content?.id, isVideo, fetchUrl]);
 
-    // Format thumbnail if it exists
     const getThumbnailSrc = (thumb?: string) => {
         if (!thumb) return null;
         if (thumb.startsWith('http') || thumb.startsWith('data:')) return thumb;
@@ -51,10 +55,16 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     const hasValidContent = Boolean(content?.id && content.id.trim() !== '');
     const hasMedia = isVideo ? !!videoUrl : !!thumbSrc;
 
+    const classNames = [
+        'nsm-content-preview',
+        hasValidContent ? 'has-content' : '',
+        isDragOver ? 'drop-hover' : '',
+    ].filter(Boolean).join(' ');
+
     return (
         <div
             id={id}
-            className={`nsm-content-preview ${hasValidContent ? 'has-content' : ''} ${isDragOver ? 'drop-hover' : ''}`}
+            className={classNames}
             onClick={(e) => {
                 e.stopPropagation();
                 if (!hasValidContent) onOpenDrawer();
@@ -64,7 +74,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
             onDragLeave={onDragLeave}
             onDragEnter={onDragEnter}
         >
-            {/* 1. Placeholder (shown when empty) */}
+            {/* Placeholder — shown when empty */}
             <div
                 className="nsm-content-placeholder"
                 style={{ display: hasValidContent ? 'none' : 'flex' }}
@@ -73,23 +83,22 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                 <span className="placeholder-text">{placeholderText}</span>
             </div>
 
-            {/* 2. Filled Content (shown when has content) */}
+            {/* Filled Content */}
             <div
                 className="nsm-content-filled"
                 style={{
                     display: hasValidContent ? 'flex' : 'none',
                     backgroundImage: (!isVideo && thumbSrc) ? `url(${thumbSrc})` : 'none',
-                    backgroundColor: hasValidContent && !thumbSrc ? 'rgba(155, 93, 229, 0.1)' : 'transparent'
+                    backgroundColor: hasValidContent && !thumbSrc ? 'rgba(155, 93, 229, 0.1)' : 'transparent',
                 }}
             >
                 {isVideo && videoUrl && (
                     <video
-                        ref={videoRef}
                         src={videoUrl}
                         style={{
                             position: 'absolute', inset: 0,
                             width: '100%', height: '100%',
-                            objectFit: 'cover', zIndex: 1, pointerEvents: 'none'
+                            objectFit: 'cover', zIndex: 1, pointerEvents: 'none',
                         }}
                         autoPlay
                         muted
@@ -101,7 +110,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                     <div style={{
                         position: 'absolute', inset: 0,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '32px', zIndex: 1, opacity: 0.5
+                        fontSize: '32px', zIndex: 1, opacity: 0.5,
                     }}>
                         {isVideo ? '🎬' : '🖼️'}
                     </div>
@@ -109,7 +118,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                 <div className="filled-title">{content?.title}</div>
             </div>
 
-            {/* 3. Remove Button */}
+            {/* Remove Button */}
             <button
                 className="nsm-remove-content"
                 style={{ display: hasValidContent ? 'flex' : 'none' }}

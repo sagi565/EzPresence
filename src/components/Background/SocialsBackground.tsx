@@ -29,18 +29,18 @@ const ICON_PATHS = [
 ];
 
 // Tuned parameter (slightly faster wind for realism)
-const COUNT = 50;
-const WIND = 1.6; // Faster wind to cross screen sooner
-const GRAVITY_MIN = 1.5; // Stronger drift down
+const COUNT = 30;
+const WIND = 1.5  ; // Faster wind to cross screen sooner
+const GRAVITY_MIN = 1; // Stronger drift down
 const SIZE_MIN = 14;
 const SIZE_MAX = 32;
-const OPACITY_MIN = 0.15; // slightly more visible
-const OPACITY_MAX = 0.40;
+const OPACITY_MIN = 0.10; // slightly more visible
+const OPACITY_MAX = 0.30;
 
 // Interaction settings
-const INTERACTION_RADIUS = 150;
-const REPULSION_FORCE = 2;
-const SWIRL_FORCE = 0.5;
+const INTERACTION_RADIUS = 70;
+const REPULSION_FORCE = 1;
+const SWIRL_FORCE = 0.2;
 
 const SocialsBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);

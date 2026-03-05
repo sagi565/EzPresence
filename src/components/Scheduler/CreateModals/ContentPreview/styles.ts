@@ -1,16 +1,15 @@
 import { CSSProperties } from 'react';
 
-// We inject some global CSS to handle the hover pseudoclasses that are hard to do inline perfectly
+// Exact CSS from HTML demo (Scheduler_Create_Modals.html) for .nsm-content-preview / .npm-content-preview
 if (typeof document !== 'undefined') {
     const styleId = 'content-preview-global-styles';
     if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
+            /* Content preview (9:16) — matches HTML demo exactly */
             .nsm-content-preview {
-                width: 100%; /* In the HTML demo it is 180px, but React wrapper handles width */
-                height: 100%;
-                min-height: 200px; /* Base min height for when it's empty */
+                width: 100%;
                 aspect-ratio: 9/16;
                 border-radius: 14px;
                 border: 2px dashed rgba(0, 0, 0, .1);
@@ -24,7 +23,7 @@ if (typeof document !== 'undefined') {
                 position: relative;
             }
             .nsm-content-preview:hover {
-                border-color: #9b5de5; /* var(--color-primary) */
+                border-color: #9b5de5;
                 background: rgba(155, 93, 229, .04);
             }
             .nsm-content-preview.drop-hover {
@@ -39,7 +38,7 @@ if (typeof document !== 'undefined') {
             .nsm-content-placeholder {
                 display: flex; flex-direction: column;
                 align-items: center; gap: 6px;
-                color: #6b7280; /* var(--muted) */
+                color: #6b7280;
             }
             .nsm-content-placeholder .placeholder-icon {
                 font-size: 32px;
@@ -50,6 +49,7 @@ if (typeof document !== 'undefined') {
                 text-align: center;
                 padding: 0 8px;
             }
+            /* Filled state */
             .nsm-content-filled {
                 position: absolute; inset: 0;
                 border-radius: 10px;
@@ -88,6 +88,19 @@ if (typeof document !== 'undefined') {
                 z-index: 3;
             }
             .nsm-content-preview:hover .nsm-remove-content { opacity: 1; }
+
+            /* Pick-elevated state — shown on clone above overlay */
+            .nsm-content-preview.pick-elevated,
+            .npm-content-preview.pick-elevated {
+                border-color: #9b5de5;
+                background: rgba(155, 93, 229, .04) !important;
+                box-shadow: 0 0 14px rgba(251, 191, 36, .35), 0 0 28px rgba(251, 191, 36, .15);
+            }
+            .nsm-content-preview.pick-elevated.drop-hover,
+            .npm-content-preview.pick-elevated.drop-hover {
+                border-style: solid;
+                background: rgba(155, 93, 229, .08) !important;
+            }
         `;
         document.head.appendChild(style);
     }

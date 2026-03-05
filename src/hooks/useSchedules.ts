@@ -6,6 +6,7 @@ import {
   ApiScheduleDto,
   convertApiScheduleToPost,
   convertPostToApiSchedule,
+  convertPlatformsToTargets,
   parseTimeString
 } from '@models/Post';
 import { api } from '@utils/apiClient';
@@ -13,6 +14,10 @@ import { api } from '@utils/apiClient';
 // Module-level shared map: all useSchedules instances share this
 // so contentUuids stored by the modal's instance are visible to SchedulerPage's instance
 const contentUuidsMap: Record<string, string[]> = {};
+
+// Module-level last requested range to ensure refetches (e.g. after create/update)
+// use the same window as the initial fetch from the SchedulerPage
+let lastRequestedRange: { start: Date; end: Date } | null = null;
 
 export const useSchedules = (brandId: string) => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -33,10 +38,30 @@ export const useSchedules = (brandId: string) => {
       // Build query params for date range filtering
       const params = new URLSearchParams();
 
-      // If startTime/endTime are not passed, default to a broad window 
-      // (e.g., 2 years back to 2 years forward) to prevent unbounded RRULE evaluation exceptions.
-      const start = startTime || new Date(new Date().setFullYear(new Date().getFullYear() - 2));
-      const end = endTime || new Date(new Date().setFullYear(new Date().getFullYear() + 2));
+      // Determine date range: Use passed dates, or fall back to last used range, 
+      // or finally a tight default (current month +/- 1 month) instead of the broad 4-year window.
+      let start: Date;
+      let end: Date;
+
+      if (startTime && endTime) {
+        start = startTime;
+        end = endTime;
+        lastRequestedRange = { start, end };
+      } else if (lastRequestedRange) {
+        start = lastRequestedRange.start;
+        end = lastRequestedRange.end;
+      } else {
+        // Fallback: Current month start to end of next month (approx 3 months window)
+        start = new Date();
+        start.setMonth(start.getMonth() - 1);
+        start.setDate(1);
+        start.setHours(0, 0, 0, 0);
+
+        end = new Date();
+        end.setMonth(end.getMonth() + 2);
+        end.setDate(0); // Last day of previous (which is next month)
+        end.setHours(23, 59, 59, 999);
+      }
 
       params.append('start_time', start.toISOString());
       params.append('end_time', end.toISOString());
@@ -153,8 +178,8 @@ export const useSchedules = (brandId: string) => {
       description?: string;
       status?: string;
       rruleText?: string | null;
-      startDate?: string | null;
       endDate?: string | null;
+      type?: 'Post' | 'Story';
     }>,
     updateOccurrenceOnly: boolean = false
   ) => {
@@ -166,29 +191,29 @@ export const useSchedules = (brandId: string) => {
         const { hours, minutes } = parseTimeString(updates.time);
         const scheduledDate = new Date(updates.date);
         scheduledDate.setHours(hours, minutes, 0, 0);
-        updatedProperties.PlannedAtUtc = scheduledDate.toISOString();
+        updatedProperties.plannedAtUtc = scheduledDate.toISOString();
       }
 
-      if (updates.platforms) updatedProperties.Targets = updates.platforms;
-      if (updates.media) updatedProperties.PostType = updates.media;
-      if (updates.title) {
-        updatedProperties.ScheduleName = updates.title;
-        updatedProperties.ScheduleTitle = updates.title;
-      }
-      if (updates.description !== undefined) {
-        updatedProperties.ScheduleDescription = updates.description;
-      }
-      if (updates.status) updatedProperties.Status = updates.status;
-      if (updates.rruleText !== undefined) {
-        updatedProperties.RruleText = updates.rruleText;
-        if (updates.rruleText) {
-          updatedProperties.ScheduleType = 'Policy';
-        } else if (!calendarItemId) {
-          updatedProperties.ScheduleType = 'OneTime';
+      if (updates.platforms) updatedProperties.targets = convertPlatformsToTargets(updates.platforms);
+      if (updates.media || updates.type) {
+        if (updates.type === 'Story') {
+          updatedProperties.postType = 'Story';
+        } else {
+          updatedProperties.postType = updates.media === 'video' ? 'Video' : 'Post';
         }
       }
-      if (updates.startDate !== undefined) updatedProperties.StartDate = updates.startDate;
-      if (updates.endDate !== undefined) updatedProperties.EndDate = updates.endDate;
+      if (updates.title) {
+        updatedProperties.scheduleName = updates.title;
+        updatedProperties.scheduleTitle = updates.title;
+      }
+      if (updates.description !== undefined) {
+        updatedProperties.scheduleDescription = updates.description;
+      }
+      if (updates.status) updatedProperties.status = updates.status;
+      if (updates.rruleText !== undefined) {
+        updatedProperties.rruleText = updates.rruleText;
+      }
+      if (updates.endDate !== undefined) updatedProperties.endDate = updates.endDate;
 
       // PUT /api/schedules - Partially updates an existing schedule
       await api.put('/schedules', {

@@ -216,23 +216,17 @@ const DatePicker: React.FC<DatePickerProps> = ({
         }
       }
 
-      // Sync state with extracted values using normalized formats
-      if (y && y !== year) {
-        console.log(`📅 [DatePicker] Setting Year state to: "${y}"`);
-        setYear(y);
-      }
+      if (y && y !== year) setYear(y);
 
-      const normalizedMonth = m ? m.padStart(2, '0') : '';
-      if (normalizedMonth && normalizedMonth !== month) {
-        console.log(`📅 [DatePicker] Setting Month state to: "${normalizedMonth}"`);
-        setMonth(normalizedMonth);
-      }
+      // Month: Use 2-digit format (e.g., "03")
+      const normMonth = m ? m.padStart(2, '0') : '';
+      if (normMonth && normMonth !== month) setMonth(normMonth);
 
-      const normalizedDay = d ? String(parseInt(d, 10)) : '';
-      if (normalizedDay && normalizedDay !== day) {
-        console.log(`📅 [DatePicker] Setting Day state to: "${normalizedDay}"`);
-        setDay(normalizedDay);
-      }
+      // Day: Use 1-digit format for 1-9 (e.g., "3")
+      const normDay = d ? String(parseInt(d, 10)) : '';
+      if (normDay && normDay !== day) setDay(normDay);
+
+      console.log(`📅 [DatePicker] Parsed -> Y:${y}, M:${normMonth}, D:${normDay}`);
     }
   }, [value]); // Only run when the external value changes manually or via profile load
 

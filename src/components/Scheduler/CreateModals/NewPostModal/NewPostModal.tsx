@@ -48,6 +48,7 @@ interface NewPostModalProps {
     onContentDrop?: () => void;
     lastPickedContent?: ContentItem | null;
     status?: string;
+
 }
 
 const NewPostModal: React.FC<NewPostModalProps> = ({
@@ -62,7 +63,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     onCancelPicking,
     onContentDrop,
     lastPickedContent,
-    status
+    status,
+
 }) => {
     const { currentBrand } = useBrands();
     const { createSchedule, updateSchedule, deleteSchedule } = useSchedules(currentBrand?.id || '');
@@ -765,7 +767,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                             undefined;
 
             const isRecurring = !!formData.repeat.rruleText;
-            const startDateStr = isRecurring ? `${formData.date.getFullYear()}-${String(formData.date.getMonth() + 1).padStart(2, '0')}-${String(formData.date.getDate()).padStart(2, '0')}` : null;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
 
             if (formData.calendarItemId) {
@@ -777,7 +778,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                     title: formData.title || formData.contentTitle || 'Untitled Draft',
                     description: description,
                     rruleText: formData.repeat.rruleText || null,
-                    startDate: startDateStr,
                     endDate: endDateStr,
                     status: 'Draft',
                 });
@@ -809,7 +809,9 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     const handleDelete = async () => {
         if (!formData.scheduleUuid && !formData.calendarItemId) return;
 
-        if (formData.repeat.frequency && formData.repeat.frequency !== 'none') {
+        // If the post has an rruleText it is a recurring policy — show the recurring choice dialog.
+        // Otherwise just show the simple "are you sure?" confirmation.
+        if (!!formData.repeat.rruleText) {
             setRecurringDialogMode('delete');
             setShowRecurringDialog(true);
         } else {
@@ -930,7 +932,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                             undefined;
 
             const isRecurring = !!formData.repeat.rruleText;
-            const startDateStr = isRecurring ? `${formData.date.getFullYear()}-${String(formData.date.getMonth() + 1).padStart(2, '0')}-${String(formData.date.getDate()).padStart(2, '0')}` : null;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
 
             if (formData.calendarItemId) {
@@ -943,7 +944,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                     title: formData.title || formData.contentTitle || 'Untitled Post',
                     description: description,
                     rruleText: formData.repeat.rruleText || null,
-                    startDate: startDateStr,
                     endDate: endDateStr,
                     status: 'Pending',
                 }, occurrenceOnly);
@@ -1052,6 +1052,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                             }}
                             onDragLeave={() => setIsDragOver(false)}
                             placeholderText="Click to add content"
+
                         />
                         {validationErrors.content && (
                             <div style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, textAlign: 'center', marginTop: '8px' }}>
@@ -1089,7 +1090,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                                 cursor: (isSubmitting || isReadOnly || !isFormValid) ? 'not-allowed' : 'pointer'
                             }}
                         >
-                            {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update Post' : 'Schedule Post'))}
+                            {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update' : 'Schedule'))}
                         </button>
                     </div>
                 }

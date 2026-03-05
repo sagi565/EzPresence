@@ -37,23 +37,25 @@ export interface ApiScheduleDto {
   calendarItemName?: string;
   scheduleId?: string;
   scheduleType?: string;
-  postType?: string;        // 'POST' | 'VIDEO' | 'STORY'
+  postType?: string;        // 'Post' | 'Video' | 'Story'
   targets?: string[];       // ['INSTAGRAM', 'FACEBOOK', etc.]
   plannedAtLocalTime?: string; // ISO 8601
   failReason?: Record<string, any>;
-  Status?: string;
   status?: string;
   postStatus?: string; // New field for draft/pending
 
-  // Legacy/Optional fields if still used by create payload
+  // Fields for create/update payload
   scheduleName?: string | null;
   scheduleTitle?: string | null;
   scheduleDescription?: string | null;
   rruleText?: string | null;
-  startDate?: string | null;
   endDate?: string | null;
   plannedAtUtc?: string | null;
   contentUuids?: string[] | null;
+
+  // Legacy/Optional fields
+  startDate?: string | null;
+  Status?: string;
   contents?: string[] | null;
 }
 
@@ -112,22 +114,23 @@ export const formatTimeString = (date: Date): string => {
 };
 
 export const convertApiScheduleToPost = (apiSchedule: ApiScheduleDto, index: number): Post => {
-  // Use plannedAtLocalTime first, fallback to plannedAtUtc or startDate
+  // Use plannedAtLocalTime first, fallback to plannedAtUtc or legacy startDate
   const scheduledDateStr = apiSchedule.plannedAtLocalTime || apiSchedule.plannedAtUtc || apiSchedule.startDate;
   const date = scheduledDateStr ? new Date(scheduledDateStr) : new Date();
 
   const isStory = apiSchedule.postType?.toUpperCase() === 'STORY';
-  // postType is now either 'POST' or 'STORY'
+  // postType is now either 'Post', 'Video', or 'Story'
 
   // Extract contentUuids from multiple potential fields returned by the API
   const contentUuids = apiSchedule.contentUuids || apiSchedule.contents || undefined;
+  const status = (apiSchedule.status || apiSchedule.Status || apiSchedule.postStatus || 'scheduled').toLowerCase();
 
   return {
     id: apiSchedule.scheduleId || apiSchedule.calendarItemId || `schedule-${index}-${Date.now()}`,
     date: date,
     time: formatTimeString(date),
     platforms: convertTargetsToPlatforms(apiSchedule.targets),
-    status: ((apiSchedule.status || apiSchedule.Status)?.toLowerCase() === 'pending' ? 'scheduled' : (apiSchedule.status || apiSchedule.Status)?.toLowerCase() as PostStatus) || 'scheduled',
+    status: (status === 'pending' ? 'scheduled' : status as PostStatus) || 'scheduled',
     media: convertPostTypeToMediaType(apiSchedule.postType),
     type: isStory ? 'Story' : 'Post',
     title: apiSchedule.scheduleTitle || apiSchedule.calendarItemName || apiSchedule.scheduleName || 'Untitled Post',
@@ -148,43 +151,39 @@ export const convertPostToApiSchedule = (post: {
   title: string;
   description?: string;
   contentUuids?: string[];
-  rruleText?: string;
-  endDate?: Date;
+  rruleText?: string | null;
+  endDate?: Date | null;
   type?: 'Post' | 'Story';
-  status?: string; // Added status
+  status?: string;
 }): ApiScheduleDto => {
   const { hours, minutes } = parseTimeString(post.time);
 
   const scheduledDate = new Date(post.date);
   scheduledDate.setHours(hours, minutes, 0, 0);
 
-  // Format date as YYYY-MM-DD using local time to avoid timezone shifts
-  const startDateStr = `${post.date.getFullYear()}-${String(post.date.getMonth() + 1).padStart(2, '0')}-${String(post.date.getDate()).padStart(2, '0')}`;
-
   let endDateStr = null;
   if (post.endDate) {
     endDateStr = `${post.endDate.getFullYear()}-${String(post.endDate.getMonth() + 1).padStart(2, '0')}-${String(post.endDate.getDate()).padStart(2, '0')}`;
   }
 
-  // Determine if this is a recurring schedule or one-time
-  const isRecurring = !!post.rruleText;
+  // Determine postType value
+  let postType = 'Post';
+  if (post.type === 'Story') {
+    postType = 'Story';
+  } else if (post.media === 'video') {
+    postType = 'Video';
+  }
 
   return {
     scheduleName: post.title,
     scheduleTitle: post.title,
     scheduleDescription: post.description || null,
-
-    postType: post.type === 'Story' ? 'STORY' : 'POST',
-    scheduleType: isRecurring ? 'Policy' : 'OneTime',
-
-    plannedAtUtc: isRecurring ? null : scheduledDate.toISOString(),
-
-    startDate: isRecurring ? startDateStr : null,
-    endDate: isRecurring ? endDateStr : null,
-    rruleText: isRecurring ? post.rruleText || null : null,
-
+    postType,
+    rruleText: post.rruleText || null,
+    endDate: endDateStr,
+    plannedAtUtc: scheduledDate.toISOString(),
     targets: convertPlatformsToTargets(post.platforms),
     contentUuids: post.contentUuids || null,
-    Status: post.status || undefined,
+    status: post.status || 'Pending',
   };
 };

@@ -95,19 +95,20 @@ const ItemDragPreview: React.FC<{ item: any }> = ({ item }) => {
   return (
     <div
       style={{
-        width: '120px',
-        height: '160px',
-        borderRadius: '12px',
+        width: '140px',
+        aspectRatio: '9/16',
+        borderRadius: '16px',
         overflow: 'hidden',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0 25px 50px -12px rgba(155, 93, 229, 0.4)',
         transform: 'rotate(-2deg) scale(1.05)',
         cursor: 'grabbing',
-        background: '#2a2a2a',
+        background: '#f8f9fb',
         position: 'relative',
-        opacity: 0.7, // Semi-transparent so user can see icons underneath
+        opacity: 0.9,
+        border: '2px solid #9b5de5',
       }}
     >
-      {thumbnailSrc && (
+      {thumbnailSrc ? (
         <img
           src={thumbnailSrc}
           alt={item.title}
@@ -117,6 +118,14 @@ const ItemDragPreview: React.FC<{ item: any }> = ({ item }) => {
             objectFit: 'cover',
           }}
         />
+      ) : (
+        <div style={{
+          width: '100%', height: '100%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '32px', background: 'rgba(155, 93, 229, 0.05)'
+        }}>
+          {item.type === 'video' ? '🎬' : '🖼️'}
+        </div>
       )}
       <div
         style={{
@@ -124,14 +133,16 @@ const ItemDragPreview: React.FC<{ item: any }> = ({ item }) => {
           bottom: 0,
           left: 0,
           right: 0,
-          padding: '8px',
-          background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
+          padding: '14px 10px 8px 10px',
+          background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)',
           color: 'white',
-          fontSize: '11px',
-          fontWeight: 600,
+          fontSize: '13px',
+          fontWeight: 700,
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
+          textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+          zIndex: 2,
         }}
       >
         {item.title}
@@ -243,19 +254,16 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
       activeDragTypeRef.current = activeData?.type || null;
       dragEndCooldown.current = false;
     } else if (wasDragging.current) {
-      const type = activeDragTypeRef.current;
       wasDragging.current = false;
       activeDragTypeRef.current = null;
 
-      // Only apply reorder cooldown (snap disable) for LIST reordering
-      // Item movement should keep snap enabled for a stable experience
-      if (type === 'LIST') {
-        setIsReorderScrolling(true);
-        const timeout = setTimeout(() => {
-          setIsReorderScrolling(false);
-        }, 1200);
-        return () => clearTimeout(timeout);
-      }
+      // Always apply a small cooldown to disable scroll-snap after ANY drag
+      // This prevents the browser from "jumping" to a snap point during a state update
+      setIsReorderScrolling(true);
+      const timeout = setTimeout(() => {
+        setIsReorderScrolling(false);
+      }, 1200);
+      return () => clearTimeout(timeout);
     }
   }, [isDragging, activeData?.type]);
 
