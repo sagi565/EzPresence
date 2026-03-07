@@ -1,5 +1,5 @@
 import React from 'react';
-import { styles } from './styles';
+import { Wrapper, Label, Input } from './styles';
 
 type AuthFieldProps = {
   label: string;
@@ -19,17 +19,16 @@ const AuthField: React.FC<AuthFieldProps> = ({
   placeholder,
 }) => {
   return (
-    <label style={styles.wrapper}>
-      <span style={styles.label}>{label}</span>
-      <input
-        style={styles.input}
+    <Wrapper>
+      <Label>{label}</Label>
+      <Input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         autoComplete={autoComplete}
         placeholder={placeholder}
       />
-    </label>
+    </Wrapper>
   );
 };
 

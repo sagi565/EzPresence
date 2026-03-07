@@ -1,96 +1,84 @@
-import { CSSProperties } from 'react';
+import styled from 'styled-components';
 import { theme } from '@theme/theme';
+import { Link } from 'react-router-dom';
 
-type S = Record<string, CSSProperties>;
+export const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  z-index: 50000;
+  gap: 12px;
+`;
 
-export const styles: S = {
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    zIndex: 50000,
-    gap: 12,
-  },
-  link: {
-    color: theme.colors.blue,
-    textDecoration: 'none',
-    fontWeight: 600,
-  },
-  forgotLink: {
-    marginTop: 4,
-    marginBottom: 12,
-    color: theme.colors.blue,
-    textDecoration: 'none',
-    fontWeight: 500,
-    alignSelf: 'flex-end',
-    fontSize: 14,
-  },
-  primaryBtn: {
-    fontSize: 16,
-    fontWeight: 700,
-    height: 44,
-    border: 'none',
-    borderRadius: 12,
-    cursor: 'pointer',
-    color: '#fff',
-    backgroundImage: theme.gradients.innovator,
-    boxShadow: theme.shadows.primary,
-    transition: 'transform 0.2s, box-shadow 0.2s',
-  },
-  // For the or divider
-  orContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    width: '100%',
-    margin: '20px 0',
-  },
-  line: {
-    height: 1,
-    background: theme.colors.muted,
-    flex: 1,
-  },
-  orText: {
-    margin: '0 12px',
-    color: theme.colors.muted,
-    fontSize: 14,
-    whiteSpace: 'nowrap',
-  },
-  passwordWrapper: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  eyeBtn: {
-    position: 'absolute',
-    right: 12,
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    padding: 4,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  eyeIcon: {
-    width: 20,
-    height: 20,
-  },
-  error: {
-    background: theme.colors.primaryLight,
-    color: theme.colors.text,
-    border: '1px solid',
-    borderColor: 'rgba(155,93,229,0.2)',
-    borderRadius: 12,
-    padding: '8px 12px',
-    fontSize: 14,
-  },
-  successMessage: {
-    background: 'rgba(20, 184, 166, 0.1)',
-    color: theme.colors.teal,
-    border: '1px solid rgba(20, 184, 166, 0.3)',
-    borderRadius: 12,
-    padding: '12px 16px',
-    fontSize: 14,
-    fontWeight: 500,
-    marginBottom: 4,
-  },
-};
+export const StyledLink = styled(Link)`
+  color: ${theme.colors.blue};
+  text-decoration: none;
+  font-weight: 600;
+`;
+
+export const ForgotLink = styled(Link)`
+  margin-top: 4px;
+  margin-bottom: 12px;
+  color: ${theme.colors.blue};
+  text-decoration: none;
+  font-weight: 500;
+  align-self: flex-end;
+  font-size: 14px;
+`;
+
+export const PrimaryBtn = styled.button`
+  font-size: 16px;
+  font-weight: 700;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #fff;
+  background-image: ${theme.gradients.innovator};
+  box-shadow: ${theme.shadows.primary};
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+`;
+
+export const OrContainer = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 20px 0;
+`;
+
+export const Line = styled.div`
+  height: 1px;
+  background: ${theme.colors.muted};
+  flex: 1;
+`;
+
+export const OrText = styled.span`
+  margin: 0 12px;
+  color: ${theme.colors.muted};
+  font-size: 14px;
+  white-space: nowrap;
+`;
+
+export const ErrorText = styled.div`
+  background: ${theme.colors.primaryLight};
+  color: ${theme.colors.text};
+  border: 1px solid rgba(155, 93, 229, 0.2);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 14px;
+`;
+
+export const SuccessMessage = styled.div`
+  background: rgba(20, 184, 166, 0.1);
+  color: ${theme.colors.teal};
+  border: 1px solid rgba(20, 184, 166, 0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+`;

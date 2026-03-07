@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { theme } from '@theme/theme';
 import { media } from '@/styles/breakpoints';
+import { Link } from 'react-router-dom';
 
 export const Shell = styled.div`
   height: 100vh;
@@ -17,7 +18,7 @@ export const Header = styled.div`
   z-index: 10;
 `;
 
-export const Brand = styled.span`
+export const Brand = styled(Link)`
   font-size: 40px;
   font-weight: 900;
   background-image: ${theme.gradients.innovator};

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Shell, Header, Brand, ContentContainer, CenterPane, Card, Title, Subtitle, FormArea, FooterArea, ImagePane, HeroImg } from './styles';
-import { Link } from 'react-router-dom';
 import SocialsBackground from '@components/Background/SocialsBackground';
 import Footer from '@components/Footer/Footer';
 
@@ -14,9 +13,7 @@ const AuthLayout: React.FC<{
     <Shell>
       <SocialsBackground />
       <Header>
-        <Link to="/">
-          <Brand>EZpresence</Brand>
-        </Link>
+        <Brand to="/">EZpresence</Brand>
       </Header>
       <ContentContainer>
         <CenterPane>

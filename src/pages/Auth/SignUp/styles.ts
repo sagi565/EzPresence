@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { theme } from '@theme/theme';
+import { Link } from 'react-router-dom';
 
 export const Form = styled.form`
   display: flex;
@@ -7,7 +8,7 @@ export const Form = styled.form`
   gap: 12px;
 `;
 
-export const StyledLink = styled.span`
+export const StyledLink = styled(Link)`
   color: ${theme.colors.blue};
   text-decoration: none;
   font-weight: 600;

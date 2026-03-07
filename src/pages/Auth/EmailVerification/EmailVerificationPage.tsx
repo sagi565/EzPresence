@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '@components/Auth/AuthLayout/AuthLayout';
 import { useAuth } from '@auth/AuthProvider';
-import { styles } from './styles';
+import { Container, EmailDisplay, EmailIcon, EmailText, NoteText, SuccessMessage, ErrorMessage, Actions, ResendButton, LogoutButton, CheckingStatus, Spinner } from './styles';
 
 const EmailVerificationPage: React.FC = () => {
   const { user, refreshUser, resendVerificationEmail, logout } = useAuth();
@@ -66,50 +66,48 @@ const EmailVerificationPage: React.FC = () => {
       title="Verify Your Email"
       subtitle="We've sent a verification link to your email"
     >
-      <div style={styles.container}>
-        <div style={styles.emailDisplay}>
-          <span style={styles.emailIcon}>📧</span>
-          <span style={styles.email}>{user.email}</span>
-        </div>
+      <Container>
+        <EmailDisplay>
+          <EmailIcon>📧</EmailIcon>
+          <EmailText>{user.email}</EmailText>
+        </EmailDisplay>
 
-        <p style={styles.noteText}>
+        <NoteText>
           Click the verification link in the email
-        </p>
+        </NoteText>
 
         {resendSuccess && (
-          <div style={styles.successMessage}>
+          <SuccessMessage>
             ✓ Verification email sent successfully!
-          </div>
+          </SuccessMessage>
         )}
 
         {error && (
-          <div style={styles.errorMessage}>
+          <ErrorMessage>
             {error}
-          </div>
+          </ErrorMessage>
         )}
 
-        <div style={styles.actions}>
-          <button
-            style={styles.resendButton}
+        <Actions>
+          <ResendButton
             onClick={handleResendEmail}
             disabled={isResending}
           >
             {isResending ? 'Sending...' : 'Resend Verification Email'}
-          </button>
+          </ResendButton>
 
-          <button
-            style={styles.logoutButton}
+          <LogoutButton
             onClick={handleLogout}
           >
             Sign Out
-          </button>
-        </div>
+          </LogoutButton>
+        </Actions>
 
-        <div style={styles.checkingStatus}>
-          <div style={styles.spinner}></div>
+        <CheckingStatus>
+          <Spinner />
           <span>Checking verification status...</span>
-        </div>
-      </div>
+        </CheckingStatus>
+      </Container>
     </AuthLayout>
   );
 };

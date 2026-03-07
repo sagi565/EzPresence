@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import AuthLayout from '@components/Auth/AuthLayout/AuthLayout';
 import AuthField from '@components/Auth/AuthField/AuthField';
 import { Form, StyledLink, PrimaryBtn, ErrorText } from './styles';
@@ -47,9 +47,7 @@ const SignUpPage: React.FC = () => {
       footer={
         <span>
           Already have an account?{' '}
-          <Link to="/login" style={{ textDecoration: 'none' }}>
-            <StyledLink>Log in</StyledLink>
-          </Link>
+          <StyledLink to="/login">Log in</StyledLink>
         </span>
       }
     >

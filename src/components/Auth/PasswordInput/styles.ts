@@ -1,48 +1,48 @@
-import { CSSProperties } from 'react';
+import styled from 'styled-components';
 import { theme } from '@theme/theme';
 
-type S = Record<string, CSSProperties>;
+export const Wrapper = styled.label`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
 
-export const styles: S = {
-  wrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 6,
-  },
-  label: {
-    fontSize: 13,
-    color: theme.colors.muted,
-  },
-  passwordWrapper: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  input: {
-    width: '100%',
-    height: 44,
-    borderRadius: 12,
-    border: '1px solid',
-    borderColor: 'rgba(0,0,0,0.08)',
-    outline: 'none',
-    padding: '0 44px 0 12px', // Extra padding on right for eye button
-    background: theme.colors.surface,
-    fontSize: 14, // Smaller font size for password input
-  },
-  eyeBtn: {
-    position: 'absolute',
-    right: 12,
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    padding: 4,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: theme.colors.muted,
-  },
-  eyeIcon: {
-    width: 20,
-    height: 20,
-  },
-};
+export const Label = styled.span`
+  font-size: 13px;
+  color: ${theme.colors.muted};
+`;
+
+export const PasswordWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+`;
+
+export const Input = styled.input`
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  outline: none;
+  padding: 0 44px 0 12px;
+  background: ${theme.colors.surface};
+  font-size: 14px;
+`;
+
+export const EyeBtn = styled.button`
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${theme.colors.muted};
+`;
+
+export const EyeIcon = styled.svg`
+  width: 20px;
+  height: 20px;
+`;

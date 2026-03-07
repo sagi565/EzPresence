@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, Navigate, useLocation } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import AuthLayout from '@components/Auth/AuthLayout/AuthLayout';
 import AuthField from '@components/Auth/AuthField/AuthField';
 import SocialButtons from '@components/Auth/SocialButtons/SocialButtons';
-import { styles } from './styles';
+import { Form, StyledLink, ForgotLink, PrimaryBtn, OrContainer, Line, OrText, ErrorText, SuccessMessage } from './styles';
 import { useAuth } from '@auth/AuthProvider';
 import PasswordInput from '@components/Auth/PasswordInput/PasswordInput';
 
@@ -76,17 +76,17 @@ const LoginPage: React.FC = () => {
       footer={
         <span>
           Don't have an account?{' '}
-          <Link to="/signup" style={styles.link}>
+          <StyledLink to="/signup">
             Sign up
-          </Link>
+          </StyledLink>
         </span>
       }
     >
-      <form style={styles.form} onSubmit={onSubmit}>
+      <Form onSubmit={onSubmit}>
         {successMessage && (
-          <div style={styles.successMessage}>
+          <SuccessMessage>
             ✓ {successMessage}
-          </div>
+          </SuccessMessage>
         )}
 
         <AuthField
@@ -104,25 +104,25 @@ const LoginPage: React.FC = () => {
           autoComplete="current-password"
         />
 
-        <Link to="/forgot-password" style={styles.forgotLink}>
+        <ForgotLink to="/forgot-password">
           Forgot Password?
-        </Link>
+        </ForgotLink>
 
-        {err && <div style={styles.error}>{err}</div>}
+        {err && <ErrorText>{err}</ErrorText>}
 
-        <button style={styles.primaryBtn} disabled={submitting} type="submit">
+        <PrimaryBtn disabled={submitting} type="submit">
           {submitting ? 'Signing in…' : 'Sign in'}
-        </button>
+        </PrimaryBtn>
 
         {/* Divider line + or in middle */}
-        <div style={styles.orContainer}>
-          <div style={styles.line} />
-          <span style={styles.orText}>or</span>
-          <div style={styles.line} />
-        </div>
+        <OrContainer>
+          <Line />
+          <OrText>or</OrText>
+          <Line />
+        </OrContainer>
 
         <SocialButtons />
-      </form>
+      </Form>
     </AuthLayout>
   );
 };

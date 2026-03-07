@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@lib/firebase";
 import AuthLayout from "@components/Auth/AuthLayout/AuthLayout";
@@ -40,9 +40,7 @@ const ForgotPasswordPage: React.FC = () => {
       footer={
         <span>
           Back to{" "}
-          <Link to="/login" style={{ textDecoration: 'none' }}>
-            <StyledLink>Login</StyledLink>
-          </Link>
+          <StyledLink to="/login">Login</StyledLink>
         </span>
       }
     >
