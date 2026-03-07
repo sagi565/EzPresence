@@ -27,12 +27,12 @@ export const styles: Record<string, CSSProperties> = {
   },
 
   contentItemVideo: {
-    width: '340px',
-    height: '520px',
+    width: '280px',
+    height: '480px',
   },
   contentItemImage: {
-    width: '340px',
-    height: '520px',
+    width: '280px',
+    height: '480px',
   },
 
   contentItemHover: {

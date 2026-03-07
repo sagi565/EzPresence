@@ -11,7 +11,7 @@ import NewStoryModal from '@components/Scheduler/CreateModals/NewStoryModal/NewS
 import NewPostModal from '@components/Scheduler/CreateModals/NewPostModal/NewPostModal';
 import CreateDropdown from '@components/Scheduler/SchedulerBar/CreateDropdown';
 import { StoryFormData } from '@/models/StorySchedule';
-import { PostFormData } from '@/models/ScheduleFormData';
+import { PostFormData, parseRruleFrequency, generateRepeatLabel } from '@/models/ScheduleFormData';
 import { styles } from './styles';
 import { ContentItem } from '@/models/ContentList';
 
@@ -290,14 +290,24 @@ const SchedulerPage: React.FC = () => {
       calendarItemId: post.calendarItemId,
       id: post.id,
       status: post.status,
-      repeat: post.isRecurring ? {
-        frequency: 'custom' as const,
-        // Use actual rruleText if available; fall back to a non-empty marker so
-        // !!formData.repeat.rruleText is truthy for Policy schedules even when
-        // the API doesn't return an rruleText for that occurrence.
-        rruleText: post.rruleText || 'POLICY',
-        label: 'Recurring'
-      } : { frequency: 'none' as const, label: 'Does not repeat' }
+      repeat: (() => {
+        if (!post.isRecurring) {
+          return { frequency: 'none' as const, label: 'Does not repeat' };
+        }
+        const frequency = parseRruleFrequency(post.rruleText);
+        const rruleText = post.rruleText;
+        let label = 'Recurring';
+        if (frequency !== 'custom' && frequency !== 'none') {
+          try {
+            label = generateRepeatLabel(frequency, new Date(post.date));
+          } catch (e) { }
+        }
+        return {
+          frequency,
+          rruleText,
+          label
+        };
+      })()
     };
 
     if (post.type === 'Story') {

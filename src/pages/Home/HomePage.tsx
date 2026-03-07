@@ -56,7 +56,7 @@ const styles = {
 
 const HomePage: React.FC = () => {
     const { profile } = useUserProfile();
-    const { platforms: connectedPlatforms, refetch: refetchPlatforms } = useConnectedPlatforms();
+    const { platforms: connectedPlatforms, loading: platformsLoading, refetch: refetchPlatforms } = useConnectedPlatforms();
     const { brands, currentBrand, switchBrand } = useBrands();
 
     // Get user's first name
@@ -82,9 +82,10 @@ const HomePage: React.FC = () => {
                         connectedPlatforms={connectedPlatforms}
                         onConnectionChange={refetchPlatforms}
                         isUninitializedBrand={false}
-                        brandId="" // Passing empty string as user requested not to pass uninitializedBrandUuid
+                        brandId=""
                         title="Your Platforms"
                         subtitle="Connect your social media accounts to get started"
+                        isLoading={platformsLoading}
                     />
                 </div>
             </div>

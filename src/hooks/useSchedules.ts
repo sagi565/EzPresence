@@ -215,6 +215,11 @@ export const useSchedules = (brandId: string) => {
       }
       if (updates.endDate !== undefined) updatedProperties.endDate = updates.endDate;
 
+      if (Object.keys(updatedProperties).length === 0) {
+        console.log('No properties changed, skipping update API call.');
+        return;
+      }
+
       // PUT /api/schedules - Partially updates an existing schedule
       await api.put('/schedules', {
         calendarItemId,

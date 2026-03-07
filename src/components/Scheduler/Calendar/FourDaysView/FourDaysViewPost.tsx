@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Post } from '@models/Post';
 import { styles } from './styles';
+import { getPolicyBackground, getPolicyAccent } from '@utils/policyColors';
 
 interface FourDaysViewPostProps {
   post: Post;
@@ -14,6 +15,7 @@ const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = fals
   const mediaEmoji = post.media === 'video' ? '🎥' : '🖼️';
 
   const [isMediaHovered, setIsMediaHovered] = useState(false);
+  const [isRepeatHovered, setIsRepeatHovered] = useState(false);
   const mediaText = post.media === 'video' ? 'Video' : 'Image';
 
   const getStatusText = (status: string) => {
@@ -31,9 +33,14 @@ const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = fals
     }
   };
 
+  const policyBg = post.isRecurring ? getPolicyBackground(post.scheduleUuid) : null;
+  const policyAccent = post.isRecurring ? getPolicyAccent(post.scheduleUuid) : null;
+
   const postStyle = {
     ...styles.post,
     ...(isHalf ? styles.postHalf : {}),
+    ...(policyBg ? { background: policyBg } : {}),
+    ...(policyAccent ? { borderLeft: `3px solid ${policyAccent}` } : {}),
     ...(isHovered ? styles.postHovered : {}),
   };
 
@@ -66,6 +73,26 @@ const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = fals
             )}
           </div>
           <span style={styles.postTime}>{post.time}</span>
+          {post.isRecurring && (
+            <div
+              style={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              onMouseEnter={() => setIsRepeatHovered(true)}
+              onMouseLeave={() => setIsRepeatHovered(false)}
+            >
+              <img
+                src="/icons/repeat.png"
+                alt="Recurring"
+                style={{ width: '12px', height: '12px', objectFit: 'contain', opacity: 0.7 }}
+              />
+              {isRepeatHovered && (
+                <div style={styles.blackTooltip}>Repeat {post.type}</div>
+              )}
+            </div>
+          )}
           <div
             style={{
               position: 'relative',

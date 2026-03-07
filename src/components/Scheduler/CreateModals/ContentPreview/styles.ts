@@ -1,13 +1,13 @@
 import { CSSProperties } from 'react';
 
-// Exact CSS from HTML demo (Scheduler_Create_Modals.html) for .nsm-content-preview / .npm-content-preview
+// Exact CSS from HTML demo (Scheduler_Create_Modals.html) for .nsm-content-preview
 if (typeof document !== 'undefined') {
     const styleId = 'content-preview-global-styles';
     if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
-            /* Content preview (9:16) — matches HTML demo exactly */
+            /* Content preview (9:16) */
             .nsm-content-preview {
                 width: 100%;
                 aspect-ratio: 9/16;
@@ -31,9 +31,10 @@ if (typeof document !== 'undefined') {
                 border-style: solid;
                 background: rgba(155, 93, 229, .08);
             }
+            /* has-content: no selected ring, just keep normal dashed border */
             .nsm-content-preview.has-content {
-                border-style: solid;
-                border-color: #9b5de5;
+                border-style: dashed;
+                border-color: rgba(0, 0, 0, .1);
             }
             .nsm-content-placeholder {
                 display: flex; flex-direction: column;
@@ -89,17 +90,49 @@ if (typeof document !== 'undefined') {
             }
             .nsm-content-preview:hover .nsm-remove-content { opacity: 1; }
 
-            /* Pick-elevated state — shown on clone above overlay */
+            /* Pick-elevated state */
             .nsm-content-preview.pick-elevated,
             .npm-content-preview.pick-elevated {
                 border-color: #9b5de5;
                 background: rgba(155, 93, 229, .04) !important;
-                box-shadow: 0 0 14px rgba(251, 191, 36, .35), 0 0 28px rgba(251, 191, 36, .15);
+                box-shadow: 0 0 0 3px rgba(155, 93, 229, 0.3), 0 8px 32px rgba(155, 93, 229, 0.2);
             }
             .nsm-content-preview.pick-elevated.drop-hover,
             .npm-content-preview.pick-elevated.drop-hover {
                 border-style: solid;
                 background: rgba(155, 93, 229, .08) !important;
+            }
+
+            /*
+             * ✅ FIX: Elevate .content-preview-drag-target above the dimmer (z-index 1200)
+             * during drag so it remains visible and interactive.
+             * Apply class "content-preview-drag-target" to the wrapper div around
+             * your <ContentPreview> component(s) in your modal/form.
+             */
+            body.content-dragging .content-preview-drag-target {
+                position: relative;
+                z-index: 1400;
+                /* Subtle glow so user knows this is the valid drop zone */
+                filter: drop-shadow(0 0 18px rgba(155, 93, 229, 0.5));
+            }
+
+            /* ── Dark scrim while picking ── */
+            #contentPickScrim {
+                position: fixed;
+                inset: 0;
+                z-index: 1655;
+                background: rgba(0, 0, 0, 0.55);
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity .25s;
+            }
+            #contentPickScrim.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            /* Drawer stays ABOVE the scrim */
+            #contentDrawer {
+                z-index: 1700;
             }
         `;
         document.head.appendChild(style);

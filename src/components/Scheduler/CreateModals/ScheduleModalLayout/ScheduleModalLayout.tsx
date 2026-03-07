@@ -39,18 +39,13 @@ const ScheduleModalLayout: React.FC<ScheduleModalLayoutProps> = ({
     scrollableBody = false,
     onOverlayClick
 }) => {
-    // Handle escape key
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && isOpen) {
-                if (onOverlayClick) {
-                    onOverlayClick();
-                } else {
-                    onClose();
-                }
+                if (onOverlayClick) onOverlayClick();
+                else onClose();
             }
         };
-
         if (isOpen) {
             document.addEventListener('keydown', handleKeyDown);
             return () => document.removeEventListener('keydown', handleKeyDown);
@@ -61,7 +56,32 @@ const ScheduleModalLayout: React.FC<ScheduleModalLayoutProps> = ({
 
     return ReactDOM.createPortal(
         <>
-            <div style={styles.overlay} onClick={onOverlayClick || onClose} />
+            {/*
+             * THE FIX — two things must both be true for drag to work:
+             *
+             * 1. The overlay must call e.preventDefault() on dragover so the
+             *    browser keeps the drag operation alive and keeps firing
+             *    dragover events (which ContentCard uses to track DragCard
+             *    position). Without this, the drag "dies" silently and the
+             *    DragCard freezes in place.
+             *
+             * 2. The overlay must NOT sit in front of ContentPreview. We solve
+             *    this by giving the modal a higher z-index than the overlay,
+             *    and ContentPreview lives inside the modal. So the overlay only
+             *    covers the area OUTSIDE the modal — it never intercepts events
+             *    that are over the modal/ContentPreview.
+             *
+             * The z-index relationship (defined in styles.ts) must be:
+             *   overlay z-index < modal z-index
+             * This is already the standard pattern — overlay dims the page
+             * behind the modal.
+             */}
+            <div
+                style={styles.overlay}
+                onClick={onOverlayClick || onClose}
+                onDragOver={(e) => e.preventDefault()}
+                onDragEnter={(e) => e.preventDefault()}
+            />
             <div
                 className="schedule-modal-layout"
                 style={{
@@ -71,7 +91,6 @@ const ScheduleModalLayout: React.FC<ScheduleModalLayoutProps> = ({
                     ...(scrollableBody ? { overflow: 'hidden' } : {})
                 }}
             >
-                {/* Header */}
                 <div style={styles.header}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         {icon && <span style={styles.typeLabel}>{icon}</span>}
@@ -79,17 +98,9 @@ const ScheduleModalLayout: React.FC<ScheduleModalLayoutProps> = ({
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {onDelete && (
-                            <TrashButton
-                                onClick={onDelete}
-                                disabled={isDeleting}
-                                title="Delete"
-                            />
+                            <TrashButton onClick={onDelete} disabled={isDeleting} title="Delete" />
                         )}
-                        <button
-                            style={styles.closeBtn}
-                            className="modal-close-btn"
-                            onClick={onClose}
-                        >
+                        <button style={styles.closeBtn} className="modal-close-btn" onClick={onClose}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
                                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -98,52 +109,31 @@ const ScheduleModalLayout: React.FC<ScheduleModalLayoutProps> = ({
                     </div>
                 </div>
 
-                {/* Scrollable wrapper for Post modal */}
                 {scrollableBody ? (
                     <div style={styles.scrollableBody}>
-                        {/* Before Body */}
                         {beforeBody}
-
-                        {/* Body */}
                         <div style={styles.body}>
-                            <div style={styles.leftColumn}>
-                                {children}
-                            </div>
-                            <div style={styles.rightColumn}>
-                                {rightColumn}
-                            </div>
+                            <div style={styles.leftColumn}>{children}</div>
+                            <div style={styles.rightColumn}>{rightColumn}</div>
                         </div>
                     </div>
                 ) : (
                     <>
-                        {/* Before Body */}
                         {beforeBody}
-
-                        {/* Body */}
                         <div style={styles.body}>
-                            <div style={styles.leftColumn}>
-                                {children}
-                            </div>
-                            <div style={styles.rightColumn}>
-                                {rightColumn}
-                            </div>
+                            <div style={styles.leftColumn}>{children}</div>
+                            <div style={styles.rightColumn}>{rightColumn}</div>
                         </div>
                     </>
                 )}
 
-                {/* Footer */}
-                {footer && (
-                    <div style={styles.footer}>
-                        {footer}
-                    </div>
-                )}
+                {footer && <div style={styles.footer}>{footer}</div>}
             </div>
         </>,
         document.body
     );
 };
 
-// Add global hover styles for close button rotation
 if (typeof document !== 'undefined') {
     const styleId = 'modal-close-btn-animation';
     if (!document.getElementById(styleId)) {

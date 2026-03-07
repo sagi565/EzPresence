@@ -208,8 +208,8 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
   },
   statusIndicator: {
-    width: '6px',
-    height: '6px',
+    width: '8px',
+    height: '8px',
     borderRadius: '50%',
     flexShrink: 0,
     cursor: 'pointer',
@@ -221,11 +221,13 @@ export const styles: Record<string, CSSProperties> = {
     background: '#ef4444',
   },
   statusScheduled: {
-    background: theme.colors.blue,
+    background: 'white',
+    border: '1.7px solid black',
+    boxSizing: 'border-box',
   },
   statusDraft: {
     background: 'white',
-    border: '1.5px dashed #4b5563',
+    border: '2.2px dotted #4b5563',
     boxSizing: 'border-box',
   },
   blackTooltip: {

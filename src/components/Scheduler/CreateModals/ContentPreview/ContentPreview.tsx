@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ContentItem } from '@/models/ContentList';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
 import './styles';
@@ -17,11 +17,15 @@ export interface ContentPreviewProps {
 }
 
 /**
- * ContentPreview — matches the HTML demo (Scheduler_Create_Modals.html) exactly.
+ * All drag handling is done via native addEventListener (not React synthetic
+ * events). React's synthetic drag events go through event delegation on the
+ * root — when the modal is opened by clicking this element, the browser's
+ * focus/active tracking interferes with React's delegation and events stop
+ * being delivered reliably. Native listeners on the actual DOM node always
+ * fire regardless of that.
  *
- * Placeholder state: 🎞️ icon + "Click to add content" text.
- * Filled state:      thumbnail/video fills the entire card; title overlaid at bottom.
- * Drag-over state:   only border/bg changes (no overlay panel), matching the demo.
+ * dragLeave uses relatedTarget to filter out child-crossing noise — only
+ * fires the parent callback when the pointer truly leaves this element.
  */
 const ContentPreview: React.FC<ContentPreviewProps> = ({
     id,
@@ -37,12 +41,60 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
 }) => {
     const isVideo = content?.type === 'video';
     const { url: videoUrl, fetchUrl } = useContentUrl();
+    const divRef = useRef<HTMLDivElement>(null);
+
+    // Keep callbacks in refs so the native listeners never go stale
+    const onDragEnterRef = useRef(onDragEnter);
+    const onDragOverRef = useRef(onDragOver);
+    const onDragLeaveRef = useRef(onDragLeave);
+    const onDropRef = useRef(onDrop);
+    useEffect(() => { onDragEnterRef.current = onDragEnter; }, [onDragEnter]);
+    useEffect(() => { onDragOverRef.current = onDragOver; }, [onDragOver]);
+    useEffect(() => { onDragLeaveRef.current = onDragLeave; }, [onDragLeave]);
+    useEffect(() => { onDropRef.current = onDrop; }, [onDrop]);
 
     useEffect(() => {
-        if (content?.id && isVideo) {
-            fetchUrl(content.id);
-        }
+        if (content?.id && isVideo) fetchUrl(content.id);
     }, [content?.id, isVideo, fetchUrl]);
+
+    useEffect(() => {
+        const el = divRef.current;
+        if (!el) return;
+
+        const handleDragEnter = (e: DragEvent) => {
+            e.preventDefault();
+            onDragEnterRef.current?.(e as unknown as React.DragEvent);
+        };
+
+        const handleDragOver = (e: DragEvent) => {
+            e.preventDefault();
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+            onDragOverRef.current?.(e as unknown as React.DragEvent);
+        };
+
+        const handleDragLeave = (e: DragEvent) => {
+            // relatedTarget is where the pointer went TO — if it's still
+            // inside this element (a child), ignore it entirely.
+            if (el.contains(e.relatedTarget as Node)) return;
+            onDragLeaveRef.current?.(e as unknown as React.DragEvent);
+        };
+
+        const handleDrop = (e: DragEvent) => {
+            e.preventDefault();
+            onDropRef.current?.(e as unknown as React.DragEvent);
+        };
+
+        el.addEventListener('dragenter', handleDragEnter);
+        el.addEventListener('dragover', handleDragOver);
+        el.addEventListener('dragleave', handleDragLeave);
+        el.addEventListener('drop', handleDrop);
+        return () => {
+            el.removeEventListener('dragenter', handleDragEnter);
+            el.removeEventListener('dragover', handleDragOver);
+            el.removeEventListener('dragleave', handleDragLeave);
+            el.removeEventListener('drop', handleDrop);
+        };
+    }, []); // attach once — callbacks read from refs
 
     const getThumbnailSrc = (thumb?: string) => {
         if (!thumb) return null;
@@ -63,69 +115,50 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
 
     return (
         <div
+            ref={divRef}
             id={id}
             className={classNames}
             onClick={(e) => {
                 e.stopPropagation();
-                if (!hasValidContent) onOpenDrawer();
+                onOpenDrawer();
             }}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            onDragEnter={onDragEnter}
         >
-            {/* Placeholder — shown when empty */}
             <div
                 className="nsm-content-placeholder"
-                style={{ display: hasValidContent ? 'none' : 'flex' }}
+                style={{ display: hasValidContent ? 'none' : 'flex', pointerEvents: 'none' }}
             >
                 <span className="placeholder-icon">🎞️</span>
                 <span className="placeholder-text">{placeholderText}</span>
             </div>
 
-            {/* Filled Content */}
             <div
                 className="nsm-content-filled"
                 style={{
                     display: hasValidContent ? 'flex' : 'none',
                     backgroundImage: (!isVideo && thumbSrc) ? `url(${thumbSrc})` : 'none',
                     backgroundColor: hasValidContent && !thumbSrc ? 'rgba(155, 93, 229, 0.1)' : 'transparent',
+                    pointerEvents: 'none',
                 }}
             >
                 {isVideo && videoUrl && (
                     <video
                         src={videoUrl}
-                        style={{
-                            position: 'absolute', inset: 0,
-                            width: '100%', height: '100%',
-                            objectFit: 'cover', zIndex: 1, pointerEvents: 'none',
-                        }}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, pointerEvents: 'none' }}
+                        autoPlay muted loop playsInline
                     />
                 )}
                 {!hasMedia && content && (
-                    <div style={{
-                        position: 'absolute', inset: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '32px', zIndex: 1, opacity: 0.5,
-                    }}>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', zIndex: 1, opacity: 0.5, pointerEvents: 'none' }}>
                         {isVideo ? '🎬' : '🖼️'}
                     </div>
                 )}
-                <div className="filled-title">{content?.title}</div>
+                <div className="filled-title" style={{ pointerEvents: 'none' }}>{content?.title}</div>
             </div>
 
-            {/* Remove Button */}
             <button
                 className="nsm-remove-content"
                 style={{ display: hasValidContent ? 'flex' : 'none' }}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove(e);
-                }}
+                onClick={(e) => { e.stopPropagation(); onRemove(e); }}
                 title="Remove content"
             >
                 ✕

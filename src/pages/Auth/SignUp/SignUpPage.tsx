@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import AuthLayout from '@components/Auth/AuthLayout/AuthLayout';
 import AuthField from '@components/Auth/AuthField/AuthField';
-import { styles } from './styles';
+import { Form, StyledLink, PrimaryBtn, ErrorText } from './styles';
 import { useAuth } from '@auth/AuthProvider';
 import PasswordInput from '@components/Auth/PasswordInput/PasswordInput';
 
@@ -47,13 +47,13 @@ const SignUpPage: React.FC = () => {
       footer={
         <span>
           Already have an account?{' '}
-          <Link to="/login" style={styles.link}>
-            Log in
+          <Link to="/login" style={{ textDecoration: 'none' }}>
+            <StyledLink>Log in</StyledLink>
           </Link>
         </span>
       }
     >
-      <form style={styles.form} onSubmit={onSubmit}>
+      <Form onSubmit={onSubmit}>
         <AuthField
           label="Name"
           value={displayName}
@@ -74,12 +74,12 @@ const SignUpPage: React.FC = () => {
           autoComplete="new-password"
         />
 
-        {err && <div style={styles.error}>{err}</div>}
+        {err && <ErrorText>{err}</ErrorText>}
 
-        <button style={styles.primaryBtn} disabled={submitting} type="submit">
+        <PrimaryBtn disabled={submitting} type="submit">
           {submitting ? 'Creating…' : 'Sign Up'}
-        </button>
-      </form>
+        </PrimaryBtn>
+      </Form>
     </AuthLayout>
   );
 };

@@ -9,16 +9,15 @@ interface Particle {
   speedX: number;
   rotation: number;
   rotationSpeed: number;
+  baseRotationSpeed: number;
   opacity: number;
   img: HTMLImageElement;
   flutterPhase: number;
   flutterSpeed: number;
-  flutterAmplitude: number;
   swayXAmplitude: number;
   swayYAmplitude: number;
   isExtra?: boolean;
   markedForDeletion?: boolean;
-  baseRotationSpeed: number;
 }
 
 const ICON_PATHS = [
@@ -40,9 +39,7 @@ const OPACITY_MAX = 0.30;
 // Interaction settings
 const INTERACTION_RADIUS = 70;
 const REPULSION_FORCE = 1;
-const SWIRL_FORCE = 0.2;
-
-const SocialsBackground: React.FC = () => {
+const SWIRL_FORCE = 0.2;const SocialsBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -58,11 +55,11 @@ const SocialsBackground: React.FC = () => {
 
   // Burst configuration
   const BURST_DURATION = 8000;
-  const burstRef = useRef<{ active: boolean; platform: string | null; endTime: number; extrasSpawned: boolean }>({
+  const burstRef = useRef<{ active: boolean; platform: string | null; endTime: number; extrasSpawned: number }>({
     active: false,
     platform: null,
     endTime: 0,
-    extrasSpawned: false,
+    extrasSpawned: 0,
   });
 
   const loadIcons = (): Promise<Record<string, HTMLImageElement>> =>
@@ -107,25 +104,22 @@ const SocialsBackground: React.FC = () => {
     const speedX = WIND * (0.9 + Math.random() * 0.3) + z * 0.2;
 
     const rotation = Math.random() * Math.PI * 2;
-    const baseRotationSpeed = (Math.random() - 0.5) * 0.04; // slightly faster base spin
+    const baseRotationSpeed = (Math.random() - 0.5) * 0.02;
     const rotationSpeed = baseRotationSpeed;
     const opacity = OPACITY_MIN + z * (OPACITY_MAX - OPACITY_MIN);
 
     const flutterPhase = Math.random() * Math.PI * 2;
-    const flutterSpeed = Math.random() * 0.04 + 0.02; // Uneven flutter speed
-    const flutterAmplitude = 0;
+    const flutterSpeed = Math.random() * 0.02 + 0.01; // slower flutter
 
-    // Much smaller ellipses, consistent across all particles
-    const swayXAmplitude = Math.random() * 3 + 1; // 1 to 4 px
-    const swayYAmplitude = Math.random() * 1.5 + 0.5; // 0.5 to 2 px
+    // Very slight ellipses
+    const swayXAmplitude = Math.random() * 1.5 + 0.5; // very slight horizontal waiver
+    const swayYAmplitude = Math.random() * 0.5 + 0.2; // minimal vertical waiver
 
     return {
       x, y, z, size,
-      speedY, speedX, rotation, rotationSpeed, opacity,
-      img, flutterPhase, flutterSpeed, flutterAmplitude,
-      swayXAmplitude, swayYAmplitude,
+      speedY, speedX, rotation, rotationSpeed, baseRotationSpeed, opacity,
+      img, flutterPhase, flutterSpeed, swayXAmplitude, swayYAmplitude,
       isExtra, markedForDeletion: false,
-      baseRotationSpeed
     };
   };
 
@@ -207,16 +201,16 @@ const SocialsBackground: React.FC = () => {
     if (burstRef.current.active && now > burstRef.current.endTime) {
       burstRef.current.active = false;
       burstRef.current.platform = null;
-      burstRef.current.extrasSpawned = false;
+      burstRef.current.extrasSpawned = 0;
     }
     const isBursting = burstRef.current.active;
     const burstPlatform = burstRef.current.platform;
 
-    // Spawn 40 extra particles of the connected platform
-    if (isBursting && !burstRef.current.extrasSpawned && burstPlatform && dict[burstPlatform]) {
-      burstRef.current.extrasSpawned = true;
-      for (let i = 0; i < 40; i++) {
-        // We set `isExtra` to true so it can be discarded after burst ends
+    // Gradual spawn up to ~40 particles during burst
+    if (isBursting && burstRef.current.extrasSpawned < 40 && burstPlatform && dict[burstPlatform]) {
+      // Spawn 1 or 2 particles per frame occasionally to make it feel organic, not all at once
+      if (Math.random() < 0.2) { 
+        burstRef.current.extrasSpawned++;
         particlesRef.current.push(makeParticle(dict[burstPlatform], w, h, true));
       }
     }
@@ -228,18 +222,15 @@ const SocialsBackground: React.FC = () => {
     particles.sort((a, b) => a.z - b.z);
 
     for (const p of particles) {
-      // Flutter speed increases slightly during burst
       p.flutterPhase += isBursting ? p.flutterSpeed * 1.5 : p.flutterSpeed;
 
-      // Realistic "leaves in the fall": Use particle-specific amplitudes
-      const swayX = Math.cos(p.flutterPhase * 0.8) * p.swayXAmplitude;
-      const swayY = Math.sin(p.flutterPhase * 0.8) * p.swayYAmplitude;
+      const swayX = Math.cos(p.flutterPhase) * p.swayXAmplitude;
+      const swayY = Math.sin(p.flutterPhase) * p.swayYAmplitude;
 
       let dx = p.speedX + swayX;
       let dy = p.speedY + swayY;
 
       // --- Interaction: Repulsion / Attraction ---
-      // We calculate distance from particle center to mouse
       const pCx = p.x + p.size / 2;
       const pCy = p.y + p.size / 2;
       const distX = pCx - mX;
@@ -247,32 +238,27 @@ const SocialsBackground: React.FC = () => {
       const dist = Math.sqrt(distX * distX + distY * distY);
 
       if (dist < INTERACTION_RADIUS && dist > 1) { // avoid divide by zero
-        // Normalize direction
         const force = (INTERACTION_RADIUS - dist) / INTERACTION_RADIUS;
-        const mag = force * REPULSION_FORCE * (p.z + 0.5); // affects closer items more
+        const mag = force * REPULSION_FORCE * (p.z + 0.5);
 
         const normX = distX / dist;
         const normY = distY / dist;
 
-        // Tangential vector (perpendicular) for swirl
-        // Rotation (x,y) -> (-y, x) gives 90 deg rotation
         const tanX = -normY;
         const tanY = normX;
 
-        // REPULSION / HURRICANE MODE
         // Push away
         dx += normX * mag;
         dy += normY * mag;
 
-        // Forceful Swirl (Hurricane)
+        // Forceful Swirl
         dx += tanX * mag * SWIRL_FORCE * 2.5;
         dy += tanY * mag * SWIRL_FORCE * 2.5;
 
-        // Cause chaotic spinning when disrupted
+        // Chaotic spinning
         p.rotationSpeed = p.baseRotationSpeed * 5;
       } else {
-        // Return to natural uneven spin
-        // Spin faster when moving faster horizontally to simulate drag
+        // Return to natural spin
         p.rotationSpeed = p.baseRotationSpeed + (Math.sin(p.flutterPhase) * 0.01);
       }
 
@@ -321,7 +307,7 @@ const SocialsBackground: React.FC = () => {
 
     let mounted = true;
     let ro: ResizeObserver | null = null;
-
+    
     // Mouse listener
     const handleMouseMove = (e: MouseEvent) => {
       if (!canvasRef.current) return;
@@ -338,7 +324,7 @@ const SocialsBackground: React.FC = () => {
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseout', handleMouseLeave); // Optional: reset when out of window
+    window.addEventListener('mouseout', handleMouseLeave);
 
     const handlePlatformConnected = (e: Event) => {
       const customEvent = e as CustomEvent<{ platform: string }>;
@@ -346,7 +332,7 @@ const SocialsBackground: React.FC = () => {
         active: true,
         platform: customEvent.detail.platform,
         endTime: Date.now() + BURST_DURATION,
-        extrasSpawned: false,
+        extrasSpawned: 0,
       };
     };
     window.addEventListener('ezp:platformConnected', handlePlatformConnected);
@@ -400,25 +386,19 @@ const SocialsBackground: React.FC = () => {
   }, []);
 
   return (
-    <div
+    <canvas
+      ref={canvasRef}
       style={{
         position: 'absolute',
         inset: 0,
-        overflow: 'hidden',
+        width: '100%',
+        height: '100%',
+        display: 'block',
         zIndex: 0,
         pointerEvents: 'none',
       }}
-    >
-      <canvas
-        ref={canvasRef}
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'block',
-        }}
-      />
-    </div>
+    />
   );
 };
 
-export default SocialsBackground;
+export default React.memo(SocialsBackground);

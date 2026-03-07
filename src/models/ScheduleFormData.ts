@@ -273,6 +273,18 @@ export const generateRruleText = (frequency: RepeatFrequency, date: Date): strin
 };
 
 /**
+ * Parse iCal RRULE text to determine the frequency
+ */
+export const parseRruleFrequency = (rruleText?: string | null): RepeatFrequency => {
+    if (!rruleText || rruleText === 'POLICY') return 'custom';
+    if (rruleText.includes('FREQ=DAILY')) return 'daily';
+    if (rruleText.includes('FREQ=WEEKLY')) return 'weekly';
+    if (rruleText.includes('FREQ=MONTHLY')) return 'monthly';
+    if (rruleText.includes('FREQ=YEARLY')) return 'annually';
+    return 'custom';
+};
+
+/**
  * Validate that at least one platform is enabled
  */
 export const hasEnabledPlatform = (formData: ScheduleFormData): boolean => {

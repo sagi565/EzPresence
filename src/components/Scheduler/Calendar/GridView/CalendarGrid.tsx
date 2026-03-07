@@ -44,6 +44,16 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     const isToday = dayDate.getTime() === todayDate.getTime();
     // showMonthName on the 1st of the prev month only when it falls in the grid
     const showMonthName = dayNum === 1;
+
+    const dayPosts = posts.filter((p) => {
+      const pd = new Date(p.date);
+      return (
+        pd.getDate() === dayNum &&
+        pd.getMonth() === prevMonth &&
+        pd.getFullYear() === prevYear
+      );
+    }).sort((a, b) => a.time.localeCompare(b.time));
+
     days.push(
       <CalendarDay
         key={`prev-${dayNum}`}
@@ -53,7 +63,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         isToday={isToday}
         isOtherMonth
         showMonthName={showMonthName}
-        posts={[]}
+        posts={dayPosts}
         onDrop={onDrop}
         onPostClick={onPostClick}
         activeDropDate={activeDropDate}
@@ -106,6 +116,16 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     const isPast = dayDate < todayDate;
     const isToday = dayDate.getTime() === todayDate.getTime();
     const showMonthName = i === 1;
+
+    const dayPosts = posts.filter((p) => {
+      const pd = new Date(p.date);
+      return (
+        pd.getDate() === i &&
+        pd.getMonth() === nextMonth &&
+        pd.getFullYear() === nextYear
+      );
+    }).sort((a, b) => a.time.localeCompare(b.time));
+
     days.push(
       <CalendarDay
         key={`next-${i}`}
@@ -115,7 +135,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         isToday={isToday}
         isOtherMonth
         showMonthName={showMonthName}
-        posts={[]}
+        posts={dayPosts}
         onDrop={onDrop}
         onPostClick={onPostClick}
         activeDropDate={activeDropDate}

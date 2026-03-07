@@ -11,10 +11,12 @@ import ProtectedRoute from '@auth/ProtectedRoute';
 import AuthActionPage from './pages/Auth/AuthAction/AuthActionPage';
 import ResetPasswordPage from './pages/Auth/ResetPassword/ResetPAsswordPage';
 import CreateBrandPage from './pages/CreateBrand/CreateBrandPage';
+import CreateNewBrandPage from './pages/CreateNewBrand/CreateNewBrandPage';
 import CreateUserPage from './pages/CreateUser/CreateUserPage';
 import TermsOfServicePage from './pages/Legal/TermsOfServicePage';
 import PrivacyPolicyPage from './pages/Legal/PrivacyPolicyPage';
 import HomePage from './pages/Home/HomePage';
+import DashboardPage from './pages/Dashboard/DashboardPage';
 
 function App() {
   return (
@@ -53,6 +55,15 @@ function App() {
           />
 
           <Route
+            path="/create-new-brand"
+            element={
+              <ProtectedRoute>
+                <CreateNewBrandPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/scheduler"
             element={
               <ProtectedRoute>
@@ -73,6 +84,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <StudioPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
               </ProtectedRoute>
             }
           />

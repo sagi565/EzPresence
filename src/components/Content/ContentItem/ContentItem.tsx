@@ -290,8 +290,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
 
           <div style={{
             ...styles.contentActions,
-            opacity: isHovered || item.favorite || showMenu ? 1 : 0,
-            transition: 'opacity 0.3s ease',
+            ...(isHovered || item.favorite || showMenu ? styles.contentActionsVisible : {}),
           }}>
             <button
               style={{
@@ -302,7 +301,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
               onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
               onMouseEnter={() => setHoveredBtn('fav')}
               onMouseLeave={() => setHoveredBtn(null)}
-              title={item.favorite ? 'Unlike' : 'Like'}
+              title="Toggle Favorite"
             >
               {item.favorite ? '❤️' : '🤍'}
             </button>

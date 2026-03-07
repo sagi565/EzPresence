@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { applyActionCode } from 'firebase/auth';
 import { auth } from '@lib/firebase';
-import { styles } from './styles';
+import { Container, Card, Spinner, SuccessIcon, ErrorIcon, Title, Subtitle, ErrorText, AutoCloseMessage, Button } from './styles';
 
 const AuthActionPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -70,46 +70,43 @@ const AuthActionPage: React.FC = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
+    <Container>
+      <Card>
         {status === 'loading' && (
           <>
-            <div style={styles.spinner}></div>
-            <h2 style={styles.title}>Processing...</h2>
-            <p style={styles.subtitle}>Please wait a moment</p>
+            <Spinner />
+            <Title>Processing...</Title>
+            <Subtitle>Please wait a moment</Subtitle>
           </>
         )}
         
         {status === 'success' && (
           <>
-            <div style={styles.successIcon}>✓</div>
-            <h2 style={styles.title}>Email Verified!</h2>
-            <p style={styles.subtitle}>
+            <SuccessIcon>✓</SuccessIcon>
+            <Title>Email Verified!</Title>
+            <Subtitle>
               Your email has been successfully verified.
               <br />
               You can close this window now.
-            </p>
-            <div style={styles.autoCloseMessage}>
+            </Subtitle>
+            <AutoCloseMessage>
               Closing automatically...
-            </div>
+            </AutoCloseMessage>
           </>
         )}
         
         {status === 'error' && (
           <>
-            <div style={styles.errorIcon}>✕</div>
-            <h2 style={styles.title}>Action Failed</h2>
-            <p style={styles.errorText}>{errorMessage}</p>
-            <button 
-              style={styles.button}
-              onClick={() => navigate('/login')}
-            >
+            <ErrorIcon>✕</ErrorIcon>
+            <Title>Action Failed</Title>
+            <ErrorText>{errorMessage}</ErrorText>
+            <Button onClick={() => navigate('/login')}>
               Go to Login
-            </button>
+            </Button>
           </>
         )}
-      </div>
-    </div>
+      </Card>
+    </Container>
   );
 };
 

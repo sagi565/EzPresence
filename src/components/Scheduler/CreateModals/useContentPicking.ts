@@ -23,6 +23,7 @@ export const useContentPicking = ({ onPick, targetType }: UseContentPickingProps
 
     const pickCloneRef = useRef<HTMLElement | null>(null);
     const pickGlowRef = useRef<HTMLElement | null>(null);
+    const pickScrimRef = useRef<HTMLElement | null>(null);
     const [isPicking, setIsPicking] = useState(false);
 
     // Shared cleanup — remove clone, glow, restore original, clear overlay/drawer classes
@@ -36,6 +37,13 @@ export const useContentPicking = ({ onPick, targetType }: UseContentPickingProps
         if (pickGlowRef.current) {
             pickGlowRef.current.remove();
             pickGlowRef.current = null;
+        }
+        if (pickScrimRef.current) {
+            pickScrimRef.current.classList.remove('active');
+            // short fade-out then remove
+            const s = pickScrimRef.current;
+            setTimeout(() => s.remove(), 280);
+            pickScrimRef.current = null;
         }
 
         // Restore originals for both modals (in case both are in DOM)
@@ -103,6 +111,17 @@ export const useContentPicking = ({ onPick, targetType }: UseContentPickingProps
         `;
         document.body.appendChild(glow);
         pickGlowRef.current = glow;
+
+        // ── 2b. Dark scrim (dims everything behind clone/drawer) ─────────────
+        let scrim = document.getElementById('contentPickScrim') as HTMLElement | null;
+        if (!scrim) {
+            scrim = document.createElement('div');
+            scrim.id = 'contentPickScrim';
+            document.body.appendChild(scrim);
+        }
+        // trigger fade-in on next frame
+        requestAnimationFrame(() => scrim!.classList.add('active'));
+        pickScrimRef.current = scrim;
 
         // ── 3. Visual clone (the actual drop zone) ───────────────────────────
         const clone = preview.cloneNode(true) as HTMLElement;

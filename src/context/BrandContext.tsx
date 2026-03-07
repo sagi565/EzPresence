@@ -77,6 +77,8 @@ export const BrandProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     try {
       await api.post(`/users/set-active-brand?BrandUuid=${brandId}`);
+      // Refresh the brand list to ensure we have the latest active states from the server
+      await fetchBrands();
     } catch (err) {
       console.error('Failed to sync active brand', err);
     }

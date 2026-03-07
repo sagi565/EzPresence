@@ -4,7 +4,7 @@ import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@lib/firebase";
 import AuthLayout from "@components/Auth/AuthLayout/AuthLayout";
 import AuthField from "@components/Auth/AuthField/AuthField";
-import { styles } from "./styles";
+import { Form, StyledLink, PrimaryBtn, NoticeText, ErrorText } from "./styles";
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -40,18 +40,18 @@ const ForgotPasswordPage: React.FC = () => {
       footer={
         <span>
           Back to{" "}
-          <Link to="/login" style={styles.link}>
-            Login
+          <Link to="/login" style={{ textDecoration: 'none' }}>
+            <StyledLink>Login</StyledLink>
           </Link>
         </span>
       }
     >
       {sent ? (
-        <div style={styles.notice}>
+        <NoticeText>
           If an account exists for <b>{email}</b>, a reset link has been sent.
-        </div>
+        </NoticeText>
       ) : (
-        <form style={styles.form} onSubmit={onSubmit}>
+        <Form onSubmit={onSubmit}>
           <AuthField
             label="Email address"
             type="email"
@@ -59,11 +59,11 @@ const ForgotPasswordPage: React.FC = () => {
             onChange={setEmail}
             autoComplete="email"
           />
-          {err && <div style={styles.error}>{err}</div>}
-          <button style={styles.primaryBtn} disabled={submitting} type="submit">
+          {err && <ErrorText>{err}</ErrorText>}
+          <PrimaryBtn disabled={submitting} type="submit">
             {submitting ? "Sending…" : "Send reset link"}
-          </button>
-        </form>
+          </PrimaryBtn>
+        </Form>
       )}
     </AuthLayout>
   );

@@ -16,7 +16,7 @@ export const styles: Record<string, CSSProperties> = {
     borderRadius: '24px 24px 0 0',
     boxShadow: '0 -4px 20px rgba(155, 93, 229, 0.1)',
     transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
-    zIndex: 2000, /* Ensure it is above the modal (1600) and overlay (1650) */
+    zIndex: 2000,
     display: 'flex',
     flexDirection: 'column',
     transform: 'translateY(calc(100% - 70px))',
@@ -61,7 +61,7 @@ export const styles: Record<string, CSSProperties> = {
   drawerInner: {
     padding: '16px 24px',
     display: 'flex',
-    gap: '0', // NO GAP
+    gap: '0',
     height: '100%',
   },
 
@@ -96,7 +96,7 @@ export const styles: Record<string, CSSProperties> = {
 
   // SIDEBAR
   listsContainer: {
-    width: '280px', // Wider
+    width: '280px',
     flexShrink: 0,
     background: '#ffffff',
     borderLeft: '1px solid',
@@ -166,9 +166,10 @@ export const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // ✅ Yellow glow removed — now uses a subtle purple shadow
   contentCardHover: {
     transform: 'translateY(-4px)',
-    boxShadow: '0 8px 20px rgba(251, 191, 36, 0.3)',
+    boxShadow: '0 8px 20px rgba(155, 93, 229, 0.25)',
   },
   contentThumbnail: {
     width: '100%',

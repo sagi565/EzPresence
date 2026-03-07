@@ -12,10 +12,6 @@ interface ContentCardProps {
   onClickDetail?: (content: ContentItem) => void;
 }
 
-// ---------------------------------------------------------------------------
-// Invisible 1×1 canvas to suppress the native browser drag ghost.
-// Created once at module level — always in the DOM so setDragImage works sync.
-// ---------------------------------------------------------------------------
 const ghostCanvas = document.createElement('canvas');
 ghostCanvas.width = 1;
 ghostCanvas.height = 1;
@@ -24,20 +20,16 @@ const ctx = ghostCanvas.getContext('2d');
 if (ctx) ctx.clearRect(0, 0, 1, 1);
 document.body.appendChild(ghostCanvas);
 
-// ---------------------------------------------------------------------------
-// Global drag-dimmer styles (injected once)
-// ---------------------------------------------------------------------------
 const DIMMER_STYLE_ID = 'drag-dimmer-styles';
 if (!document.getElementById(DIMMER_STYLE_ID)) {
   const s = document.createElement('style');
   s.id = DIMMER_STYLE_ID;
   s.textContent = `
-    /* Dark overlay shown globally when a content card is being dragged */
     #drag-dimmer {
       position: fixed;
       inset: 0;
-      background: rgba(17, 24, 39, 0.55);
-      z-index: 1200;          /* above calendar, below drawer (z-index 900 is drawer; we need above modals too) */
+      background: rgba(17, 24, 39, 0.65);
+      z-index: 1200;
       pointer-events: none;
       animation: dimmerFadeIn 0.2s ease forwards;
     }
@@ -45,13 +37,9 @@ if (!document.getElementById(DIMMER_STYLE_ID)) {
       from { opacity: 0; }
       to   { opacity: 1; }
     }
-
-    /* The drawer sits above the dimmer while dragging */
     body.content-dragging .content-drawer {
-      z-index: 1300 !important;
+      z-index: 2000 !important;
     }
-    /* Content preview clone (#pickClone) and pick-glow already sit at 1660 — above everything */
-    /* Make the modal above the dimmer too (for pick mode) */
     body.content-dragging .new-story-modal,
     body.content-dragging .new-post-modal {
       z-index: 1300 !important;
@@ -60,9 +48,6 @@ if (!document.getElementById(DIMMER_STYLE_ID)) {
   document.head.appendChild(s);
 }
 
-// ---------------------------------------------------------------------------
-// Floating drag-card preview (rendered via portal to document.body)
-// ---------------------------------------------------------------------------
 const DragCard: React.FC<{ content: ContentItem; pos: { x: number; y: number } }> = ({ content, pos }) => {
   const thumb = content.thumbnail;
   const thumbnailSrc = thumb
@@ -90,37 +75,22 @@ const DragCard: React.FC<{ content: ContentItem; pos: { x: number; y: number } }
         pointerEvents: 'none',
         zIndex: 9999,
         opacity: 0.95,
-        // No transition here — we want 1:1 mouse tracking without lag
       }}
     >
       {thumbnailSrc ? (
-        <img
-          src={thumbnailSrc}
-          alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
+        <img src={thumbnailSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       ) : (
-        <div style={{
-          width: '100%', height: '100%',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '32px', background: 'rgba(155, 93, 229, 0.05)',
-        }}>
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', background: 'rgba(155, 93, 229, 0.05)' }}>
           {content.type === 'video' ? '🎬' : '🖼️'}
         </div>
       )}
       <div style={{
-        position: 'absolute',
-        bottom: 0, left: 0, right: 0,
+        position: 'absolute', bottom: 0, left: 0, right: 0,
         padding: '14px 10px 8px',
         background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)',
-        color: 'white',
-        fontSize: '12px',
-        fontWeight: 700,
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-        zIndex: 2,
+        color: 'white', fontSize: '12px', fontWeight: 700,
+        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        textShadow: '0 1px 3px rgba(0,0,0,0.8)', zIndex: 2,
       }}>
         {content.title}
       </div>
@@ -129,9 +99,6 @@ const DragCard: React.FC<{ content: ContentItem; pos: { x: number; y: number } }
   );
 };
 
-// ---------------------------------------------------------------------------
-// Dimmer div rendered via portal while dragging
-// ---------------------------------------------------------------------------
 const DragDimmer: React.FC = () =>
   ReactDOM.createPortal(<div id="drag-dimmer" />, document.body);
 
@@ -155,10 +122,7 @@ const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragS
     e.dataTransfer.setData('contentId', content.id);
     e.dataTransfer.setData('item', JSON.stringify(content));
     setDragItem(content);
-
-    // Kill the native browser ghost — use our DragCard portal instead
     e.dataTransfer.setDragImage(ghostCanvas, -2, -2);
-
     setPointerPos({ x: e.clientX, y: e.clientY });
     setIsDragging(true);
     document.body.classList.add('content-dragging');
@@ -172,13 +136,19 @@ const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragS
     document.body.classList.remove('content-dragging');
   };
 
-  // Track pointer position while dragging — only attached while isDragging
-  // This listener is scoped to this card, not to SchedulerPage, so no re-renders there.
   useEffect(() => {
     if (!isDragging) return;
+
+    // ✅ CRITICAL: must call preventDefault here too.
+    // The browser only fires dragover events continuously if at least one
+    // element is accepting the drag (calling preventDefault). If the overlay
+    // or any element under the cursor stops doing this, the browser halts
+    // dragover events and the DragCard stops tracking the cursor.
     const onDragOver = (e: DragEvent) => {
+      e.preventDefault();
       setPointerPos({ x: e.clientX, y: e.clientY });
     };
+
     window.addEventListener('dragover', onDragOver);
     return () => window.removeEventListener('dragover', onDragOver);
   }, [isDragging]);
@@ -192,9 +162,7 @@ const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragS
           cursor: isDragging ? 'grabbing' : 'grab',
           opacity: isDragging ? 0 : 1,
           userSelect: 'none',
-          transition: isDragging
-            ? 'none'
-            : (styles.contentCard as React.CSSProperties).transition,
+          transition: isDragging ? 'none' : (styles.contentCard as React.CSSProperties).transition,
         }}
         draggable
         onDragStart={handleDragStart}
@@ -207,12 +175,7 @@ const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragS
       >
         <div style={styles.contentThumbnail}>
           {thumbnailSrc ? (
-            <img
-              src={thumbnailSrc}
-              alt={content.title}
-              draggable={false}
-              style={styles.thumbnailImage as React.CSSProperties}
-            />
+            <img src={thumbnailSrc} alt={content.title} draggable={false} style={styles.thumbnailImage as React.CSSProperties} />
           ) : (
             <span style={{ fontSize: '24px' }}>
               {isEmoji ? content.thumbnail : content.type === 'video' ? '🎬' : '🖼️'}
@@ -222,10 +185,7 @@ const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragS
         </div>
       </div>
 
-      {/* Custom drag preview — rendered to body via portal, no SchedulerPage re-render */}
       {isDragging && <DragCard content={content} pos={pointerPos} />}
-
-      {/* Full-page dimmer — renders above calendar/modals, below drawer */}
       {isDragging && <DragDimmer />}
     </>
   );

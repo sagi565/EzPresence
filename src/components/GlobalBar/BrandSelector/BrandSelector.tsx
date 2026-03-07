@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Brand, getLogoDataUrl } from '@models/Brand';
 import { styles } from './styles';
 import { theme } from '@theme/theme';
@@ -19,6 +20,7 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
   const [hoveredOption, setHoveredOption] = useState<string | null>(null);
   const [hoveredAddBtn, setHoveredAddBtn] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -53,9 +55,7 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
   };
 
   const handleAddBrand = () => {
-    alert(
-      'Directing the user to the "New Brand" page.\nIn case the user\'s subscription is insufficient - it is directed to the "Subscription Plans" page to upgrade its plan.'
-    );
+    navigate('/create-new-brand');
   };
 
   // Fixed selector style - explicitly set border and boxShadow in both states

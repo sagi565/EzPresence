@@ -4,7 +4,7 @@ import { confirmPasswordReset, verifyPasswordResetCode } from 'firebase/auth';
 import { auth } from '@lib/firebase';
 import AuthLayout from '@components/Auth/AuthLayout/AuthLayout';
 import PasswordInput from '@components/Auth/PasswordInput/PasswordInput';
-import { styles } from './styles';
+import { Form, PrimaryBtn, CancelBtn, ErrorText, LoadingContainer, Spinner, LoadingText, ErrorContainer, ErrorIcon, ErrorTextLarge } from './styles';
 
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -106,10 +106,10 @@ const ResetPasswordPage: React.FC = () => {
         title="Reset Password"
         subtitle="Validating reset link..."
       >
-        <div style={styles.loadingContainer}>
-          <div style={styles.spinner}></div>
-          <p style={styles.loadingText}>Please wait...</p>
-        </div>
+        <LoadingContainer>
+          <Spinner />
+          <LoadingText>Please wait...</LoadingText>
+        </LoadingContainer>
       </AuthLayout>
     );
   }
@@ -120,16 +120,13 @@ const ResetPasswordPage: React.FC = () => {
         title="Invalid Link"
         subtitle="This password reset link is not valid"
       >
-        <div style={styles.errorContainer}>
-          <div style={styles.errorIcon}>✕</div>
-          <p style={styles.errorText}>{error}</p>
-          <button
-            style={styles.primaryBtn}
-            onClick={() => navigate('/forgot-password')}
-          >
+        <ErrorContainer>
+          <ErrorIcon>✕</ErrorIcon>
+          <ErrorTextLarge>{error}</ErrorTextLarge>
+          <PrimaryBtn onClick={() => navigate('/forgot-password')}>
             Request New Reset Link
-          </button>
-        </div>
+          </PrimaryBtn>
+        </ErrorContainer>
       </AuthLayout>
     );
   }
@@ -139,7 +136,7 @@ const ResetPasswordPage: React.FC = () => {
       title="Reset Password"
       subtitle={`Enter a new password for ${email}`}
     >
-      <form style={styles.form} onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit}>
         <PasswordInput
           label="New Password"
           value={password}
@@ -156,24 +153,16 @@ const ResetPasswordPage: React.FC = () => {
           placeholder="Re-enter your password"
         />
 
-        {error && <div style={styles.error}>{error}</div>}
+        {error && <ErrorText>{error}</ErrorText>}
 
-        <button 
-          style={styles.primaryBtn} 
-          disabled={submitting} 
-          type="submit"
-        >
+        <PrimaryBtn disabled={submitting} type="submit">
           {submitting ? 'Resetting...' : 'Reset Password'}
-        </button>
+        </PrimaryBtn>
 
-        <button
-          type="button"
-          style={styles.cancelBtn}
-          onClick={() => navigate('/login')}
-        >
+        <CancelBtn type="button" onClick={() => navigate('/login')}>
           Cancel
-        </button>
-      </form>
+        </CancelBtn>
+      </Form>
     </AuthLayout>
   );
 };

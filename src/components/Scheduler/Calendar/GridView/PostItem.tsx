@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Post } from '@models/Post';
 import { styles } from './styles';
+import { getPolicyBackground, getPolicyAccent } from '@utils/policyColors';
 
 interface PostItemProps {
   post: Post;
@@ -11,6 +12,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isStatusHovered, setIsStatusHovered] = useState(false);
   const [isMediaHovered, setIsMediaHovered] = useState(false);
+  const [isRepeatHovered, setIsRepeatHovered] = useState(false);
   const mediaEmoji = post.media === 'video' ? '🎥' : '🖼️';
   const mediaText = post.media === 'video' ? 'Video' : 'Image';
   const getStatusText = (status: string) => {
@@ -28,8 +30,13 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
     }
   };
 
+  const policyBg = post.isRecurring ? getPolicyBackground(post.scheduleUuid) : null;
+  const policyAccent = post.isRecurring ? getPolicyAccent(post.scheduleUuid) : null;
+
   const postStyle = {
     ...styles.postItem,
+    ...(policyBg ? { background: policyBg } : {}),
+    ...(policyAccent ? { borderLeft: `3px solid ${policyAccent}` } : {}),
     ...(isHovered ? {
       transform: 'translateX(2px)',
       boxShadow: '0 2px 6px rgba(155, 93, 229, 0.15)',
@@ -74,6 +81,26 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
             )}
           </div>
           <span style={styles.postTime}>{post.time}</span>
+          {post.isRecurring && (
+            <div
+              style={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              onMouseEnter={() => setIsRepeatHovered(true)}
+              onMouseLeave={() => setIsRepeatHovered(false)}
+            >
+              <img
+                src="/icons/repeat.png"
+                alt="Recurring"
+                style={{ width: '12px', height: '12px', objectFit: 'contain', opacity: 0.7 }}
+              />
+              {isRepeatHovered && (
+                <div style={styles.blackTooltip}>Repeat {post.type}</div>
+              )}
+            </div>
+          )}
           <div
             style={{
               position: 'relative',
