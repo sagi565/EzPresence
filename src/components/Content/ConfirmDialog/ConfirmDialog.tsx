@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
-import { styles } from './styles';
+import { 
+  Overlay, 
+  Dialog, 
+  Title, 
+  Message, 
+  ButtonGroup, 
+  Button 
+} from './styles';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -21,47 +28,33 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const [hoveredButton, setHoveredButton] = useState<'cancel' | 'confirm' | null>(null);
-
   if (!isOpen) return null;
 
-  const cancelStyle = {
-    ...styles.btn,
-    ...styles.btnCancel,
-    ...(hoveredButton === 'cancel' ? styles.btnCancelHover : {}),
-  };
-
-  const confirmStyle = {
-    ...styles.btn,
-    ...styles.btnConfirm,
-    ...(hoveredButton === 'confirm' ? styles.btnConfirmHover : {}),
-  };
-
   return ReactDOM.createPortal(
-    <div style={styles.overlay} onClick={onCancel}>
-      <div style={styles.dialog} onClick={(e) => e.stopPropagation()}>
-        <div style={styles.title}>{title}</div>
-        <div style={styles.message}>{message}</div>
-        <div style={styles.buttonGroup}>
+    <Overlay onClick={onCancel}>
+      <Dialog onClick={(e) => e.stopPropagation()}>
+        <Title>{title}</Title>
+        <Message>{message}</Message>
+        <ButtonGroup>
           <button
-            style={cancelStyle}
+            style={{ border: 'none', background: 'transparent', padding: 0 }}
             onClick={onCancel}
-            onMouseEnter={() => setHoveredButton('cancel')}
-            onMouseLeave={() => setHoveredButton(null)}
           >
-            {cancelText}
+            <Button $variant="cancel">
+              {cancelText}
+            </Button>
           </button>
           <button
-            style={confirmStyle}
+            style={{ border: 'none', background: 'transparent', padding: 0 }}
             onClick={onConfirm}
-            onMouseEnter={() => setHoveredButton('confirm')}
-            onMouseLeave={() => setHoveredButton(null)}
           >
-            {confirmText}
+            <Button $variant="confirm">
+              {confirmText}
+            </Button>
           </button>
-        </div>
-      </div>
-    </div>,
+        </ButtonGroup>
+      </Dialog>
+    </Overlay>,
     document.body
   );
 };

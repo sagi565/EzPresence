@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { styles } from './styles';
+import { Container, Label, Required, SelectGroup, DropdownContainer, Select, SelectedText, SearchInput, Dropdown, DropdownList, Option, NoResults, ErrorText } from './styles';
 
 interface DatePickerProps {
   label: string;
@@ -109,27 +109,23 @@ const CustomDropdown: React.FC<DropdownProps> = ({
   };
 
   return (
-    <div style={styles.dropdownContainer} ref={containerRef}>
-      <div
-        style={{
-          ...styles.select,
-          ...(isOpen ? styles.selectFocused : {}),
-          ...(error ? styles.selectError : {}),
-        }}
+    <DropdownContainer ref={containerRef}>
+      <Select
+        $isOpen={isOpen}
+        $isError={error}
         onClick={() => {
           setIsOpen(true);
           setTimeout(() => inputRef.current?.focus(), 0);
         }}
       >
         {selectedOption && !isOpen ? (
-          <span style={styles.selectedText}>{selectedOption.label}</span>
+          <SelectedText>{selectedOption.label}</SelectedText>
         ) : (
-          <input
+          <SearchInput
             ref={inputRef}
             type="text"
             name={name}
             autoComplete={autoComplete}
-            style={styles.searchInput}
             placeholder={placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -137,22 +133,19 @@ const CustomDropdown: React.FC<DropdownProps> = ({
             onFocus={() => setIsOpen(true)}
           />
         )}
-      </div>
+      </Select>
 
       {isOpen && (
-        <div style={styles.dropdown}>
-          <div style={styles.dropdownList} ref={listRef}>
+        <Dropdown>
+          <DropdownList ref={listRef}>
             {filteredOptions.length === 0 ? (
-              <div style={styles.noResults}>No results</div>
+              <NoResults>No results</NoResults>
             ) : (
               filteredOptions.map((option, index) => (
-                <div
+                <Option
                   key={option.value}
-                  style={{
-                    ...styles.option,
-                    ...(index === highlightedIndex ? styles.optionHighlighted : {}),
-                    ...(option.value === value ? styles.optionSelected : {}),
-                  }}
+                  $isHighlighted={index === highlightedIndex}
+                  $isSelected={option.value === value}
                   onClick={() => {
                     onChange(option.value);
                     setIsOpen(false);
@@ -161,13 +154,13 @@ const CustomDropdown: React.FC<DropdownProps> = ({
                   onMouseEnter={() => setHighlightedIndex(index)}
                 >
                   {option.label}
-                </div>
+                </Option>
               ))
             )}
-          </div>
-        </div>
+          </DropdownList>
+        </Dropdown>
       )}
-    </div>
+    </DropdownContainer>
   );
 };
 
@@ -273,12 +266,12 @@ const DatePicker: React.FC<DatePickerProps> = ({
   );
 
   return (
-    <div style={styles.container}>
-      <label style={styles.label}>
+    <Container>
+      <Label>
         {label}
-        {required && <span style={styles.required}>*</span>}
-      </label>
-      <div style={styles.selectGroup}>
+        {required && <Required>*</Required>}
+      </Label>
+      <SelectGroup>
         <CustomDropdown
           value={day}
           placeholder="Day"
@@ -306,9 +299,9 @@ const DatePicker: React.FC<DatePickerProps> = ({
           name="bday-year"
           autoComplete="bday-year"
         />
-      </div>
-      {error && <span style={styles.errorText}>{error}</span>}
-    </div>
+      </SelectGroup>
+      {error && <ErrorText>{error}</ErrorText>}
+    </Container>
   );
 };
 

@@ -1,5 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { styles } from './styles';
+import { 
+  UploadButtonContainer, 
+  UploadIcon 
+} from './styles';
 
 interface UploadButtonProps {
   listType: 'video' | 'image';
@@ -25,29 +28,21 @@ const UploadButton: React.FC<UploadButtonProps> = ({ listType, onUpload, onNavig
     if (file) {
       onUpload(file);
     }
-    // Reset input to allow uploading same file again
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  // All upload buttons now use vertical format
-  const buttonStyle = {
-    ...styles.uploadButton,
-    ...styles.uploadButtonVideo,
-    ...(isHovered ? styles.uploadButtonHover : {}),
-  };
-
   return (
     <>
-      <div
-        style={buttonStyle}
+      <UploadButtonContainer
+        $isHovered={isHovered}
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div style={styles.uploadIcon}>➕</div>
-      </div>
+        <UploadIcon>➕</UploadIcon>
+      </UploadButtonContainer>
       <input
         ref={fileInputRef}
         type="file"

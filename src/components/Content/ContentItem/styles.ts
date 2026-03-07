@@ -1,284 +1,275 @@
-import { CSSProperties } from 'react';
+import styled, { keyframes, css } from 'styled-components';
+import { theme } from '@theme/theme';
 
-const stylesSheet = document.createElement("style");
-stylesSheet.innerText = `
-  @keyframes favoriteClick {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-  }
+export const favoriteClick = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 `;
-document.head.appendChild(stylesSheet);
 
-export const styles: Record<string, CSSProperties> = {
-  contentItem: {
-    position: 'relative',
-    backgroundColor: 'white',
-    borderRadius: '16px',
-    overflow: 'hidden',
-    cursor: 'pointer',
-    transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-radius 0.3s ease, box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-    userSelect: 'none',
-    display: 'flex',
-    flexDirection: 'column',
-    flexShrink: 0,
-    margin: '8px', // Ensure smooth layout flow
-  },
+export const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
 
-  contentItemVideo: {
-    width: '280px',
-    height: '480px',
-  },
-  contentItemImage: {
-    width: '280px',
-    height: '480px',
-  },
+export const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
 
-  contentItemHover: {
-    transform: 'scale(1.03) translateY(-4px)',
-    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
-    zIndex: 10,
-  },
+export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: boolean; $isUploading?: boolean }>`
+  position: relative;
+  background-color: white;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-radius 0.3s ease, box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  margin: 8px;
+  width: 280px;
+  height: 480px;
 
-  contentItemDragging: {
-    opacity: 1,
-    cursor: 'grabbing',
-    // width: '56px', // Relied on scale
-    // height: '96px', // Relied on scale
-    borderRadius: '16px', // Keep original radius so it scales down smoothly
-    boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
-    zIndex: 9999,
-    backgroundColor: 'transparent',
-    // transform: 'none', // Managed by manual positioning
-    margin: 0, // Force zero margin to ensure perfect centering
-    transition: 'none', // CRITICAL: Disable transition during drag to prevent lag
-  },
+  ${props => props.$isHovered && !props.$isUploading && !props.$isDragging && css`
+    transform: scale(1.03) translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+  `}
 
-  mediaContainer: {
-    position: 'relative',
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#f3f4f6',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
+  ${props => props.$isDragging && css`
+    opacity: 1;
+    cursor: grabbing;
+    border-radius: 16px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 9999;
+    background-color: transparent;
+    margin: 0;
+    transition: none;
+  `}
+`;
 
-  mediaCover: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    position: 'absolute',
-    inset: 0,
-    transition: 'opacity 0.3s ease',
-  },
+export const MediaContainer = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+`;
 
-  gradientOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '120px',
-    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)',
-    opacity: 0,
-    transition: 'opacity 0.3s ease',
-    pointerEvents: 'none',
-    zIndex: 2,
-  },
-  gradientOverlayVisible: {
-    opacity: 1,
-  },
+export const MediaCover = styled.img<{ $isVisible?: boolean }>`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.3s ease;
+  opacity: ${props => props.$isVisible !== false ? 1 : 0};
+`;
 
-  contentActions: {
-    position: 'absolute',
-    top: '12px',
-    left: '12px',
-    display: 'flex',
-    gap: '8px',
-    opacity: 0,
-    transition: 'opacity 0.3s ease',
-    zIndex: 20,
-  },
-  contentActionsVisible: {
-    opacity: 1,
-  },
+export const VideoCover = styled.video<{ $isVisible?: boolean }>`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.3s ease;
+  opacity: ${props => props.$isVisible ? 1 : 0};
+`;
 
-  actionBtn: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '50%',
-    background: 'rgba(0, 0, 0, 0.4)',
-    backdropFilter: 'blur(10px)',
-    border: '1.5px solid',
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    fontSize: '16px',
-    color: 'white',
-    transition: 'all 0.2s ease',
-    padding: 0,
-  },
+export const GradientOverlay = styled.div<{ $isVisible?: boolean }>`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+  opacity: ${props => props.$isVisible ? 1 : 0};
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 2;
+`;
 
-  actionBtnHover: {
-    transform: 'scale(1.1)',
-    background: 'rgba(0, 0, 0, 0.6)',
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-  },
+export const ActionsContainer = styled.div<{ $isVisible?: boolean }>`
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 8px;
+  opacity: ${props => props.$isVisible ? 1 : 0};
+  transition: opacity 0.3s ease;
+  z-index: 20;
+`;
 
-  actionBtnFavoriteActive: {
-    background: 'rgba(239, 68, 68, 0.85)',
-    borderColor: 'rgba(239, 68, 68, 0.5)',
-    opacity: 1,
-    animation: 'favoriteClick 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)',
-  },
+export const ActionButton = styled.button<{ $active?: boolean; $isHovered?: boolean }>`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${props => props.$active ? 'rgba(239, 68, 68, 0.85)' : 'rgba(0, 0, 0, 0.4)'};
+  backdrop-filter: blur(10px);
+  border: 1.5px solid ${props => props.$active ? 'rgba(239, 68, 68, 0.5)' : 'rgba(255, 255, 255, 0.2)'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: white;
+  transition: all 0.2s ease;
+  padding: 0;
+  
+  ${props => props.$active && css`
+    animation: ${favoriteClick} 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  `}
 
-  moreOptionsBtn: {
-    position: 'absolute',
-    top: '12px',
-    right: '12px',
-    background: 'rgba(0, 0, 0, 0.15)',
-    backdropFilter: 'blur(10px)',
-    border: '1.5px solid',
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    zIndex: 20,
-    color: 'rgba(255, 255, 255, 0.9)',
-    opacity: 0,
-    transition: 'opacity 0.3s ease, background 0.3s ease, transform 0.3s ease',
-    width: '28px',
-    height: '28px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-  },
-  moreOptionsBtnVisible: {
-    opacity: 1,
-  },
-  moreOptionsBtnHover: {
-    background: 'rgba(0, 0, 0, 0.3)',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    transform: 'scale(1.1)',
-  },
+  ${props => props.$isHovered && !props.$active && css`
+    transform: scale(1.1);
+    background: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.4);
+  `}
+`;
 
-  menuDropdown: {
-    position: 'absolute',
-    top: '48px',
-    right: '12px',
-    background: 'white',
-    borderRadius: '12px',
-    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
-    padding: '6px',
-    zIndex: 100,
-    minWidth: '140px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-    animation: 'fadeIn 0.2s ease',
-  },
-  menuItem: {
-    padding: '10px 12px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: 500,
-    color: '#1f2937',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    border: 'none',
-    borderColor: 'transparent',
-    background: 'transparent',
-    textAlign: 'left',
-    width: '100%',
-    transition: 'all 0.2s',
-  },
-  menuItemHover: {
-    background: 'rgba(155, 93, 229, 0.08)',
-    color: '#9b5de5',
-  },
-  menuItemDeleteHover: {
-    background: 'rgba(239, 68, 68, 0.08)',
-    color: '#ef4444',
-  },
+export const MoreOptionsButton = styled.button<{ $isVisible?: boolean; $isHovered?: boolean }>`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  z-index: 20;
+  color: rgba(255, 255, 255, 0.9);
+  opacity: ${props => props.$isVisible ? 1 : 0};
+  transition: opacity 0.3s ease, background 0.3s ease, transform 0.3s ease;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 
-  contentTitle: {
-    position: 'absolute',
-    bottom: '28px',
-    left: '16px',
-    right: '16px',
-    color: 'white',
-    fontWeight: 700,
-    fontSize: '15px',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    opacity: 0,
-    transition: 'opacity 0.3s ease',
-    zIndex: 3,
-    pointerEvents: 'none',
-    textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-  },
-  contentDate: {
-    position: 'absolute',
-    bottom: '10px',
-    left: '16px',
-    right: '16px',
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: '11px',
-    fontWeight: 500,
-    opacity: 0,
-    transition: 'opacity 0.3s ease',
-    zIndex: 3,
-    pointerEvents: 'none',
-  },
-  textVisible: {
-    opacity: 1,
-  },
+  ${props => props.$isHovered && css`
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+  `}
+`;
 
-  renameContainer: {
-    position: 'absolute',
-    bottom: '10px',
-    left: '12px',
-    right: '12px',
-    zIndex: 25,
-  },
-  renameInput: {
-    width: '100%',
-    padding: '8px 12px',
-    borderRadius: '8px',
-    border: '2px solid',
-    borderColor: '#9b5de5',
-    background: 'white',
-    fontSize: '14px',
-    fontWeight: 600,
-    color: '#1f2937',
-    outline: 'none',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-  },
+export const MenuDropdown = styled.div`
+  position: absolute;
+  top: 48px;
+  right: 12px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  padding: 6px;
+  z-index: 100;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: ${fadeIn} 0.2s ease;
+`;
 
-  loadingOverlay: {
-    position: 'absolute',
-    inset: 0,
-    background: 'rgba(0,0,0,0.5)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-    zIndex: 10,
-  },
-  spinner: {
-    width: '28px',
-    height: '28px',
-    border: '3px solid',
-    borderColor: 'rgba(255,255,255,0.3)',
-    borderTopColor: 'white',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-  },
-};
+export const MenuItem = styled.button<{ $variant?: 'default' | 'delete'; $isHovered?: boolean }>`
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  width: 100%;
+  transition: all 0.2s;
+
+  ${props => props.$isHovered && (props.$variant === 'delete' ? css`
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+  ` : css`
+    background: ${theme.colors.primary}14;
+    color: ${theme.colors.primary};
+  `)}
+`;
+
+export const ContentTitle = styled.div<{ $isVisible?: boolean }>`
+  position: absolute;
+  bottom: 28px;
+  left: 16px;
+  right: 16px;
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: ${props => props.$isVisible ? 1 : 0};
+  transition: opacity 0.3s ease;
+  z-index: 3;
+  pointer-events: none;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+`;
+
+export const ContentDate = styled.div<{ $isVisible?: boolean }>`
+  position: absolute;
+  bottom: 10px;
+  left: 16px;
+  right: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+  font-weight: 500;
+  opacity: ${props => props.$isVisible ? 1 : 0};
+  transition: opacity 0.3s ease;
+  z-index: 3;
+  pointer-events: none;
+`;
+
+export const RenameContainer = styled.div`
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  right: 12px;
+  z-index: 25;
+`;
+
+export const RenameInput = styled.input`
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid ${theme.colors.primary};
+  background: white;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  outline: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+`;
+
+export const LoadingOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 10;
+`;
+
+export const Spinner = styled.div`
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: ${spin} 1s linear infinite;
+`;

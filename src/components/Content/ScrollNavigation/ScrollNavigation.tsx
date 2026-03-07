@@ -1,9 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ContentList } from '@models/ContentList';
 import { formatSystemListTitle } from '@models/ContentList';
-import { styles } from './styles';
+import { 
+  ScrollNavContainer, 
+  DotsContainer, 
+  InnerContainer, 
+  ScrollItem, 
+  ScrollLabel, 
+  ScrollDot, 
+  ScrollIcon, 
+  ScrollLine, 
+  ScrollArrow, 
+  ContextMenu, 
+  ContextMenuItem 
+} from './styles';
 import { useDroppable } from '@dnd-kit/core';
-
 import { useDndState } from '@/context/DndContext';
 import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
 
@@ -15,7 +26,6 @@ interface ScrollNavigationProps {
   onReorder: (fromIndex: number, toIndex: number) => void;
 }
 
-// Individual nav item
 const NavItem: React.FC<{
   list: ContentList;
   index: number;
@@ -35,14 +45,11 @@ const NavItem: React.FC<{
   const isItemBeingDragged = isDndKitDragging && activeData?.type === 'ITEM';
   const isDraggingFromOtherList = isItemBeingDragged && activeData?.listId !== list.id;
 
-  // Validation: Check if the dragged item is compatible with this list
   const isInvalidDropTarget = (() => {
     if (!isItemBeingDragged || !list.isSystem) return false;
     const targetTitle = (list.title || '').toLowerCase();
     const isTargetVideo = targetTitle.includes('video') && targetTitle.includes('upload');
     const isTargetImage = targetTitle.includes('image') && targetTitle.includes('upload');
-
-    // Use the explicit mediaType from activeData
     const actualType = activeData?.mediaType;
 
     if (isTargetImage && actualType === 'video') return true;
@@ -50,22 +57,19 @@ const NavItem: React.FC<{
     return false;
   })();
 
-  // Dnd-kit droppable for accepting content items
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `nav-drop-${list.id}`,
     data: {
       type: 'LIST',
       id: list.id,
     },
-    disabled: isInvalidDropTarget, // Disable dropping on incompatible lists
+    disabled: isInvalidDropTarget,
   });
 
   const isDropTarget = isOver && isDraggingFromOtherList && !isInvalidDropTarget;
 
-  // Detect when drop happens - when isOver goes from true to false while dragging
   useEffect(() => {
     if (prevIsOver.current && !isOver && !isDndKitDragging) {
-      // A drop just happened on this item
       setIsCelebrating(true);
       const timer = setTimeout(() => setIsCelebrating(false), 600);
       return () => clearTimeout(timer);
@@ -73,103 +77,20 @@ const NavItem: React.FC<{
     prevIsOver.current = isOver;
   }, [isOver, isDndKitDragging]);
 
-  // No longer need local lastDragEndTime ref since we use global lastDropTime from context
-  /*
-  useEffect(() => {
-    if (!isDndKitDragging) {
-      lastDragEndTime.current = Date.now();
-    }
-  }, [isDndKitDragging]);
-  */
-
   const shouldShowLabel = isHovered || showAllLabels || isDropTarget;
-
-  // Dot styles helper
-  const getDotStyles = (snapshot: DraggableStateSnapshot): React.CSSProperties => {
-    const baseStyles = { ...styles.scrollDot };
-
-    // Default color based on list type
-    if (list.isSystem) {
-      Object.assign(baseStyles, styles.scrollDotSystem);
-    } else {
-      Object.assign(baseStyles, styles.scrollDotCustom);
-    }
-
-    // Semi-transparent when content item is being dragged (but not this icon)
-    if (isItemBeingDragged && !isDropTarget) {
-      Object.assign(baseStyles, styles.scrollDotItemDragging);
-    }
-
-    // Hover state (when not active and not being dragged)
-    if (isHovered && !isActive && !snapshot.isDragging) {
-      if (list.isSystem) {
-        Object.assign(baseStyles, styles.scrollDotHoverSystem);
-      } else {
-        Object.assign(baseStyles, styles.scrollDotHoverCustom);
-      }
-    }
-
-    // Active/Selected state - matches list's own color (overrides default colors)
-    if (isActive) {
-      if (list.isSystem) {
-        Object.assign(baseStyles, styles.scrollDotActiveSystem);
-      } else {
-        Object.assign(baseStyles, styles.scrollDotActiveCustom);
-      }
-    }
-
-    // Drop target state (when content item is hovering over)
-    if (isDropTarget) {
-      Object.assign(baseStyles, styles.scrollDotDropTarget);
-      if (list.isSystem) {
-        Object.assign(baseStyles, styles.scrollDotDropTargetSystem);
-      } else {
-        Object.assign(baseStyles, styles.scrollDotDropTargetCustom);
-      }
-    }
-
-    // Disabled state for invalid drop targets
-    if (isInvalidDropTarget) {
-      Object.assign(baseStyles, styles.scrollDotDisabled);
-    }
-
-    // Celebration animation after drop
-    if (isCelebrating) {
-      Object.assign(baseStyles, styles.scrollDotCelebrating);
-    }
-
-    if (snapshot.isDragging) {
-      Object.assign(baseStyles, {
-        zIndex: 9999,
-        boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
-        transform: 'scale(1.1)',
-      });
-    }
-
-    return baseStyles;
-  };
 
   return (
     <Draggable draggableId={list.id} index={index}>
       {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-        <div
+        <ScrollItem
           ref={provided.innerRef}
           {...provided.draggableProps}
-          style={{
-            ...styles.scrollItem,
-            ...provided.draggableProps.style,
-          }}
+          style={provided.draggableProps.style}
         >
-          {/* Label on the LEFT of the icon */}
           {(() => {
             const gradientParts = formatSystemListTitle(list.title);
             return (
-              <span
-                style={{
-                  ...styles.scrollLabel,
-                  ...(shouldShowLabel ? styles.scrollLabelVisible : {}),
-                }}
-              >
+              <ScrollLabel $visible={shouldShowLabel}>
                 {gradientParts ? (
                   <>
                     <span>{gradientParts.prefix}</span>
@@ -178,19 +99,22 @@ const NavItem: React.FC<{
                 ) : (
                   list.title
                 )}
-              </span>
+              </ScrollLabel>
             );
           })()}
 
-          {/* Icon dot - drag handle is HERE */}
-          <div
-            ref={setDroppableRef} // Dnd-kit ref
-            style={getDotStyles(snapshot)}
+          <ScrollDot
+            ref={setDroppableRef}
+            $isSystem={list.isSystem}
+            $isActive={isActive}
+            $isHovered={isHovered}
+            $isDropTarget={isDropTarget}
+            $isInvalidDropTarget={isInvalidDropTarget}
+            $isItemDragging={isItemBeingDragged}
+            $isCelebrating={isCelebrating}
+            $isDragging={snapshot.isDragging}
             onClick={(e) => {
               const timeSinceDrop = Date.now() - lastDropTimeRef.current;
-
-              // Synchronously block click if drag just ended < 1000ms ago
-              // This ensures that the "mouse up" part of a drop doesn't trigger navigation
               if (!snapshot.isDragging && !isCelebrating && !isDndKitDragging && timeSinceDrop > 1000) {
                 e.stopPropagation();
                 onNavigate(index);
@@ -201,18 +125,13 @@ const NavItem: React.FC<{
             onMouseLeave={() => setIsHovered(false)}
             {...provided.dragHandleProps}
           >
-            <span style={styles.scrollIcon}>{list.icon}</span>
-          </div>
+            <ScrollIcon>{list.icon}</ScrollIcon>
+          </ScrollDot>
 
           {index < totalLists - 1 && (
-            <div
-              style={{
-                ...styles.scrollLine,
-                ...(snapshot.isDragging || hideLines ? styles.scrollLineHidden : {})
-              }}
-            />
+            <ScrollLine $hidden={snapshot.isDragging || hideLines} />
           )}
-        </div>
+        </ScrollItem>
       )}
     </Draggable>
   );
@@ -234,7 +153,6 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   } | null>(null);
   const [hoveredMenuItem, setHoveredMenuItem] = useState(false);
 
-  // Close context menu on outside click
   useEffect(() => {
     const handleClickOutside = () => setContextMenu(null);
     if (contextMenu) {
@@ -260,24 +178,24 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     }
   };
 
-  // Scroll logic
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showTopArrow, setShowTopArrow] = useState(false);
   const [showBottomArrow, setShowBottomArrow] = useState(false);
   const [hoveredArrow, setHoveredArrow] = useState<'up' | 'down' | null>(null);
 
+  const MAX_VISIBLE = 7;
+  const ITEM_HEIGHT = 108;
+
   const checkScroll = () => {
     const el = scrollContainerRef.current;
     if (!el) return;
 
-    // Never show arrows when all lists fit without scrolling
     if (lists.length <= MAX_VISIBLE) {
       setShowTopArrow(false);
       setShowBottomArrow(false);
       return;
     }
 
-    // Allow a small tolerance (1px) for floating point rendering differences
     const isAtTop = el.scrollTop <= 1;
     const isAtBottom = Math.abs(el.scrollHeight - el.clientHeight - el.scrollTop) <= 1;
 
@@ -291,28 +209,18 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     return () => window.removeEventListener('resize', checkScroll);
   }, [lists.length]);
 
-  // Check scroll when currentIndex changes to ensure active item is visible
-  // Check scroll when currentIndex changes to ensure active item is visible
   useEffect(() => {
     if (!scrollContainerRef.current) return;
-
     const el = scrollContainerRef.current;
-
-    // Calculate the position of the current item (center alignment logic preferred)
-    const itemHeightWithSpacing = ITEM_HEIGHT; // Using the constant
+    const itemHeightWithSpacing = ITEM_HEIGHT;
     const itemTop = currentIndex * itemHeightWithSpacing;
     const itemBottom = itemTop + itemHeightWithSpacing;
-
     const scrollTop = el.scrollTop;
     const clientHeight = el.clientHeight;
 
-    // Check if out of view
-    // Top boundary
     if (itemTop < scrollTop) {
       el.scrollTo({ top: itemTop, behavior: 'smooth' });
-    }
-    // Bottom boundary
-    else if (itemBottom > scrollTop + clientHeight) {
+    } else if (itemBottom > scrollTop + clientHeight) {
       el.scrollTo({ top: itemBottom - clientHeight, behavior: 'smooth' });
     }
   }, [currentIndex]);
@@ -331,25 +239,16 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
 
   const onDragEnd = (result: DropResult) => {
     setIsListDragging(false);
-
     if (!result.destination) return;
-
     const sourceIndex = result.source.index;
     const destIndex = result.destination.index;
-
     if (destIndex === sourceIndex) return;
-
     onReorder(sourceIndex, destIndex);
-
-    // Removed automatic navigation on reorder to keep view stable
   };
 
-  // Auto-scroll on hover arrows
   const scrollInterval = useRef<NodeJS.Timeout | null>(null);
   const startScrolling = (direction: 'up' | 'down') => {
-    // Only auto-scroll on hover if dragging content or lists
     if (!isListDragging && !isDndKitDragging) return;
-
     stopScrolling();
     scrollInterval.current = setInterval(() => {
       scrollContainerRef.current?.scrollBy({ top: direction === 'up' ? -10 : 10, behavior: 'auto' });
@@ -362,42 +261,12 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     }
   };
 
-  const MAX_VISIBLE = 7;
-  const ITEM_HEIGHT = 108; // 32px top padding + 44px dot + 32px bottom padding
-
   return (
     <>
-      <nav style={styles.scrollNav}>
-        <style>{`
-          .nav-grad-text {
-            display: inline-block;
-            font-weight: 800;
-            background: linear-gradient(135deg, #9b5de5 0%, #fbbf24 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-          }
-        `}</style>
-        {isListDragging && (
-          <style>{`
-            /* Hide all scrollbar thumbs transparently while dragging a list */
-            *::-webkit-scrollbar-thumb {
-              background-color: transparent !important;
-              border-color: transparent !important;
-            }
-            * {
-              scrollbar-color: transparent transparent !important;
-            }
-          `}</style>
-        )}
-        {/* Up Arrow */}
-        <div
-          style={{
-            ...styles.scrollArrow,
-            opacity: showTopArrow ? 1 : 0,
-            pointerEvents: showTopArrow ? 'auto' : 'none',
-            ...(hoveredArrow === 'up' ? styles.scrollArrowHover : {}),
-          }}
+      <ScrollNavContainer>
+        <ScrollArrow
+          $visible={showTopArrow}
+          $isHovered={hoveredArrow === 'up'}
           onClick={handleScrollUp}
           onMouseEnter={() => {
             setHoveredArrow('up');
@@ -411,29 +280,15 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
           <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
           </svg>
-        </div>
+        </ScrollArrow>
 
-        <div
+        <DotsContainer 
           ref={scrollContainerRef}
           onScroll={checkScroll}
-          className="hide-scrollbar"
-          style={{
-            ...styles.dotsContainer,
-            height: `${Math.min(lists.length, MAX_VISIBLE) * ITEM_HEIGHT}px`,
-            overflowY: lists.length > MAX_VISIBLE ? 'auto' : 'visible',
-            overflowX: 'visible',
-            scrollbarWidth: 'none', // Firefox
-            msOverflowStyle: 'none', // IE/Edge
-          }}
+          $scrollable={lists.length > MAX_VISIBLE}
+          $height={`${Math.min(lists.length, MAX_VISIBLE) * ITEM_HEIGHT}px`}
         >
-          {/* Hide scrollbar for Webkit */}
-          <style>{`
-            .hide-scrollbar::-webkit-scrollbar {
-              display: none;
-            }
-          `}</style>
-
-          <div style={{ ...styles.innerContainer, transform: 'none' }}>
+          <InnerContainer>
             <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
               <Droppable droppableId="scroll-nav-list">
                 {(provided: DroppableProvided) => (
@@ -460,17 +315,12 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                 )}
               </Droppable>
             </DragDropContext>
-          </div>
-        </div>
+          </InnerContainer>
+        </DotsContainer>
 
-        {/* Down Arrow */}
-        <div
-          style={{
-            ...styles.scrollArrow,
-            opacity: showBottomArrow ? 1 : 0,
-            pointerEvents: showBottomArrow ? 'auto' : 'none',
-            ...(hoveredArrow === 'down' ? styles.scrollArrowHover : {}),
-          }}
+        <ScrollArrow
+          $visible={showBottomArrow}
+          $isHovered={hoveredArrow === 'down'}
           onClick={handleScrollDown}
           onMouseEnter={() => {
             setHoveredArrow('down');
@@ -484,32 +334,25 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
           <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
-        </div>
-      </nav>
+        </ScrollArrow>
+      </ScrollNavContainer>
 
-      {/* Context Menu */}
       {contextMenu && (
-        <div
-          style={{
-            ...styles.contextMenu,
-            top: `${contextMenu.y}px`,
-            left: `${contextMenu.x}px`,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
+        <ContextMenu $top={contextMenu.y} $left={contextMenu.x} onClick={(e) => e.stopPropagation()}>
           <button
-            style={{
-              ...styles.contextMenuItem,
-              ...(hoveredMenuItem ? styles.contextMenuItemHover : {}),
-            }}
+            style={{ border: 'none', background: 'transparent', width: '100%', padding: 0 }}
             onClick={handleDelete}
-            onMouseEnter={() => setHoveredMenuItem(true)}
-            onMouseLeave={() => setHoveredMenuItem(false)}
           >
-            <span>🗑️</span>
-            <span>Delete</span>
+            <ContextMenuItem 
+              $isHovered={hoveredMenuItem}
+              onMouseEnter={() => setHoveredMenuItem(true)}
+              onMouseLeave={() => setHoveredMenuItem(false)}
+            >
+              <span>🗑️</span>
+              <span>Delete</span>
+            </ContextMenuItem>
           </button>
-        </div>
+        </ContextMenu>
       )}
     </>
   );

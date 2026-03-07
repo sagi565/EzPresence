@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBrands } from '@hooks/brands/useBrands';
 import { useConnectedPlatforms } from '@hooks/platforms/useConnectedPlatforms';
-import { styles } from './styles';
+import { Container, Content, Header, Title, TitleHighlight, Subtitle, Form, MainContent, Row, NameAndSloganColumn, FormGroupStacked, FormGroupRight, Label, Required, LogoCenterLabel, LogoUploadArea, LogoPreviewContainer, LogoPreview, RemoveLogoBtn, LogoUploadPlaceholder, UploadIcon, UploadText, FormGroup, Input, InputWrapper, CharCountInside, CategorySelect, ErrorText, ErrorMessageWrapper, ErrorIcon, Actions, SubmitBtn, Ripple, Spinner, BackButton } from './styles';
 import { ConnectedPlatformsGrid } from '@components/SocialPlatform/ConnectedPlatformsGrid';
 import { BrandInitializeDto } from '@models/Brand';
 
@@ -12,52 +12,6 @@ const BRAND_CATEGORIES = [
   'Consulting', 'Marketing', 'Photography', 'Art & Design', 'Food & Beverage',
   'Automotive', 'Home Services',
 ];
-
-// Add CSS animations
-const styleSheet = document.createElement('style');
-styleSheet.textContent = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
-  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-  @keyframes ripple { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
-  @keyframes adjectiveHover { 0% { transform: translateY(0); } 50% { transform: translateY(-4px); } 100% { transform: translateY(0); } }
-  select { position: relative; }
-  select option { padding: 14px 20px; font-size: 15px; font-weight: 500; background: white; color: #333; border-bottom: 1px solid rgba(155, 93, 229, 0.1); }
-  select option:hover { background: rgba(155, 93, 229, 0.08); color: #9B5DE5; }
-  select option:checked { background: linear-gradient(135deg, rgba(155, 93, 229, 0.15), rgba(155, 93, 229, 0.08)); color: #9B5DE5; font-weight: 600; }
-  select:hover { border-color: rgba(155, 93, 229, 0.5); }
-  select:focus { border-color: #9B5DE5; box-shadow: 0 0 0 3px rgba(155, 93, 229, 0.1); }
-
-  /* Back Button */
-  .back-btn {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    background: transparent;
-    border: none;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #9b5de5;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 50;
-    border-radius: 50%;
-  }
-
-  .back-btn:hover {
-    background: rgba(155, 93, 229, 0.1);
-    transform: scale(1.1);
-  }
-
-  .back-btn:active {
-    transform: scale(0.95);
-  }
-`;
-if (!document.head.querySelector('style[data-create-brand-animations]')) {
-  styleSheet.setAttribute('data-create-brand-animations', 'true');
-  document.head.appendChild(styleSheet);
-}
 
 // Helper: File to Base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -212,7 +166,7 @@ const CreateNewBrandPage: React.FC = () => {
   // Loading State - don't show loader if there's an error
   if ((brandsLoading || !uninitializedBrandId) && !errorError) {
     return (
-      <div style={styles.container}>
+      <Container>
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -221,27 +175,18 @@ const CreateNewBrandPage: React.FC = () => {
           minHeight: '100vh',
           gap: '20px',
         }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            border: '4px solid rgba(155, 93, 229, 0.2)',
-            borderTopColor: '#9b5de5',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-          }} />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <Spinner />
           <p style={{ color: '#9B5DE5', fontWeight: 500 }}>Initializing your brand session...</p>
         </div>
-      </div>
+      </Container>
     );
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.content}>
+    <Container>
+      <Content>
         {/* Back Button */}
-        <button
-          className="back-btn"
+        <BackButton
           onClick={() => navigate('/')}
           title="Back to home"
           type="button"
@@ -249,36 +194,33 @@ const CreateNewBrandPage: React.FC = () => {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ overflow: 'visible' }}>
             <path className="arrow-group" d="M19 12H5m0 0l7 7m-7-7l7-7" />
           </svg>
-        </button>
+        </BackButton>
 
-        <div style={styles.header}>
-          <h1 style={styles.title}>
-            Create a <span style={styles.titleHighlight}>New Brand</span>
-          </h1>
-          <p style={styles.subtitle}>
+        <Header>
+          <Title>
+            Create <TitleHighlight>New Brand</TitleHighlight>
+          </Title>
+          <Subtitle>
             Set up your brand profile to get started!
-          </p>
-        </div>
+          </Subtitle>
+        </Header>
 
-        <form style={styles.form} onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit}>
           {/* Main Form Fields */}
-          <div style={styles.mainContent}>
-            <div style={styles.row}>
+          <MainContent>
+            <Row>
               {/* Left Side: Name and Slogan */}
-              <div style={styles.nameAndSloganColumn}>
+              <NameAndSloganColumn>
                 {/* Name Field */}
-                <div style={styles.formGroupStacked}>
-                  <label style={styles.label}>
-                    Brand Name <span style={styles.required}>*</span>
-                  </label>
-                  <div style={styles.inputWrapper}>
-                    <input
+                <FormGroupStacked>
+                  <Label>
+                    Brand Name <Required>*</Required>
+                  </Label>
+                  <InputWrapper>
+                    <Input
                       type="text"
-                      style={{
-                        ...styles.input,
-                        ...(nameError ? styles.inputError : {}),
-                        paddingRight: '60px',
-                      }}
+                      $isError={nameError}
+                      style={{ paddingRight: '60px' }}
                       value={formData.name}
                       onChange={(e) => {
                         const value = e.target.value;
@@ -289,22 +231,22 @@ const CreateNewBrandPage: React.FC = () => {
                       }}
                       maxLength={50}
                     />
-                    <span style={styles.charCountInside}>
+                    <CharCountInside>
                       {formData.name.length}/50
-                    </span>
-                  </div>
+                    </CharCountInside>
+                  </InputWrapper>
                   {nameError && (
-                    <span style={styles.errorText}>Brand name is required</span>
+                    <ErrorText>Brand name is required</ErrorText>
                   )}
-                </div>
+                </FormGroupStacked>
 
                 {/* Slogan Field */}
-                <div style={styles.formGroupStacked}>
-                  <label style={styles.label}>Slogan</label>
-                  <div style={styles.inputWrapper}>
-                    <input
+                <FormGroupStacked>
+                  <Label>Slogan</Label>
+                  <InputWrapper>
+                    <Input
                       type="text"
-                      style={{ ...styles.input, paddingRight: '60px' }}
+                      style={{ paddingRight: '60px' }}
                       value={formData.slogan}
                       onChange={(e) => {
                         const value = e.target.value;
@@ -312,58 +254,53 @@ const CreateNewBrandPage: React.FC = () => {
                       }}
                       maxLength={60}
                     />
-                    <span style={styles.charCountInside}>
+                    <CharCountInside>
                       {formData.slogan?.length || 0}/60
-                    </span>
-                  </div>
-                </div>
-              </div>
+                    </CharCountInside>
+                  </InputWrapper>
+                </FormGroupStacked>
+              </NameAndSloganColumn>
 
               {/* Logo Upload */}
-              <div style={styles.formGroupRight}>
-                <label style={styles.logoCenterLabel}>Brand Logo</label>
-                <div style={styles.logoUploadArea}>
+              <FormGroupRight>
+                <LogoCenterLabel>Brand Logo</LogoCenterLabel>
+                <LogoUploadArea>
                   {logoPreview ? (
-                    <div style={styles.logoPreviewContainer}>
-                      <img src={logoPreview} alt="Logo preview" style={styles.logoPreview} />
-                      <button
+                    <LogoPreviewContainer>
+                      <LogoPreview src={logoPreview as string} alt="Logo preview" />
+                      <RemoveLogoBtn
                         type="button"
-                        style={styles.removeLogoBtn}
                         onClick={handleRemoveLogo}
                       >
                         ✕
-                      </button>
-                    </div>
+                      </RemoveLogoBtn>
+                    </LogoPreviewContainer>
                   ) : (
-                    <div
-                      style={{
-                        ...styles.logoUploadPlaceholder,
-                        ...(isLogoHovered ? styles.logoUploadPlaceholderHover : {}),
-                      }}
+                    <LogoUploadPlaceholder
+                      $isHovered={isLogoHovered}
                       onClick={() => fileInputRef.current?.click()}
                       onMouseEnter={() => setIsLogoHovered(true)}
                       onMouseLeave={() => setIsLogoHovered(false)}
                     >
-                      <span style={styles.uploadIcon}>📷</span>
-                      <span style={styles.uploadText}>Upload</span>
-                    </div>
+                      <UploadIcon>📷</UploadIcon>
+                      <UploadText>Upload</UploadText>
+                    </LogoUploadPlaceholder>
                   )}
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
-                    style={styles.hiddenInput}
+                    style={{ display: 'none' }}
                     onChange={handleLogoUpload}
                   />
-                </div>
-              </div>
-            </div>
+                </LogoUploadArea>
+              </FormGroupRight>
+            </Row>
 
             {/* Category */}
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Category</label>
-              <select
-                style={styles.categorySelect}
+            <FormGroup>
+              <Label>Category</Label>
+              <CategorySelect
                 value={formData.categories?.[0] || ''}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -374,9 +311,9 @@ const CreateNewBrandPage: React.FC = () => {
                 {BRAND_CATEGORIES.map((category) => (
                   <option key={category} value={category}>{category}</option>
                 ))}
-              </select>
-            </div>
-          </div>
+              </CategorySelect>
+            </FormGroup>
+          </MainContent>
 
           {/* Social Media Connections - Pass uninitializedBrandUuid */}
           <ConnectedPlatformsGrid
@@ -388,10 +325,10 @@ const CreateNewBrandPage: React.FC = () => {
 
           {/* Messages */}
           {errorError && (
-            <div style={styles.errorMessage}>
-              <span style={styles.errorIcon}>⚠️</span>
+            <ErrorMessageWrapper>
+              <ErrorIcon>⚠️</ErrorIcon>
               <span>{errorError}</span>
-            </div>
+            </ErrorMessageWrapper>
           )}
 
           {submitSuccess && (
@@ -406,34 +343,25 @@ const CreateNewBrandPage: React.FC = () => {
           )}
 
           {/* Submit Button */}
-          <div style={styles.actions}>
-            <button
+          <Actions>
+            <SubmitBtn
               type="submit"
               disabled={isSubmitting || submitSuccess}
-              style={{
-                ...styles.submitBtn,
-                ...(isSubmitting || submitSuccess ? styles.submitBtnLoading : {}),
-                ...(isButtonHovered && !isSubmitting ? styles.submitBtnHover : {}),
-                ...(isButtonActive && !isSubmitting ? styles.submitBtnActive : {}),
-              }}
+              $isSubmitting={isSubmitting || submitSuccess}
+              $isHovered={isButtonHovered}
+              $isActive={isButtonActive}
               onMouseEnter={() => setIsButtonHovered(true)}
               onMouseLeave={() => { setIsButtonHovered(false); setIsButtonActive(false); }}
               onMouseDown={() => { setIsButtonActive(true); setShowRipple(true); setTimeout(() => setShowRipple(false), 600); }}
               onMouseUp={() => setIsButtonActive(false)}
             >
-              {showRipple && (
-                <span style={{
-                  position: 'absolute', width: '20px', height: '20px', borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.6)', animation: 'ripple 0.6s ease-out', pointerEvents: 'none',
-                }} />
-              )}
+              {showRipple && <Ripple />}
               {isSubmitting ? 'Creating...' : submitSuccess ? 'Success!' : 'Create Brand'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            </SubmitBtn>
+          </Actions>
+        </Form>
+      </Content>
+    </Container>
   );
 };
-
 export default CreateNewBrandPage;

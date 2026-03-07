@@ -7,108 +7,9 @@ import { api } from '@utils/apiClient';
 import { Gender, validateBirthDate } from '@models/User';
 import SocialsBackground from '@components/Background/SocialsBackground';
 import { DatePicker, CountrySelector, GenderSelector, FormInput } from '@components/CreateUser';
-import { styles } from './styles';
 import { LogOut } from 'lucide-react';
 import { useFirebaseAuth } from '@/hooks/auth/useFirebaseAuth';
-
-// Add CSS animations and dropdown styling
-const styleSheet = document.createElement('style');
-styleSheet.textContent = `
-  @keyframes ripple {
-    0% {
-      transform: scale(0);
-      opacity: 1;
-    }
-    100% {
-      transform: scale(4);
-      opacity: 0;
-    }
-  }
-  
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Better select dropdown styling */
-  .create-user-form select {
-    transition: border-color 0.2s ease;
-  }
-  
-  .create-user-form select:hover {
-    border-color: rgba(155, 93, 229, 0.35);
-  }
-  
-  .create-user-form select:focus {
-    border-color: rgba(155, 93, 229, 0.4);
-    outline: none;
-  }
-  
-  .create-user-form select option {
-    padding: 12px 16px;
-    background: white;
-    color: #111827;
-  }
-  
-  .create-user-form select option:checked {
-    background: rgba(155, 93, 229, 0.1);
-    color: #9b5de5;
-  }
-
-  /* Country dropdown scrollbar */
-  .create-user-form [style*="overflow"] {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(155, 93, 229, 0.3) transparent;
-  }
-  
-  .create-user-form [style*="overflow"]::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  .create-user-form [style*="overflow"]::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  .create-user-form [style*="overflow"]::-webkit-scrollbar-thumb {
-    background: rgba(155, 93, 229, 0.3);
-    border-radius: 3px;
-  }
-  
-  .create-user-form [style*="overflow"]::-webkit-scrollbar-thumb:hover {
-    background: rgba(155, 93, 229, 0.5);
-  }
-
-  /* Logout Button */
-  .logout-btn {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    background: transparent;
-    border: none;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ef4444;
-    cursor: pointer;
-    z-index: 50;
-    border-radius: 50%;
-  }
-
-  .logout-btn:hover {
-    background: rgba(239, 68, 68, 0.1);
-  }
-`;
-if (!document.head.querySelector('style[data-create-user-animations]')) {
-  styleSheet.setAttribute('data-create-user-animations', 'true');
-  document.head.appendChild(styleSheet);
-}
+import { Container, Content, Header, Title, Subtitle, Form, Row, ErrorMessage, ErrorIcon, Actions, SubmitBtn, Ripple, Spinner, PrivacyNote, LogoutButton } from './styles';
 
 const CreateUserPage: React.FC = () => {
   const navigate = useNavigate();
@@ -274,29 +175,28 @@ const CreateUserPage: React.FC = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <Container>
       <SocialsBackground />
 
-      <div style={styles.content}>
+      <Content>
         {/* Logout Button */}
-        <button
-          className="logout-btn"
+        <LogoutButton
           onClick={handleLogout}
           disabled={isLoggingOut}
           title="Logout"
         >
           {isLoggingOut ? (
-            <span style={{ ...styles.spinner, borderColor: 'rgba(239, 68, 68, 0.3)', borderTopColor: '#ef4444' }} />
+            <Spinner $logout />
           ) : (
             <LogOut className="door-icon" size={24} color="#ef4444" strokeWidth={2.5} />
           )}
-        </button>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Tell Us Who You Are</h1>
-          <p style={styles.subtitle}>Help us set up your profile in just a few steps</p>
-        </div>
+        </LogoutButton>
+        <Header>
+          <Title>Tell Us Who You Are</Title>
+          <Subtitle>Help us set up your profile in just a few steps</Subtitle>
+        </Header>
 
-        <form style={styles.form} className="create-user-form" onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit}>
           {/* Name Row */}
           {(() => {
             interface NameInputChange {
@@ -307,7 +207,7 @@ const CreateUserPage: React.FC = () => {
             const onLastNameChange: NameInputChange = (value) => handleInputChange('lastName', value);
 
             return (
-              <div style={styles.row}>
+              <Row>
                 <FormInput
                   label="First Name"
                   value={formData.firstName}
@@ -329,7 +229,7 @@ const CreateUserPage: React.FC = () => {
                   name="family-name"
                   autoComplete="family-name"
                 />
-              </div>
+              </Row>
             );
           })()}
 
@@ -345,7 +245,7 @@ const CreateUserPage: React.FC = () => {
           />
 
           {/* Country and Gender Row */}
-          <div style={styles.row}>
+          <Row>
             <CountrySelector
               label="Country"
               value={formData.country || ''}
@@ -358,26 +258,23 @@ const CreateUserPage: React.FC = () => {
               onChange={(gender) => handleInputChange('gender', gender)}
               error={errors.gender}
             />
-          </div>
+          </Row>
 
           {/* Error Message */}
           {error && !error.toLowerCase().includes('already exists') && (
-            <div style={styles.errorMessage}>
-              <span style={styles.errorIcon}>⚠️</span>
-              <span>{error}</span>
-            </div>
+            <ErrorMessage>
+              <ErrorIcon>⚠️</ErrorIcon>
+              <span>User already exists - {error}</span>
+            </ErrorMessage>
           )}
 
           {/* Action Button */}
-          <div style={styles.actions}>
-            <button
+          <Actions>
+            <SubmitBtn
               type="submit"
-              style={{
-                ...styles.submitBtn,
-                ...(isSubmitting ? styles.submitBtnLoading : {}),
-                ...(isButtonHovered && !isSubmitting ? styles.submitBtnHover : {}),
-                ...(isButtonActive && !isSubmitting ? styles.submitBtnActive : {}),
-              }}
+              $isSubmitting={isSubmitting}
+              $isHovered={isButtonHovered}
+              $isActive={isButtonActive}
               disabled={loading || isSubmitting}
               onMouseEnter={() => setIsButtonHovered(true)}
               onMouseLeave={() => {
@@ -390,25 +287,25 @@ const CreateUserPage: React.FC = () => {
               }}
               onMouseUp={() => setIsButtonActive(false)}
             >
-              {showRipple && <span style={styles.ripple} />}
+              {showRipple && <Ripple />}
               {isSubmitting ? (
                 <>
-                  <span style={styles.spinner} />
+                  <Spinner />
                   {profile ? 'Updating...' : 'Creating...'}
                 </>
               ) : (
                 profile ? 'Update Profile' : 'Create Profile'
               )}
-            </button>
-          </div>
+            </SubmitBtn>
+          </Actions>
 
           {/* Privacy Note */}
-          <p style={styles.privacyNote}>
+          <PrivacyNote>
             🔒 Your information is secure and will only be used to personalize your experience
-          </p>
-        </form>
-      </div>
-    </div>
+          </PrivacyNote>
+        </Form>
+      </Content>
+    </Container>
   );
 };
 

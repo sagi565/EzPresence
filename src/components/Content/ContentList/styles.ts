@@ -1,226 +1,211 @@
-import { CSSProperties } from 'react';
+import styled, { css } from 'styled-components';
 import { theme } from '@theme/theme';
 
-export const styles: Record<string, CSSProperties> = {
-  listHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px',
-    marginBottom: '24px',
-  },
-  listIcon: {
-    fontSize: '48px',
-    flexShrink: 0,
-    transition: 'all 0.2s ease',
-  },
-  listIconEditable: {
-    cursor: 'pointer',
-    padding: '8px',
-    borderRadius: '12px',
-    border: '2px dashed',
-    borderColor: 'transparent',
-    background: 'transparent',
-  },
-  listIconHover: {
-    border: '2px dashed',
-    borderColor: 'rgba(155, 93, 229, 0.5)',
-    background: 'rgba(155, 93, 229, 0.05)',
-  },
-  listIconEditMode: {
-    border: '2px dashed',
-    borderColor: '#9b5de5',
-    background: 'rgba(155, 93, 229, 0.1)',
-  },
-  listTitleGroup: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-  listTitle: {
-    fontSize: '28px',
-    fontWeight: 700,
-    color: theme.colors.text,
-    margin: 0,
-  },
-  listTitleDisplay: {
-    fontSize: '28px',
-    fontWeight: 700,
-    color: theme.colors.text,
-    margin: 0,
-  },
-  listTitleClickable: {
-    cursor: 'pointer',
-    padding: '6px 10px',
-    borderRadius: '10px',
-    border: '2px dashed',
-    borderColor: 'transparent',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    display: 'inline-block',
-  },
-  listTitleHover: {
-    border: '2px dashed',
-    borderColor: 'rgba(155, 93, 229, 0.5)',
-    background: 'rgba(155, 93, 229, 0.05)',
-  },
-  listTitleEditable: {
-    fontSize: '28px',
-    fontWeight: 700,
-    color: theme.colors.text,
-    background: 'transparent',
-    border: '2px dashed',
-    borderColor: 'transparent',
-    padding: '6px 10px',
-    borderRadius: '10px',
-    outline: 'none',
-    maxWidth: '550px',
-    transition: 'all 0.3s ease',
-  },
-  listTitleEditableFocus: {
-    background: 'white',
-    border: '2px dashed',
-    borderColor: '#9b5de5',
-    boxShadow: '0 4px 20px rgba(155, 93, 229, 0.25)',
-    transition: 'all 0.3s ease',
-  },
-  listSubtitle: {
-    fontSize: '15px',
-    fontWeight: 500,
-    color: theme.colors.muted,
-    margin: 0,
-  },
-  brandGradient: {
-    fontWeight: 800,
-    background: theme.gradients.innovator,
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-  },
-  listTitleContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  listDeleteBtn: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '8px',
-    background: 'rgba(239, 68, 68, 0.1)',
-    border: '1px solid',
-    borderColor: 'rgba(239, 68, 68, 0.2)',
-    color: '#ef4444',
-    fontSize: '20px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    display: 'none',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    flexShrink: 0,
-    padding: 0,
-    alignSelf: 'center',
-    lineHeight: 1,
-    paddingBottom: '0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  listDeleteBtnVisible: {
-    display: 'inline-flex',
-  },
-  listDeleteBtnHover: {
-    background: '#ef4444',
-    borderColor: '#dc2626',
-    color: 'white',
-    transform: 'scale(1.08)',
-    boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)',
-  },
-  listSaveBtn: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '8px',
-    background: 'rgba(34, 197, 94, 0.1)',
-    border: '1px solid',
-    borderColor: 'rgba(34, 197, 94, 0.2)',
-    color: '#22c55e',
-    fontSize: '18px',
-    fontWeight: 700,
-    cursor: 'pointer',
-    display: 'none',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    flexShrink: 0,
-    padding: 0,
-    alignSelf: 'center',
-    lineHeight: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  listSaveBtnVisible: {
-    display: 'inline-flex',
-  },
-  listSaveBtnHover: {
-    background: '#22c55e',
-    borderColor: '#16a34a',
-    color: 'white',
-    transform: 'scale(1.08)',
-    boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)',
-  },
-  listContainer: {
-    position: 'relative',
-    overflow: 'visible',
-    height: '100%',
-    width: '100%',
-  },
-  listScrollWrapper: {
-    display: 'flex',
-    gap: '20px',
-    overflowX: 'auto',
-    overflowY: 'visible',
-    padding: '16px 8px',
-    scrollBehavior: 'smooth',
-    scrollbarWidth: 'none',
-    msOverflowStyle: 'none',
-    alignItems: 'flex-start',
-    borderRadius: '16px',
-    transition: 'all 0.3s ease',
-  },
-  listScrollWrapperDragOver: {
-    backgroundColor: 'rgba(34, 197, 94, 0.08)',
-    border: '3px dashed rgba(34, 197, 94, 0.5)',
-    boxShadow: 'inset 0 0 30px rgba(34, 197, 94, 0.1)',
-    transform: 'scale(1.01)',
-  },
-  scrollArrow: {
-    position: 'absolute',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    width: '48px',
-    height: '120px',
-    background: 'rgba(0, 0, 0, 0.15)',
-    backdropFilter: 'blur(10px)',
-    border: 'none',
-    borderColor: 'transparent',
-    color: 'white',
-    fontSize: '36px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0,
-    visibility: 'hidden',
-    transition: 'opacity 0.3s ease, background 0.2s ease',
-    zIndex: 10,
-    borderRadius: '8px',
-  },
-  scrollArrowVisible: {
-    visibility: 'visible',
-    opacity: 1,
-  },
-  scrollArrowHover: {
-    opacity: '1 !important' as any,
-    background: 'rgba(0, 0, 0, 0.25)',
-  },
-  scrollArrowLeft: {
-    left: '8px',
-  },
-  scrollArrowRight: {
-    right: '8px',
-  },
-};
+export const ListContainer = styled.div`
+  position: relative;
+  overflow: visible;
+  height: 100%;
+  width: 100%;
+  min-height: 540px;
+`;
+
+export const ListHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  marginBottom: 24px;
+`;
+
+export const ListIcon = styled.div<{ $isEditable?: boolean; $isHovered?: boolean; $isEditMode?: boolean }>`
+  font-size: 64px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  padding: 8px;
+  border-radius: 12px;
+  border: 2px dashed transparent;
+  background: transparent;
+
+  ${props => props.$isEditable && css`
+    cursor: pointer;
+  `}
+
+  ${props => props.$isHovered && css`
+    border-color: ${theme.colors.primary}80;
+    background: ${theme.colors.primary}0D;
+  `}
+
+  ${props => props.$isEditMode && css`
+    border-color: ${theme.colors.primary};
+    background: ${theme.colors.primary}1A;
+  `}
+`;
+
+export const ListTitleGroup = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+export const ListTitleContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+export const ListTitle = styled.h2`
+  font-size: 36px;
+  font-weight: 700;
+  color: ${theme.colors.text};
+  margin: 0;
+`;
+
+export const ListTitleClickable = styled.div<{ $isHovered?: boolean }>`
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 2px dashed transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+
+  ${props => props.$isHovered && css`
+    border-color: ${theme.colors.primary}80;
+    background: ${theme.colors.primary}0D;
+  `}
+`;
+
+export const ListTitleEditable = styled.input<{ $isFocused?: boolean }>`
+  font-size: 36px;
+  font-weight: 700;
+  color: ${theme.colors.text};
+  background: transparent;
+  border: 2px dashed transparent;
+  padding: 6px 10px;
+  border-radius: 10px;
+  outline: none;
+  max-width: 550px;
+  transition: all 0.3s ease;
+
+  ${props => props.$isFocused && css`
+    background: white;
+    border-color: ${theme.colors.primary};
+    box-shadow: 0 4px 20px ${theme.colors.primary}40;
+  `}
+`;
+
+export const ListSubtitle = styled.p`
+  fontSize: 15px;
+  font-weight: 500;
+  color: ${theme.colors.muted};
+  margin: 0;
+`;
+
+export const BrandGradient = styled.span`
+  font-weight: 800;
+  background: ${theme.gradients.innovator};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+`;
+
+export const ActionButton = styled.button<{ $type: 'delete' | 'save'; $visible?: boolean; $isHovered?: boolean }>`
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: ${props => props.$visible ? 'inline-flex' : 'none'};
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid;
+
+  ${props => props.$type === 'delete' && css`
+    background: rgba(239, 68, 68, 0.1);
+    borderColor: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+
+    ${props.$isHovered && css`
+      background: #ef4444;
+      borderColor: #dc2626;
+      color: white;
+      transform: scale(1.08);
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    `}
+  `}
+
+  ${props => props.$type === 'save' && css`
+    background: rgba(34, 197, 94, 0.1);
+    borderColor: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+
+    ${props.$isHovered && css`
+      background: #22c55e;
+      borderColor: #16a34a;
+      color: white;
+      transform: scale(1.08);
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+    `}
+  `}
+`;
+
+export const ListScrollWrapper = styled.div<{ $isDropTarget?: boolean; $isInvalidDropTarget?: boolean }>`
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 16px 8px;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  ms-overflow-style: none;
+  align-items: flex-start;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  ${props => props.$isDropTarget && css`
+    backgroundColor: rgba(34, 197, 94, 0.08);
+    border: 3px dashed rgba(34, 197, 94, 0.5);
+    box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.1);
+    transform: scale(1.01);
+  `}
+
+  ${props => props.$isInvalidDropTarget && css`
+    opacity: 0.5;
+    filter: grayscale(0.5);
+    cursor: not-allowed;
+  `}
+`;
+
+export const ScrollArrow = styled.button<{ $side: 'left' | 'right'; $visible?: boolean; $isHovered?: boolean }>`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 120px;
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  border: none;
+  color: white;
+  fontSize: 36px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: ${props => props.$visible ? 1 : 0};
+  visibility: ${props => props.$visible ? 'visible' : 'hidden'};
+  transition: opacity 0.3s ease, background 0.2s ease;
+  zIndex: 10;
+  border-radius: 8px;
+  ${props => props.$side === 'left' ? 'left: 8px;' : 'right: 8px;'}
+
+  ${props => props.$isHovered && css`
+    opacity: 1 !important;
+    background: rgba(0, 0, 0, 0.25);
+  `}
+`;

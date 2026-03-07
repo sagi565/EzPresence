@@ -2,7 +2,26 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { ContentItem } from '@models/ContentList';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
-import { styles } from './styles';
+import { 
+  Overlay, 
+  Modal, 
+  CloseButton, 
+  ContentWrapper, 
+  MediaSection, 
+  Media, 
+  MediaPlaceholder, 
+  InfoSection, 
+  TitleSection, 
+  Title, 
+  RenameInput, 
+  IconButton, 
+  MetadataContainer, 
+  MetaItem, 
+  MetaLabel, 
+  MetaValue, 
+  ActionContainer, 
+  ActionButton 
+} from './styles';
 import TrashButton from '@/components/Scheduler/CreateModals/TrashButton/TrashButton';
 
 interface ContentDetailModalProps {
@@ -24,7 +43,6 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
 }) => {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
-  const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,14 +50,12 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
 
   const isVideo = item?.type === 'video';
 
-  // Fetch URL when modal opens
   useEffect(() => {
     if (isOpen && item && !fetchedUrl && !item.id.startsWith('temp-')) {
       fetchUrl(item.id);
     }
   }, [isOpen, item, fetchedUrl, fetchUrl]);
 
-  // Reset rename state when modal closes
   useEffect(() => {
     if (!isOpen) {
       setIsRenaming(false);
@@ -47,7 +63,6 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
     }
   }, [isOpen]);
 
-  // Focus rename input
   useEffect(() => {
     if (isRenaming && renameInputRef.current) {
       renameInputRef.current.focus();
@@ -55,7 +70,6 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
     }
   }, [isRenaming]);
 
-  // Handle escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -86,7 +100,6 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   };
 
   const mediaSrc = fetchedUrl || getThumbnailSrc();
-  // For images, always prefer thumbnail for inline display (download URLs may not render inline)
   const displaySrc = isVideo ? mediaSrc : (getThumbnailSrc() || fetchedUrl);
 
   const formatFileSize = (bytes?: number) => {
@@ -158,151 +171,121 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
     setRenameValue(item.title || '');
   };
 
-
-  const favoriteBtnStyle = {
-    ...styles.favoriteBtn,
-    ...(item.favorite ? styles.favoriteBtnActive : {}),
-    ...(hoveredBtn === 'favorite' ? styles.favoriteBtnHover : {}),
-  };
-
   return ReactDOM.createPortal(
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-        {/* Close Button */}
-        <button
-          style={{
-            ...styles.closeBtn,
-            // Keep specific hover if needed, but rely on global class for primary rotation effect
-          }}
-          className="modal-close-btn"
-          onClick={onClose}
-        >
+    <Overlay onClick={onClose}>
+      <Modal onClick={(e) => e.stopPropagation()}>
+        <CloseButton className="modal-close-btn" onClick={onClose}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-        </button>
+        </CloseButton>
 
-        <div style={styles.content}>
-          {/* Media Section */}
-          <div style={styles.mediaSection}>
+        <ContentWrapper>
+          <MediaSection>
             {isVideo && displaySrc ? (
-              <video
-                ref={videoRef}
-                src={displaySrc}
-                controls
-                autoPlay
-                loop
-                style={styles.media}
-              />
+              <Media $isVideo={true}>
+                <video
+                  ref={videoRef}
+                  src={displaySrc}
+                  controls
+                  autoPlay
+                  loop
+                />
+              </Media>
             ) : !isVideo && displaySrc ? (
-              <img src={displaySrc} alt={item.title} style={styles.media} />
+              <Media $isVideo={false}>
+                <img src={displaySrc} alt={item.title} />
+              </Media>
             ) : (
-              <div style={styles.mediaPlaceholder}>
+              <MediaPlaceholder>
                 <span style={{ fontSize: '64px' }}>{isVideo ? '🎬' : '🖼️'}</span>
-              </div>
+              </MediaPlaceholder>
             )}
-          </div>
+          </MediaSection>
 
-          {/* Info Section */}
-          <div style={styles.infoSection}>
-            {/* Title with Edit and Favorite */}
-            <div style={styles.titleSection}>
+          <InfoSection>
+            <TitleSection>
               {isRenaming ? (
                 <div style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'center' }}>
-                  <input
+                  <RenameInput
                     ref={renameInputRef}
                     type="text"
                     value={renameValue}
                     onChange={(e) => setRenameValue(e.target.value)}
                     onKeyDown={handleRenameKeyDown}
-                    style={styles.renameInput}
                     placeholder="Enter name..."
                   />
-                  <button
+                  <IconButton
+                    $type="save"
                     onClick={handleRenameSubmit}
-                    style={{ ...styles.editBtn, background: 'rgba(34, 197, 94, 0.15)', color: '#16a34a' }}
                     title="Save"
                   >
                     ✓
-                  </button>
-                  <button
+                  </IconButton>
+                  <IconButton
+                    $type="cancel"
                     onClick={handleEditCancel}
-                    style={{ ...styles.editBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#dc2626' }}
                     title="Cancel"
                   >
                     ×
-                  </button>
+                  </IconButton>
                 </div>
               ) : (
                 <>
-                  <h2 style={styles.title}>{item.title || 'Untitled'}</h2>
-                  <button
-                    style={{
-                      ...styles.editBtn,
-                      ...(hoveredBtn === 'edit' ? styles.editBtnHover : {}),
-                    }}
+                  <Title>{item.title || 'Untitled'}</Title>
+                  <IconButton
+                    $type="edit"
                     onClick={() => {
                       setRenameValue(item.title || '');
                       setIsRenaming(true);
                     }}
-                    onMouseEnter={() => setHoveredBtn('edit')}
-                    onMouseLeave={() => setHoveredBtn(null)}
                     title="Rename"
                   >
                     ✏️
-                  </button>
-                  <button
-                    style={favoriteBtnStyle}
+                  </IconButton>
+                  <IconButton
+                    $type="favorite"
+                    $active={item.favorite}
                     onClick={onToggleFavorite}
-                    onMouseEnter={() => setHoveredBtn('favorite')}
-                    onMouseLeave={() => setHoveredBtn(null)}
                     title={item.favorite ? 'Remove from favorites' : 'Add to favorites'}
                   >
                     {item.favorite ? '❤️' : '🤍'}
-                  </button>
+                  </IconButton>
                 </>
               )}
-            </div>
+            </TitleSection>
 
-            {/* Metadata */}
-            <div style={styles.metadata}>
-              <div style={styles.metaItem}>
-                <span style={styles.metaLabel}>Type</span>
-                <span style={styles.metaValue}>{isVideo ? 'Video' : 'Image'}</span>
-              </div>
+            <MetadataContainer>
+              <MetaItem>
+                <MetaLabel>Type</MetaLabel>
+                <MetaValue>{isVideo ? 'Video' : 'Image'}</MetaValue>
+              </MetaItem>
               {item.sizeBytes && (
-                <div style={styles.metaItem}>
-                  <span style={styles.metaLabel}>Size</span>
-                  <span style={styles.metaValue}>{formatFileSize(item.sizeBytes)}</span>
-                </div>
+                <MetaItem>
+                  <MetaLabel>Size</MetaLabel>
+                  <MetaValue>{formatFileSize(item.sizeBytes)}</MetaValue>
+                </MetaItem>
               )}
               {isVideo && item.durationSec && (
-                <div style={styles.metaItem}>
-                  <span style={styles.metaLabel}>Duration</span>
-                  <span style={styles.metaValue}>{formatDuration(item.durationSec)}</span>
-                </div>
+                <MetaItem>
+                  <MetaLabel>Duration</MetaLabel>
+                  <MetaValue>{formatDuration(item.durationSec)}</MetaValue>
+                </MetaItem>
               )}
-              <div style={styles.metaItem}>
-                <span style={styles.metaLabel}>Created</span>
-                <span style={styles.metaValue}>{formatDate(item.createdAt)}</span>
-              </div>
-            </div>
+              <MetaItem>
+                <MetaLabel>Created</MetaLabel>
+                <MetaValue>{formatDate(item.createdAt)}</MetaValue>
+              </MetaItem>
+            </MetadataContainer>
 
-            {/* Actions */}
-            <div style={styles.actions}>
-              <button
-                style={{
-                  ...styles.actionBtn,
-                  ...styles.downloadBtn,
-                  ...(hoveredBtn === 'download' ? styles.downloadBtnHover : {}),
-                }}
+            <ActionContainer>
+              <ActionButton
+                $variant="download"
                 onClick={handleDownload}
-                onMouseEnter={() => setHoveredBtn('download')}
-                onMouseLeave={() => setHoveredBtn(null)}
               >
                 ⬇️ Download
-              </button>
+              </ActionButton>
               <TrashButton
                 onClick={onDelete}
                 title="Delete"
@@ -316,11 +299,11 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
               >
                 Delete
               </TrashButton>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>,
+            </ActionContainer>
+          </InfoSection>
+        </ContentWrapper>
+      </Modal>
+    </Overlay>,
     document.body
   );
 };

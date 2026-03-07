@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { styles } from './styles';
+import { Nav, NavLeft, Logo, NavCenter, NavItemWrapper, NavBtn, NavRight, IconBtn, Avatar } from './styles';
 import { theme } from '@theme/theme';
 import BrandSelector from '../BrandSelector/BrandSelector';
 import { signOut } from 'firebase/auth';
@@ -10,7 +10,6 @@ import { useUserProfile } from '@/hooks/user/useUserProfile';
 
 interface GlobalNavProps {
   brands: Brand[];
-  // Fix: Allow null for initial loading state
   currentBrand: Brand | null;
   onBrandChange: (brandId: string) => void;
 }
@@ -20,7 +19,6 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
   const location = useLocation();
   const { profile } = useUserProfile();
 
-  const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
   const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
   const [isLogoutHovered, setIsLogoutHovered] = useState(false);
 
@@ -29,41 +27,23 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
     navigate('/login');
   };
 
-
-
   const navButtons = [
-    { id: 'home', label: '🏠 Home', path: '/', active: location.pathname === '/' },
-    { id: 'content', label: '▶️ Content', path: '/content', active: location.pathname === '/content' },
-    { id: 'studio', label: '🎬 Studio', path: '/studio', active: location.pathname.startsWith('/studio') },
-    { id: 'scheduler', label: '📅 Scheduler', path: '/scheduler', active: location.pathname === '/scheduler' },
-    { id: 'dashboard', label: '📊 Dashboard', path: '/dashboard', active: location.pathname === '/dashboard' },
+    { id: 'home', icon: '🏠', label: 'Home', path: '/', active: location.pathname === '/' },
+    { id: 'content', icon: '▶️', label: 'Content', path: '/content', active: location.pathname === '/content' },
+    { id: 'studio', icon: '🎬', label: 'Studio', path: '/studio', active: location.pathname.startsWith('/studio') },
+    { id: 'scheduler', icon: '📅', label: 'Scheduler', path: '/scheduler', active: location.pathname === '/scheduler' },
+    { id: 'dashboard', icon: '📊', label: 'Dashboard', path: '/dashboard', active: location.pathname === '/dashboard' },
   ];
-
-
-
-  const getButtonStyle = (btnId: string, isActive: boolean) => ({
-    ...styles.navBtn,
-    ...(isActive ? styles.navBtnActive : {}),
-    ...(hoveredBtn === btnId && !isActive ? { transform: 'translateY(-1px)' } : {}),
-  });
-
-
 
   const handleNavClick = (e: React.MouseEvent, path: string) => {
     e.preventDefault();
     navigate(path);
   };
 
-
-
   const getAvatarConfig = () => {
     const identifier = profile?.firstName || auth.currentUser?.email || '?';
     const initial = identifier[0].toUpperCase();
-
-    // User requested purple theme color
     const color = theme.colors.primary;
-
-    // Get photo URL from Firebase Auth (available for Google sign-in)
     const photoURL = auth.currentUser?.photoURL || null;
 
     return { initial, color, photoURL };
@@ -72,48 +52,41 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
   const { initial: avatarInitial, color: avatarColor, photoURL } = getAvatarConfig();
 
   return (
-    <nav style={styles.nav}>
-      <div style={styles.navLeft}>
-        <a
+    <Nav>
+      <NavLeft>
+        <Logo
           href="/"
-          style={styles.logo}
           onClick={(e) => handleNavClick(e, '/')}
         >
-          EZpresence
-        </a>
+          EZ<span className="logo-presence">presence</span>
+        </Logo>
         <BrandSelector
           brands={brands}
           currentBrand={currentBrand}
           onBrandChange={onBrandChange}
         />
-      </div>
+      </NavLeft>
 
-      <div style={styles.navCenter}>
+      <NavCenter>
         {navButtons.map((btn) => (
-          <div
-            key={btn.id}
-            style={styles.navItemWrapper}
-          >
-            <a
+          <NavItemWrapper key={btn.id}>
+            <NavBtn
               href={btn.path}
-              style={getButtonStyle(btn.id, btn.active)}
-              onMouseEnter={() => setHoveredBtn(btn.id)}
-              onMouseLeave={() => setHoveredBtn(null)}
+              $active={btn.active}
               onClick={(e) => handleNavClick(e, btn.path)}
             >
-              {btn.label}
-            </a>
-          </div>
+              <span className="nav-icon">{btn.icon}</span>
+              <span className="nav-label">{btn.label}</span>
+            </NavBtn>
+          </NavItemWrapper>
         ))}
-      </div>
+      </NavCenter>
 
-      <div style={styles.navRight}>
-        <button
+      <NavRight>
+        <IconBtn
           onClick={handleLogout}
-          style={{
-            ...styles.iconBtn,
-            ...(isLogoutHovered ? styles.iconBtnDangerHover : {}),
-          }}
+          $variant="danger"
+          $hovered={isLogoutHovered}
           onMouseEnter={() => setIsLogoutHovered(true)}
           onMouseLeave={() => setIsLogoutHovered(false)}
           title="Sign Out"
@@ -132,49 +105,32 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-        </button>
+        </IconBtn>
 
-        <button
-          style={{
-            ...styles.iconBtn,
-            ...(hoveredIcon === 'notifications' ? styles.iconBtnHover : {}),
-          }}
+        <IconBtn
+          $hovered={hoveredIcon === 'notifications'}
           onMouseEnter={() => setHoveredIcon('notifications')}
           onMouseLeave={() => setHoveredIcon(null)}
           title="Notifications"
         >
           🔔
-        </button>
+        </IconBtn>
 
-        <button
-          style={{
-            ...styles.avatar,
-            background: photoURL ? 'transparent' : avatarColor,
-            cursor: 'default',
-            ...(hoveredIcon === 'profile' ? { transform: 'scale(1.05)', transition: 'transform 0.2s' } : {}),
-          }}
+        <Avatar
+          $bgColor={photoURL ? 'transparent' : avatarColor}
+          $hovered={hoveredIcon === 'profile'}
           onMouseEnter={() => setHoveredIcon('profile')}
           onMouseLeave={() => setHoveredIcon(null)}
           title="Settings"
-          onClick={(e) => e.preventDefault()}
         >
           {photoURL ? (
-            <img
-              src={photoURL}
-              alt="User profile"
-              style={{
-                width: '100%',
-                height: '100%',
-                borderRadius: '50%',
-                objectFit: 'cover',
-              }}
-            />
+            <img src={photoURL} alt="User profile" />
           ) : (
             avatarInitial
           )}
-        </button>
-      </div>
-    </nav>
+        </Avatar>
+      </NavRight>
+    </Nav>
   );
 };
 

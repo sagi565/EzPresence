@@ -1,40 +1,41 @@
-import { CSSProperties } from 'react';
+import styled, { css } from 'styled-components';
+import { theme } from '@theme/theme';
 
-export const styles: Record<string, CSSProperties> = {
+export const PickerContainer = styled.div<{ $top: number; $left: number }>`
+  position: fixed;
+  top: ${props => props.$top}px;
+  left: ${props => props.$left}px;
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  border: 2px solid ${theme.colors.primary};
+  width: auto;
+  max-width: 320px;
+  z-index: 2001;
+`;
 
-  picker: {
-    position: 'fixed',
-    background: 'white',
-    borderRadius: '16px',
-    padding: '16px',
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
-    border: '2px solid',
-    borderColor: '#9b5de5',
-    width: 'auto',
-    maxWidth: '320px',
-    zIndex: 2001,
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(5, 1fr)',
-    gap: '8px',
-  },
-  option: {
-    width: '48px',
-    height: '48px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '28px',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    border: '2px solid',
-    borderColor: 'transparent',  // Changed from visible border
-  },
-  optionHover: {
-    background: 'rgba(155, 93, 229, 0.1)',
-    borderColor: '#9b5de5',
-    transform: 'scale(1.1)',
-  },
-};
+export const EmojiGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+`;
+
+export const EmojiOption = styled.div<{ $isHovered?: boolean }>`
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+
+  ${props => props.$isHovered && css`
+    background: ${theme.colors.primary}1A;
+    border-color: ${theme.colors.primary};
+    transform: scale(1.1);
+  `}
+`;

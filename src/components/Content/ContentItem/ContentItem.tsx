@@ -1,6 +1,23 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ContentItem as ContentItemType } from '@models/ContentList';
-import { styles } from './styles';
+import { 
+  ItemContainer, 
+  MediaContainer, 
+  MediaCover, 
+  VideoCover, 
+  GradientOverlay, 
+  ActionsContainer, 
+  ActionButton, 
+  MoreOptionsButton, 
+  MenuDropdown, 
+  MenuItem, 
+  ContentTitle, 
+  ContentDate, 
+  RenameContainer, 
+  RenameInput, 
+  LoadingOverlay, 
+  Spinner 
+} from './styles';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
 import { DraggableProvided } from '@hello-pangea/dnd';
 
@@ -18,7 +35,6 @@ interface ContentItemProps {
 
 const ContentItem: React.FC<ContentItemProps> = ({
   item,
-  // listType,
   provided,
   isDragging = false,
   onClick,
@@ -28,7 +44,6 @@ const ContentItem: React.FC<ContentItemProps> = ({
   onToggleFavorite,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  // const [isDragging, setIsDragging] = useState(false); // Managed by parent now
   const [showMenu, setShowMenu] = useState(false);
   const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -42,10 +57,8 @@ const ContentItem: React.FC<ContentItemProps> = ({
 
   const { url: fetchedUrl, fetchUrl } = useContentUrl();
   const isUploading = item.status === 'uploading';
-
   const isVideo = item.type === 'video';
 
-  // Preview delay in milliseconds (1 second)
   const PREVIEW_DELAY = 1000;
 
   const getThumbnailSrc = () => {
@@ -54,35 +67,18 @@ const ContentItem: React.FC<ContentItemProps> = ({
       return item.thumbnail;
     }
     if (item.thumbnail.length < 20) return null;
-
     const cleanBase64 = item.thumbnail.replace(/[\n\r\s]/g, '');
     return `data:image/jpeg;base64,${cleanBase64}`;
   };
 
   const thumbnailSrc = getThumbnailSrc();
 
-  // Legacy handler fallback
-  // const handleDragStart = (e: React.DragEvent) => {
-  //   if (isUploading) { e.preventDefault(); return; }
-  //   // setIsDragging(true); // Parent handles state
-  //   setShowMenu(false);
-  //   if (onDragStart) onDragStart(e);
-  // };
-
-  // const handleDragEnd = () => {
-  //   // setIsDragging(false);
-  //   if (onDragEnd) onDragEnd();
-  // };
-
-  // Handle hover with delay for video preview
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
-
     if (isVideo && !isUploading && item.id && !item.id.startsWith('temp-')) {
       if (!fetchedUrl) {
         fetchUrl(item.id);
       }
-
       hoverTimeoutRef.current = setTimeout(() => {
         setShowPreview(true);
       }, PREVIEW_DELAY);
@@ -92,14 +88,12 @@ const ContentItem: React.FC<ContentItemProps> = ({
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
     setShowPreview(false);
-
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
   }, []);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
@@ -108,7 +102,6 @@ const ContentItem: React.FC<ContentItemProps> = ({
     };
   }, []);
 
-  // Video autoplay logic
   useEffect(() => {
     if (isVideo && videoRef.current) {
       if (showPreview && fetchedUrl) {
@@ -123,7 +116,6 @@ const ContentItem: React.FC<ContentItemProps> = ({
     }
   }, [isVideo, showPreview, fetchedUrl]);
 
-  // Click outside menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -134,7 +126,6 @@ const ContentItem: React.FC<ContentItemProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
 
-  // Focus rename input when renaming
   useEffect(() => {
     if (isRenaming && renameInputRef.current) {
       renameInputRef.current.focus();
@@ -203,67 +194,14 @@ const ContentItem: React.FC<ContentItemProps> = ({
     });
   };
 
-  const renderMedia = () => {
-    if (isUploading) {
-      return (
-        <div style={styles.mediaContainer}>
-          {thumbnailSrc && <img src={thumbnailSrc} alt="Uploading..." style={styles.mediaCover} />}
-          <div style={styles.loadingOverlay}>
-            <div style={styles.spinner} />
-            <span style={{ fontSize: '12px', marginTop: '8px', fontWeight: 600 }}>Uploading...</span>
-          </div>
-        </div>
-      );
-    }
-
-    if (isVideo) {
-      return (
-        <div style={styles.mediaContainer}>
-          {fetchedUrl && (
-            <video
-              ref={videoRef}
-              src={fetchedUrl}
-              loop
-              muted
-              playsInline
-              style={{
-                ...styles.mediaCover,
-                opacity: showPreview && fetchedUrl ? 1 : 0
-              }}
-            />
-          )}
-
-          {thumbnailSrc && (
-            <img
-              src={thumbnailSrc}
-              alt={item.title}
-              style={{
-                ...styles.mediaCover,
-                opacity: showPreview && fetchedUrl ? 0 : 1
-              }}
-            />
-          )}
-        </div>
-      );
-    }
-
-    const displaySrc = fetchedUrl || thumbnailSrc;
-    return (
-      <div style={styles.mediaContainer}>
-        {displaySrc && (
-          <img src={displaySrc} alt={item.title} style={styles.mediaCover} />
-        )}
-      </div>
-    );
-  };
-
-  // Mouse tracking removed
-
   return (
-    <div
+    <ItemContainer
       ref={provided?.innerRef}
       {...provided?.draggableProps}
       {...provided?.dragHandleProps}
+      $isDragging={isDragging}
+      $isHovered={isHovered}
+      $isUploading={isUploading}
       onClick={onClick}
       onDoubleClick={(e) => {
         e.stopPropagation();
@@ -271,117 +209,126 @@ const ContentItem: React.FC<ContentItemProps> = ({
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      style={{
-        ...styles.contentItem,
-        ...styles.contentItemVideo,
-        ...provided?.draggableProps.style,
-        ...(isHovered && !isUploading && !isDragging ? styles.contentItemHover : {}),
-        ...(isDragging ? styles.contentItemDragging : {}),
-      }}
+      style={provided?.draggableProps.style}
     >
-      {renderMedia()}
+      <MediaContainer>
+        {isUploading ? (
+          <>
+            {thumbnailSrc && <MediaCover src={thumbnailSrc} alt="Uploading..." />}
+            <LoadingOverlay>
+              <Spinner />
+              <span style={{ fontSize: '12px', marginTop: '8px', fontWeight: 600 }}>Uploading...</span>
+            </LoadingOverlay>
+          </>
+        ) : isVideo ? (
+          <>
+            {fetchedUrl && (
+              <VideoCover
+                ref={videoRef}
+                src={fetchedUrl}
+                loop
+                muted
+                playsInline
+                $isVisible={showPreview && !!fetchedUrl}
+              />
+            )}
+            {thumbnailSrc && (
+              <MediaCover
+                src={thumbnailSrc}
+                alt={item.title}
+                $isVisible={!(showPreview && fetchedUrl)}
+              />
+            )}
+          </>
+        ) : (
+          (fetchedUrl || thumbnailSrc) && (
+            <MediaCover src={fetchedUrl || thumbnailSrc} alt={item.title} />
+          )
+        )}
+      </MediaContainer>
 
       {!isUploading && (
         <>
-          <div style={{
-            ...styles.gradientOverlay,
-            ...(isHovered ? styles.gradientOverlayVisible : {}),
-          }} />
+          <GradientOverlay $isVisible={isHovered} />
 
-          <div style={{
-            ...styles.contentActions,
-            ...(isHovered || item.favorite || showMenu ? styles.contentActionsVisible : {}),
-          }}>
-            <button
-              style={{
-                ...styles.actionBtn,
-                ...(item.favorite ? styles.actionBtnFavoriteActive : {}),
-                ...(hoveredBtn === 'fav' && !item.favorite ? styles.actionBtnHover : {}),
-              }}
+          <ActionsContainer $isVisible={isHovered || item.favorite || showMenu}>
+            <ActionButton
+              $active={item.favorite}
+              $isHovered={hoveredBtn === 'fav'}
               onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
               onMouseEnter={() => setHoveredBtn('fav')}
               onMouseLeave={() => setHoveredBtn(null)}
               title="Toggle Favorite"
             >
               {item.favorite ? '❤️' : '🤍'}
-            </button>
-          </div>
+            </ActionButton>
+          </ActionsContainer>
 
-          <button
-            style={{
-              ...styles.moreOptionsBtn,
-              ...(isHovered || showMenu ? styles.moreOptionsBtnVisible : {}),
-              ...(hoveredBtn === 'more' || showMenu ? styles.moreOptionsBtnHover : {}),
-            }}
+          <MoreOptionsButton
+            $isVisible={isHovered || showMenu}
+            $isHovered={hoveredBtn === 'more' || showMenu}
             onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
             onMouseEnter={() => setHoveredBtn('more')}
             onMouseLeave={() => setHoveredBtn(null)}
           >
             ⋯
-          </button>
+          </MoreOptionsButton>
 
           {showMenu && (
-            <div ref={menuRef} style={styles.menuDropdown} onClick={(e) => e.stopPropagation()}>
-              <button
-                style={{ ...styles.menuItem, ...(hoveredBtn === 'download' ? styles.menuItemHover : {}) }}
+            <MenuDropdown ref={menuRef} onClick={(e) => e.stopPropagation()}>
+              <MenuItem
+                $isHovered={hoveredBtn === 'download'}
                 onClick={handleDownload}
                 onMouseEnter={() => setHoveredBtn('download')}
                 onMouseLeave={() => setHoveredBtn(null)}
               >
                 <span>⬇️</span> Download
-              </button>
-              <button
-                style={{ ...styles.menuItem, ...(hoveredBtn === 'rename' ? styles.menuItemHover : {}) }}
+              </MenuItem>
+              <MenuItem
+                $isHovered={hoveredBtn === 'rename'}
                 onClick={handleRenameClick}
                 onMouseEnter={() => setHoveredBtn('rename')}
                 onMouseLeave={() => setHoveredBtn(null)}
               >
                 <span>✏️</span> Rename
-              </button>
-              <button
-                style={{ ...styles.menuItem, ...(hoveredBtn === 'delete' ? styles.menuItemDeleteHover : {}) }}
+              </MenuItem>
+              <MenuItem
+                $variant="delete"
+                $isHovered={hoveredBtn === 'delete'}
                 onClick={handleDelete}
                 onMouseEnter={() => setHoveredBtn('delete')}
                 onMouseLeave={() => setHoveredBtn(null)}
               >
                 <span>🗑️</span> Delete
-              </button>
-            </div>
+              </MenuItem>
+            </MenuDropdown>
           )}
 
           {isRenaming ? (
-            <div style={styles.renameContainer} onClick={(e) => e.stopPropagation()}>
-              <input
+            <RenameContainer onClick={(e) => e.stopPropagation()}>
+              <RenameInput
                 ref={renameInputRef}
                 type="text"
                 value={renameValue}
                 onChange={(e) => setRenameValue(e.target.value)}
                 onKeyDown={handleRenameKeyDown}
                 onBlur={handleRenameSubmit}
-                style={styles.renameInput}
                 placeholder="Enter name..."
               />
-            </div>
+            </RenameContainer>
           ) : (
             <>
-              <div style={{
-                ...styles.contentTitle,
-                ...(isHovered ? styles.textVisible : {}),
-              }}>
+              <ContentTitle $isVisible={isHovered}>
                 {item.title}
-              </div>
-
-              <div style={{
-                ...styles.contentDate,
-                ...(isHovered ? styles.textVisible : {}),
-              }}>
+              </ContentTitle>
+              <ContentDate $isVisible={isHovered}>
                 {formatDate(item.createdAt)}
-              </div>
+              </ContentDate>
             </>
           )}
         </>
       )}
-    </div>
+    </ItemContainer>
   );
 };
 

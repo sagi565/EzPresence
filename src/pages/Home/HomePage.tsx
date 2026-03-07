@@ -5,54 +5,7 @@ import { useBrands } from '@/hooks/brands/useBrands';
 import { ConnectedPlatformsGrid } from '@components/SocialPlatform/ConnectedPlatformsGrid';
 import SocialsBackground from '@components/Background/SocialsBackground';
 import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
-import { theme } from '@theme/theme';
-
-const styles = {
-    container: {
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column' as const,
-        position: 'relative' as const,
-        overflow: 'hidden',
-    },
-    content: {
-        maxWidth: '1000px',
-        width: '100%',
-        margin: '0 auto',
-        padding: '40px',
-        position: 'relative' as const,
-        zIndex: 1,
-    },
-    greetingSection: {
-        marginBottom: '40px',
-        textAlign: 'left' as const,
-    },
-    greeting: {
-        fontSize: '48px',
-        fontWeight: 800,
-        color: theme.colors.text,
-        marginBottom: '8px',
-        letterSpacing: '-1px',
-        fontFamily: 'Figtree, ui-sans-serif, system-ui, sans-serif',
-    },
-    nameHighlight: {
-        background: theme.gradients.innovator,
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
-    },
-    subtitle: {
-        fontSize: '18px',
-        color: theme.colors.muted,
-    },
-    gridContainer: {
-        background: 'white',
-        borderRadius: '24px',
-        padding: '32px',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
-        border: '1px solid rgba(0, 0, 0, 0.05)',
-    }
-};
+import { Container, Content, GreetingSection, Greeting, NameHighlight, Subtitle, GridContainer } from './styles';
 
 const HomePage: React.FC = () => {
     const { profile } = useUserProfile();
@@ -63,21 +16,21 @@ const HomePage: React.FC = () => {
     const firstName = profile?.firstName || 'Creator';
 
     return (
-        <div style={styles.container}>
+        <Container>
             <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
             <SocialsBackground />
 
-            <div style={styles.content}>
-                <div style={styles.greetingSection}>
-                    <h1 style={styles.greeting}>
-                        Hello, <span style={styles.nameHighlight}>{firstName}</span>
-                    </h1>
-                    <p style={styles.subtitle}>
+            <Content>
+                <GreetingSection>
+                    <Greeting>
+                        Hello, <NameHighlight>{firstName}</NameHighlight>
+                    </Greeting>
+                    <Subtitle>
                         Manage your social presence and grow your brand.
-                    </p>
-                </div>
+                    </Subtitle>
+                </GreetingSection>
 
-                <div style={styles.gridContainer}>
+                <GridContainer>
                     <ConnectedPlatformsGrid
                         connectedPlatforms={connectedPlatforms}
                         onConnectionChange={refetchPlatforms}
@@ -87,9 +40,9 @@ const HomePage: React.FC = () => {
                         subtitle="Connect your social media accounts to get started"
                         isLoading={platformsLoading}
                     />
-                </div>
-            </div>
-        </div>
+                </GridContainer>
+            </Content>
+        </Container>
     );
 };
 

@@ -4,7 +4,11 @@ import ContentListHeader from './ContentListHeader';
 import ContentItem from '../ContentItem/ContentItem';
 import UploadButton from '../UploadButton/UploadButton';
 import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
-import { styles } from './styles';
+import { 
+  ListContainer, 
+  ListScrollWrapper, 
+  ScrollArrow 
+} from './styles';
 import { useDraggable } from '@dnd-kit/core';
 import { useDroppable } from '@dnd-kit/core';
 import { useDndState, DragData } from '@/context/DndContext';
@@ -53,11 +57,10 @@ const DraggableItem: React.FC<{
       listId: listId,
       title: item.title,
       thumbnail: item.thumbnail,
-      mediaType: item.type, // Explicitly pass 'video' or 'image'
+      mediaType: item.type,
     } as DragData,
   });
 
-  // Hide the item when it's being dragged (the overlay shows the preview)
   const isBeingDragged = activeId === item.id;
 
   return (
@@ -114,14 +117,12 @@ const ContentList: React.FC<ContentListProps> = ({
   const isItemDragging = isDragging && activeData?.type === 'ITEM';
   const isDraggingFromOtherList = isItemDragging && activeData?.listId !== list.id;
 
-  // Validation: Check if the dragged item is compatible with this list
   const isInvalidDropTarget = (() => {
     if (!isItemDragging || !list.isSystem) return false;
     const targetTitle = (list.title || '').toLowerCase();
     const isTargetVideo = targetTitle.includes('video') && targetTitle.includes('upload');
     const isTargetImage = targetTitle.includes('image') && targetTitle.includes('upload');
 
-    // Use the explicit mediaType from activeData
     const actualType = activeData?.mediaType;
 
     if (isTargetImage && actualType === 'video') return true;
@@ -129,14 +130,13 @@ const ContentList: React.FC<ContentListProps> = ({
     return false;
   })();
 
-  // Droppable for accepting items from other lists
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `list-drop-${list.id}`,
     data: {
       type: 'LIST',
       id: list.id,
     } as DragData,
-    disabled: isInvalidDropTarget, // Disable dropping on incompatible lists
+    disabled: isInvalidDropTarget,
   });
 
   const isDropTarget = isOver && isDraggingFromOtherList && !isInvalidDropTarget;
@@ -208,26 +208,6 @@ const ContentList: React.FC<ContentListProps> = ({
     onDelete();
   };
 
-  const containerStyle = {
-    ...styles.listContainer,
-    minHeight: '540px',
-  };
-
-  const leftArrowStyle = {
-    ...styles.scrollArrow,
-    ...styles.scrollArrowLeft,
-    ...(showLeftArrow && isHovered ? styles.scrollArrowVisible : {}),
-    ...(isLeftArrowHovered ? styles.scrollArrowHover : {}),
-  };
-
-  const rightArrowStyle = {
-    ...styles.scrollArrow,
-    ...styles.scrollArrowRight,
-    ...(showRightArrow && isHovered ? styles.scrollArrowVisible : {}),
-    ...(isRightArrowHovered ? styles.scrollArrowHover : {}),
-  };
-
-  // Combined refs
   const setRefs = (el: HTMLDivElement | null) => {
     (scrollRef as any).current = el;
     setDroppableRef(el);
@@ -235,9 +215,8 @@ const ContentList: React.FC<ContentListProps> = ({
 
   return (
     <>
-      <div
+      <ListContainer
         data-list-id={list.id}
-        style={containerStyle}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -255,13 +234,10 @@ const ContentList: React.FC<ContentListProps> = ({
           listId={list.id}
         />
 
-        <div
+        <ListScrollWrapper
           ref={setRefs}
-          style={{
-            ...styles.listScrollWrapper,
-            ...(isDropTarget ? styles.listScrollWrapperDragOver : {}),
-            ...(isInvalidDropTarget ? { opacity: 0.5, filter: 'grayscale(0.5)', cursor: 'not-allowed' } : {}),
-          }}
+          $isDropTarget={isDropTarget}
+          $isInvalidDropTarget={isInvalidDropTarget}
         >
           <UploadButton listType={list.listType} onUpload={onUpload} onNavigate={onAddNavigate} />
 
@@ -278,25 +254,29 @@ const ContentList: React.FC<ContentListProps> = ({
               onToggleFavorite={onToggleFavorite}
             />
           ))}
-        </div>
+        </ListScrollWrapper>
 
-        <button
-          style={leftArrowStyle}
+        <ScrollArrow
+          $side="left"
+          $visible={showLeftArrow && isHovered}
+          $isHovered={isLeftArrowHovered}
           onClick={() => handleScroll('left')}
           onMouseEnter={() => setIsLeftArrowHovered(true)}
           onMouseLeave={() => setIsLeftArrowHovered(false)}
         >
           ‹
-        </button>
-        <button
-          style={rightArrowStyle}
+        </ScrollArrow>
+        <ScrollArrow
+          $side="right"
+          $visible={showRightArrow && isHovered}
+          $isHovered={isRightArrowHovered}
           onClick={() => handleScroll('right')}
           onMouseEnter={() => setIsRightArrowHovered(true)}
           onMouseLeave={() => setIsRightArrowHovered(false)}
         >
           ›
-        </button>
-      </div>
+        </ScrollArrow>
+      </ListContainer>
 
       <ConfirmDialog
         isOpen={!!itemToDelete}

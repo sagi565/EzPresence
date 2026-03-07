@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { styles } from './styles';
+import { 
+  PickerContainer, 
+  EmojiGrid, 
+  EmojiOption 
+} from './styles';
 
 const EMOJIS = [
   '🎨', '🚀', '✨', '🔥', '💡',
@@ -28,21 +32,16 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({
   useEffect(() => {
     if (isOpen && anchorElement && pickerRef.current) {
       const iconRect = anchorElement.getBoundingClientRect();
-
-      // Force a reflow to get accurate measurements
       const pickerRect = pickerRef.current.getBoundingClientRect();
-      const pickerWidth = pickerRect.width || 280; // Use actual width or fallback
+      const pickerWidth = pickerRect.width || 280;
       const windowWidth = window.innerWidth;
 
-      // Center under icon
       let left = iconRect.left + (iconRect.width / 2) - (pickerWidth / 2);
 
-      // Ensure picker doesn't go off left edge
       if (left < 10) {
         left = 10;
       }
 
-      // Ensure picker doesn't go off right edge
       if (left + pickerWidth > windowWidth - 10) {
         left = windowWidth - pickerWidth - 10;
       }
@@ -79,31 +78,25 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({
   };
 
   return (
-    <div
+    <PickerContainer
       ref={pickerRef}
-      style={{
-        ...styles.picker,
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-      }}
+      $top={position.top}
+      $left={position.left}
     >
-      <div style={styles.grid}>
+      <EmojiGrid>
         {EMOJIS.map((emoji) => (
-          <div
+          <EmojiOption
             key={emoji}
-            style={{
-              ...styles.option,
-              ...(hoveredEmoji === emoji ? styles.optionHover : {}),
-            }}
+            $isHovered={hoveredEmoji === emoji}
             onClick={() => handleSelect(emoji)}
             onMouseEnter={() => setHoveredEmoji(emoji)}
             onMouseLeave={() => setHoveredEmoji(null)}
           >
             {emoji}
-          </div>
+          </EmojiOption>
         ))}
-      </div>
-    </div>
+      </EmojiGrid>
+    </PickerContainer>
   );
 };
 

@@ -37,6 +37,7 @@ export const ContentContainer = styled.div`
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    padding-top: 80px;
   }
 `;
 
@@ -67,8 +68,6 @@ export const Card = styled.div`
     max-width: 100%;
     padding: 24px 20px;
     box-shadow: none;
-    background-color: rgba(23, 23, 23, 0.7);
-    backdrop-filter: blur(10px);
   }
 `;
 

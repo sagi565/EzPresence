@@ -1,577 +1,416 @@
-import { CSSProperties } from 'react';
+import styled, { keyframes } from 'styled-components';
 import { theme } from '@theme/theme';
+import { media } from '@/styles/breakpoints';
 
-// Purple SVG arrow for dropdowns (same as DatePicker)
-const arrowSvg = `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%239B5DE5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`;
+const ripple = keyframes`
+  0% { transform: scale(0); opacity: 1; }
+  100% { transform: scale(4); opacity: 0; }
+`;
 
-export const styles: Record<string, CSSProperties> = {
-  container: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '60px 40px',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  content: {
-    width: '100%',
-    maxWidth: '800px',
-    background: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: '24px',
-    padding: '56px 72px',
-    boxShadow: '0 20px 60px rgba(155, 93, 229, 0.15)',
-    border: '2px solid',
-    borderColor: 'rgba(200, 200, 200, 0.3)',
-    position: 'relative',
-    zIndex: 1,
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: '40px',
-  },
-  title: {
-    fontSize: '40px',
-    fontWeight: 630,
-    color: theme.colors.text,
-    marginBottom: '12px',
-    letterSpacing: '-0.5px',
-  },
-  titleHighlight: {
-    fontFamily: '"Playfair Display", serif',
-    fontWeight: 750,
-    fontStyle: 'italic',
-    background: theme.gradients.innovator,
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-  },
-  subtitle: {
-    fontSize: '16px',
-    color: theme.colors.muted,
-    lineHeight: 1.6,
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '32px',
-  },
-  mainContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-  },
-  socialSectionBottom: {
-    padding: '28px 32px',
-    marginTop: '16px',
-    background: 'rgba(155, 93, 229, 0.03)',
-    borderRadius: '16px',
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.15)',
-  },
-  socialHeaderBottom: {
-    marginBottom: '20px',
-  },
-  socialTitleBottom: {
-    fontSize: '20px',
-    fontWeight: 700,
-    fontFamily: 'Figtree, ui-sans-serif, system-ui, sans-serif',
-    fontStyle: 'italic',
-    color: theme.colors.text,
-    margin: '0 0 6px 0',
-  },
-  socialSubtitleBottom: {
-    fontSize: '14px',
-    color: theme.colors.muted,
-    margin: 0,
-  },
-  socialGridBottom: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: '16px',
-  },
-  leftColumn: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-  },
-  rightColumn: {
-    position: 'sticky',
-    top: '20px',
-  },
-  mainSection: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-  },
-  row: {
-    display: 'grid',
-    gridTemplateColumns: '1.5fr 1fr',
-    gap: '32px',
-    alignItems: 'flex-start',
-  },
-  formGroupLeft: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  formGroupStacked: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  nameAndSloganColumn: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-  },
-  formGroupRight: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  logoSection: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  sectionLabel: {
-    fontSize: '18px',
-    fontWeight: 700,
-    color: theme.colors.text,
-  },
-  sectionHint: {
-    fontSize: '14px',
-    color: theme.colors.muted,
-    marginTop: '-8px',
-  },
-  logoUploadArea: {
-    display: 'flex',
-    justifyContent: 'center',
-  },
-  logoPreviewContainer: {
-    position: 'relative',
-    width: '160px',
-    height: '160px',
-  },
-  logoPreview: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    borderRadius: '16px',
-    border: '3px solid',
-    borderColor: theme.colors.primary,
-    boxShadow: theme.shadows.md,
-  },
-  removeLogoBtn: {
-    position: 'absolute',
-    top: '-12px',
-    right: '-12px',
-    width: '36px',
-    height: '36px',
-    borderRadius: '50%',
-    background: '#ef4444',
-    border: '3px solid',
-    borderColor: 'white',
-    color: 'white',
-    fontSize: '18px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.2s',
-    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
-  },
-  logoUploadPlaceholder: {
-    width: '160px',
-    height: '160px',
-    border: '3px dashed',
-    borderColor: 'rgba(155, 93, 229, 0.3)',
-    borderRadius: '16px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    cursor: 'pointer',
-    transition: 'all 0.3s cubic-bezier(0.2, 0, 0.1, 0.5)',
-    background: 'rgba(155, 93, 229, 0.03)',
-  },
-  logoUploadPlaceholderHover: {
-    borderColor: 'rgba(155, 93, 229, 0.6)',
-    background: 'rgba(155, 93, 229, 0.08)',
-    transform: 'scale(1.01)',
-    boxShadow: '0 4px 12px rgba(155, 93, 229, 0.15)',
-  },
-  uploadIcon: {
-    fontSize: '48px',
-  },
-  uploadText: {
-    fontSize: '14px',
-    fontWeight: 600,
-    color: theme.colors.primary,
-  },
-  hiddenInput: {
-    display: 'none',
-  },
-  formGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  label: {
-    fontSize: '15px',
-    fontWeight: 600,
-    color: theme.colors.text,
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-  },
-  required: {
-    color: '#ef4444',
-    fontSize: '18px',
-  },
-  logoCenterLabel: {
-    fontSize: '15px',
-    fontWeight: 600,
-    color: theme.colors.text,
-    textAlign: 'center',
-    gap: '4px',
-  },
-  fieldHint: {
-    fontSize: '13px',
-    color: theme.colors.muted,
-  },
-  input: {
-    height: '52px',
-    padding: '0 18px',
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.2)',
-    borderRadius: '12px',
-    fontSize: '15px',
-    outline: 'none',
-    transition: 'border-color 0.2s',
-    background: 'white',
-    color: theme.colors.text,
-    fontFamily: 'inherit',
-    width: '100%',
-  },
-  inputHovered: {
-    borderColor: 'rgba(155, 93, 229, 0.35)',
-  },
-  inputFocused: {
-    borderColor: 'rgba(155, 93, 229, 0.35)',
-  },
-  inputWrapper: {
-    position: 'relative',
-    width: '100%',
-  },
-  charCountInside: {
-    position: 'absolute',
-    right: '16px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    fontSize: '12px',
-    color: theme.colors.muted,
-    pointerEvents: 'none',
-  },
-  inputError: {
-    borderColor: '#ef4444',
-    background: 'rgba(239, 68, 68, 0.05)',
-  },
-  textarea: {
-    padding: '14px 16px',
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.2)',
-    borderRadius: '12px',
-    fontSize: '15px',
-    outline: 'none',
-    transition: 'all 0.2s',
-    background: 'white',
-    color: theme.colors.text,
-    fontFamily: 'inherit',
-    resize: 'none',
-    lineHeight: 1.6,
-    width: '100%',
-  },
-  textareaWrapper: {
-    position: 'relative',
-    width: '100%',
-  },
-  charCountInsideTextarea: {
-    position: 'absolute',
-    right: '16px',
-    bottom: '14px',
-    fontSize: '12px',
-    color: theme.colors.muted,
-    pointerEvents: 'none',
-    background: 'white',
-    padding: '2px 4px',
-    borderRadius: '4px',
-  },
-  // Custom Dropdown Styles (matching DatePicker)
-  dropdownContainer: {
-    position: 'relative',
-    width: '100%',
-  },
-  customSelect: {
-    display: 'flex',
-    alignItems: 'center',
-    height: '52px',
-    padding: '0 40px 0 16px',
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.2)',
-    borderRadius: '12px',
-    fontSize: '15px',
-    outline: 'none',
-    transition: 'border-color 0.2s',
-    background: 'white',
-    color: theme.colors.text,
-    fontFamily: 'inherit',
-    cursor: 'pointer',
-    backgroundImage: arrowSvg,
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'right 14px center',
-    width: '100%',
-  },
-  customSelectHovered: {
-    borderColor: 'rgba(155, 93, 229, 0.35)',
-  },
-  customSelectFocused: {
-    borderColor: 'rgba(155, 93, 229, 0.35)',
-  },
-  selectedText: {
-    color: theme.colors.text,
-  },
-  dropdownSearchInput: {
-    flex: 1,
-    border: 'none',
-    outline: 'none',
-    fontSize: '15px',
-    background: 'transparent',
-    color: theme.colors.text,
-    fontFamily: 'inherit',
-    width: '100%',
-    padding: 0,
-  },
-  dropdown: {
-    position: 'absolute',
-    top: 'calc(100% + 6px)',
-    left: 0,
-    right: 0,
-    background: 'white',
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.15)',
-    borderRadius: '12px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-    zIndex: 1000,
-    overflow: 'hidden',
-  },
-  dropdownList: {
-    maxHeight: '240px',
-    overflowY: 'auto',
-    padding: '6px 0',
-  },
-  dropdownOption: {
-    padding: '10px 16px',
-    fontSize: '15px',
-    color: theme.colors.text,
-    cursor: 'pointer',
-    transition: 'background 0.15s',
-  },
-  optionHighlighted: {
-    background: 'rgba(155, 93, 229, 0.08)',
-  },
-  optionSelected: {
-    background: 'rgba(155, 93, 229, 0.12)',
-  },
-  noResults: {
-    padding: '12px 16px',
-    fontSize: '14px',
-    color: theme.colors.muted,
-    textAlign: 'center',
-  },
-  categoryInputContainer: {
-    position: 'relative',
-  },
-  categoryInput: {
-    width: '100%',
-    height: '48px',
-    padding: '0 16px',
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.2)',
-    borderRadius: '12px',
-    fontSize: '15px',
-    outline: 'none',
-    transition: 'all 0.2s',
-    background: 'white',
-    color: theme.colors.text,
-    fontFamily: 'inherit',
-  },
-  categoryTags: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '10px',
-    marginTop: '8px',
-  },
-  categoryTag: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 14px',
-    background: 'rgba(155, 93, 229, 0.1)',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: 500,
-    color: theme.colors.primary,
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.2)',
-  },
-  removeTagBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: theme.colors.primary,
-    fontSize: '16px',
-    cursor: 'pointer',
-    padding: '0 4px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.2s',
-    fontWeight: 'bold',
-  },
-  categorySelect: {
-    width: '100%',
-    height: '52px',
-    padding: '0 20px',
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.25)',
-    borderRadius: '14px',
-    fontSize: '15px',
-    fontWeight: 500,
-    outline: 'none',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    background: 'white',
-    color: theme.colors.text,
-    fontFamily: 'inherit',
-    cursor: 'pointer',
-    appearance: 'none',
-    backgroundImage: `url("data:image/svg+xml,%3Csvg width='14' height='9' viewBox='0 0 14 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L7 7.5L13 1.5' stroke='%239B5DE5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'right 20px center',
-    paddingRight: '52px',
-  },
-  socialSection: {
-    padding: '28px 24px',
-    background: 'rgba(155, 93, 229, 0.02)',
-    borderRadius: '20px',
-    border: '2px dashed',
-    borderColor: 'rgba(155, 93, 229, 0.2)',
-  },
-  socialHeader: {
-    textAlign: 'center',
-    marginBottom: '24px',
-  },
-  socialTitle: {
-    fontSize: '20px',
-    fontWeight: 650,
-    color: theme.colors.text,
-    margin: '0 0 6px 0',
-  },
-  socialSubtitle: {
-    fontSize: '13px',
-    color: theme.colors.muted,
-    margin: 0,
-  },
-  socialGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: '16px',
-  },
-  errorText: {
-    fontSize: '13px',
-    color: '#ef4444',
-    marginTop: '4px',
-  },
-  errorMessage: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '14px 18px',
-    background: 'rgba(239, 68, 68, 0.1)',
-    border: '2px solid',
-    borderColor: '#ef4444',
-    borderRadius: '12px',
-    color: '#ef4444',
-    fontSize: '14px',
-    fontWeight: 500,
-  },
-  errorIcon: {
-    fontSize: '20px',
-  },
-  actions: {
-    display: 'flex',
-    gap: '16px',
-    marginTop: '8px',
-  },
-  skipBtn: {
-    flex: 1,
-    height: '52px',
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.3)',
-    borderRadius: '14px',
-    background: 'transparent',
-    color: theme.colors.muted,
-    fontSize: '16px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.3s',
-    fontFamily: 'inherit',
-  },
-  submitBtn: {
-    flex: 2,
-    height: '56px',
-    border: 'none',
-    borderRadius: '14px',
-    background: theme.gradients.innovator,
-    color: 'white',
-    fontSize: '17px',
-    fontWeight: 700,
-    cursor: 'pointer',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 8px 24px rgba(155, 93, 229, 0.3)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '10px',
-    fontFamily: 'inherit',
-    position: 'relative',
-    overflow: 'hidden',
-    transform: 'scale(1)',
-  } as CSSProperties & {
-    '&:hover'?: CSSProperties;
-    '&:active'?: CSSProperties;
-  },
-  submitBtnHover: {
-    transform: 'translateY(-1px)',
-    boxShadow: '0 8px 24px rgba(155, 93, 229, 0.3)',
-  },
-  submitBtnActive: {
-    transform: 'translateY(0)',
-    boxShadow: '0 4px 12px rgba(155, 93, 229, 0.2)',
-  },
-  submitBtnLoading: {
-    opacity: 0.7,
-    cursor: 'not-allowed',
-  },
-  spinner: {
-    width: '20px',
-    height: '20px',
-    border: '3px solid',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderTopColor: 'white',
-    borderRadius: '50%',
-    animation: 'spin 0.8s linear infinite',
-  },
-};
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+export const Container = styled.div`
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  position: relative;
+  overflow: hidden;
+  overflow-x: hidden;
+
+  ${media.tablet} {
+    padding: 24px 20px;
+  }
+`;
+
+export const Content = styled.div`
+  width: 100%;
+  max-width: 800px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  padding: 56px 72px;
+  box-shadow: 0 20px 60px rgba(155, 93, 229, 0.15);
+  border: 2px solid rgba(200, 200, 200, 0.3);
+  position: relative;
+  z-index: 1;
+
+  ${media.tablet} {
+    padding: 40px 24px;
+    border-radius: 20px;
+  }
+`;
+
+export const Header = styled.div`
+  text-align: center;
+  margin-bottom: 40px;
+
+  ${media.tablet} {
+    margin-bottom: 32px;
+  }
+`;
+
+export const Title = styled.h1`
+  font-size: 40px;
+  font-weight: 630;
+  color: ${theme.colors.text};
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+
+  ${media.tablet} {
+    font-size: 32px;
+  }
+`;
+
+export const TitleHighlight = styled.span`
+  font-family: "Playfair Display", serif;
+  font-weight: 750;
+  font-style: italic;
+  background: ${theme.gradients.innovator};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+`;
+
+export const Subtitle = styled.p`
+  font-size: 16px;
+  color: ${theme.colors.muted};
+  line-height: 1.6;
+
+  ${media.tablet} {
+    font-size: 15px;
+  }
+`;
+
+export const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+`;
+
+export const MainContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+export const Row = styled.div`
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 32px;
+  align-items: flex-start;
+
+  ${media.tablet} {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+`;
+
+export const NameAndSloganColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+export const FormGroupStacked = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+export const FormGroupRight = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+export const Label = styled.label`
+  font-size: 15px;
+  font-weight: 600;
+  color: ${theme.colors.text};
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+export const Required = styled.span`
+  color: #ef4444;
+  font-size: 18px;
+`;
+
+export const LogoCenterLabel = styled.label`
+  font-size: 15px;
+  font-weight: 600;
+  color: ${theme.colors.text};
+  text-align: center;
+  gap: 4px;
+`;
+
+export const LogoUploadArea = styled.div`
+  display: flex;
+  justify-content: center;
+`;
+
+export const LogoPreviewContainer = styled.div`
+  position: relative;
+  width: 160px;
+  height: 160px;
+`;
+
+export const LogoPreview = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 3px solid ${theme.colors.primary};
+  box-shadow: ${theme.shadows.md};
+`;
+
+export const RemoveLogoBtn = styled.button`
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 3px solid white;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+`;
+
+export const LogoUploadPlaceholder = styled.div<{ $isHovered?: boolean }>`
+  width: 160px;
+  height: 160px;
+  border: 3px dashed rgba(155, 93, 229, 0.3);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 0.5);
+  background: rgba(155, 93, 229, 0.03);
+
+  ${props => props.$isHovered ? `
+    border-color: rgba(155, 93, 229, 0.6);
+    background: rgba(155, 93, 229, 0.08);
+    transform: scale(1.01);
+    box-shadow: 0 4px 12px rgba(155, 93, 229, 0.15);
+  ` : ``}
+`;
+
+export const UploadIcon = styled.span`
+  font-size: 48px;
+`;
+
+export const UploadText = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: ${theme.colors.primary};
+`;
+
+export const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+export const Input = styled.input<{ $isError?: boolean }>`
+  height: 52px;
+  padding: 0 18px;
+  border: 2px solid rgba(155, 93, 229, 0.2);
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+  background: white;
+  color: ${theme.colors.text};
+  font-family: inherit;
+  width: 100%;
+
+  &:hover, &:focus {
+    border-color: rgba(155, 93, 229, 0.35);
+  }
+
+  ${props => props.$isError ? `
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+  ` : ``}
+`;
+
+export const InputWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+export const CharCountInside = styled.span`
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: ${theme.colors.muted};
+  pointer-events: none;
+`;
+
+const arrowSvg = `url("data:image/svg+xml,%3Csvg width='14' height='9' viewBox='0 0 14 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L7 7.5L13 1.5' stroke='%239B5DE5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`;
+
+export const CategorySelect = styled.select`
+  width: 100%;
+  height: 52px;
+  padding: 0 52px 0 20px;
+  border: 2px solid rgba(155, 93, 229, 0.25);
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+  color: ${theme.colors.text};
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  background-image: ${arrowSvg};
+  background-repeat: no-repeat;
+  background-position: right 20px center;
+
+  & option {
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 500;
+    background: white;
+    color: #333;
+    border-bottom: 1px solid rgba(155, 93, 229, 0.1);
+  }
+  & option:hover {
+    background: rgba(155, 93, 229, 0.08);
+    color: ${theme.colors.primary};
+  }
+  & option:checked {
+    background: linear-gradient(135deg, rgba(155, 93, 229, 0.15), rgba(155, 93, 229, 0.08));
+    color: ${theme.colors.primary};
+    font-weight: 600;
+  }
+  &:hover {
+    border-color: rgba(155, 93, 229, 0.5);
+  }
+  &:focus {
+    border-color: ${theme.colors.primary};
+    box-shadow: 0 0 0 3px rgba(155, 93, 229, 0.1);
+  }
+`;
+
+export const ErrorText = styled.span`
+  font-size: 13px;
+  color: #ef4444;
+  margin-top: 4px;
+`;
+
+export const ErrorMessageWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px solid #ef4444;
+  border-radius: 12px;
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+`;
+
+export const ErrorIcon = styled.span`
+  font-size: 20px;
+`;
+
+export const Actions = styled.div`
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+`;
+
+export const SubmitBtn = styled.button<{ $isSubmitting?: boolean; $isHovered?: boolean; $isActive?: boolean }>`
+  flex: 2;
+  height: 56px;
+  border: none;
+  border-radius: 14px;
+  background: ${theme.gradients.innovator};
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: ${props => props.$isSubmitting ? 'not-allowed' : 'pointer'};
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(155, 93, 229, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+  transform: ${props => props.$isActive ? 'translateY(0)' : props.$isHovered ? 'translateY(-1px)' : 'scale(1)'};
+  opacity: ${props => props.$isSubmitting ? 0.7 : 1};
+  
+  ${props => props.$isActive ? `box-shadow: 0 4px 12px rgba(155, 93, 229, 0.2);` : ``}
+`;
+
+export const Ripple = styled.span`
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  animation: ${ripple} 0.6s ease-out;
+  pointer-events: none;
+`;
+
+export const Spinner = styled.div`
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: ${spin} 0.8s linear infinite;
+`;
+
+export const BackButton = styled.button`
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9b5de5;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 50;
+  border-radius: 50%;
+
+  &:hover {
+    background: rgba(155, 93, 229, 0.1);
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  ${media.tablet} {
+    top: 16px;
+    right: 16px;
+  }
+`;

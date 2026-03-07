@@ -42,7 +42,8 @@ export const EyeBtn = styled.button`
   color: ${theme.colors.muted};
 `;
 
-export const EyeIcon = styled.svg`
-  width: 20px;
-  height: 20px;
+export const EyeIcon = styled.img`
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 `;

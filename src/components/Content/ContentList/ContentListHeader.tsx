@@ -1,5 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { styles } from './styles';
+import { 
+  ListHeader, 
+  ListIcon, 
+  ListTitleGroup, 
+  ListTitleContainer, 
+  ListTitle, 
+  ListTitleClickable, 
+  ListTitleEditable, 
+  ListSubtitle, 
+  BrandGradient,
+  ActionButton
+} from './styles';
 import { formatSystemListTitle } from '@models/ContentList';
 
 interface ContentListHeaderProps {
@@ -20,9 +31,7 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
   icon,
   title,
   subtitle,
-  isSystem,
   isEditable,
-  listId,
   isNewList = false,
   onTitleChange,
   onIconClick,
@@ -36,25 +45,24 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
   const [isSaveHovered, setIsSaveHovered] = useState(false);
   const [titleValue, setTitleValue] = useState(title);
   const [originalTitle, setOriginalTitle] = useState(title);
-  const iconRef = useRef<HTMLSpanElement>(null);
+  const iconRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Update title when prop changes
   useEffect(() => {
     setTitleValue(title);
     setOriginalTitle(title);
   }, [title]);
 
-  // Focus input when entering edit mode
   useEffect(() => {
     if (isEditMode && titleInputRef.current) {
       titleInputRef.current.focus();
-      titleInputRef.current.select();
+      // Place cursor at the end instead of selecting all
+      const length = titleInputRef.current.value.length;
+      titleInputRef.current.setSelectionRange(length, length);
     }
   }, [isEditMode]);
 
-  // Handle click outside to exit edit mode
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -103,8 +111,8 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
     e.stopPropagation();
 
     if (isEditable) {
-      setIsEditMode(true);
-      setIsIconHovered(false); // Reset hover state
+      // Don't enter edit mode for title, just trigger icon click
+      setIsIconHovered(false);
       if (iconRef.current) {
         onIconClick(iconRef.current);
       }
@@ -114,7 +122,7 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
   const handleTitleClick = () => {
     if (isEditable && !isEditMode) {
       setIsEditMode(true);
-      setIsTitleHovered(false); // Reset hover state
+      setIsTitleHovered(false);
     }
   };
 
@@ -124,87 +132,56 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
     onDelete();
   };
 
-  // Render system list title with gradient
   const renderTitle = () => {
     const gradientParts = formatSystemListTitle(title);
 
     if (gradientParts) {
       return (
-        <h2 style={styles.listTitle}>
+        <ListTitle>
           <span style={{ color: '#111827' }}>{gradientParts.prefix}</span>
-          <span style={styles.brandGradient}>{gradientParts.gradient}</span>
-        </h2>
+          <BrandGradient>{gradientParts.gradient}</BrandGradient>
+        </ListTitle>
       );
     }
 
-    return <h2 style={styles.listTitle}>{title}</h2>;
-  };
-
-  const iconStyle = {
-    ...styles.listIcon,
-    ...(isEditable ? {
-      ...styles.listIconEditable,
-      ...(isEditMode ? styles.listIconEditMode : {}),
-      ...(!isEditMode && isIconHovered ? styles.listIconHover : {}),
-    } : {}),
-  };
-
-  const titleContainerStyle = {
-    ...styles.listTitleClickable,
-    ...(isEditable && !isEditMode && isTitleHovered ? styles.listTitleHover : {}),
-  };
-
-  const inputStyle = {
-    ...styles.listTitleEditable,
-    ...(isEditMode ? styles.listTitleEditableFocus : {}),
-  };
-
-  const deleteButtonStyle = {
-    ...styles.listDeleteBtn,
-    ...(isEditMode ? styles.listDeleteBtnVisible : {}),
-    ...(isDeleteHovered ? styles.listDeleteBtnHover : {}),
-  };
-
-  const saveButtonStyle = {
-    ...styles.listSaveBtn,
-    ...(isEditMode ? styles.listSaveBtnVisible : {}),
-    ...(isSaveHovered ? styles.listSaveBtnHover : {}),
+    return <ListTitle>{title}</ListTitle>;
   };
 
   return (
-    <div ref={containerRef} style={styles.listHeader}>
-      <span
+    <ListHeader ref={containerRef}>
+      <ListIcon
         ref={iconRef}
-        className="list-icon"
-        style={iconStyle}
+        $isEditable={isEditable}
+        $isEditMode={isEditMode}
+        $isHovered={isIconHovered}
         onClick={handleIconClick}
         onMouseEnter={() => setIsIconHovered(true)}
         onMouseLeave={() => setIsIconHovered(false)}
       >
         {icon}
-      </span>
-      <div style={styles.listTitleGroup}>
-        <div style={styles.listTitleContainer}>
+      </ListIcon>
+      <ListTitleGroup>
+        <ListTitleContainer>
           {isEditable ? (
             isEditMode ? (
-              <input
+              <ListTitleEditable
                 ref={titleInputRef}
                 type="text"
-                style={inputStyle}
+                $isFocused={true}
                 value={titleValue}
-                onChange={(e) => setTitleValue(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitleValue(e.target.value)}
                 onKeyDown={handleTitleKeyDown}
                 placeholder="My new playlist"
               />
             ) : (
-              <div
-                style={titleContainerStyle}
+              <ListTitleClickable
+                $isHovered={isTitleHovered}
                 onClick={handleTitleClick}
                 onMouseEnter={() => setIsTitleHovered(true)}
                 onMouseLeave={() => setIsTitleHovered(false)}
               >
-                <h2 style={styles.listTitleDisplay}>{titleValue}</h2>
-              </div>
+                <ListTitle>{titleValue}</ListTitle>
+              </ListTitleClickable>
             )
           ) : (
             renderTitle()
@@ -212,17 +189,21 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
 
           {isEditable && isEditMode && (
             <>
-              <button
-                style={saveButtonStyle}
+              <ActionButton
+                $type="save"
+                $visible={true}
+                $isHovered={isSaveHovered}
                 onClick={handleSave}
                 onMouseEnter={() => setIsSaveHovered(true)}
                 onMouseLeave={() => setIsSaveHovered(false)}
                 title="Save changes"
               >
                 ✓
-              </button>
-              <button
-                style={deleteButtonStyle}
+              </ActionButton>
+              <ActionButton
+                $type="delete"
+                $visible={true}
+                $isHovered={isDeleteHovered}
                 onClick={handleDeleteClick}
                 onMouseEnter={() => setIsDeleteHovered(true)}
                 onMouseLeave={() => setIsDeleteHovered(false)}
@@ -234,13 +215,13 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
                   <path d="M10 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M14 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </button>
+              </ActionButton>
             </>
           )}
-        </div>
-        {subtitle && <p style={styles.listSubtitle}>{subtitle}</p>}
-      </div>
-    </div>
+        </ListTitleContainer>
+        {subtitle && <ListSubtitle>{subtitle}</ListSubtitle>}
+      </ListTitleGroup>
+    </ListHeader>
   );
 };
 

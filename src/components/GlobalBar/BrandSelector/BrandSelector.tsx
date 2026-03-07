@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Brand, getLogoDataUrl } from '@models/Brand';
-import { styles } from './styles';
-import { theme } from '@theme/theme';
+import { Container, Selector, TenantName, BrandIcon, Dropdown, Option, OptIcon, AddBrandBtn, AddIcon, LogoImage } from './styles';
 
 interface BrandSelectorProps {
   brands: Brand[];
-  currentBrand: Brand | null; // Updated to allow null
+  currentBrand: Brand | null;
   onBrandChange: (brandId: string) => void;
 }
 
@@ -38,14 +37,13 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
     };
   }, [isOpen]);
 
-  // Prevent crash if currentBrand is not loaded yet
   if (!currentBrand) {
     return (
-      <div style={styles.container}>
-        <div style={{ ...styles.selector, opacity: 0.7, cursor: 'wait' }}>
-          <span style={styles.tenantName}>Loading...</span>
-        </div>
-      </div>
+      <Container>
+        <Selector $isHovered={false} style={{ opacity: 0.7, cursor: 'wait' }}>
+          <TenantName>Loading...</TenantName>
+        </Selector>
+      </Container>
     );
   }
 
@@ -58,105 +56,73 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
     navigate('/create-new-brand');
   };
 
-  // Fixed selector style - explicitly set border and boxShadow in both states
-  const selectorStyle = {
-    ...styles.selector,
-    border: isHovered
-      ? `2px solid ${theme.colors.primary}`
-      : `2px solid ${theme.colors.secondary}`,
-    boxShadow: isHovered
-      ? '0 8px 25px rgba(251, 191, 36, 0.3)'
-      : 'none',
-    ...(isHovered ? {
-      transform: 'translateY(-2px)',
-    } : {}),
-  };
-
-  const addBrandStyle = {
-    ...styles.addBrand,
-    ...(hoveredAddBtn ? {
-      background: 'rgba(20, 184, 166, 0.05)',
-      color: theme.colors.teal,
-    } : {}),
-  };
-
   const currentBrandLogo = getLogoDataUrl(currentBrand.logo);
 
   return (
-    <div ref={selectorRef} style={styles.container}>
-      <div
-        style={selectorStyle}
+    <Container ref={selectorRef}>
+      <Selector
+        $isHovered={isHovered}
         onClick={() => setIsOpen(!isOpen)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         role="button"
         tabIndex={0}
       >
-        <span style={styles.tenantName}>{currentBrand.name}</span>
-        <div style={styles.brandIcon}>
+        <TenantName>{currentBrand.name}</TenantName>
+        <BrandIcon>
           {currentBrandLogo ? (
-            <img
+            <LogoImage
               src={currentBrandLogo}
               alt={`${currentBrand.name} logo`}
-              style={styles.logoImage}
             />
           ) : (
             currentBrand.icon
           )}
-        </div>
-      </div>
+        </BrandIcon>
+      </Selector>
 
       {isOpen && (
-        <div style={styles.dropdown}>
+        <Dropdown>
           {brands.map((brand) => {
             const isActive = brand.id === currentBrand.id;
             const isOptionHovered = hoveredOption === brand.id;
-
-            const optionStyle = {
-              ...styles.option,
-              ...(isActive ? styles.optionActive : {}),
-              ...(isOptionHovered && !isActive ? {
-                background: theme.colors.primaryLight,
-              } : {}),
-            };
-
             const brandLogo = getLogoDataUrl(brand.logo);
 
             return (
-              <button
+              <Option
                 key={brand.id}
-                style={optionStyle}
+                $isActive={isActive}
+                $isHovered={isOptionHovered}
                 onClick={() => handleBrandSelect(brand.id)}
                 onMouseEnter={() => setHoveredOption(brand.id)}
                 onMouseLeave={() => setHoveredOption(null)}
               >
-                <span style={styles.optIcon}>
+                <OptIcon>
                   {brandLogo ? (
-                    <img
+                    <LogoImage
                       src={brandLogo}
                       alt={`${brand.name} logo`}
-                      style={styles.logoImage}
                     />
                   ) : (
                     brand.icon
                   )}
-                </span>
+                </OptIcon>
                 <span>{brand.name}</span>
-              </button>
+              </Option>
             );
           })}
-          <button
-            style={addBrandStyle}
+          <AddBrandBtn
+            $isHovered={hoveredAddBtn}
             onClick={handleAddBrand}
             onMouseEnter={() => setHoveredAddBtn(true)}
             onMouseLeave={() => setHoveredAddBtn(false)}
           >
-            <span style={styles.addIcon}>➕</span>
+            <AddIcon>➕</AddIcon>
             <span>Add a new Brand</span>
-          </button>
-        </div>
+          </AddBrandBtn>
+        </Dropdown>
       )}
-    </div>
+    </Container>
   );
 };
 

@@ -2,7 +2,22 @@ import React, { useState } from 'react';
 import { SocialPlatform, PLATFORM_COLORS, PLATFORM_NAMES } from '@models/SocialAccount';
 import { useConnectPlatform } from '@/hooks/platforms/useConnectPlatform';
 import ConfirmDialog from '@/components/Scheduler/CreateModals/ConfirmDialog/ConfirmDialog';
-import { socialCardStyles as styles } from './styles';
+import { 
+  CardContainer, 
+  GradientOverlay, 
+  CardTopSection, 
+  CardIconContainer, 
+  Icon, 
+  IconEmoji, 
+  CardNameSection, 
+  CardPlatformName, 
+  CardConnectedBadge, 
+  CardAccountName, 
+  CardNotConnectedText, 
+  CardActionButton, 
+  Spinner, 
+  CardAnimatedBorder 
+} from './styles';
 
 interface SocialConnectionCardProps {
   platform: SocialPlatform;
@@ -68,89 +83,70 @@ export const SocialConnectionCard: React.FC<SocialConnectionCardProps> = ({
   const [iconError, setIconError] = useState(false);
 
   return (
-    <div
-      style={{
-        ...styles.card,
-        ...(isHovered && !loading ? (isConnected ? styles.cardHoveredConnected : styles.cardHoveredDisconnected) : {}),
-        ...(isAnimating ? styles.cardAnimating : {}),
-      }}
+    <CardContainer
+      $isConnected={isConnected}
+      $isHovered={isHovered}
+      $isLoading={loading}
+      $isAnimating={isAnimating}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Background Gradient Overlay */}
-      <div
-        style={{
-          ...styles.gradientOverlay,
-          background: isConnected ? platformColors.gradient : 'transparent',
-          opacity: isConnected ? 0.015 : 0,
-        }}
+      <GradientOverlay
+        $isConnected={isConnected}
+        $platformGradient={platformColors.gradient}
       />
 
-      {/* Top Section: Icon and Platform Name */}
-      <div style={styles.topSection}>
-        {/* Icon Container */}
-        <div
-          style={{
-            ...styles.iconContainer,
-            background: platformColors.gradient,
-            ...(isHovered && !loading ? styles.iconContainerHovered : {}),
-          }}
+      <CardTopSection>
+        <CardIconContainer
+          $platformGradient={platformColors.gradient}
+          $isHovered={isHovered}
+          $isLoading={loading}
         >
           {!iconError ? (
-            <img
+            <Icon
               src={getIconPath()}
               alt={platformName}
-              style={styles.icon}
               onError={() => setIconError(true)}
             />
           ) : (
-            <span style={styles.iconEmoji}>{getIconEmoji()}</span>
+            <IconEmoji>{getIconEmoji()}</IconEmoji>
           )}
-        </div>
+        </CardIconContainer>
 
-        {/* Platform Name and Status */}
-        <div style={styles.nameSection}>
-          <h3 style={styles.platformName}>{platformName}</h3>
+        <CardNameSection>
+          <CardPlatformName>{platformName}</CardPlatformName>
           {isConnected && (
-            <span style={styles.connectedBadge}>● Connected</span>
+            <CardConnectedBadge>● Connected</CardConnectedBadge>
           )}
-        </div>
-      </div>
+        </CardNameSection>
+      </CardTopSection>
 
-      {/* Account Name */}
       {isConnected && account?.accountName ? (
-        <p style={styles.accountName}>{account.accountName}</p>
+        <CardAccountName>{account.accountName}</CardAccountName>
       ) : (
-        <p style={styles.notConnectedText}>Not connected</p>
+        <CardNotConnectedText>Not connected</CardNotConnectedText>
       )}
 
-      {/* Action Button */}
-      <button
-        style={{
-          ...styles.actionButton,
-          ...(isConnected ? styles.disconnectButton : styles.connectButton),
-          background: isConnected ? 'transparent' : platformColors.gradient,
-          ...(isHovered && !loading ? (isConnected ? styles.disconnectButtonHovered : styles.connectButtonHovered) : {}),
-        }}
+      <CardActionButton
+        $isConnected={isConnected}
+        $isHovered={isHovered}
+        $isLoading={loading}
+        $platformGradient={platformColors.gradient}
         onClick={handleAction}
         disabled={loading}
       >
         {loading ? (
-          <span style={styles.spinner} />
+          <Spinner />
         ) : isConnected ? (
           isHovered ? 'Disconnect' : 'Connected'
         ) : (
           'Connect'
         )}
-      </button>
+      </CardActionButton>
 
-      {/* Animated Border Effect for Connected State */}
       {isConnected && (
-        <div
-          style={{
-            ...styles.animatedBorder,
-            background: platformColors.gradient,
-          }}
+        <CardAnimatedBorder
+          $platformGradient={platformColors.gradient}
         />
       )}
 
@@ -164,6 +160,6 @@ export const SocialConnectionCard: React.FC<SocialConnectionCardProps> = ({
         onConfirm={confirmDisconnect}
         onCancel={() => setShowDisconnectConfirm(false)}
       />
-    </div>
+    </CardContainer>
   );
 };
