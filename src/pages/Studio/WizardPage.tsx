@@ -1,17 +1,17 @@
 
 import React from 'react';
-import { styles } from './styles';
+import { DefaultContent, ContentHeader, ContentTitle, ContentSubtitle } from './styles';
 
 const WizardPage: React.FC = () => {
   return (
-    <div style={styles.defaultContent}>
-      <div style={styles.contentHeader}>
-        <h1 style={styles.contentTitle}>Wizard</h1>
-        <p style={styles.contentSubtitle}>
+    <DefaultContent>
+      <ContentHeader>
+        <ContentTitle>Wizard</ContentTitle>
+        <ContentSubtitle>
           Step-by-step content creation wizard - Coming Soon
-        </p>
-      </div>
-    </div>
+        </ContentSubtitle>
+      </ContentHeader>
+    </DefaultContent>
   );
 };
 

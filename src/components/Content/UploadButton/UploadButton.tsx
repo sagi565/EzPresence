@@ -3,6 +3,7 @@ import {
   UploadButtonContainer, 
   UploadIcon 
 } from './styles';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface UploadButtonProps {
   listType: 'video' | 'image';
@@ -14,6 +15,7 @@ interface UploadButtonProps {
 const UploadButton: React.FC<UploadButtonProps> = ({ listType, onUpload, onNavigate }) => {
   const [isHovered, setIsHovered] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   const handleClick = () => {
     if (onNavigate) {
@@ -37,11 +39,12 @@ const UploadButton: React.FC<UploadButtonProps> = ({ listType, onUpload, onNavig
     <>
       <UploadButtonContainer
         $isHovered={isHovered}
+        $isMobile={isMobile}
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <UploadIcon>➕</UploadIcon>
+        <UploadIcon $isMobile={isMobile}>➕</UploadIcon>
       </UploadButtonContainer>
       <input
         ref={fileInputRef}

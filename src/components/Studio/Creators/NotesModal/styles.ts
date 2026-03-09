@@ -1,440 +1,543 @@
-import { CSSProperties } from 'react';
+import styled, { keyframes, css } from 'styled-components';
 import { theme } from '@theme/theme';
 
-export const styles: Record<string, CSSProperties> = {
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0, 0, 0, 0.5)',
-    backdropFilter: 'blur(4px)',
-    zIndex: 3000,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modal: {
-    width: '95%',
-    maxWidth: '70vw',
-    maxHeight: '85vh',
-    background: 'white',
-    borderRadius: '16px',
-    border: '2px solid',
-    borderColor: theme.colors.primary,
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.1), 0 0 22px 6px var(--color-primary)',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    animation: 'fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-  },
-  modalHeader: {
-    padding: '24px 28px',
-    borderBottom: '1px solid',
-    borderColor: 'rgba(155, 93, 229, 0.1)',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    background: 'linear-gradient(135deg, rgba(155, 93, 229, 0.03) 0%, rgba(251, 191, 36, 0.03) 100%)',
-  },
-  modalTitleGroup: {
-    flex: 1,
-  },
-  modalSubtitle: {
-    fontSize: '12px',
-    fontWeight: 700,
-    color: theme.colors.muted,
-    textTransform: 'uppercase',
-    letterSpacing: '0.12em',
-    marginBottom: '6px',
-  },
-  modalTitle: {
-    fontSize: '28px',
-    fontWeight: 800,
-    background: theme.gradients.innovator,
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-    margin: 0,
-  },
-  closeBtn: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '50%',
-    background: 'rgba(155, 93, 229, 0.08)',
-    border: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    fontSize: '18px',
-    color: theme.colors.muted,
-  },
-  closeBtnHover: {
-    background: 'rgba(155, 93, 229, 0.15)',
-    transform: 'rotate(90deg)',
-  },
-  modalBody: {
-    flex: 1,
-    padding: '28px',
-    overflowY: 'auto',
-    display: 'grid',
-    gridTemplateColumns: '1.618fr 1fr',
-    gap: '32px',
-  },
-  leftColumn: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-  },
-  rightColumn: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-  },
-  formGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: 700,
-    color: theme.colors.text,
-  },
-  textarea: {
-    width: '100%',
-    minHeight: '120px',
-    padding: '14px',
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.15)',
-    borderRadius: '12px',
-    background: 'rgba(249, 250, 251, 0.5)',
-    fontSize: '14px',
-    lineHeight: 1.6,
-    resize: 'vertical',
-    transition: 'all 0.2s',
-    color: theme.colors.text,
-    fontFamily: 'inherit',
-    outline: 'none',
-  },
-  textareaError: {
-    borderColor: '#ef4444',
-    animation: 'shake 0.3s ease',
-  },
-  helper: {
-    fontSize: '12px',
-    color: theme.colors.muted,
-  },
-  themeGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '12px',
-  },
-  themeOption: {
-    position: 'relative',
-    borderRadius: '10px',
-    overflow: 'hidden',
-    cursor: 'pointer',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    border: '3px solid',
-    borderColor: 'transparent',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-  },
-  themeOptionHover: {
-    transform: 'translateY(-3px)',
-    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.12)',
-    borderColor: theme.colors.primary,
-  },
-  themeOptionSelected: {
-    borderColor: theme.colors.secondary,
-    boxShadow: '0 0 0 4px rgba(251, 191, 36, 0.25)',
-  },
-  themeOptionError: {
-    borderColor: '#ef4444',
-    animation: 'shake 0.3s ease',
-  },
-  themeThumbnail: {
-    aspectRatio: '9/16',
-    width: '100%',
-    position: 'relative',
-  },
-  themeName: {
-    position: 'absolute',
-    bottom: '6px',
-    left: '6px',
-    right: '6px',
-    background: 'rgba(255, 255, 255, 0.95)',
-    padding: '5px 8px',
-    borderRadius: '6px',
-    fontSize: '10px',
-    fontWeight: 600,
-    textAlign: 'center',
-    color: theme.colors.text,
-  },
-  logoSelector: {
-    display: 'flex',
-    gap: '10px',
-  },
-  logoOption: {
-    width: '72px',
-    height: '72px',
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.15)',
-    borderRadius: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    background: 'rgba(249, 250, 251, 0.5)',
-    position: 'relative',
-    flexDirection: 'column',
-    gap: '4px',
-    padding: '8px',
-  },
-  logoOptionHover: {
-    borderColor: theme.colors.primary,
-    transform: 'translateY(-2px)',
-    boxShadow: '0 4px 12px rgba(155, 93, 229, 0.15)',
-  },
-  logoOptionSelected: {
-    borderColor: theme.colors.secondary,
-    background: 'rgba(251, 191, 36, 0.05)',
-    boxShadow: '0 0 0 4px rgba(251, 191, 36, 0.25)',
-  },
-  logoIcon: {
-    fontSize: '28px',
-  },
-  logoText: {
-    fontSize: '9px',
-    fontWeight: 600,
-    textAlign: 'center',
-    color: theme.colors.text,
-  },
-  logoSaved: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '8px',
-    background: theme.colors.secondary,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '22px',
-    border: '2px solid',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    boxShadow: '0 2px 8px rgba(251, 191, 36, 0.2)',
-  },
-  logoAdd: {
-    color: theme.colors.teal,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '2px',
-  },
-  logoAddText: {
-    fontSize: '8px',
-    fontWeight: 600,
-    color: theme.colors.muted,
-  },
-  soundGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(5, 1fr)',
-    gap: '8px',
-    gridAutoRows: 'minmax(70px, auto)',
-  },
-  soundOption: {
-    border: '2px solid',
-    borderColor: 'rgba(155, 93, 229, 0.15)',
-    borderRadius: '8px',
-    padding: '10px 6px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '4px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    background: 'rgba(249, 250, 251, 0.5)',
-    position: 'relative',
-    minHeight: '70px',
-  },
-  soundOptionHover: {
-    borderColor: theme.colors.primary,
-    transform: 'translateY(-2px)',
-    boxShadow: '0 4px 12px rgba(155, 93, 229, 0.15)',
-  },
-  soundOptionSelected: {
-    borderColor: theme.colors.secondary,
-    background: 'rgba(251, 191, 36, 0.05)',
-    boxShadow: '0 0 0 4px rgba(251, 191, 36, 0.25)',
-  },
-  soundIcon: {
-    fontSize: '18px',
-    color: theme.colors.primary,
-  },
-  soundName: {
-    fontSize: '9px',
-    fontWeight: 600,
-    textAlign: 'center',
-    color: theme.colors.text,
-  },
-  soundFavorite: {
-    position: 'absolute',
-    top: '2px',
-    right: '2px',
-    fontSize: '10px',
-    color: theme.colors.pink,
-  },
-  libraryBtn: {
-    padding: '10px 20px',
-    borderRadius: '10px',
-    fontWeight: 600,
-    fontSize: '13px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    background: 'transparent',
-    color: theme.colors.primary,
-    border: '2px solid',
-    borderColor: theme.colors.primary,
-    marginTop: '8px',
-  },
-  libraryBtnHover: {
-    background: 'rgba(155, 93, 229, 0.08)',
-    transform: 'translateY(-1px)',
-  },
-  modalFooter: {
-    padding: '20px 28px',
-    borderTop: '1px solid',
-    borderColor: 'rgba(155, 93, 229, 0.1)',
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '12px',
-    background: 'rgba(249, 250, 251, 0.5)',
-  },
-  generateBtn: {
-    padding: '18px 24px',
-    background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
-    border: 'none',
-    borderColor: 'transparent',
-    borderRadius: '14px',
-    color: 'white',
-    fontWeight: 700,
-    fontSize: '15px',
-    cursor: 'pointer',
-    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 6px 20px rgba(155, 93, 229, 0.3), 0 3px 10px rgba(251, 191, 36, 0.25)',
-    position: 'relative',
-    overflow: 'hidden',
-    letterSpacing: '0.5px',
-  },
-  generateBtnHover: {
-    transform: 'translateY(-4px) scale(1.02)',
-    boxShadow: '0 12px 35px rgba(155, 93, 229, 0.5), 0 8px 20px rgba(251, 191, 36, 0.4), 0 0 30px rgba(155, 93, 229, 0.3)',
-    filter: 'brightness(1.1)',
-  },
-  generateBtnActive: {
-    transform: 'translateY(-2px) scale(0.98)',
-  },
-  confirmOverlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0, 0, 0, 0.5)',
-    backdropFilter: 'blur(4px)',
-    zIndex: 3001,
-  },
-  confirmDialog: {
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    background: 'white',
-    borderRadius: '16px',
-    padding: '28px',
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)',
-    zIndex: 3002,
-    maxWidth: '400px',
-    textAlign: 'center',
-  },
-  confirmTitle: {
-    fontSize: '18px',
-    fontWeight: 700,
-    marginBottom: '16px',
-    color: theme.colors.text,
-  },
-  confirmMessage: {
-    fontSize: '14px',
-    lineHeight: 1.6,
-    color: theme.colors.muted,
-    marginBottom: '24px',
-    whiteSpace: 'pre-line',
-  },
-  creditsBold: {
-    fontWeight: 700,
-    color: theme.colors.text,
-  },
-  confirmButtons: {
-    display: 'flex',
-    gap: '12px',
-    justifyContent: 'center',
-  },
-  confirmBtn: {
-    padding: '12px 24px',
-    borderRadius: '10px',
-    fontWeight: 600,
-    fontSize: '14px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    border: 'none',
-    borderColor: 'transparent',
-  },
-  confirmBtnCancel: {
-    background: 'rgba(107, 114, 128, 0.1)',
-    color: theme.colors.muted,
-  },
-  confirmBtnCancelHover: {
-    background: 'rgba(107, 114, 128, 0.15)',
-  },
-  confirmBtnProceed: {
-    background: theme.gradients.innovator,
-    color: 'white',
-    boxShadow: '0 4px 12px rgba(155, 93, 229, 0.3)',
-  },
-  confirmBtnProceedHover: {
-    transform: 'translateY(-1px)',
-    boxShadow: '0 6px 20px rgba(155, 93, 229, 0.4)',
-  },
-  celebrationContainer: {
-    position: 'fixed',
-    inset: 0,
-    zIndex: 3005,
-    pointerEvents: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  celebrationContent: {
-    textAlign: 'center',
-    animation: 'celebrationPulse 2s ease-out',
-  },
-  celebrationIcon: {
-    fontSize: '80px',
-    marginBottom: '20px',
-  },
-  celebrationText: {
-    fontSize: '32px',
-    fontWeight: 800,
-    background: theme.gradients.innovator,
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-  },
-  confetti: {
-    position: 'absolute',
-    width: '10px',
-    height: '10px',
-    background: theme.colors.secondary,
-    animation: 'confettiFall 3s ease-out forwards',
-  },
-};
+// Animations
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const shake = keyframes`
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+`;
+
+const celebrationPulse = keyframes`
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+const confettiFall = keyframes`
+  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+`;
+
+// Modal Shell Components
+export const ModalOverlay = styled.div<{ $depth?: boolean }>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: ${props => props.$depth ? 2999 : 3000};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const ModalContainer = styled.div`
+  width: 95%;
+  maxWidth: 70vw;
+  maxHeight: 85vh;
+  background: white;
+  border-radius: 16px;
+  border: 2px solid ${theme.colors.primary};
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), 0 0 22px 6px rgba(155, 93, 229, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: ${fadeInUp} 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (max-width: 768px) {
+    maxWidth: 95vw;
+    maxHeight: 95vh;
+  }
+`;
+
+// Header Components
+export const ModalHeader = styled.div`
+  padding: 24px 28px;
+  border-bottom: 1px solid rgba(155, 93, 229, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(155, 93, 229, 0.03) 0%, rgba(251, 191, 36, 0.03) 100%);
+
+  @media (max-width: 768px) {
+    padding: 16px 20px;
+  }
+`;
+
+export const TitleGroup = styled.div`
+  flex: 1;
+`;
+
+export const Subtitle = styled.div`
+  font-size: 12px;
+  font-weight: 700;
+  color: ${theme.colors.muted};
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+`;
+
+export const Title = styled.h2`
+  font-size: 28px;
+  font-weight: 800;
+  background: ${theme.gradients.innovator};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 20px;
+  }
+`;
+
+export const CloseBtn = styled.button`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(155, 93, 229, 0.08);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 18px;
+  color: ${theme.colors.muted};
+
+  &:hover {
+    background: rgba(155, 93, 229, 0.15);
+    transform: rotate(90deg);
+  }
+`;
+
+// Body Components
+export const ModalBody = styled.div`
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1.618fr 1fr;
+  gap: 32px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+`;
+
+export const LeftColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+export const RightColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+export const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+export const Label = styled.label`
+  font-size: 14px;
+  font-weight: 700;
+  color: ${theme.colors.text};
+`;
+
+export const Textarea = styled.textarea<{ $error?: boolean }>`
+  width: 100%;
+  min-height: 120px;
+  padding: 14px;
+  border: 2px solid ${props => props.$error ? '#ef4444' : 'rgba(155, 93, 229, 0.15)'};
+  border-radius: 12px;
+  background: rgba(249, 250, 251, 0.5);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  transition: all 0.2s;
+  color: ${theme.colors.text};
+  font-family: inherit;
+  outline: none;
+  animation: ${props => props.$error ? css`${shake} 0.3s ease` : 'none'};
+
+  &:focus {
+    border-color: ${theme.colors.primary};
+    background: white;
+  }
+`;
+
+export const HelperText = styled.div`
+  font-size: 12px;
+  color: ${theme.colors.muted};
+`;
+
+export const ThemeGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+`;
+
+export const ThemeOption = styled.div<{ $selected?: boolean; $error?: boolean }>`
+  position: relative;
+  borderRadius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 3px solid ${props => {
+    if (props.$error) return '#ef4444';
+    if (props.$selected) return theme.colors.secondary;
+    return 'transparent';
+  }};
+  box-shadow: ${props => props.$selected ? '0 0 0 4px rgba(251, 191, 36, 0.25)' : '0 2px 8px rgba(0, 0, 0, 0.08)'};
+  animation: ${props => props.$error ? css`${shake} 0.3s ease` : 'none'};
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    border-color: ${props => props.$selected ? theme.colors.secondary : theme.colors.primary};
+  }
+`;
+
+export const ThemeThumbnail = styled.div`
+  aspect-ratio: 9/16;
+  width: 100%;
+  position: relative;
+`;
+
+export const ThemeName = styled.div`
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 5px 8px;
+  border-radius: 6px;
+  fontSize: 10px;
+  fontWeight: 600;
+  textAlign: center;
+  color: ${theme.colors.text};
+`;
+
+export const LogoSelector = styled.div`
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
+
+export const LogoOption = styled.div<{ $selected?: boolean }>`
+  width: 72px;
+  height: 72px;
+  border: 2px solid ${props => props.$selected ? theme.colors.secondary : 'rgba(155, 93, 229, 0.15)'};
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: ${props => props.$selected ? 'rgba(251, 191, 36, 0.05)' : 'rgba(249, 250, 251, 0.5)'};
+  position: relative;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  box-shadow: ${props => props.$selected ? '0 0 0 4px rgba(251, 191, 36, 0.25)' : 'none'};
+
+  &:hover {
+    border-color: ${theme.colors.primary};
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(155, 93, 229, 0.15);
+  }
+`;
+
+export const LogoIcon = styled.div`
+  font-size: 28px;
+`;
+
+export const LogoText = styled.div`
+  font-size: 9px;
+  font-weight: 600;
+  textAlign: center;
+  color: ${theme.colors.text};
+`;
+
+export const LogoSaved = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: ${theme.colors.secondary};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
+`;
+
+export const LogoAdd = styled.div`
+  color: ${theme.colors.teal};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+`;
+
+export const LogoAddText = styled.div`
+  font-size: 8px;
+  font-weight: 600;
+  color: ${theme.colors.muted};
+`;
+
+export const SoundGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  grid-auto-rows: minmax(70px, auto);
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+`;
+
+export const SoundOption = styled.div<{ $selected?: boolean }>`
+  border: 2px solid ${props => props.$selected ? theme.colors.secondary : 'rgba(155, 93, 229, 0.15)'};
+  border-radius: 8px;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: ${props => props.$selected ? 'rgba(251, 191, 36, 0.05)' : 'rgba(249, 250, 251, 0.5)'};
+  position: relative;
+  min-height: 70px;
+  box-shadow: ${props => props.$selected ? '0 0 0 4px rgba(251, 191, 36, 0.25)' : 'none'};
+
+  &:hover {
+    border-color: ${theme.colors.primary};
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(155, 93, 229, 0.15);
+  }
+`;
+
+export const SoundIcon = styled.div`
+  font-size: 18px;
+  color: ${theme.colors.primary};
+`;
+
+export const SoundName = styled.div`
+  font-size: 9px;
+  font-weight: 600;
+  textAlign: center;
+  color: ${theme.colors.text};
+`;
+
+export const SoundFavorite = styled.div`
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 10px;
+  color: ${theme.colors.pink};
+`;
+
+export const LibraryBtn = styled.button`
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  color: ${theme.colors.primary};
+  border: 2px solid ${theme.colors.primary};
+  marginTop: 8px;
+
+  &:hover {
+    background: rgba(155, 93, 229, 0.08);
+    transform: translateY(-1px);
+  }
+`;
+
+// Footer Components
+export const ModalFooter = styled.div`
+  padding: 20px 28px;
+  border-top: 1px solid rgba(155, 93, 229, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: rgba(249, 250, 251, 0.5);
+
+  @media (max-width: 768px) {
+    padding: 16px 20px;
+  }
+`;
+
+export const GenerateBtn = styled.button`
+  padding: 18px 24px;
+  background: ${theme.gradients.innovator};
+  border: none;
+  border-radius: 14px;
+  color: white;
+  fontWeight: 700;
+  fontSize: 15px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 6px 20px rgba(155, 93, 229, 0.3), 0 3px 10px rgba(251, 191, 36, 0.25);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+
+  &:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 35px rgba(155, 93, 229, 0.5), 0 8px 20px rgba(251, 191, 36, 0.4), 0 0 30px rgba(155, 93, 229, 0.3);
+    filter: brightness(1.1);
+  }
+
+  &:active {
+    transform: translateY(-2px) scale(0.98);
+  }
+
+  @media (max-width: 768px) {
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+`;
+
+// Confirm Dialog Components
+export const ConfirmOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 3001;
+`;
+
+export const ConfirmDialog = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  z-index: 3002;
+  maxWidth: 400px;
+  width: 90%;
+  textAlign: center;
+`;
+
+export const ConfirmTitle = styled.h3`
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: ${theme.colors.text};
+`;
+
+export const ConfirmMessage = styled.p`
+  font-size: 14px;
+  line-height: 1.6;
+  color: ${theme.colors.muted};
+  margin-bottom: 24px;
+  white-space: pre-line;
+`;
+
+export const CreditsBold = styled.span`
+  fontWeight: 700;
+  color: ${theme.colors.text};
+`;
+
+export const ConfirmButtons = styled.div`
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+`;
+
+export const ConfirmBtn = styled.button<{ $proceed?: boolean }>`
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+
+  ${props => props.$proceed ? css`
+    background: ${theme.gradients.innovator};
+    color: white;
+    box-shadow: 0 4px 12px rgba(155, 93, 229, 0.3);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(155, 93, 229, 0.4);
+    }
+  ` : css`
+    background: rgba(107, 114, 128, 0.1);
+    color: ${theme.colors.muted};
+
+    &:hover {
+      background: rgba(107, 114, 128, 0.15);
+    }
+  `}
+`;
+
+// Celebration Components
+export const CelebrationContainer = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 3005;
+  pointerEvents: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const CelebrationContent = styled.div`
+  textAlign: center;
+  animation: ${celebrationPulse} 2s ease-out;
+`;
+
+export const CelebrationIcon = styled.div`
+  fontSize: 80px;
+  margin-bottom: 20px;
+`;
+
+export const CelebrationText = styled.h2`
+  fontSize: 32px;
+  fontWeight: 800;
+  background: ${theme.gradients.innovator};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+`;
+
+export const Confetti = styled.div<{ $left: number; $delay: number; $color: string }>`
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: ${props => props.$color};
+  left: ${props => props.$left}%;
+  animation: ${confettiFall} 3s ease-out forwards;
+  animation-delay: ${props => props.$delay}s;
+`;

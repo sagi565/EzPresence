@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { styles } from './styles';
+import { 
+  NavContainer, 
+  NavItem, 
+  DotContainer, 
+  Dot, 
+  Icon, 
+  NavLine, 
+  Label 
+} from './styles';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface Creator {
   id: string;
@@ -19,48 +28,44 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   onNavigate,
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const isMobile = useIsMobile();
 
   return (
-    <nav style={styles.scrollNav}>
+    <NavContainer $isMobile={isMobile}>
       {creators.map((creator, index) => {
         const isActive = index === currentIndex;
         const isHovered = hoveredIndex === index;
 
         return (
-          <div key={creator.id} style={styles.scrollItem}>
-            {isHovered && (
-              <div style={styles.scrollLabel}>{creator.name}</div>
+          <NavItem key={creator.id}>
+            {isHovered && !isMobile && (
+              <Label $isMobile={isMobile}>{creator.name}</Label>
             )}
 
-            <div
-              style={styles.scrollDotContainer}
+            <DotContainer
               onClick={() => onNavigate(index)}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
-              <div
-                style={{
-                  ...styles.scrollDot,
-                  ...(isHovered && !isActive ? styles.scrollDotHover : {}),
-                  ...(isActive ? styles.scrollDotActive : {}),
-                }}
+              <Dot
+                $isActive={isActive}
+                $isHovered={isHovered}
+                $isMobile={isMobile}
               >
-                <span
-                  style={{
-                    ...styles.scrollIcon,
-                    ...(isHovered || isActive ? styles.scrollIconVisible : {}),
-                  }}
+                <Icon 
+                  $visible={isHovered || isActive}
+                  $isMobile={isMobile}
                 >
                   {creator.icon}
-                </span>
-              </div>
-            </div>
+                </Icon>
+              </Dot>
+            </DotContainer>
 
-            {index < creators.length - 1 && <div style={styles.scrollLine} />}
-          </div>
+            {index < creators.length - 1 && <NavLine />}
+          </NavItem>
         );
       })}
-    </nav>
+    </NavContainer>
   );
 };
 

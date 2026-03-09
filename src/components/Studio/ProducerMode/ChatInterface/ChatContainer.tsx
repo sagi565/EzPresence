@@ -3,7 +3,7 @@ import { VideoIdea } from '@models/VideoIdea';
 import { VideoModelType } from '@models/VideoModel';
 import ChatMessages from './ChatMessages';
 import ChatInput from './ChatInput';
-import { styles } from './styles';
+import { ChatContainer as StyledContainer } from './styles';
 
 interface Message {
   sender: 'user' | 'agent';
@@ -61,18 +61,12 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
     });
   };
 
-  const containerStyle = {
-    ...styles.chatContainer,
-    ...(isInitialState ? styles.chatContainerInitial : {}),
-    ...(isExpanded ? styles.chatContainerExpanded : {}),
-  };
-
   return (
-    <div style={containerStyle}>
+    <StyledContainer $isInitial={isInitialState} $isExpanded={isExpanded}>
       {isInitialState ? (
         <>
-          <h1 style={styles.initialTitle}>Let's make a video</h1>
-          <div style={styles.initialChatInputArea}>
+          <h1 style={{ fontSize: '40px', fontWeight: 700, margin: 0 }}>Let's make a video</h1>
+          <div style={{ width: '100%', maxWidth: 'none' }}>
             <ChatInput onSend={handleSendMessage} isInitial={true} />
           </div>
         </>
@@ -88,7 +82,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
           <ChatInput onSend={handleSendMessage} isInitial={false} />
         </>
       )}
-    </div>
+    </StyledContainer>
   );
 };
 

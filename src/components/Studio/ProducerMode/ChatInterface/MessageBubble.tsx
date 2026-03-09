@@ -1,5 +1,10 @@
 import React from 'react';
-import { styles } from './styles';
+import { 
+  MessageRow, 
+  MessageAvatar, 
+  MessageContent, 
+  MessageText 
+} from './styles';
 
 interface MessageBubbleProps {
   sender: 'user' | 'agent';
@@ -7,20 +12,17 @@ interface MessageBubbleProps {
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ sender, text }) => {
-  const avatarStyle = {
-    ...styles.messageAvatar,
-    ...(sender === 'agent' ? styles.messageAvatarAgent : styles.messageAvatarUser),
-  };
+  const isAgent = sender === 'agent';
 
   return (
-    <div style={styles.message}>
-      <div style={avatarStyle}>
-        {sender === 'agent' ? 'EZ' : '👤'}
-      </div>
-      <div style={styles.messageContent}>
-        <div style={styles.messageText}>{text}</div>
-      </div>
-    </div>
+    <MessageRow>
+      <MessageAvatar $isAgent={isAgent}>
+        {isAgent ? 'EZ' : '👤'}
+      </MessageAvatar>
+      <MessageContent>
+        <MessageText>{text}</MessageText>
+      </MessageContent>
+    </MessageRow>
   );
 };
 

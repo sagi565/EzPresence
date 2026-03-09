@@ -1,8 +1,7 @@
 import styled, { css } from 'styled-components';
 import { theme } from '@theme/theme';
-import { media } from '@/styles/breakpoints';
 
-export const UploadButtonContainer = styled.div<{ $isHovered?: boolean }>`
+export const UploadButtonContainer = styled.div<{ $isHovered?: boolean; $isMobile?: boolean }>`
   flex-shrink: 0;
   border: 3px dashed rgba(155, 93, 229, 0.3);
   background: rgba(155, 93, 229, 0.05);
@@ -17,11 +16,11 @@ export const UploadButtonContainer = styled.div<{ $isHovered?: boolean }>`
   width: 280px;
   height: 480px;
 
-  ${media.phone} {
-    width: 100px;
-    height: 180px;
-    border-radius: 12px;
-  }
+  ${props => props.$isMobile && css`
+    width: 70px;
+    height: 124px;
+    border-radius: 8px;
+  `}
 
   ${props => props.$isHovered && css`
     border-color: ${theme.colors.primary};
@@ -30,11 +29,11 @@ export const UploadButtonContainer = styled.div<{ $isHovered?: boolean }>`
   `}
 `;
 
-export const UploadIcon = styled.div`
+export const UploadIcon = styled.div<{ $isMobile?: boolean }>`
   font-size: 64px;
   color: ${theme.colors.primary};
 
-  ${media.phone} {
-    font-size: 32px;
-  }
+  ${props => (props as any).$isMobile && css`
+    font-size: 24px;
+  `}
 `;

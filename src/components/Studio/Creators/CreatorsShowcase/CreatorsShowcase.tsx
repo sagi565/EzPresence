@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import CreatorSlide from './CreatorSlide';
 import ScrollNavigation from '../ScrollNavigation/ScrollNavigation';
 import NotesModal from '../NotesModal/NotesModal';
-import { styles } from './styles';
+import { ShowcaseContainer } from './styles';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface Creator {
   id: string;
@@ -62,6 +63,7 @@ const CreatorsShowcase: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
+  const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
   const slidesRef = useRef<HTMLElement[]>([]);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -237,7 +239,7 @@ const CreatorsShowcase: React.FC = () => {
 
   return (
     <>
-      <div ref={containerRef} style={styles.container} className="creators-scroll-container">
+      <ShowcaseContainer ref={containerRef} className="creators-scroll-container">
         {CREATORS.map((creator, index) => (
           <CreatorSlide
             key={creator.id}
@@ -246,11 +248,12 @@ const CreatorsShowcase: React.FC = () => {
             }}
             creator={creator}
             isActive={index === currentIndex}
+            isMobile={isMobile}
             onTry={handleTryCreator}
             onLearnMore={handleLearnMore}
           />
         ))}
-      </div>
+      </ShowcaseContainer>
 
       <ScrollNavigation
         creators={CREATORS}

@@ -1,12 +1,12 @@
 import React from 'react';
 import CreatorsShowcase from '@components/Studio/Creators/CreatorsShowcase/CreatorsShowcase';
-import { styles } from './styles';
+import { CreatorsContainer } from './styles';
 
 const CreatorsPage: React.FC = () => {
   return (
-    <div style={styles.creatorsContainer}>
+    <CreatorsContainer>
       <CreatorsShowcase />
-    </div>
+    </CreatorsContainer>
   );
 };
 

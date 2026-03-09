@@ -5,7 +5,7 @@ import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
 import ProducerPage from './ProducerPage';
 import CreatorsPage from './CreatorsPage';
 import WizardPage from './WizardPage';
-import { styles } from './styles';
+import { PageContainer } from './styles';
 
 const StudioPage: React.FC = () => {
   const { section } = useParams<{ section?: string }>();
@@ -24,10 +24,10 @@ const StudioPage: React.FC = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <PageContainer>
       <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
       {renderContent()}
-    </div>
+    </PageContainer>
   );
 };
 

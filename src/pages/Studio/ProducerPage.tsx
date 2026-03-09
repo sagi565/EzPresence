@@ -4,7 +4,7 @@ import { useVideoIdeas } from '@hooks/useVideoIdeas';
 import { useVideoGeneration } from '@hooks/useVideoGeneration';
 import ProducerControls from '@components/Studio/ProducerMode/ProducerControls/ProducerControls';
 import ChatContainer from '@components/Studio/ProducerMode/ChatInterface/ChatContainer';
-import { styles } from './styles';
+import { ProducerContainer } from './styles';
 
 const ProducerPage: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<VideoModelType>('Veo 3');
@@ -20,7 +20,7 @@ const ProducerPage: React.FC = () => {
   };
 
   return (
-    <div style={styles.producerContainer}>
+    <ProducerContainer>
       <ProducerControls
         selectedModel={selectedModel}
         onModelChange={handleModelChange}
@@ -35,7 +35,7 @@ const ProducerPage: React.FC = () => {
         onGenerateVideo={generateVideo}
         isGenerating={isGenerating}
       />
-    </div>
+    </ProducerContainer>
   );
 };
 

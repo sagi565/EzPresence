@@ -13,6 +13,7 @@ import {
 import { useDraggable } from '@dnd-kit/core';
 import { useDroppable } from '@dnd-kit/core';
 import { useDndState, DragData } from '@/context/DndContext';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ContentListProps {
   list: ContentListType;
@@ -107,6 +108,7 @@ const ContentList: React.FC<ContentListProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isLeftArrowHovered, setIsLeftArrowHovered] = useState(false);
   const [isRightArrowHovered, setIsRightArrowHovered] = useState(false);
+  const isMobile = useIsMobile();
 
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [deleteListConfirm, setDeleteListConfirm] = useState(false);
@@ -217,6 +219,7 @@ const ContentList: React.FC<ContentListProps> = ({
         data-list-id={list.id}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        $isMobile={isMobile}
       >
         <ContentListHeader
           icon={list.icon}
@@ -230,6 +233,7 @@ const ContentList: React.FC<ContentListProps> = ({
           onDelete={handleDeleteList}
           onSave={onSaveChanges}
           listId={list.id}
+          isMobile={isMobile}
         />
 
         <ListScrollWrapper

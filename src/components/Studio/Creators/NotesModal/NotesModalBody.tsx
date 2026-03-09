@@ -1,6 +1,30 @@
-import React, { useState } from 'react';
-import { styles } from './styles';
-import { theme } from '@theme/theme';
+import React from 'react';
+import { 
+  ModalBody, 
+  LeftColumn, 
+  RightColumn, 
+  FormGroup, 
+  Label, 
+  Textarea, 
+  HelperText, 
+  ThemeGrid, 
+  ThemeOption, 
+  ThemeThumbnail, 
+  ThemeName,
+  LogoSelector,
+  LogoOption,
+  LogoIcon,
+  LogoText,
+  LogoSaved,
+  LogoAdd,
+  LogoAddText,
+  SoundGrid,
+  SoundOption,
+  SoundIcon,
+  SoundName,
+  SoundFavorite,
+  LibraryBtn
+} from './styles';
 
 interface SelectedOptions {
   theme: string | null;
@@ -58,11 +82,6 @@ const NotesModalBody: React.FC<NotesModalBodyProps> = ({
   setSelectedOptions,
   errors,
 }) => {
-  const [hoveredTheme, setHoveredTheme] = useState<string | null>(null);
-  const [hoveredLogo, setHoveredLogo] = useState<string | null>(null);
-  const [hoveredSound, setHoveredSound] = useState<string | null>(null);
-  const [hoveredLibraryBtn, setHoveredLibraryBtn] = useState(false);
-
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTextInput(e.target.value);
   };
@@ -84,149 +103,89 @@ const NotesModalBody: React.FC<NotesModalBodyProps> = ({
   };
 
   return (
-    <div style={styles.modalBody}>
-      <div style={styles.leftColumn}>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Text (required)</label>
-          <textarea
-            style={{
-              ...styles.textarea,
-              ...(errors.text ? styles.textareaError : {}),
-            }}
+    <ModalBody>
+      <LeftColumn>
+        <FormGroup>
+          <Label>Text (required)</Label>
+          <Textarea
+            $error={errors.text}
             placeholder="Write your thoughts. Describe the message, vibe, and key beats you want to hit..."
             value={textInput}
             onChange={handleTextChange}
           />
-          <div style={styles.helper}>
+          <HelperText>
             We'll source visuals and timing from your intent—no footage required.
-          </div>
-        </div>
+          </HelperText>
+        </FormGroup>
 
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Theme (required)</label>
-          <div style={styles.themeGrid}>
-            {THEMES.map((themeItem) => {
-              const isSelected = selectedOptions.theme === themeItem.id;
-              const isHovered = hoveredTheme === themeItem.id;
-              const hasError = errors.theme;
+        <FormGroup>
+          <Label>Theme (required)</Label>
+          <ThemeGrid>
+            {THEMES.map((themeItem) => (
+              <ThemeOption
+                key={themeItem.id}
+                $selected={selectedOptions.theme === themeItem.id}
+                $error={errors.theme}
+                onClick={() => handleThemeSelect(themeItem.id)}
+              >
+                <ThemeThumbnail style={{ background: themeItem.gradient }}>
+                  <ThemeName>{themeItem.name}</ThemeName>
+                </ThemeThumbnail>
+              </ThemeOption>
+            ))}
+          </ThemeGrid>
+        </FormGroup>
+      </LeftColumn>
 
-              return (
-                <div
-                  key={themeItem.id}
-                  style={{
-                    ...styles.themeOption,
-                    ...(isHovered ? styles.themeOptionHover : {}),
-                    ...(isSelected ? styles.themeOptionSelected : {}),
-                    ...(hasError ? styles.themeOptionError : {}),
-                  }}
-                  onClick={() => handleThemeSelect(themeItem.id)}
-                  onMouseEnter={() => setHoveredTheme(themeItem.id)}
-                  onMouseLeave={() => setHoveredTheme(null)}
-                >
-                  <div
-                    style={{
-                      ...styles.themeThumbnail,
-                      background: themeItem.gradient,
-                    }}
-                  >
-                    <div style={styles.themeName}>{themeItem.name}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <div style={styles.rightColumn}>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Logo Image</label>
-          <div style={styles.logoSelector}>
-            <div
-              style={{
-                ...styles.logoOption,
-                ...(selectedOptions.logo === 'none' ? styles.logoOptionSelected : {}),
-                ...(hoveredLogo === 'none' ? styles.logoOptionHover : {}),
-              }}
+      <RightColumn>
+        <FormGroup>
+          <Label>Logo Image</Label>
+          <LogoSelector>
+            <LogoOption
+              $selected={selectedOptions.logo === 'none'}
               onClick={() => handleLogoSelect('none')}
-              onMouseEnter={() => setHoveredLogo('none')}
-              onMouseLeave={() => setHoveredLogo(null)}
             >
-              <span style={styles.logoIcon}>🚫</span>
-              <span style={styles.logoText}>None</span>
-            </div>
+              <LogoIcon>🚫</LogoIcon>
+              <LogoText>None</LogoText>
+            </LogoOption>
 
-            <div
-              style={{
-                ...styles.logoOption,
-                ...(selectedOptions.logo === 'saved' ? styles.logoOptionSelected : {}),
-                ...(hoveredLogo === 'saved' ? styles.logoOptionHover : {}),
-              }}
+            <LogoOption
+              $selected={selectedOptions.logo === 'saved'}
               onClick={() => handleLogoSelect('saved')}
-              onMouseEnter={() => setHoveredLogo('saved')}
-              onMouseLeave={() => setHoveredLogo(null)}
             >
-              <div style={styles.logoSaved}>🍔</div>
-            </div>
+              <LogoSaved>🍔</LogoSaved>
+            </LogoOption>
 
-            <div
-              style={{
-                ...styles.logoOption,
-                ...(hoveredLogo === 'add' ? styles.logoOptionHover : {}),
-              }}
-              onClick={() => handleLogoSelect('add')}
-              onMouseEnter={() => setHoveredLogo('add')}
-              onMouseLeave={() => setHoveredLogo(null)}
-            >
-              <div style={styles.logoAdd}>
-                <span style={styles.logoIcon}>➕</span>
-                <span style={styles.logoAddText}>Add New</span>
-              </div>
-            </div>
-          </div>
-        </div>
+            <LogoOption onClick={() => handleLogoSelect('add')}>
+              <LogoAdd>
+                <LogoIcon>➕</LogoIcon>
+                <LogoAddText>Add New</LogoAddText>
+              </LogoAdd>
+            </LogoOption>
+          </LogoSelector>
+        </FormGroup>
 
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Background Sound</label>
-          <div style={styles.soundGrid}>
-            {SOUNDS.map((sound) => {
-              const isSelected = selectedOptions.sound === sound.id;
-              const isHovered = hoveredSound === sound.id;
-
-              return (
-                <div
-                  key={sound.id}
-                  style={{
-                    ...styles.soundOption,
-                    ...(isSelected ? styles.soundOptionSelected : {}),
-                    ...(isHovered ? styles.soundOptionHover : {}),
-                  }}
-                  onClick={() => handleSoundSelect(sound.id)}
-                  onMouseEnter={() => setHoveredSound(sound.id)}
-                  onMouseLeave={() => setHoveredSound(null)}
-                >
-                  <span style={styles.soundIcon}>
-                    {sound.id === 'none' ? '🚫' : '▶️'}
-                  </span>
-                  <span style={styles.soundName}>{sound.name}</span>
-                  {sound.favorite && <span style={styles.soundFavorite}>❤️</span>}
-                </div>
-              );
-            })}
-          </div>
-          <button
-            style={{
-              ...styles.libraryBtn,
-              ...(hoveredLibraryBtn ? styles.libraryBtnHover : {}),
-            }}
-            onMouseEnter={() => setHoveredLibraryBtn(true)}
-            onMouseLeave={() => setHoveredLibraryBtn(false)}
-          >
-            Choose from library
-          </button>
-        </div>
-      </div>
-    </div>
+        <FormGroup>
+          <Label>Background Sound</Label>
+          <SoundGrid>
+            {SOUNDS.map((sound) => (
+              <SoundOption
+                key={sound.id}
+                $selected={selectedOptions.sound === sound.id}
+                onClick={() => handleSoundSelect(sound.id)}
+              >
+                <SoundIcon>
+                  {sound.id === 'none' ? '🚫' : '▶️'}
+                </SoundIcon>
+                <SoundName>{sound.name}</SoundName>
+                {sound.favorite && <SoundFavorite>❤️</SoundFavorite>}
+              </SoundOption>
+            ))}
+          </SoundGrid>
+          <LibraryBtn>Choose from library</LibraryBtn>
+        </FormGroup>
+      </RightColumn>
+    </ModalBody>
   );
 };
 

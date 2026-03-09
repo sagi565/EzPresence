@@ -20,6 +20,7 @@ import {
 } from './styles';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
 import { DraggableProvided } from '@hello-pangea/dnd';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ContentItemProps {
   item: ContentItemType;
@@ -49,6 +50,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
   const [showPreview, setShowPreview] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(item.title || '');
+  const isMobile = useIsMobile();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -202,6 +204,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
       $isDragging={isDragging}
       $isHovered={isHovered}
       $isUploading={isUploading}
+      $isMobile={isMobile}
       onClick={onClick}
       onDoubleClick={(e) => {
         e.stopPropagation();
@@ -242,7 +245,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
           </>
         ) : (
           (fetchedUrl || thumbnailSrc) && (
-            <MediaCover src={fetchedUrl || thumbnailSrc} alt={item.title} />
+            <MediaCover src={(fetchedUrl || thumbnailSrc) as string} alt={item.title} />
           )
         )}
       </MediaContainer>
@@ -318,10 +321,10 @@ const ContentItem: React.FC<ContentItemProps> = ({
             </RenameContainer>
           ) : (
             <>
-              <ContentTitle $isVisible={isHovered}>
+              <ContentTitle $isVisible={isHovered} $isMobile={isMobile}>
                 {item.title}
               </ContentTitle>
-              <ContentDate $isVisible={isHovered}>
+              <ContentDate $isVisible={isHovered} $isMobile={isMobile}>
                 {formatDate(item.createdAt)}
               </ContentDate>
             </>

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { VideoIdea } from '@models/VideoIdea';
 import { VideoModelType } from '@models/VideoModel';
 import MessageBubble from './MessageBubble';
 import IdeaCard from '../IdeaCard/IdeaCard';
-import { styles } from './styles';
+import { ChatMessages as MessagesContainer, IdeasList } from './styles';
 
 interface Message {
   sender: 'user' | 'agent';
@@ -27,8 +27,18 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   onGenerateVideo,
   isGenerating,
 }) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   return (
-    <div style={styles.chatMessages}>
+    <MessagesContainer>
       {messages.map((msg, idx) => {
         if (msg.isLoading) {
           return (
@@ -36,10 +46,10 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
               key={idx}
               sender="agent" 
               text={
-                <div className="loading-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+                <div style={{ display: 'inline-flex', gap: '4px' }}>
+                  <span>.</span>
+                  <span>.</span>
+                  <span>.</span>
                 </div>
               } 
             />
@@ -54,7 +64,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
               text={
                 <>
                   {msg.text && <div>{msg.text}</div>}
-                  <div style={styles.ideasList}>
+                  <IdeasList>
                     {msg.ideas.map((idea) => (
                       <IdeaCard
                         key={idea.id}
@@ -65,7 +75,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                         isGenerating={isGenerating}
                       />
                     ))}
-                  </div>
+                  </IdeasList>
                 </>
               }
             />
@@ -80,7 +90,8 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           />
         );
       })}
-    </div>
+      <div ref={messagesEndRef} />
+    </MessagesContainer>
   );
 };
 

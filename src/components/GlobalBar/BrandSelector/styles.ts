@@ -4,6 +4,7 @@ import { media } from '@/styles/breakpoints';
 
 export const Container = styled.div`
   position: relative;
+  flex-shrink: 0;
 `;
 
 export const Selector = styled.div<{ $isHovered: boolean }>`
@@ -12,36 +13,21 @@ export const Selector = styled.div<{ $isHovered: boolean }>`
   background: rgba(255, 255, 255, 0.9);
   border: 2px solid ${props => props.$isHovered ? theme.colors.primary : theme.colors.secondary};
   border-radius: 16px;
-  padding: 8px 16px;
+  padding: 6px 14px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
   white-space: nowrap;
-  width: 225px;
-  outline: none !important;
+  width: 220px;
+  outline: none;
   box-shadow: ${props => props.$isHovered ? '0 8px 25px rgba(251, 191, 36, 0.3)' : 'none'};
   transform: ${props => props.$isHovered ? 'translateY(-2px)' : 'none'};
 
-  ${media.tablet} {
-    width: 160px;
-    padding: 6px 12px;
+  /* ── Collapse to icon-only at the same point nav labels disappear ── */
+  @media (max-width: 1050px) {
+    width: auto;
+    padding: 5px 6px;
     border-radius: 12px;
-  }
-
-  ${media.phone} {
-    width: auto;
-    min-width: 36px;
-    padding: 2px;
-    border-radius: 8px;
-    justify-content: center;
-  }
-
-  /* Shrink dynamically without text inside tight spaces */
-  @container navleft (max-width: 300px) {
-    width: auto;
-    min-width: 44px;
-    padding: 4px;
-    border-radius: 10px;
     justify-content: center;
   }
 `;
@@ -56,18 +42,15 @@ export const TenantName = styled.span`
   white-space: nowrap;
   text-overflow: ellipsis;
 
-  ${media.phone} {
-    display: none;
-  }
-
-  @container navleft (max-width: 300px) {
+  /* Hidden whenever selector collapses */
+  @media (max-width: 1050px) {
     display: none;
   }
 `;
 
 export const BrandIcon = styled.div`
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   background: ${theme.colors.secondary};
   display: flex;
@@ -77,18 +60,21 @@ export const BrandIcon = styled.div`
   border: 2px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
   flex-shrink: 0;
-  margin-left: 12px;
+  margin-left: 10px;
 
-  ${media.phone} {
+  /* No margin once name is hidden */
+  @media (max-width: 1050px) {
     margin-left: 0;
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
-    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
   }
 
-  @container navleft (max-width: 300px) {
-    margin-left: 0;
+  ${media.phone} {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    border-radius: 8px;
   }
 `;
 
@@ -96,7 +82,7 @@ export const Dropdown = styled.div`
   position: absolute;
   top: calc(100% + 10px);
   left: 0;
-  width: 225px;
+  width: 220px;
   background: rgba(255, 255, 255, 0.98);
   border: 1px solid ${theme.colors.secondary};
   border-radius: 12px;
@@ -104,8 +90,11 @@ export const Dropdown = styled.div`
   box-shadow: 0 10px 25px rgba(251, 191, 36, 0.15);
   z-index: 2000;
 
-  ${media.tablet} {
+  /* On phone the selector is icon-only so anchor dropdown to right edge instead */
+  ${media.phone} {
     width: 200px;
+    left: auto;
+    right: 0;
   }
 `;
 
@@ -116,20 +105,20 @@ export const Option = styled.button<{ $isActive?: boolean; $isHovered?: boolean 
   width: 100%;
   padding: 10px 12px;
   border: none;
-  background: ${props => 
-    props.$isActive 
-      ? 'rgba(251, 191, 36, 0.2)' 
-      : props.$isHovered 
-        ? theme.colors.primaryLight 
-        : 'transparent'
-  };
+  background: ${props =>
+    props.$isActive
+      ? 'rgba(251, 191, 36, 0.2)'
+      : props.$isHovered
+        ? theme.colors.primaryLight
+        : 'transparent'};
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   color: ${props => props.$isActive ? '#d97706' : theme.colors.text};
   font-size: 14px;
   transition: all 0.2s ease;
-  outline: none !important;
+  outline: none;
+  text-align: left;
 
   ${media.tablet} {
     padding: 8px 10px;
@@ -147,11 +136,12 @@ export const OptIcon = styled.span`
   border-radius: 8px;
   background: rgba(155, 93, 229, 0.08);
   font-size: 18px;
+  flex-shrink: 0;
 
   ${media.tablet} {
     width: 24px;
     height: 24px;
-    font-size: 16px;
+    font-size: 15px;
   }
 `;
 
@@ -173,7 +163,7 @@ export const AddBrandBtn = styled.button<{ $isHovered?: boolean }>`
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  outline: none !important;
+  outline: none;
 
   ${media.tablet} {
     gap: 8px;
@@ -189,6 +179,7 @@ export const AddIcon = styled.span`
   font-size: 14px;
   background: rgba(20, 184, 166, 0.1);
   border-radius: 8px;
+  flex-shrink: 0;
 `;
 
 export const LogoImage = styled.img`

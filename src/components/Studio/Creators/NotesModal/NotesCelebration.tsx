@@ -1,41 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { styles } from './styles';
+import { CelebrationContainer, CelebrationContent, CelebrationIcon, CelebrationText, Confetti } from './styles';
 
 const NotesCelebration: React.FC = () => {
-  const [confetti, setConfetti] = useState<Array<{ id: number; left: string; delay: string; size: string; color: string }>>([]);
+  const [pieces, setPieces] = useState<any[]>([]);
 
   useEffect(() => {
-    const colors = ['var(--color-primary)', 'var(--color-secondary)', 'var(--color-pink)', 'var(--color-blue)', 'var(--color-teal)'];
-    const newConfetti = Array.from({ length: 20 }, (_, i) => ({
+    const colors = ['#9b5de5', '#f15bb5', '#fee440', '#00bbf9', '#00f5d4'];
+    const newPieces = Array.from({ length: 40 }).map((_, i) => ({
       id: i,
-      left: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 0.5}s`,
-      size: `${Math.random() * 10 + 5}px`,
+      left: Math.random() * 100,
+      delay: Math.random() * 2,
       color: colors[Math.floor(Math.random() * colors.length)],
     }));
-    setConfetti(newConfetti);
+    setPieces(newPieces);
   }, []);
 
   return (
-    <div style={styles.celebrationContainer}>
-      <div style={styles.celebrationContent}>
-        <div style={styles.celebrationIcon}>🎉</div>
-        <div style={styles.celebrationText}>Video Created!</div>
-      </div>
-      {confetti.map((piece) => (
-        <div
+    <CelebrationContainer>
+      {pieces.map((piece) => (
+        <Confetti
           key={piece.id}
-          style={{
-            ...styles.confetti,
-            left: piece.left,
-            animationDelay: piece.delay,
-            width: piece.size,
-            height: piece.size,
-            background: piece.color,
-          }}
+          $left={piece.left}
+          $delay={piece.delay}
+          $color={piece.color}
         />
       ))}
-    </div>
+      <CelebrationContent>
+        <CelebrationIcon>✨</CelebrationIcon>
+        <CelebrationText>Generating Real Magic...</CelebrationText>
+      </CelebrationContent>
+    </CelebrationContainer>
   );
 };
 

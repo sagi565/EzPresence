@@ -1,27 +1,26 @@
 import styled, { css } from 'styled-components';
 import { theme } from '@theme/theme';
-import { media } from '@/styles/breakpoints';
 
-export const ListContainer = styled.div`
+export const ListContainer = styled.div<{ $isMobile?: boolean }>`
   position: relative;
   overflow: visible;
   height: 100%;
   width: 100%;
   min-height: 540px;
 
-  ${media.tablet} {
+  ${props => props.$isMobile && css`
     min-height: auto;
-  }
+  `}
 `;
 
-export const ListHeader = styled.div`
+export const ListHeader = styled.div<{ $isMobile?: boolean }>`
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: ${props => props.$isMobile ? '6px' : '20px'};
   margin-bottom: 12px;
 `;
 
-export const ListIcon = styled.div<{ $isEditable?: boolean; $isHovered?: boolean; $isEditMode?: boolean }>`
+export const ListIcon = styled.div<{ $isEditable?: boolean; $isHovered?: boolean; $isEditMode?: boolean; $isMobile?: boolean }>`
   font-size: 56px;
   flex-shrink: 0;
   transition: all 0.2s ease;
@@ -44,10 +43,10 @@ export const ListIcon = styled.div<{ $isEditable?: boolean; $isHovered?: boolean
     background: ${theme.colors.primary}1A;
   `}
 
-  ${media.phone} {
-    font-size: 40px;
-    padding: 4px;
-  }
+  ${props => props.$isMobile && css`
+    font-size: 24px;
+    padding: 2px;
+  `}
 `;
 
 export const ListTitleGroup = styled.div`
@@ -63,15 +62,15 @@ export const ListTitleContainer = styled.div`
   gap: 8px;
 `;
 
-export const ListTitle = styled.h2`
+export const ListTitle = styled.h2<{ $isMobile?: boolean }>`
   font-size: 32px;
   font-weight: 700;
   color: ${theme.colors.text};
   margin: 0;
 
-  ${media.phone} {
-    font-size: 24px;
-  }
+  ${props => props.$isMobile && css`
+    font-size: 16px;
+  `}
 `;
 
 export const ListTitleClickable = styled.div<{ $isHovered?: boolean }>`
@@ -88,7 +87,7 @@ export const ListTitleClickable = styled.div<{ $isHovered?: boolean }>`
   `}
 `;
 
-export const ListTitleEditable = styled.input<{ $isFocused?: boolean }>`
+export const ListTitleEditable = styled.input<{ $isFocused?: boolean; $isMobile?: boolean }>`
   font-size: 32px;
   font-weight: 700;
   color: ${theme.colors.text};
@@ -106,10 +105,10 @@ export const ListTitleEditable = styled.input<{ $isFocused?: boolean }>`
     box-shadow: 0 4px 20px ${theme.colors.primary}40;
   `}
 
-  ${media.phone} {
-    font-size: 24px;
-    max-width: 200px;
-  }
+  ${props => props.$isMobile && css`
+    font-size: 16px;
+    max-width: 120px;
+  `}
 `;
 
 export const ListSubtitle = styled.p`

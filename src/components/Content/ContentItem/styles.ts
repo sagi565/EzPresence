@@ -1,6 +1,5 @@
 import styled, { keyframes, css } from 'styled-components';
 import { theme } from '@theme/theme';
-import { media } from '@/styles/breakpoints';
 
 export const favoriteClick = keyframes`
   0% { transform: scale(1); }
@@ -18,7 +17,7 @@ export const fadeIn = keyframes`
   to { opacity: 1; }
 `;
 
-export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: boolean; $isUploading?: boolean }>`
+export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: boolean; $isUploading?: boolean; $isMobile?: boolean }>`
   position: relative;
   background-color: white;
   border-radius: 16px;
@@ -34,12 +33,12 @@ export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: bo
   width: 280px;
   height: 480px;
 
-  ${media.phone} {
-    width: 100px;
-    height: 180px;
+  ${props => props.$isMobile && css`
+    width: 70px;
+    height: 124px;
     margin: 4px;
-    border-radius: 12px;
-  }
+    border-radius: 8px;
+  `}
 
   ${props => props.$isHovered && !props.$isUploading && !props.$isDragging && css`
     transform: scale(1.03) translateY(-4px);
@@ -208,7 +207,7 @@ export const MenuItem = styled.button<{ $variant?: 'default' | 'delete'; $isHove
   `)}
 `;
 
-export const ContentTitle = styled.div<{ $isVisible?: boolean }>`
+export const ContentTitle = styled.div<{ $isVisible?: boolean; $isMobile?: boolean }>`
   position: absolute;
   bottom: 28px;
   left: 16px;
@@ -216,17 +215,20 @@ export const ContentTitle = styled.div<{ $isVisible?: boolean }>`
   color: white;
   font-weight: 700;
   font-size: 15px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: ${props => props.$isVisible ? 1 : 0};
   transition: opacity 0.3s ease;
   z-index: 3;
   pointer-events: none;
   text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+
+  ${props => (props as any).$isMobile && css`
+    font-size: 11px;
+    bottom: 22px;
+    left: 8px;
+    right: 8px;
+  `}
 `;
 
-export const ContentDate = styled.div<{ $isVisible?: boolean }>`
+export const ContentDate = styled.div<{ $isVisible?: boolean; $isMobile?: boolean }>`
   position: absolute;
   bottom: 10px;
   left: 16px;
@@ -238,6 +240,13 @@ export const ContentDate = styled.div<{ $isVisible?: boolean }>`
   transition: opacity 0.3s ease;
   z-index: 3;
   pointer-events: none;
+
+  ${props => (props as any).$isMobile && css`
+    font-size: 8px;
+    bottom: 6px;
+    left: 8px;
+    right: 8px;
+  `}
 `;
 
 export const RenameContainer = styled.div`

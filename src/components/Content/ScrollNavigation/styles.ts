@@ -40,10 +40,9 @@ export const ScrollNavContainer = styled.nav`
   pointer-events: none;
 
   ${media.phone} {
-    right: 0px;
+    right: -245px;
     transform: scale(0.9);
-    transform-origin: right center;
-    width: 80px;
+    font-size: 22px;
   }
 `;
 
@@ -53,7 +52,7 @@ export const DotsContainer = styled.div<{ $height: string; $scrollable: boolean 
   align-items: center;
   gap: 0;
   overflow: ${props => props.$scrollable ? 'auto' : 'visible'};
-  pointer-events: auto;
+  pointer-events: none;
   height: ${props => props.$height};
   width: 100%;
   overflow-x: visible;
@@ -69,6 +68,7 @@ export const InnerContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  pointer-events: auto;
 `;
 
 export const ScrollItem = styled.div`
@@ -100,10 +100,10 @@ export const ScrollLabel = styled.span<{ $visible?: boolean }>`
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 
   ${media.phone} {
-    font-size: 14px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 6px 12px;
-    right: 52px;
+    right: 56px;
+    padding: 4px 10px;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.98);
   }
 
   .nav-grad-text {
@@ -113,12 +113,6 @@ export const ScrollLabel = styled.span<{ $visible?: boolean }>`
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-  }
-
-  ${media.phone} {
-    right: 56px;
-    opacity: 1 !important;
-    transform: translateX(0) !important;
   }
 `;
 

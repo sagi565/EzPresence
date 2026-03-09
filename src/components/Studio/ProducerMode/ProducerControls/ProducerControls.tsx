@@ -2,7 +2,7 @@ import React from 'react';
 import { VideoModelType } from '@models/VideoModel';
 import ModelSelector from '../ModelSelector/ModelSelector';
 import NewChatButton from './NewChatButton';
-import { styles } from './styles';
+import { ControlsContainer } from './styles';
 
 interface ProducerControlsProps {
   selectedModel: VideoModelType;
@@ -16,10 +16,10 @@ const ProducerControls: React.FC<ProducerControlsProps> = ({
   onNewChat,
 }) => {
   return (
-    <div style={styles.controls}>
+    <ControlsContainer>
       <ModelSelector selectedModel={selectedModel} onModelChange={onModelChange} />
       <NewChatButton onClick={onNewChat} />
-    </div>
+    </ControlsContainer>
   );
 };
 

@@ -14,24 +14,27 @@ export const Nav = styled.nav`
   top: 0;
   z-index: 1000;
   box-shadow: ${theme.shadows.primary};
+  gap: 12px;
+
+  ${media.tablet} {
+    padding: 10px 16px;
+    gap: 8px;
+  }
 
   ${media.phone} {
-    padding: 6px 10px;
+    padding: 8px 10px;
+    gap: 6px;
   }
 `;
 
 export const NavLeft = styled.div`
   display: flex;
   align-items: center;
-  gap: 32px;
-  
-  /* Dynamic sizing */
-  container-type: inline-size;
-  container-name: navleft;
-  min-width: 0;
+  gap: 24px;
+  flex-shrink: 0;
 
   ${media.tablet} {
-    gap: 16px;
+    gap: 12px;
   }
 
   ${media.phone} {
@@ -49,10 +52,17 @@ export const Logo = styled.a`
   text-decoration: none;
   letter-spacing: -0.5px;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  /* "presence" part — hidden on small screens, leaving just "EZ" */
+  .logo-presence {
+    display: inline;
+  }
 
   ${media.phone} {
-    font-size: 16px;
-    
+    font-size: 20px;
+
     .logo-presence {
       display: none;
     }
@@ -61,24 +71,16 @@ export const Logo = styled.a`
 
 export const NavCenter = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 4px;
   background: transparent;
   padding: 4px;
   border-radius: 12px;
-  
-  /* Dynamic resizing properties */
   flex: 1;
   justify-content: center;
-  min-width: 0; /* allows shrinking */
-  container-type: inline-size;
-  container-name: navcenter;
+  min-width: 0;
 
   ${media.tablet} {
-    gap: 6px;
-  }
-
-  ${media.phone} {
-    gap: 6px;
+    gap: 2px;
   }
 `;
 
@@ -92,8 +94,8 @@ export const NavItemWrapper = styled.div`
 export const NavBtn = styled.a<{ $active?: boolean }>`
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
+  gap: 6px;
+  padding: 10px 14px;
   border: none;
   border-radius: 10px;
   font-weight: 600;
@@ -104,55 +106,46 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
   background: ${props => props.$active ? theme.gradients.momentum : 'transparent'};
   font-size: 14px;
   box-shadow: ${props => props.$active ? '0 4px 12px rgba(155, 93, 229, 0.3)' : 'none'};
+  white-space: nowrap;
 
   .nav-icon {
     font-size: 16px;
     flex-shrink: 0;
+    line-height: 1;
   }
 
   .nav-label {
-    display: block;
-    white-space: nowrap;
+    display: inline;
   }
 
   &:hover {
     ${props => !props.$active && `
       transform: translateY(-1px);
       color: ${theme.colors.primary};
+      background: rgba(155, 93, 229, 0.06);
     `}
   }
 
-  /* Dynamically hide text based on the available space for NavCenter container */
-  @container navcenter (max-width: 650px) {
-    padding: 10px;
-    .nav-label {
-      display: none;
-    }
-    .nav-icon {
-      font-size: 18px;
-    }
-  }
-
-  /* Fallback media query if container queries aren't supported */
+  /* ── Medium screens: hide labels, keep emoji ── */
   @media (max-width: 1050px) {
-    padding: 10px;
+    padding: 10px 10px;
+    gap: 0;
+
     .nav-label {
       display: none;
     }
+
     .nav-icon {
       font-size: 18px;
     }
   }
 
+  /* ── Small phones: tighter padding ── */
   ${media.phone} {
-    padding: 6px;
-    
-    .nav-label {
-      display: none;
-    }
-    
+    padding: 8px 8px;
+
     .nav-icon {
-      font-size: 16px;
+      font-size: 17px;
     }
   }
 `;
@@ -160,61 +153,83 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
 export const NavRight = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  flex-shrink: 0;
+
+  ${media.tablet} {
+    gap: 4px;
+  }
 
   ${media.phone} {
-    gap: 4px;
+    gap: 2px;
   }
 `;
 
-export const IconBtn = styled.button<{ $variant?: 'danger' | 'default', $hovered?: boolean }>`
-  width: 44px;
-  height: 44px;
+export const IconBtn = styled.button<{ $variant?: 'danger' | 'default'; $hovered?: boolean }>`
+  width: 40px;
+  height: 40px;
   border: none;
   border-radius: 50%;
-  background: ${props => 
-    props.$hovered 
-      ? (props.$variant === 'danger' ? '#fee2e2' : 'rgba(155, 93, 229, 0.08)') 
-      : 'transparent'
-  };
+  background: ${props =>
+    props.$hovered
+      ? props.$variant === 'danger'
+        ? '#fee2e2'
+        : 'rgba(155, 93, 229, 0.08)'
+      : 'transparent'};
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 20px;
-  color: ${props => 
-    props.$hovered 
-      ? (props.$variant === 'danger' ? '#ef4444' : theme.colors.primary) 
-      : theme.colors.muted
-  };
+  font-size: 18px;
+  color: ${props =>
+    props.$hovered
+      ? props.$variant === 'danger'
+        ? '#ef4444'
+        : theme.colors.primary
+      : theme.colors.muted};
   transform: ${props => props.$hovered ? 'translateY(-1px)' : 'none'};
-  box-shadow: ${props => (props.$hovered && props.$variant === 'danger') ? '0 2px 4px rgba(239, 68, 68, 0.1)' : 'none'};
+  box-shadow: ${props =>
+    props.$hovered && props.$variant === 'danger'
+      ? '0 2px 4px rgba(239, 68, 68, 0.1)'
+      : 'none'};
+  padding: 0;
+  flex-shrink: 0;
+
+  /* Hide notification bell on small phones to save space */
+  &.hide-on-phone {
+    ${media.phone} {
+      display: none;
+    }
+  }
 
   ${media.phone} {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
     font-size: 16px;
   }
 `;
 
-export const Avatar = styled.button<{ $hovered?: boolean, $bgColor?: string }>`
-  width: 44px;
-  height: 44px;
+export const Avatar = styled.button<{ $hovered?: boolean; $bgColor?: string }>`
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #fff;
   border: 2px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   text-transform: uppercase;
   background: ${props => props.$bgColor || theme.colors.primary};
   cursor: default;
   transition: transform 0.2s;
-  ${props => props.$hovered && `transform: scale(1.05);`}
+  transform: ${props => props.$hovered ? 'scale(1.05)' : 'none'};
+  flex-shrink: 0;
+  overflow: hidden;
+  padding: 0;
 
   img {
     width: 100%;
@@ -224,9 +239,9 @@ export const Avatar = styled.button<{ $hovered?: boolean, $bgColor?: string }>`
   }
 
   ${media.phone} {
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
   }
 `;
 

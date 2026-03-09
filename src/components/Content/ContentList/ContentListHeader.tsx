@@ -20,6 +20,7 @@ interface ContentListHeaderProps {
   isEditable: boolean;
   listId?: string;
   isNewList?: boolean;
+  isMobile?: boolean;
   onTitleChange: (newTitle: string) => void;
   onIconClick: (element: HTMLElement) => void;
   onDelete: () => void;
@@ -36,6 +37,7 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
   onIconClick,
   onDelete,
   onSave,
+  isMobile,
 }) => {
   const [isEditMode, setIsEditMode] = useState(isNewList);
   const [isIconHovered, setIsIconHovered] = useState(false);
@@ -128,23 +130,24 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
 
     if (gradientParts) {
       return (
-        <ListTitle>
+        <ListTitle $isMobile={isMobile}>
           <span style={{ color: '#111827' }}>{gradientParts.prefix}</span>
           <BrandGradient>{gradientParts.gradient}</BrandGradient>
         </ListTitle>
       );
     }
 
-    return <ListTitle>{title}</ListTitle>;
+    return <ListTitle $isMobile={isMobile}>{title}</ListTitle>;
   };
 
   return (
-    <ListHeader ref={containerRef}>
+    <ListHeader ref={containerRef} $isMobile={isMobile}>
       <ListIcon
         ref={iconRef}
         $isEditable={isEditable}
         $isEditMode={isEditMode}
         $isHovered={isIconHovered}
+        $isMobile={isMobile}
         onClick={handleIconClick}
         onMouseEnter={() => setIsIconHovered(true)}
         onMouseLeave={() => setIsIconHovered(false)}
@@ -163,6 +166,7 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitleValue(e.target.value)}
                 onKeyDown={handleTitleKeyDown}
                 placeholder="My new playlist"
+                $isMobile={isMobile}
               />
             ) : (
               <ListTitleClickable
@@ -171,7 +175,7 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
                 onMouseEnter={() => setIsTitleHovered(true)}
                 onMouseLeave={() => setIsTitleHovered(false)}
               >
-                <ListTitle>{titleValue}</ListTitle>
+                <ListTitle $isMobile={isMobile}>{titleValue}</ListTitle>
               </ListTitleClickable>
             )
           ) : (

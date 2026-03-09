@@ -19,6 +19,7 @@ import {
 import { useDroppable } from '@dnd-kit/core';
 import { useDndState } from '@/context/DndContext';
 import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ScrollNavigationProps {
   lists: ContentList[];
@@ -35,9 +36,10 @@ const NavItem: React.FC<{
   currentIndex: number;
   showAllLabels: boolean;
   hideLines: boolean;
+  isMobile: boolean;
   onNavigate: (index: number) => void;
   onContextMenu: (e: React.MouseEvent, list: ContentList) => void;
-}> = ({ list, index, totalLists, currentIndex, showAllLabels, hideLines, onNavigate, onContextMenu }) => {
+}> = ({ list, index, totalLists, currentIndex, showAllLabels, hideLines, isMobile, onNavigate, onContextMenu }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isCelebrating, setIsCelebrating] = useState(false);
   const { activeData, isDragging: isDndKitDragging, lastDropTimeRef } = useDndState();
@@ -79,16 +81,20 @@ const NavItem: React.FC<{
     prevIsOver.current = isOver;
   }, [isOver, isDndKitDragging]);
 
-  const shouldShowLabel = isHovered || showAllLabels || isDropTarget;
-
   return (
     <Draggable draggableId={list.id} index={index}>
-      {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-        <ScrollItem
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          style={provided.draggableProps.style}
-        >
+      {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => {
+        const shouldShowLabel = 
+          isHovered || 
+          (isMobile ? (isDropTarget || snapshot.isDragging) : showAllLabels) || 
+          (isDropTarget && !isMobile);
+
+        return (
+          <ScrollItem
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            style={provided.draggableProps.style}
+          >
           {(() => {
             const gradientParts = formatSystemListTitle(list.title);
             return (
@@ -133,8 +139,9 @@ const NavItem: React.FC<{
           {index < totalLists - 1 && (
             <ScrollLine $hidden={snapshot.isDragging || hideLines} />
           )}
-        </ScrollItem>
-      )}
+          </ScrollItem>
+        );
+      }}
     </Draggable>
   );
 };
@@ -148,6 +155,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
 }) => {
   const { isDragging: isDndKitDragging } = useDndState();
   const [isListDragging, setIsListDragging] = useState(false);
+  const isMobile = useIsMobile();
   const [contextMenu, setContextMenu] = useState<{
     listId: string;
     x: number;
@@ -185,8 +193,8 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   const [showBottomArrow, setShowBottomArrow] = useState(false);
   const [hoveredArrow, setHoveredArrow] = useState<'up' | 'down' | null>(null);
 
-  const MAX_VISIBLE = 7;
-  const ITEM_HEIGHT = 84;
+  const MAX_VISIBLE = isMobile ? 5 : 7;
+  const ITEM_HEIGHT = isMobile ? 64 : 84;
 
   const checkScroll = () => {
     const el = scrollContainerRef.current;
@@ -307,6 +315,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                         currentIndex={currentIndex}
                         showAllLabels={isDndKitDragging || isListDragging}
                         hideLines={isListDragging || isDndKitDragging}
+                        isMobile={isMobile}
                         onNavigate={onNavigate}
                         onContextMenu={handleContextMenu}
                       />

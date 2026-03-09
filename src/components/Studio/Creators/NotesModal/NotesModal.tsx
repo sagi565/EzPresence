@@ -4,7 +4,7 @@ import NotesModalBody from './NotesModalBody';
 import NotesModalFooter from './NotesModalFooter';
 import NotesConfirmDialog from './NotesConfirmDialog';
 import NotesCelebration from './NotesCelebration';
-import { styles } from './styles';
+import { ModalOverlay, ModalContainer } from './styles';
 
 interface NotesModalProps {
   onClose: () => void;
@@ -90,14 +90,11 @@ const NotesModal: React.FC<NotesModalProps> = ({ onClose }) => {
 
   return (
     <>
-      <div
-        style={{
-          ...styles.modalOverlay,
-          ...(showConfirm ? { zIndex: 2999 } : {}),
-        }}
+      <ModalOverlay
+        $depth={showConfirm}
         onClick={handleOverlayClick}
       >
-        <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <ModalContainer onClick={(e) => e.stopPropagation()}>
           <NotesModalHeader onClose={onClose} />
           <NotesModalBody
             textInput={textInput}
@@ -107,8 +104,8 @@ const NotesModal: React.FC<NotesModalProps> = ({ onClose }) => {
             errors={errors}
           />
           <NotesModalFooter onGenerate={handleGenerate} />
-        </div>
-      </div>
+        </ModalContainer>
+      </ModalOverlay>
 
       {showConfirm && (
         <NotesConfirmDialog onConfirm={handleConfirm} onCancel={handleCancel} />

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { styles } from './styles';
+import { ChatInputArea, ChatInput as StyledInput, ChatSendBtn } from './styles';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -9,64 +9,45 @@ interface ChatInputProps {
 const ChatInput: React.FC<ChatInputProps> = ({ onSend, isInitial }) => {
   const [message, setMessage] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const [isButtonHovered, setIsButtonHovered] = useState(false);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
     if (message.trim()) {
       onSend(message);
       setMessage('');
+      if (textAreaRef.current) {
+        textAreaRef.current.style.height = 'auto';
+      }
     }
   };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSend();
-    }
-  };
-
-  const inputStyle = {
-    ...styles.chatInput,
-    ...(isFocused ? styles.chatInputFocus : {}),
-  };
-
-  const buttonStyle = {
-    ...styles.chatSendBtn,
-    ...(isButtonHovered ? styles.chatSendBtnHover : {}),
-  };
-
-  const containerStyle = isInitial ? styles.initialChatInputArea : styles.chatInputArea;
-
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const el = textAreaRef.current;
     if (!el) return;
 
     el.style.height = 'auto';
-    const maxHeight = parseFloat(getComputedStyle(el).lineHeight || '20') * 10;
+    const maxHeight = parseFloat(getComputedStyle(el).lineHeight || '22') * 10;
     const newHeight = Math.min(el.scrollHeight, maxHeight);
 
     el.style.height = newHeight + 'px';
     el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
   };
-  return (
-    <div style={containerStyle}>
-    <button
-      style={buttonStyle}
-      onClick={handleSend}
-      onMouseEnter={() => setIsButtonHovered(true)}
-      onMouseLeave={() => setIsButtonHovered(false)}
-    >
-      <img
-        src="/icons/up-arrow.png" 
-        alt="Send"
-        style={{ width: '20px', height: '20px', objectFit: 'contain' }}
-      />
-    </button>
 
-      <textarea
+  return (
+    <ChatInputArea style={isInitial ? { width: '100%', background: 'transparent', border: 'none', padding: 0 } : {}}>
+      <ChatSendBtn 
+        onClick={handleSend}
+        disabled={!message.trim()}
+      >
+        <img
+          src="/icons/up-arrow.png" 
+          alt="Send"
+          style={{ width: '20px', height: '20px', objectFit: 'contain' }}
+        />
+      </ChatSendBtn>
+
+      <StyledInput
         ref={textAreaRef}
-        style={inputStyle}
         placeholder="Share your video idea..."
         value={message}
         onChange={(e) => {
@@ -79,9 +60,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, isInitial }) => {
             handleSend();
           }
         }}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        $isFocused={isFocused}
         rows={1}
       />
-    </div>
+    </ChatInputArea>
   );
 };
 
