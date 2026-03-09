@@ -16,7 +16,7 @@ export const Nav = styled.nav`
   box-shadow: ${theme.shadows.primary};
 
   ${media.phone} {
-    padding: 10px 16px;
+    padding: 6px 10px;
   }
 `;
 
@@ -24,9 +24,18 @@ export const NavLeft = styled.div`
   display: flex;
   align-items: center;
   gap: 32px;
+  
+  /* Dynamic sizing */
+  container-type: inline-size;
+  container-name: navleft;
+  min-width: 0;
 
   ${media.tablet} {
     gap: 16px;
+  }
+
+  ${media.phone} {
+    gap: 8px;
   }
 `;
 
@@ -42,7 +51,7 @@ export const Logo = styled.a`
   cursor: pointer;
 
   ${media.phone} {
-    font-size: 20px;
+    font-size: 16px;
     
     .logo-presence {
       display: none;
@@ -56,10 +65,20 @@ export const NavCenter = styled.div`
   background: transparent;
   padding: 4px;
   border-radius: 12px;
+  
+  /* Dynamic resizing properties */
+  flex: 1;
+  justify-content: center;
+  min-width: 0; /* allows shrinking */
+  container-type: inline-size;
+  container-name: navcenter;
 
   ${media.tablet} {
-    display: flex;
-    gap: 4px;
+    gap: 6px;
+  }
+
+  ${media.phone} {
+    gap: 6px;
   }
 `;
 
@@ -67,6 +86,7 @@ export const NavItemWrapper = styled.div`
   position: relative;
   display: inline-flex;
   align-items: center;
+  min-width: 0;
 `;
 
 export const NavBtn = styled.a<{ $active?: boolean }>`
@@ -87,10 +107,12 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
 
   .nav-icon {
     font-size: 16px;
+    flex-shrink: 0;
   }
 
   .nav-label {
     display: block;
+    white-space: nowrap;
   }
 
   &:hover {
@@ -100,15 +122,37 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
     `}
   }
 
-  ${media.tablet} {
+  /* Dynamically hide text based on the available space for NavCenter container */
+  @container navcenter (max-width: 650px) {
     padding: 10px;
+    .nav-label {
+      display: none;
+    }
+    .nav-icon {
+      font-size: 18px;
+    }
+  }
+
+  /* Fallback media query if container queries aren't supported */
+  @media (max-width: 1050px) {
+    padding: 10px;
+    .nav-label {
+      display: none;
+    }
+    .nav-icon {
+      font-size: 18px;
+    }
+  }
+
+  ${media.phone} {
+    padding: 6px;
     
     .nav-label {
       display: none;
     }
     
     .nav-icon {
-      font-size: 18px;
+      font-size: 16px;
     }
   }
 `;
@@ -119,7 +163,7 @@ export const NavRight = styled.div`
   gap: 12px;
 
   ${media.phone} {
-    gap: 8px;
+    gap: 4px;
   }
 `;
 
@@ -148,9 +192,9 @@ export const IconBtn = styled.button<{ $variant?: 'danger' | 'default', $hovered
   box-shadow: ${props => (props.$hovered && props.$variant === 'danger') ? '0 2px 4px rgba(239, 68, 68, 0.1)' : 'none'};
 
   ${media.phone} {
-    width: 36px;
-    height: 36px;
-    font-size: 18px;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
   }
 `;
 
@@ -180,9 +224,9 @@ export const Avatar = styled.button<{ $hovered?: boolean, $bgColor?: string }>`
   }
 
   ${media.phone} {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
   }
 `;
 

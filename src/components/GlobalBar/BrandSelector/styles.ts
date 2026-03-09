@@ -30,6 +30,15 @@ export const Selector = styled.div<{ $isHovered: boolean }>`
 
   ${media.phone} {
     width: auto;
+    min-width: 36px;
+    padding: 2px;
+    border-radius: 8px;
+    justify-content: center;
+  }
+
+  /* Shrink dynamically without text inside tight spaces */
+  @container navleft (max-width: 300px) {
+    width: auto;
     min-width: 44px;
     padding: 4px;
     border-radius: 10px;
@@ -50,6 +59,10 @@ export const TenantName = styled.span`
   ${media.phone} {
     display: none;
   }
+
+  @container navleft (max-width: 300px) {
+    display: none;
+  }
 `;
 
 export const BrandIcon = styled.div`
@@ -68,10 +81,14 @@ export const BrandIcon = styled.div`
 
   ${media.phone} {
     margin-left: 0;
-    width: 32px;
-    height: 32px;
-    font-size: 16px;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
     border-radius: 6px;
+  }
+
+  @container navleft (max-width: 300px) {
+    margin-left: 0;
   }
 `;
 

@@ -12,7 +12,9 @@ import {
   ScrollLine, 
   ScrollArrow, 
   ContextMenu, 
-  ContextMenuItem 
+  ContextMenuItem,
+  DroppableListContainer,
+  ContextMenuButton
 } from './styles';
 import { useDroppable } from '@dnd-kit/core';
 import { useDndState } from '@/context/DndContext';
@@ -184,7 +186,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   const [hoveredArrow, setHoveredArrow] = useState<'up' | 'down' | null>(null);
 
   const MAX_VISIBLE = 7;
-  const ITEM_HEIGHT = 108;
+  const ITEM_HEIGHT = 84;
 
   const checkScroll = () => {
     const el = scrollContainerRef.current;
@@ -292,10 +294,9 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
             <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
               <Droppable droppableId="scroll-nav-list">
                 {(provided: DroppableProvided) => (
-                  <div
+                  <DroppableListContainer
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}
                   >
                     {lists.map((list, index) => (
                       <NavItem
@@ -311,7 +312,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                       />
                     ))}
                     {provided.placeholder}
-                  </div>
+                  </DroppableListContainer>
                 )}
               </Droppable>
             </DragDropContext>
@@ -339,10 +340,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
 
       {contextMenu && (
         <ContextMenu $top={contextMenu.y} $left={contextMenu.x} onClick={(e) => e.stopPropagation()}>
-          <button
-            style={{ border: 'none', background: 'transparent', width: '100%', padding: 0 }}
-            onClick={handleDelete}
-          >
+          <ContextMenuButton onClick={handleDelete}>
             <ContextMenuItem 
               $isHovered={hoveredMenuItem}
               onMouseEnter={() => setHoveredMenuItem(true)}
@@ -351,7 +349,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
               <span>🗑️</span>
               <span>Delete</span>
             </ContextMenuItem>
-          </button>
+          </ContextMenuButton>
         </ContextMenu>
       )}
     </>

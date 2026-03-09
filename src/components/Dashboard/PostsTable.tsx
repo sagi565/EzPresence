@@ -58,13 +58,22 @@ const PostCard: React.FC<PostCardProps> = ({ post, index }) => {
       }}
     >
       {/* ── Thumbnail ── */}
-      <div style={{
-        position: 'relative',
-        height: 220,
-        background: post.thumbnail,
-        flexShrink: 0,
-        overflow: 'hidden',
-      }}>
+      <div 
+        onClick={() => {
+          if (post.embedLink) {
+            window.open(post.embedLink, '_blank', 'noopener,noreferrer');
+          }
+        }}
+        style={{
+          position: 'relative',
+          height: 220,
+          background: post.thumbnail.startsWith('http') ? `url("${post.thumbnail}") center/cover no-repeat` : post.thumbnail,
+          flexShrink: 0,
+          overflow: 'hidden',
+          cursor: post.embedLink ? 'pointer' : 'default',
+        }}
+        title={post.embedLink ? "Click to view on platform" : undefined}
+      >
         {/* Platform icon — top-right, no circle */}
         <div style={{
           position: 'absolute', top: 10, right: 10,

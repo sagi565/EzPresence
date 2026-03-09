@@ -10,7 +10,7 @@ export const Overlay = styled.div`
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  zIndex: 99999;
+  z-index: 99999;
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;

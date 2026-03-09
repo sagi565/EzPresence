@@ -1,5 +1,6 @@
 import styled, { keyframes, css } from 'styled-components';
 import { theme } from '@theme/theme';
+import { media } from '@/styles/breakpoints';
 
 export const favoriteClick = keyframes`
   0% { transform: scale(1); }
@@ -32,6 +33,13 @@ export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: bo
   margin: 8px;
   width: 280px;
   height: 480px;
+
+  ${media.phone} {
+    width: 100px;
+    height: 180px;
+    margin: 4px;
+    border-radius: 12px;
+  }
 
   ${props => props.$isHovered && !props.$isUploading && !props.$isDragging && css`
     transform: scale(1.03) translateY(-4px);

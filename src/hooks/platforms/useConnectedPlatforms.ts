@@ -7,14 +7,16 @@ export const useConnectedPlatforms = (brandIdOrUninitializedUuid?: string | null
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchPlatforms = useCallback(async () => {
+    const fetchPlatforms = useCallback(async (showLoading: boolean = true) => {
         // Skip fetch if we're explicitly waiting for an ID (only if uninitialized context)
         if (isUninitialized && brandIdOrUninitializedUuid === null) {
-            setLoading(false);
+            if (showLoading) setLoading(false);
             return;
         }
 
-        setLoading(true);
+        if (showLoading) {
+            setLoading(true);
+        }
         setError(null);
 
         try {
@@ -108,8 +110,8 @@ export const useConnectedPlatforms = (brandIdOrUninitializedUuid?: string | null
     }, [brandIdOrUninitializedUuid, isUninitialized]);
 
     useEffect(() => {
-        fetchPlatforms();
+        fetchPlatforms(true);
     }, [fetchPlatforms]);
 
-    return { platforms, loading, error, refetch: fetchPlatforms };
+    return { platforms, loading, error, refetch: () => fetchPlatforms(false) };
 };

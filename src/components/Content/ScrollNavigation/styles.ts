@@ -1,5 +1,6 @@
 import styled, { keyframes, css } from 'styled-components';
 import { theme } from '@theme/theme';
+import { media } from '@/styles/breakpoints';
 
 export const celebrate = keyframes`
   0% {
@@ -25,28 +26,36 @@ export const celebrate = keyframes`
 
 export const ScrollNavContainer = styled.nav`
   position: fixed;
-  right: 20px;
-  top: 68px;
+  right: -220px;
+  top: 0;
   bottom: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  gap: 0;
-  zIndex: 100;
-  padding: 24px 60px 24px 24px;
+  gap: 4px;
+  z-index: 100;
+  width: 600px;
+  padding: 80px 0 24px 0;
   pointer-events: none;
+
+  ${media.phone} {
+    right: 0px;
+    transform: scale(0.9);
+    transform-origin: right center;
+    width: 80px;
+  }
 `;
 
 export const DotsContainer = styled.div<{ $height: string; $scrollable: boolean }>`
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 0;
   overflow: ${props => props.$scrollable ? 'auto' : 'visible'};
-  padding: 0 28px 0 0;
   pointer-events: auto;
   height: ${props => props.$height};
+  width: 100%;
   overflow-x: visible;
   scrollbar-width: none;
   ms-overflow-style: none;
@@ -59,9 +68,7 @@ export const DotsContainer = styled.div<{ $height: string; $scrollable: boolean 
 export const InnerContainer = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  transition: transform 0.3s ease;
-  transform: none;
+  align-items: center;
 `;
 
 export const ScrollItem = styled.div`
@@ -70,21 +77,34 @@ export const ScrollItem = styled.div`
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
-  padding: 32px 0;
+  padding: 20px 5px;
+  width: 100%;
   gap: 12px;
-  minWidth: 200px;
 `;
 
 export const ScrollLabel = styled.span<{ $visible?: boolean }>`
+  position: absolute;
+  right: 64px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: #374151;
   white-space: nowrap;
   opacity: ${props => props.$visible ? 1 : 0};
   transform: ${props => props.$visible ? 'translateX(0)' : 'translateX(8px)'};
   transition: all 0.2s ease;
   pointer-events: none;
-  padding-right: 4px;
+  text-align: right;
+  background: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+  ${media.phone} {
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 6px 12px;
+    right: 52px;
+  }
 
   .nav-grad-text {
     display: inline-block;
@@ -93,6 +113,12 @@ export const ScrollLabel = styled.span<{ $visible?: boolean }>`
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  ${media.phone} {
+    right: 56px;
+    opacity: 1 !important;
+    transform: translateX(0) !important;
   }
 `;
 
@@ -116,9 +142,9 @@ export const ScrollDot = styled.div<{
   align-items: center;
   justify-content: center;
   position: relative;
-  flexShrink: 0;
+  flex-shrink: 0;
   cursor: grab;
-  zIndex: 2;
+  z-index: 2;
 
   ${props => props.$isSystem ? css`
     background: ${theme.colors.secondary}1A;
@@ -165,7 +191,7 @@ export const ScrollDot = styled.div<{
   `}
 
   ${props => props.$isDragging && css`
-    zIndex: 9999;
+    z-index: 9999;
     box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     transform: scale(1.1);
   `}
@@ -179,14 +205,15 @@ export const ScrollIcon = styled.span`
 
 export const ScrollLine = styled.div<{ $hidden?: boolean }>`
   position: absolute;
-  right: 21px;
-  top: 76px;
+  left: 50%;
+  top: 64px;
   width: 2px;
-  height: 64px;
+  height: 40px;
   background: rgba(0, 0, 0, 0.08);
-  borderRadius: 1px;
+  border-radius: 1px;
   transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transformOrigin: top;
+  transform: translateX(-50%);
+  transform-origin: top;
   
   ${props => props.$hidden && css`
     height: 0px;
@@ -200,15 +227,13 @@ export const ScrollArrow = styled.button<{ $visible?: boolean; $isHovered?: bool
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 4px 0;
+  margin-bottom: 24px;
   cursor: pointer;
   color: #9ca3af;
   transition: all 0.2s ease;
-  borderRadius: 50%;
+  border-radius: 50%;
   background: transparent;
   border: none;
-  alignSelf: flex-end;
-  marginRight: 28px;
   pointer-events: ${props => props.$visible ? 'auto' : 'none'};
   opacity: ${props => props.$visible ? 1 : 0};
 
@@ -223,20 +248,20 @@ export const ContextMenu = styled.div<{ $top: number; $left: number }>`
   top: ${props => props.$top}px;
   left: ${props => props.$left}px;
   background: white;
-  borderRadius: 12px;
-  boxShadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   padding: 6px;
-  zIndex: 2000;
-  minWidth: 140px;
+  z-index: 2000;
+  min-width: 200px;
 `;
 
 export const ContextMenuItem = styled.button<{ $isHovered?: boolean }>`
   padding: 10px 14px;
-  borderRadius: 8px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s ease;
-  fontSize: 14px;
-  fontWeight: 500;
+  font-size: 14px;
+  font-weight: 500;
   color: #ef4444;
   display: flex;
   align-items: center;
@@ -244,9 +269,22 @@ export const ContextMenuItem = styled.button<{ $isHovered?: boolean }>`
   background: transparent;
   border: none;
   width: 100%;
-  textAlign: left;
+  text-align: left;
 
   ${props => props.$isHovered && css`
     background: rgba(239, 68, 68, 0.1);
   `}
+`;
+
+export const DroppableListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+export const ContextMenuButton = styled.button`
+  border: none;
+  background: transparent;
+  width: 100%;
+  padding: 0;
 `;

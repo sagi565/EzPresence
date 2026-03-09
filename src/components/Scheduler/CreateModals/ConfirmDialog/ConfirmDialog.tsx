@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { theme } from '@/theme/theme';
 import { styles } from './styles';
 
@@ -23,9 +24,15 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     onConfirm,
     onCancel
 }) => {
-    if (!isOpen) return null;
+    const [mounted, setMounted] = useState(false);
 
-    return (
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!isOpen || !mounted) return null;
+
+    return createPortal(
         <>
             <div
                 style={styles.overlay}
@@ -75,7 +82,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                     to { opacity: 1; transform: scale(1); }
                 }
             `}</style>
-        </>
+        </>,
+        document.body
     );
 };
 

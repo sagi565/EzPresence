@@ -1,5 +1,6 @@
 import styled, { css } from 'styled-components';
 import { theme } from '@theme/theme';
+import { media } from '@/styles/breakpoints';
 
 export const ListContainer = styled.div`
   position: relative;
@@ -7,17 +8,21 @@ export const ListContainer = styled.div`
   height: 100%;
   width: 100%;
   min-height: 540px;
+
+  ${media.tablet} {
+    min-height: auto;
+  }
 `;
 
 export const ListHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
-  marginBottom: 24px;
+  margin-bottom: 12px;
 `;
 
 export const ListIcon = styled.div<{ $isEditable?: boolean; $isHovered?: boolean; $isEditMode?: boolean }>`
-  font-size: 64px;
+  font-size: 56px;
   flex-shrink: 0;
   transition: all 0.2s ease;
   padding: 8px;
@@ -38,6 +43,11 @@ export const ListIcon = styled.div<{ $isEditable?: boolean; $isHovered?: boolean
     border-color: ${theme.colors.primary};
     background: ${theme.colors.primary}1A;
   `}
+
+  ${media.phone} {
+    font-size: 40px;
+    padding: 4px;
+  }
 `;
 
 export const ListTitleGroup = styled.div`
@@ -54,10 +64,14 @@ export const ListTitleContainer = styled.div`
 `;
 
 export const ListTitle = styled.h2`
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
   color: ${theme.colors.text};
   margin: 0;
+
+  ${media.phone} {
+    font-size: 24px;
+  }
 `;
 
 export const ListTitleClickable = styled.div<{ $isHovered?: boolean }>`
@@ -75,7 +89,7 @@ export const ListTitleClickable = styled.div<{ $isHovered?: boolean }>`
 `;
 
 export const ListTitleEditable = styled.input<{ $isFocused?: boolean }>`
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
   color: ${theme.colors.text};
   background: transparent;
@@ -91,10 +105,15 @@ export const ListTitleEditable = styled.input<{ $isFocused?: boolean }>`
     border-color: ${theme.colors.primary};
     box-shadow: 0 4px 20px ${theme.colors.primary}40;
   `}
+
+  ${media.phone} {
+    font-size: 24px;
+    max-width: 200px;
+  }
 `;
 
 export const ListSubtitle = styled.p`
-  fontSize: 15px;
+  font-size: 15px;
   font-weight: 500;
   color: ${theme.colors.muted};
   margin: 0;
@@ -124,12 +143,12 @@ export const ActionButton = styled.button<{ $type: 'delete' | 'save'; $visible?:
 
   ${props => props.$type === 'delete' && css`
     background: rgba(239, 68, 68, 0.1);
-    borderColor: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.2);
     color: #ef4444;
 
     ${props.$isHovered && css`
       background: #ef4444;
-      borderColor: #dc2626;
+      border-color: #dc2626;
       color: white;
       transform: scale(1.08);
       box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
@@ -138,12 +157,12 @@ export const ActionButton = styled.button<{ $type: 'delete' | 'save'; $visible?:
 
   ${props => props.$type === 'save' && css`
     background: rgba(34, 197, 94, 0.1);
-    borderColor: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.2);
     color: #22c55e;
 
     ${props.$isHovered && css`
       background: #22c55e;
-      borderColor: #16a34a;
+      border-color: #16a34a;
       color: white;
       transform: scale(1.08);
       box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
@@ -169,7 +188,7 @@ export const ListScrollWrapper = styled.div<{ $isDropTarget?: boolean; $isInvali
   }
 
   ${props => props.$isDropTarget && css`
-    backgroundColor: rgba(34, 197, 94, 0.08);
+    background-color: rgba(34, 197, 94, 0.08);
     border: 3px dashed rgba(34, 197, 94, 0.5);
     box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.1);
     transform: scale(1.01);
@@ -192,7 +211,7 @@ export const ScrollArrow = styled.button<{ $side: 'left' | 'right'; $visible?: b
   backdrop-filter: blur(10px);
   border: none;
   color: white;
-  fontSize: 36px;
+  font-size: 36px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -200,7 +219,7 @@ export const ScrollArrow = styled.button<{ $side: 'left' | 'right'; $visible?: b
   opacity: ${props => props.$visible ? 1 : 0};
   visibility: ${props => props.$visible ? 'visible' : 'hidden'};
   transition: opacity 0.3s ease, background 0.2s ease;
-  zIndex: 10;
+  z-index: 10;
   border-radius: 8px;
   ${props => props.$side === 'left' ? 'left: 8px;' : 'right: 8px;'}
 
@@ -208,4 +227,10 @@ export const ScrollArrow = styled.button<{ $side: 'left' | 'right'; $visible?: b
     opacity: 1 !important;
     background: rgba(0, 0, 0, 0.25);
   `}
+`;
+
+export const DraggableItemWrapper = styled.div<{ $isBeingDragged: boolean; $isDragging: boolean }>`
+  opacity: ${props => props.$isBeingDragged ? 0 : 1};
+  cursor: ${props => props.$isDragging ? 'grabbing' : 'grab'};
+  transition: opacity 0.15s ease;
 `;

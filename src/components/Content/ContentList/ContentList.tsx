@@ -7,7 +7,8 @@ import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import { 
   ListContainer, 
   ListScrollWrapper, 
-  ScrollArrow 
+  ScrollArrow,
+  DraggableItemWrapper
 } from './styles';
 import { useDraggable } from '@dnd-kit/core';
 import { useDroppable } from '@dnd-kit/core';
@@ -64,13 +65,10 @@ const DraggableItem: React.FC<{
   const isBeingDragged = activeId === item.id;
 
   return (
-    <div
+    <DraggableItemWrapper
       ref={setNodeRef}
-      style={{
-        opacity: isBeingDragged ? 0 : 1,
-        cursor: isDragging ? 'grabbing' : 'grab',
-        transition: 'opacity 0.15s ease',
-      }}
+      $isBeingDragged={isBeingDragged}
+      $isDragging={isDragging}
       {...listeners}
       {...attributes}
     >
@@ -84,7 +82,7 @@ const DraggableItem: React.FC<{
         onRename={(newName) => onItemRename(item.id, newName)}
         onToggleFavorite={() => onToggleFavorite(item.id)}
       />
-    </div>
+    </DraggableItemWrapper>
   );
 };
 

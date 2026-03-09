@@ -77,6 +77,7 @@ export const ListSection = styled.div<{ $isDeleting?: boolean }>`
   ${media.tablet} {
     padding: 40px 20px;
     justify-content: center;
+    min-height: auto;
   }
 `;
 
@@ -124,8 +125,9 @@ export const AddListButton = styled.button`
 
   ${media.phone} {
     width: 100%;
-    padding: 12px 20px;
-    font-size: 16px;
+    padding: 10px 16px;
+    font-size: 14px;
+    border-radius: 10px;
   }
 `;
 

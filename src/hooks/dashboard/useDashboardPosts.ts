@@ -25,6 +25,7 @@ export interface DashboardPost {
     comments: number;
   };
   comments: DashboardComment[];
+  embedLink?: string;
 }
 
 const platformColors: Record<string, string> = {
@@ -137,7 +138,59 @@ function generatePost(index: number, forcePlatform?: Exclude<Platform, 'all'>): 
   };
 }
 
-const ALL_MOCK_POSTS: DashboardPost[] = Array.from({ length: 40 }, (_, i) => generatePost(i));
+const REAL_POSTS: DashboardPost[] = [
+  {
+    id: "7579077087818992916",
+    platform: "tiktok",
+    type: "video",
+    thumbnail: "https://p16-sign-sg.tiktokcdn.com/tos-alisg-p-0037/oMuGAYinAAY5yKBAilASISacDAAA3I4vLElW2~tplv-tiktokx-cropcenter-q:300:400:q72.jpeg?dr=14782&refresh_token=c53db8f2&x-expires=1764777600&x-signature=a34alwAG8zuIV66IcPvXCm6k%2FHU%3D&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=8aecc5ac&idc=maliva&biz_tag=tt_video&s=TIKTOK_FOR_DEVELOPER&sc=cover",
+    caption: "Wise Jellyfish A space elevator cable would have to be over 35,000 kilometers long",
+    publishedAt: "2025-12-02T02:10:03+00:00",
+    createdByEzPresence: true,
+    stats: { views: 89, likes: 12, shares: 3, comments: 2 },
+    comments: [
+      { id: "c1", username: "space_fan", avatar: "", text: "Wow, that's insane!", publishedAt: new Date(Date.now() - 3600000).toISOString(), likes: 2 },
+      { id: "c2", username: "physics_nerd", avatar: "", text: "Would the cable snap?", publishedAt: new Date(Date.now() - 7200000).toISOString(), likes: 0 }
+    ],
+    embedLink: "https://www.tiktok.com/player/v1/7579077087818992916?music_info=1&description=1&autoplay=1&loop=1&utm_campaign=tt4d_open_api&utm_source=sbawjghbp1kd2spqww"
+  },
+  {
+    id: "7578334745826725141",
+    platform: "tiktok",
+    type: "video",
+    thumbnail: "https://p16-sign-sg.tiktokcdn.com/tos-alisg-p-0037/oAQMkrAGuffpJK49xf0GKfAAQBkpXjAITA8XWT~tplv-tiktokx-cropcenter-q:300:400:q72.jpeg?dr=14782&refresh_token=70f29713&x-expires=1764777600&x-signature=bDxTjcQtkif%2FlJPkaNnMj3JqQ8Y%3D&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=8aecc5ac&idc=maliva&sc=cover&biz_tag=tt_video&s=TIKTOK_FOR_DEVELOPER",
+    caption: "Wise Jellyfish The largest natural whirlpool on Earth is called the Saltstraumen",
+    publishedAt: "2025-11-30T02:09:27+00:00",
+    createdByEzPresence: true,
+    stats: { views: 82, likes: 8, shares: 1, comments: 1 },
+    comments: [
+      { id: "c3", username: "ocean_lover", avatar: "", text: "Nature is scary", publishedAt: new Date(Date.now() - 86400000).toISOString(), likes: 1 }
+    ],
+    embedLink: "https://www.tiktok.com/player/v1/7578334745826725141?music_info=1&description=1&autoplay=1&loop=1&utm_campaign=tt4d_open_api&utm_source=sbawjghbp1kd2spqww"
+  },
+  {
+    id: "7577985391085505809",
+    platform: "tiktok",
+    type: "video",
+    thumbnail: "https://p16-sign-sg.tiktokcdn.com/tos-alisg-p-0037/ocndqALYTUAUViI0AlifgBwo1aaATQElKAB3Bq~tplv-tiktokx-cropcenter-q:300:400:q72.jpeg?dr=14782&refresh_token=aade4d90&x-expires=1764777600&x-signature=ZW5bNTYyMjqdbtYVntiBNwA6u%2Fw%3D&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=8aecc5ac&idc=maliva&biz_tag=tt_video&s=TIKTOK_FOR_DEVELOPER&sc=cover",
+    caption: "Wise Jellyfish Pigeons can recognize themselves in a mirror",
+    publishedAt: "2025-11-29T03:34:52+00:00",
+    createdByEzPresence: true,
+    stats: { views: 234, likes: 45, shares: 12, comments: 4 },
+    comments: [
+      { id: "c4", username: "birdwatcher", avatar: "", text: "Pigeons are actually super smart!", publishedAt: new Date(Date.now() - 100000).toISOString(), likes: 15 },
+      { id: "c5", username: "city_dweller", avatar: "", text: "I didn't know that!", publishedAt: new Date(Date.now() - 500000).toISOString(), likes: 3 },
+      { id: "c6", username: "animal_facts", avatar: "", text: "They share this trait with dolphins and elephants.", publishedAt: new Date(Date.now() - 800000).toISOString(), likes: 8 },
+      { id: "c7", username: "curious_mind", avatar: "", text: "Mind blown 🤯", publishedAt: new Date(Date.now() - 900000).toISOString(), likes: 1 }
+    ],
+    embedLink: "https://www.tiktok.com/player/v1/7577985391085505809?music_info=1&description=1&autoplay=1&loop=1&utm_campaign=tt4d_open_api&utm_source=sbawjghbp1kd2spqww"
+  }
+];
+
+const ALL_MOCK_POSTS: DashboardPost[] = [
+  ...REAL_POSTS,
+  ...Array.from({ length: 37 }, (_, i) => generatePost(i + 3))
+];
 
 export const useDashboardPosts = (platforms: string[], limit = 8) => {
   const [posts, setPosts] = useState<DashboardPost[]>([]);
