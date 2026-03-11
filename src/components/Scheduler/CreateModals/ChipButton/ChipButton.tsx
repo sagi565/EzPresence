@@ -10,6 +10,7 @@ interface ChipButtonProps {
     maxWidth?: string;
     small?: boolean;
     style?: React.CSSProperties;
+    className?: string;
 }
 
 /**

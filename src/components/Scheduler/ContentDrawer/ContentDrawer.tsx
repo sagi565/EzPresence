@@ -75,19 +75,20 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({
     <>
       <div
         id="contentDrawer"
-        className={`content-drawer ${isPicking ? 'nsm-picking' : ''}`}
+        className={`content-drawer ${isOpen ? 'drawer-open' : ''} ${isPicking ? 'nsm-picking' : ''}`}
         style={{ ...styles.drawer, ...(isOpen ? styles.drawerOpen : {}) }}
       >
         <div className="content-drawer-handle" style={styles.drawerHandle} onClick={onToggle}>
           <span style={{ ...styles.drawerArrow, ...(isOpen ? styles.drawerArrowOpen : {}) }}>▲</span>
-          <span style={styles.drawerTitle}>My Content</span>
+          <span className="content-drawer-title" style={styles.drawerTitle}>My Content</span>
         </div>
 
-        <div style={styles.drawerContent}>
-          <div style={styles.drawerInner}>
-            <div style={styles.drawerControls}>
+        <div className="content-drawer-content" style={styles.drawerContent}>
+          <div className="content-drawer-inner" style={styles.drawerInner}>
+            <div className="content-drawer-controls" style={styles.drawerControls}>
               <input
                 type="text"
+                className="content-drawer-search"
                 style={styles.searchBar}
                 placeholder="Search..."
                 value={searchQuery}
@@ -120,8 +121,9 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({
               </div>
             </div>
 
-            <div style={styles.listsContainer}>
+            <div className="content-drawer-lists" style={styles.listsContainer}>
               <button
+                className={`content-drawer-list-pill ${selectedListId === 'all' ? 'content-drawer-list-pill-all-active' : ''}`}
                 style={{
                   ...styles.listPill,
                   ...(selectedListId === 'all' ? styles.listPillAllActive : {})
@@ -134,6 +136,7 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({
               {lists.map(list => (
                 <button
                   key={list.id}
+                  className={`content-drawer-list-pill ${selectedListId === list.id ? 'content-drawer-list-pill-active' : ''}`}
                   style={{ ...styles.listPill, ...(selectedListId === list.id ? styles.listPillActive : {}) }}
                   onClick={() => setSelectedListId(list.id)}
                 >

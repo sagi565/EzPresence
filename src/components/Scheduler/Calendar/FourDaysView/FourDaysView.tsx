@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Post } from '@models/Post';
-import { styles } from './styles';
+import {
+  Container,
+  Grid,
+  HeaderRow,
+  TimeHeader,
+  DayHeader,
+  DayName,
+  DayDate,
+  BodyContainer,
+  TimeRow,
+  TimeLabel,
+  DayCell,
+  PostContainer,
+  OverflowIndicator,
+  TimeIndicatorContainer,
+  TimeIndicatorDot,
+  TimeIndicatorLine
+} from './styles';
 import FourDaysViewPost from './FourDaysViewPost';
 
 interface FourDaysViewProps {
@@ -19,7 +36,6 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
   currentMonth,
   currentDay,
   posts,
-  onDayChange,
   onDrop,
   onPostClick,
   onContextMenu,
@@ -135,26 +151,26 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.grid}>
-        <div style={styles.headerRow}>
-          <div style={styles.timeHeader}>Time</div>
+    <Container>
+      <Grid>
+        <HeaderRow>
+          <TimeHeader>Time</TimeHeader>
           {days.map((day, index) => {
             const header = formatDayHeader(day);
             const isTodayDay = isToday(day);
             return (
-              <div key={index} style={{ ...styles.dayHeader, ...(isTodayDay ? styles.dayHeaderToday : {}) }}>
-                <div style={styles.dayName}>{header.dayName}</div>
-                <div style={styles.dayDate}>{header.month} {header.date}</div>
-              </div>
+              <DayHeader key={index} $isToday={isTodayDay}>
+                <DayName>{header.dayName}</DayName>
+                <DayDate>{header.month} {header.date}</DayDate>
+              </DayHeader>
             );
           })}
-        </div>
+        </HeaderRow>
 
-        <div style={styles.bodyContainer}>
+        <BodyContainer>
           {hours.map((hour) => (
-            <div key={hour} style={styles.timeRow}>
-              <div style={styles.timeLabel}>{formatHour(hour)}</div>
+            <TimeRow key={hour}>
+              <TimeLabel>{formatHour(hour)}</TimeLabel>
               {days.map((day, dayIndex) => {
                 const cellId = `${day.toISOString()}-${hour}`;
                 const cellPosts = getPostsForCell(day, hour);
@@ -168,15 +184,11 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
                 const hasOverflow = cellPosts.length > maxVisible;
 
                 return (
-                  <div
+                  <DayCell
                     key={dayIndex}
-                    style={{
-                      ...styles.dayCell,
-                      ...(isTodayDay ? styles.dayCellToday : {}),
-                      ...(isPast ? styles.dayCellPast : {}),
-                      ...(isHovered && !isPast && !isTodayDay ? styles.dayCellHover : {}),
-                      ...(isHovered && !isPast && isTodayDay ? styles.dayCellTodayHover : {}),
-                    }}
+                    $isToday={isTodayDay}
+                    $isPast={isPast}
+                    $isHovered={isHovered}
                     onDragOver={(e) => handleDragOver(e, day, hour)}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, day, hour)}
@@ -188,8 +200,8 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
                       }
                     }}
                   >
-                    <div style={styles.postContainer}>
-                      {visiblePosts.map((post, idx) => (
+                    <PostContainer>
+                      {visiblePosts.map((post) => (
                         <FourDaysViewPost
                           key={post.id}
                           post={post}
@@ -197,26 +209,26 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
                           onClick={onPostClick}
                         />
                       ))}
-                    </div>
+                    </PostContainer>
                     {hasOverflow && (
-                      <div style={styles.overflowIndicator}>
+                      <OverflowIndicator>
                         +{cellPosts.length - maxVisible}
-                      </div>
+                      </OverflowIndicator>
                     )}
                     {showIndicator && (
-                      <div style={{ ...styles.timeIndicator, top: `${(currentTime.getMinutes() / 60) * 100}%` }}>
-                        <div style={styles.timeIndicatorDot} />
-                        <div style={styles.timeIndicatorLine} />
-                      </div>
+                      <TimeIndicatorContainer style={{ top: `${(currentTime.getMinutes() / 60) * 100}%` }}>
+                        <TimeIndicatorDot />
+                        <TimeIndicatorLine />
+                      </TimeIndicatorContainer>
                     )}
-                  </div>
+                  </DayCell>
                 );
               })}
-            </div>
+            </TimeRow>
           ))}
-        </div>
-      </div>
-    </div>
+        </BodyContainer>
+      </Grid>
+    </Container>
   );
 };
 

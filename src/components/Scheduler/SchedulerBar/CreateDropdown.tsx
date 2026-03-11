@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { styles as barStyles } from './styles';
-import { theme } from '@theme/theme';
+import { DropdownMenu, DropdownItemRow, AiBadge } from './styles';
 
 export interface CreateDropdownProps {
     isOpen: boolean;
@@ -76,62 +75,36 @@ const CreateDropdown: React.FC<CreateDropdownProps> = ({ isOpen, onClose, onSele
 
     if (!isOpen) return null;
 
-    const dropdownItemStyle = (id: string) => ({
-        ...barStyles.dropdownItem,
-        ...(hoveredItem === id ? {
-            background: theme.gradients.balance,
-            color: 'white',
-        } : {}),
-    });
-
     const menuContents = (
         <>
-            <div
-                style={dropdownItemStyle('single')}
+            <DropdownItemRow
+                $isHovered={hoveredItem === 'single'}
                 onClick={() => onSelect('post')}
                 onMouseEnter={() => setHoveredItem('single')}
                 onMouseLeave={() => setHoveredItem(null)}
             >
                 <span>📤</span>
                 <span>New Post</span>
-            </div>
-            <div
-                style={dropdownItemStyle('story')}
+            </DropdownItemRow>
+            <DropdownItemRow
+                $isHovered={hoveredItem === 'story'}
                 onClick={() => onSelect('story')}
                 onMouseEnter={() => setHoveredItem('story')}
                 onMouseLeave={() => setHoveredItem(null)}
             >
                 <span>📖</span>
                 <span>New Story</span>
-            </div>
-            <div
-                style={{
-                    ...dropdownItemStyle('ai'),
-                    opacity: 0.6,
-                    cursor: 'default',
-                    position: 'relative' as const,
-                }}
+            </DropdownItemRow>
+            <DropdownItemRow
+                $isAi
                 onClick={() => onSelect('ai')}
                 onMouseEnter={() => setHoveredItem('ai')}
                 onMouseLeave={() => setHoveredItem(null)}
             >
                 <span>🤖🔁</span>
                 <span>AI Series</span>
-                <span style={{
-                    fontSize: '9px',
-                    fontWeight: 800,
-                    color: '#fff',
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                    padding: '2px 8px',
-                    borderRadius: '6px',
-                    marginLeft: 'auto',
-                    textTransform: 'uppercase' as const,
-                    letterSpacing: '0.5px',
-                    boxShadow: '0 2px 6px rgba(59, 130, 246, 0.3)',
-                }}>
-                    Soon
-                </span>
-            </div>
+                <AiBadge>Soon</AiBadge>
+            </DropdownItemRow>
         </>
     );
 
@@ -140,29 +113,24 @@ const CreateDropdown: React.FC<CreateDropdownProps> = ({ isOpen, onClose, onSele
         const pos = frozenPos.current!;
 
         return ReactDOM.createPortal(
-            <div
+            <DropdownMenu
                 ref={ref}
-                style={{
-                    ...barStyles.createDropdown,
-                    position: 'fixed',
-                    top: pos.top,
-                    left: pos.left,
-                    zIndex: 1750,
-                    minWidth: `${DROPDOWN_WIDTH}px`,
-                    animation: 'dropdownAppear 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-                }}
+                $isFixed
+                $top={pos.top}
+                $left={pos.left}
+                style={{ minWidth: `${DROPDOWN_WIDTH}px` }}
             >
                 {menuContents}
-            </div>,
+            </DropdownMenu>,
             document.body
         );
     }
 
     // --- INLINE MODE (used inside CreatePostButton) ---
     return (
-        <div ref={ref} style={barStyles.createDropdown}>
+        <DropdownMenu ref={ref}>
             {menuContents}
-        </div>
+        </DropdownMenu>
     );
 };
 

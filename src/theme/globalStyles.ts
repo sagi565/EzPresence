@@ -417,7 +417,7 @@ export const globalStyles = `
   .content-pick-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: transparent;
     z-index: 1550; /* Lower than modal (1600) so drop zones work */
     opacity: 0;
     pointer-events: none;

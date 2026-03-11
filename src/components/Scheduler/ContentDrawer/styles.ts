@@ -3,6 +3,72 @@ import { CSSProperties } from 'react';
 const styleSheet = document.createElement("style");
 styleSheet.innerText = `
   @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  @media (max-width: 768px) {
+    .content-drawer {
+      transform: translateY(calc(100% - 48px)) !important;
+    }
+    .content-drawer.drawer-open {
+      transform: translateY(0) !important;
+    }
+    .content-drawer-handle {
+      padding: 8px !important;
+    }
+    .content-drawer-title {
+      font-size: 12px !important;
+    }
+    .content-drawer-content {
+      height: 240px !important;
+    }
+    .content-drawer-inner {
+      padding: 8px 0px !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+    .content-drawer-controls {
+      padding: 0 12px !important;
+    }
+    .content-drawer-search {
+      max-width: 100% !important;
+    }
+    .content-drawer-lists {
+      width: 100% !important;
+      border-left: none !important;
+      border-top: 1px solid #f3f4f6 !important;
+      flex-direction: row !important;
+      max-height: 48px !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      flex-wrap: nowrap !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding: 0 !important;
+    }
+    .content-drawer-list-pill {
+      padding: 8px 12px !important;
+      border-bottom: none !important;
+      border-right: 1px solid #f3f4f6 !important;
+      width: auto !important;
+      white-space: nowrap !important;
+      flex: 0 0 auto !important;
+    }
+    .content-drawer-list-pill-active {
+      border-left: none !important;
+      border-bottom: 3px solid #9b5de5 !important;
+    }
+    .content-drawer-list-pill-all-active {
+      border-left: none !important;
+      border-bottom: 4px solid #6d28d9 !important;
+    }
+    .content-card {
+      width: 80px !important;
+      height: 142px !important;
+      padding: 4px !important;
+    }
+    .content-card-title {
+      font-size: 9px !important;
+      padding: 6px 4px 2px 4px !important;
+    }
+  }
 `;
 document.head.appendChild(styleSheet);
 

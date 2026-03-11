@@ -25,18 +25,6 @@ if (!document.getElementById(DIMMER_STYLE_ID)) {
   const s = document.createElement('style');
   s.id = DIMMER_STYLE_ID;
   s.textContent = `
-    #drag-dimmer {
-      position: fixed;
-      inset: 0;
-      background: rgba(17, 24, 39, 0.65);
-      z-index: 1200;
-      pointer-events: none;
-      animation: dimmerFadeIn 0.2s ease forwards;
-    }
-    @keyframes dimmerFadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
     body.content-dragging .content-drawer {
       z-index: 2000 !important;
     }
@@ -64,14 +52,14 @@ const DragCard: React.FC<{ content: ContentItem; pos: { x: number; y: number } }
         position: 'fixed',
         top: 0,
         left: 0,
-        width: '130px',
+        width: '80px',
         aspectRatio: '9/16',
-        borderRadius: '14px',
+        borderRadius: '10px',
         overflow: 'hidden',
         border: '2px solid #9b5de5',
         background: '#f8f9fb',
-        boxShadow: '0 25px 50px -12px rgba(155, 93, 229, 0.45)',
-        transform: `translate(${pos.x - 65}px, ${pos.y - 185}px) rotate(-2deg) scale(1.04)`,
+        boxShadow: '0 12px 24px -6px rgba(155, 93, 229, 0.45)',
+        transform: `translate(${pos.x - 40}px, ${pos.y - 80}px) rotate(-2deg) scale(1)`,
         pointerEvents: 'none',
         zIndex: 9999,
         opacity: 0.95,
@@ -99,8 +87,7 @@ const DragCard: React.FC<{ content: ContentItem; pos: { x: number; y: number } }
   );
 };
 
-const DragDimmer: React.FC = () =>
-  ReactDOM.createPortal(<div id="drag-dimmer" />, document.body);
+
 
 const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragStartProp, onSelect, onClickDetail }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -156,6 +143,7 @@ const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragS
   return (
     <>
       <div
+        className="content-card"
         style={{
           ...styles.contentCard,
           ...(isHovered && !isDragging ? styles.contentCardHover : {}),
@@ -181,12 +169,11 @@ const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragS
               {isEmoji ? content.thumbnail : content.type === 'video' ? '🎬' : '🖼️'}
             </span>
           )}
-          <div style={styles.contentTitle}>{content.title}</div>
+          <div className="content-card-title" style={styles.contentTitle}>{content.title}</div>
         </div>
       </div>
 
       {isDragging && <DragCard content={content} pos={pointerPos} />}
-      {isDragging && <DragDimmer />}
     </>
   );
 };

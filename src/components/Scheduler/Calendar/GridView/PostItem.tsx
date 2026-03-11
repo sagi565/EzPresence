@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 import { Post } from '@models/Post';
-import { styles } from './styles';
+import {
+  PostItemContainer,
+  PostFirstLine,
+  PostLeft,
+  PostRight,
+  StatusIndicator,
+  BlackTooltip,
+  PostTime,
+  MediaIcon,
+  PostTitleWrapper,
+  PlatformIcon
+} from './styles';
 import { getPolicyBackground, getPolicyAccent } from '@utils/policyColors';
 
 interface PostItemProps {
@@ -33,20 +44,16 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
   const policyBg = post.isRecurring ? getPolicyBackground(post.scheduleUuid) : null;
   const policyAccent = post.isRecurring ? getPolicyAccent(post.scheduleUuid) : null;
 
-  const postStyle = {
-    ...styles.postItem,
-    ...(policyBg ? { background: policyBg } : {}),
-    ...(policyAccent ? { borderLeft: `3px solid ${policyAccent}` } : {}),
-    ...(isHovered ? {
-      transform: 'translateX(2px)',
-      boxShadow: '0 2px 6px rgba(155, 93, 229, 0.15)',
-      cursor: 'pointer'
-    } : {}),
-  };
-
   return (
-    <div
-      style={postStyle}
+    <PostItemContainer
+      style={{
+        ...(policyBg ? { background: policyBg } : {}),
+        ...(policyAccent ? { borderLeft: `3px solid ${policyAccent}` } : {}),
+        ...(isHovered ? {
+          transform: 'translateX(2px)',
+          boxShadow: '0 2px 6px rgba(155, 93, 229, 0.15)'
+        } : {})
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={(e) => {
@@ -54,8 +61,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
         onClick(post);
       }}
     >
-      <div style={styles.postFirstLine}>
-        <div style={styles.postLeft}>
+      <PostFirstLine>
+        <PostLeft>
           <div
             style={{
               position: 'relative',
@@ -64,23 +71,18 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
             }}
           >
             <div
-              style={{
-                ...styles.statusIndicator,
-                ...(post.status === 'success' ? styles.statusSuccess : {}),
-                ...(post.status === 'failed' ? styles.statusFailed : {}),
-                ...(post.status === 'scheduled' ? styles.statusScheduled : {}),
-                ...(post.status === 'draft' ? styles.statusDraft : {}),
-              }}
               onMouseEnter={() => setIsStatusHovered(true)}
               onMouseLeave={() => setIsStatusHovered(false)}
-            />
+            >
+              <StatusIndicator $status={post.status} />
+            </div>
             {isStatusHovered && (
-              <div style={styles.blackTooltip}>
+              <BlackTooltip>
                 {getStatusText(post.status)}
-              </div>
+              </BlackTooltip>
             )}
           </div>
-          <span style={styles.postTime}>{post.time}</span>
+          <PostTime>{post.time}</PostTime>
           {post.isRecurring && (
             <div
               style={{
@@ -97,7 +99,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
                 style={{ width: '12px', height: '12px', objectFit: 'contain', opacity: 0.7 }}
               />
               {isRepeatHovered && (
-                <div style={styles.blackTooltip}>Repeat {post.type}</div>
+                <BlackTooltip>Repeat {post.type}</BlackTooltip>
               )}
             </div>
           )}
@@ -108,32 +110,30 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
               alignItems: 'center',
             }}
           >
-            <span
-              style={styles.mediaIcon}
+            <MediaIcon
               onMouseEnter={() => setIsMediaHovered(true)}
               onMouseLeave={() => setIsMediaHovered(false)}
             >
               {mediaEmoji}
               {isMediaHovered && (
-                <div style={styles.blackTooltip}>{mediaText}</div>
+                <BlackTooltip>{mediaText}</BlackTooltip>
               )}
-            </span>
+            </MediaIcon>
           </div>
-        </div>
-        <div style={styles.postRight}>
+        </PostLeft>
+        <PostRight>
           {post.platforms.map((platform) => (
-            <img
+            <PlatformIcon
               key={platform}
               src={`/icons/social/${platform}.png`}
               alt={platform}
-              style={styles.platformIcon}
               title={platform}
             />
           ))}
-        </div>
-      </div>
-      <div style={styles.postTitle}>{post.title}</div>
-    </div>
+        </PostRight>
+      </PostFirstLine>
+      <PostTitleWrapper>{post.title}</PostTitleWrapper>
+    </PostItemContainer>
   );
 };
 

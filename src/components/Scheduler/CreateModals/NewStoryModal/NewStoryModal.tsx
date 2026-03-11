@@ -520,6 +520,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                 beforeBody={
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <input
+                            className="nsm-title-input"
                             type="text"
                             style={{ ...titleInputStyle, ...(validationErrors.title ? { borderBottomColor: '#EF4444' } : {}) }}
                             placeholder={formData.calendarItemId ? (isReadOnly ? "View story" : "Edit story") : "New story"}
@@ -568,30 +569,30 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     </div>
                 }
             >
-                <SectionContainer icon="🕐">
-                    <div style={chipRowStyle}>
-                        <div style={{ position: 'relative' }}>
-                            <ChipButton minWidth="200px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
+                <SectionContainer icon="🕐" className="nsm-date-section">
+                    <div className="chip-row-container" style={chipRowStyle}>
+                        <div style={{ position: 'relative', flex: 1 }}>
+                            <ChipButton className="chip-button" minWidth="180px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
                                 <span>{formatDateLabel(formData.date)}</span><ChipArrow />
                             </ChipButton>
                             <DatePicker selectedDate={formData.date} onChange={handleDateChange} minDate={new Date()} show={showDatePicker} onClose={() => setShowDatePicker(false)} />
                         </div>
-                        <div style={{ position: 'relative' }}>
-                            <ChipButton minWidth="120px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
+                        <div style={{ position: 'relative', flex: 1 }}>
+                            <ChipButton className="chip-button" minWidth="90px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
                                 <span>{formData.time}</span><ChipArrow />
                             </ChipButton>
                             <TimePicker selectedTime={formData.time} onChange={handleTimeChange} show={showTimePicker} onClose={() => setShowTimePicker(false)} />
                         </div>
-                        <div style={{ position: 'relative' }}>
-                            <ChipButton minWidth="120px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
-                                <span style={{ minWidth: '80px', display: 'inline-block' }}>{formData.timezone ? getTimezoneLabel(formData.timezone) : 'Timezone'}</span><ChipArrow />
+                        <div style={{ position: 'relative', flex: 1 }}>
+                            <ChipButton className="chip-button" minWidth="110px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
+                                <span style={{ minWidth: '60px', display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formData.timezone ? getTimezoneLabel(formData.timezone) : 'Timezone'}</span><ChipArrow />
                             </ChipButton>
                             <TimezoneSelector selectedTimezone={formData.timezone || 'America/New_York'} onChange={(tz) => { setFormData(prev => ({ ...prev, timezone: tz })); setShowTimezoneSelector(false); }} show={showTimezoneSelector} onClose={() => setShowTimezoneSelector(false)} />
                         </div>
                     </div>
-                    <div style={chipRowStyle}>
-                        <div style={{ position: 'relative' }}>
-                            <ChipButton minWidth="260px" maxWidth="260px" style={{ position: 'relative' }} onClick={() => { closeAllPickers(); setShowRepeatSelector(true); }}>
+                    <div className="chip-row-container" style={{ ...chipRowStyle, marginTop: '8px' }}>
+                        <div style={{ position: 'relative', width: '100%' }}>
+                            <ChipButton className="chip-button" minWidth="100%" maxWidth="100%" style={{ position: 'relative' }} onClick={() => { closeAllPickers(); setShowRepeatSelector(true); }}>
                                 <span>{formData.repeat.label}</span><ChipArrow />
                             </ChipButton>
                             <RepeatSelector selectedRepeat={formData.repeat} onChange={(repeat) => { setFormData({ ...formData, repeat }); setShowRepeatSelector(false); }} baseDate={formData.date} show={showRepeatSelector} onClose={() => setShowRepeatSelector(false)} />

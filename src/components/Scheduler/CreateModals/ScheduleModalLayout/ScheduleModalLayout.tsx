@@ -91,7 +91,7 @@ const ScheduleModalLayout: React.FC<ScheduleModalLayoutProps> = ({
                     ...(scrollableBody ? { overflow: 'hidden' } : {})
                 }}
             >
-                <div style={styles.header}>
+                <div className="schedule-modal-layout-header" style={styles.header}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         {icon && <span style={styles.typeLabel}>{icon}</span>}
                         {headerContent || <span style={styles.title}>{title}</span>}
@@ -112,22 +112,22 @@ const ScheduleModalLayout: React.FC<ScheduleModalLayoutProps> = ({
                 {scrollableBody ? (
                     <div style={styles.scrollableBody}>
                         {beforeBody}
-                        <div style={styles.body}>
-                            <div style={styles.leftColumn}>{children}</div>
-                            <div style={styles.rightColumn}>{rightColumn}</div>
+                        <div className="schedule-modal-layout-body" style={styles.body}>
+                            <div className="schedule-modal-layout-left" style={styles.leftColumn}>{children}</div>
+                            <div className="schedule-modal-layout-right" style={styles.rightColumn}>{rightColumn}</div>
                         </div>
                     </div>
                 ) : (
                     <>
                         {beforeBody}
-                        <div style={styles.body}>
-                            <div style={styles.leftColumn}>{children}</div>
-                            <div style={styles.rightColumn}>{rightColumn}</div>
+                        <div className="schedule-modal-layout-body" style={styles.body}>
+                            <div className="schedule-modal-layout-left" style={styles.leftColumn}>{children}</div>
+                            <div className="schedule-modal-layout-right" style={styles.rightColumn}>{rightColumn}</div>
                         </div>
                     </>
                 )}
 
-                {footer && <div style={styles.footer}>{footer}</div>}
+                {footer && <div className="schedule-modal-layout-footer" style={styles.footer}>{footer}</div>}
             </div>
         </>,
         document.body
@@ -147,6 +147,32 @@ if (typeof document !== 'undefined') {
                 background: rgba(0, 0, 0, .12) !important;
                 color: ${theme.colors.text} !important;
                 transform: rotate(90deg);
+            }
+            @media (max-width: 768px) {
+                .schedule-modal-layout {
+                    width: 100vw !important;
+                    height: 100dvh !important;
+                    max-width: 100vw !important;
+                    max-height: 100dvh !important;
+                    border-radius: 0 !important;
+                }
+                .schedule-modal-layout-header {
+                    padding: 16px !important;
+                    border-radius: 0 !important;
+                }
+                .schedule-modal-layout-body {
+                    flex-direction: column !important;
+                    padding: 16px !important;
+                    gap: 16px !important;
+                }
+                .schedule-modal-layout-right {
+                    width: 100% !important;
+                    height: auto !important;
+                }
+                .schedule-modal-layout-footer {
+                    padding: 16px !important;
+                    border-radius: 0 !important;
+                }
             }
         `;
         document.head.appendChild(style);

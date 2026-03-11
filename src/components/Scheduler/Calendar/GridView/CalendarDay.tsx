@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { Post } from '@models/Post';
 import PostItem from './PostItem';
-import { styles } from './styles';
+import {
+  CalendarDayCell,
+  DayNumber,
+  MonthLabel,
+  OverflowIndicator,
+  DayCircle
+} from './styles';
 
 interface CalendarDayProps {
   day: number;
@@ -28,6 +34,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
   isPast,
   isToday,
   showMonthName = false,
+  isOtherMonth = false,
   posts,
   onDrop,
   onPostClick,
@@ -35,7 +42,6 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
   onContextMenu,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
     if (isPast) return;
@@ -56,53 +62,44 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
     onDrop(date, contentId, { x: e.clientX, y: e.clientY });
   };
 
-  const showHoverBorder = isHovered && !isPast && !isToday;
-
   const isActiveDropTarget = activeDropDate instanceof Date &&
     date.getTime() === new Date(activeDropDate).setHours(0, 0, 0, 0);
-
-  const dayStyle = {
-    ...styles.calendarDay,
-    ...(isPast ? styles.calendarDayPast : {}),
-    ...(isToday ? styles.calendarDayToday : {}),
-    ...(isDragOver || isActiveDropTarget ? styles.calendarDayDragOver : {}),
-    ...(showHoverBorder && !isDragOver && !isActiveDropTarget ? styles.calendarDayHover : {}),
-  };
 
   const maxVisible = 2;
   const visiblePosts = posts.slice(0, maxVisible);
   const hasOverflow = posts.length > maxVisible;
 
   return (
-    <div
-      style={dayStyle}
+    <CalendarDayCell
+      $isPast={isPast}
+      $isToday={isToday}
+      $isOtherMonth={isOtherMonth}
+      $isDragOver={isDragOver || isActiveDropTarget}
       data-date={date.toISOString()}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onContextMenu={(e) => {
         if (!isPast) {
           onContextMenu?.(e, date);
         }
       }}
     >
-      <div style={isToday ? styles.dayNumberToday : styles.dayNumber}>
-        {day}
+      <DayNumber $isToday={isToday} $isOtherMonth={isOtherMonth}>
+        {isToday ? <DayCircle>{day}</DayCircle> : day}
         {showMonthName && (
-          <span style={styles.monthLabel}>
+          <MonthLabel>
             {MONTH_NAMES[date.getMonth()]}
-          </span>
+          </MonthLabel>
         )}
-      </div>
+      </DayNumber>
       {visiblePosts.map((post) => (
         <PostItem key={post.id} post={post} onClick={onPostClick} />
       ))}
       {hasOverflow && (
-        <div style={styles.overflowIndicator}>+{posts.length - maxVisible}</div>
+        <OverflowIndicator>+{posts.length - maxVisible}</OverflowIndicator>
       )}
-    </div>
+    </CalendarDayCell>
   );
 };
 

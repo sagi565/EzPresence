@@ -1,11 +1,19 @@
 import React from 'react';
-import { styles } from './styles';
+import { theme } from '@/theme/theme';
 
 /**
  * Small down arrow used in chip buttons to indicate dropdown behavior.
  */
-const ChipArrow: React.FC = () => {
-    return <span style={styles.chipArrow}>▾</span>;
-};
+interface ChipArrowProps {
+}
+
+const ChipArrow: React.FC<ChipArrowProps> = () => (
+    <span style={{
+        fontSize: '10px',
+        color: theme.colors.muted,
+        marginLeft: '10px',
+        flexShrink: 0,
+    }}>▼</span>
+);
 
 export default ChipArrow;

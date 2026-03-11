@@ -1,7 +1,12 @@
 import React from 'react';
 import { Post } from '@models/Post';
 import CalendarDay from './CalendarDay';
-import { styles } from './styles';
+import {
+  CalendarGridWrapper,
+  CalendarHeaderRow,
+  DayHeaderCell,
+  CalendarBodyGrid
+} from './styles';
 
 interface CalendarGridProps {
   currentYear: number;
@@ -147,25 +152,20 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   const totalRows = Math.ceil((firstDay + daysInMonth) / 7);
 
   return (
-    <div style={styles.calendarGrid}>
-      <div style={styles.calendarHeader}>
-        {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(
+    <CalendarGridWrapper>
+      <CalendarHeaderRow>
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(
           (dayName) => (
-            <div key={dayName} style={styles.dayHeader}>
+            <DayHeaderCell key={dayName}>
               {dayName}
-            </div>
+            </DayHeaderCell>
           )
         )}
-      </div>
-      <div
-        style={{
-          ...styles.calendarBody,
-          gridTemplateRows: `repeat(${totalRows}, 1fr)`,
-        }}
-      >
+      </CalendarHeaderRow>
+      <CalendarBodyGrid style={{ gridTemplateRows: `repeat(${totalRows}, 1fr)` }}>
         {days}
-      </div>
-    </div>
+      </CalendarBodyGrid>
+    </CalendarGridWrapper>
   );
 };
 

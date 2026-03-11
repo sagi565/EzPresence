@@ -12,7 +12,20 @@ import NewPostModal from '@components/Scheduler/CreateModals/NewPostModal/NewPos
 import CreateDropdown from '@components/Scheduler/SchedulerBar/CreateDropdown';
 import { StoryFormData } from '@/models/StorySchedule';
 import { PostFormData, parseRruleFrequency, generateRepeatLabel } from '@/models/ScheduleFormData';
-import { styles } from './styles';
+import {
+  Container,
+  SchedulerContainer,
+  LoadingContainer,
+  Spinner,
+  LoadingText,
+  ErrorContainer,
+  ErrorIcon,
+  ErrorTitle,
+  ErrorText,
+  RetryButton,
+  CalendarLoadingContainer,
+  CalendarErrorContainer
+} from './styles';
 import { ContentItem } from '@/models/ContentList';
 
 const SchedulerPage: React.FC = () => {
@@ -334,47 +347,47 @@ const SchedulerPage: React.FC = () => {
   // Show loading state
   if (brandsLoading) {
     return (
-      <div style={styles.container}>
-        <div style={styles.loadingContainer}>
-          <div style={styles.spinner}></div>
-          <p style={styles.loadingText}>Loading your brands...</p>
-        </div>
-      </div>
+      <Container>
+        <LoadingContainer>
+          <Spinner />
+          <LoadingText>Loading your brands...</LoadingText>
+        </LoadingContainer>
+      </Container>
     );
   }
 
   // Show error state
   if (brandsError) {
     return (
-      <div style={styles.container}>
-        <div style={styles.errorContainer}>
-          <div style={styles.errorIcon}>⚠️</div>
-          <h2 style={styles.errorTitle}>Failed to Load</h2>
-          <p style={styles.errorText}>{brandsError}</p>
-          <button style={styles.retryButton} onClick={() => window.location.reload()}>
+      <Container>
+        <ErrorContainer>
+          <ErrorIcon>⚠️</ErrorIcon>
+          <ErrorTitle>Failed to Load</ErrorTitle>
+          <ErrorText>{brandsError}</ErrorText>
+          <RetryButton onClick={() => window.location.reload()}>
             Retry
-          </button>
-        </div>
-      </div>
+          </RetryButton>
+        </ErrorContainer>
+      </Container>
     );
   }
 
   // Show loading while auto-selecting brand
   if (!currentBrand) {
     return (
-      <div style={styles.container}>
-        <div style={styles.loadingContainer}>
-          <div style={styles.spinner}></div>
-          <p style={styles.loadingText}>Setting up your workspace...</p>
-        </div>
-      </div>
+      <Container>
+        <LoadingContainer>
+          <Spinner />
+          <LoadingText>Setting up your workspace...</LoadingText>
+        </LoadingContainer>
+      </Container>
     );
   }
 
   return (
-    <div style={styles.container}>
+    <Container>
       <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
-      <div style={styles.schedulerContainer}>
+      <SchedulerContainer>
         <SchedulerBar
           currentMonth={currentMonth}
           currentYear={currentYear}
@@ -389,14 +402,14 @@ const SchedulerPage: React.FC = () => {
         />
 
         {schedulesLoading ? (
-          <div style={styles.calendarLoadingContainer}>
-            <div style={styles.spinner}></div>
-            <p style={styles.loadingText}>Loading schedules...</p>
-          </div>
+          <CalendarLoadingContainer>
+            <Spinner />
+            <LoadingText>Loading schedules...</LoadingText>
+          </CalendarLoadingContainer>
         ) : schedulesError ? (
-          <div style={styles.calendarErrorContainer}>
-            <p style={styles.errorText}>{schedulesError}</p>
-          </div>
+          <CalendarErrorContainer>
+            <ErrorText>{schedulesError}</ErrorText>
+          </CalendarErrorContainer>
         ) : viewMode === 'month' ? (
           <CalendarGrid
             currentYear={currentYear}
@@ -420,7 +433,7 @@ const SchedulerPage: React.FC = () => {
             onContextMenu={handleFourDaysContextMenu}
           />
         )}
-      </div>
+      </SchedulerContainer>
 
       <div id="contentPickOverlay" className={`content-pick-overlay ${isDrawerOpen && isPicking ? 'active' : ''}`} onClick={() => {
         if (isPicking) {
@@ -537,7 +550,7 @@ const SchedulerPage: React.FC = () => {
         anchorPos={dropAnchorPos || undefined}
       />
 
-    </div>
+    </Container>
   );
 };
 

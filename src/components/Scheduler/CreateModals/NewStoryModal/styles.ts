@@ -125,6 +125,7 @@ export const styles: Record<string, CSSProperties> = {
         flexWrap: 'wrap' as const,
         gap: '8px',
         alignItems: 'center',
+        justifyContent: 'center',
     },
 
     chip: {
@@ -344,6 +345,58 @@ if (typeof document !== 'undefined') {
         20% { transform: scale(1.02) translate(2px, -2px) rotate(1deg); filter: blur(1px); opacity: 0.9; }
         40% { transform: scale(0.95) translate(-4px, 4px) rotate(-2deg); filter: blur(2px); opacity: 0.7; }
         100% { transform: scale(0.6) translate(0, 50px) rotate(5deg); opacity: 0; filter: blur(10px); }
+      }
+      @media (max-width: 768px) {
+         .section-icon {
+             display: none !important;
+         }
+         .nsm-title-input {
+             width: 100% !important;
+             margin-left: 0 !important;
+             text-align: center !important;
+             font-size: 20px !important;
+             padding: 10px 0 !important;
+         }
+         .schedule-modal-layout-left {
+             align-items: center !important;
+             width: 100% !important;
+         }
+         .schedule-modal-layout-left > div {
+             width: 100% !important;
+             justify-content: center !important;
+             align-items: center !important;
+         }
+         .schedule-modal-layout-left .section-content-wrapper {
+             align-items: center !important;
+         }
+         .chip-row-container {
+             flex-wrap: nowrap !important;
+             width: 100% !important;
+             justify-content: space-between !important;
+             gap: 4px !important;
+         }
+         .chip-button {
+             min-width: 0 !important;
+             max-width: none !important;
+             padding: 6px 8px !important;
+             font-size: 11px !important;
+             flex: 1 !important;
+         }
+         .chip-arrow-icon {
+             margin-left: 4px !important;
+         }
+         .nsm-content-preview {
+             height: 140px !important;
+             width: 80px !important;
+             margin: 0 auto !important;
+         }
+         .time-picker, .date-picker, .timezone-selector, .repeat-selector {
+             position: fixed !important;
+             top: 50% !important;
+             left: 50% !important;
+             transform: translate(-50%, -50%) !important;
+             z-index: 2000 !important;
+         }
       }
     `;
         document.head.appendChild(style);

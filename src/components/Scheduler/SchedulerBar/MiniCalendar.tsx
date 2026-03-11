@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
-import { styles } from './styles';
-import { theme } from '@theme/theme';
+import {
+  MiniCalWrapper,
+  MiniCalHeader,
+  MiniCalNavBtn,
+  MiniCalMonthYear,
+  MiniCalGrid,
+  MiniCalDayHeader,
+  MiniCalDay
+} from './styles';
 
 interface MiniCalendarProps {
   currentMonth: number;
@@ -73,56 +80,42 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({
     const isTodayDay = isToday(day);
     const isHovered = hoveredDay === day;
 
-    const dayStyle = {
-      ...styles.miniCalDay,
-      ...(isTodayDay ? styles.miniCalDayToday : {}),
-      ...(isHovered && !isTodayDay ? {
-        background: theme.colors.secondary,
-        color: 'white',
-      } : {}),
-    };
-
     days.push(
-      <div
+      <MiniCalDay
         key={day}
-        style={dayStyle}
+        $isToday={isTodayDay}
+        $isHovered={isHovered}
         onClick={(e) => handleDayClick(e, day)}
         onMouseEnter={() => setHoveredDay(day)}
         onMouseLeave={() => setHoveredDay(null)}
       >
         {day}
-      </div>
+      </MiniCalDay>
     );
   }
 
   return (
-    <div style={styles.miniCalendar} onClick={(e) => e.stopPropagation()}>
-      <div style={styles.miniCalHeader}>
-        <button
-          style={styles.miniCalNavBtn}
-          onClick={(e) => handleMonthChange(e, -1)}
-        >
+    <MiniCalWrapper onClick={(e) => e.stopPropagation()}>
+      <MiniCalHeader>
+        <MiniCalNavBtn onClick={(e) => handleMonthChange(e, -1)}>
           ‹
-        </button>
-        <div style={styles.miniCalMonthYear}>
+        </MiniCalNavBtn>
+        <MiniCalMonthYear>
           {MONTH_NAMES[viewMonth]} {viewYear}
-        </div>
-        <button
-          style={styles.miniCalNavBtn}
-          onClick={(e) => handleMonthChange(e, 1)}
-        >
+        </MiniCalMonthYear>
+        <MiniCalNavBtn onClick={(e) => handleMonthChange(e, 1)}>
           ›
-        </button>
-      </div>
-      <div style={styles.miniCalGrid}>
+        </MiniCalNavBtn>
+      </MiniCalHeader>
+      <MiniCalGrid>
         {dayHeaders.map((header, idx) => (
-          <div key={idx} style={styles.miniCalDayHeader}>
+          <MiniCalDayHeader key={idx}>
             {header}
-          </div>
+          </MiniCalDayHeader>
         ))}
         {days}
-      </div>
-    </div>
+      </MiniCalGrid>
+    </MiniCalWrapper>
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { styles } from './styles';
+import { CreateBtnContainer, CreateBtn } from './styles';
 import CreateDropdown from './CreateDropdown';
 
 interface CreatePostButtonProps {
@@ -21,31 +21,22 @@ const CreatePostButton: React.FC<CreatePostButtonProps> = ({ onCreateStory, onCr
       alert('AI Series feature coming soon!');
     }
   };
-
-  const buttonStyle = {
-    ...styles.createBtn,
-    ...(hoveredBtn ? {
-      transform: 'scale(1.07)',
-      boxShadow: '0 6px 20px rgba(251, 191, 36, 0.4)',
-    } : {}),
-  };
-
   return (
-    <div style={styles.createButton}>
-      <button
-        style={buttonStyle}
+    <CreateBtnContainer>
+      <CreateBtn
+        $isHovered={hoveredBtn}
         onClick={() => setShowDropdown(!showDropdown)}
         onMouseEnter={() => setHoveredBtn(true)}
         onMouseLeave={() => setHoveredBtn(false)}
       >
         Create
-      </button>
+      </CreateBtn>
       <CreateDropdown
         isOpen={showDropdown}
         onClose={() => setShowDropdown(false)}
         onSelect={handleSelect}
       />
-    </div>
+    </CreateBtnContainer>
   );
 };
 
