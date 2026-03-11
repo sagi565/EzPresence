@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { theme } from '@theme/theme';
+import {
+  StyledExportButton,
+  ExportIcon,
+  ExportButtonText
+} from './styles';
 
 interface ExportButtonProps {
   onExport: () => void;
@@ -17,40 +21,23 @@ const ExportButton: React.FC<ExportButtonProps> = ({ onExport, loading }) => {
   };
 
   return (
-    <button
+    <StyledExportButton
       onClick={handleClick}
       disabled={loading}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        padding: '10px 20px',
-        borderRadius: theme.borderRadius.md,
-        border: `1.5px solid ${hovered ? theme.colors.teal : 'rgba(20,184,166,0.4)'}`,
-        background: hovered
-          ? 'rgba(20, 184, 166, 0.1)'
-          : clicked
-            ? 'rgba(20, 184, 166, 0.05)'
-            : 'white',
-        color: theme.colors.teal,
-        fontWeight: 600,
-        fontSize: '14px',
-        cursor: loading ? 'not-allowed' : 'pointer',
-        transition: 'all 0.2s ease',
-        boxShadow: hovered ? '0 4px 16px rgba(20,184,166,0.2)' : 'none',
-        transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
-      }}
+      $hovered={hovered}
+      $clicked={clicked}
+      $loading={loading}
     >
       {clicked ? (
         <>
           <span style={{ fontSize: '16px' }}>✅</span>
-          <span>Exported!</span>
+          <ExportButtonText>Exported!</ExportButtonText>
         </>
       ) : (
         <>
-          <svg
+          <ExportIcon
             width="16"
             height="16"
             viewBox="0 0 24 24"
@@ -59,17 +46,19 @@ const ExportButton: React.FC<ExportButtonProps> = ({ onExport, loading }) => {
             strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ transition: 'transform 0.2s', transform: hovered ? 'translateY(2px)' : 'translateY(0)' }}
+            $hovered={hovered}
           >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          <span>Export to Excel</span>
+          </ExportIcon>
+          <ExportButtonText>Export to Excel</ExportButtonText>
         </>
       )}
-    </button>
+    </StyledExportButton>
   );
 };
 
 export default ExportButton;
+
+

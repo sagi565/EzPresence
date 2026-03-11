@@ -84,10 +84,10 @@ const SWIRL_FORCE = 0.2;
 // ─────────────────────────────────────────────
 
 /** Maximum icons that join the heart shape. Must be ≤ COUNT. */
-const HEART_PARTICLE_COUNT = 24;
+const HEART_PARTICLE_COUNT = 40;
 
 /** Minimum icons that must join. If fewer are nearby, closest ones are pulled in regardless of distance. */
-const HEART_MIN_PARTICLE_COUNT = 18;
+const HEART_MIN_PARTICLE_COUNT = 30;
 
 /** Heart size as a fraction of the smaller canvas dimension (width or height).
  *  0.011 = small heart. Increase for larger. */

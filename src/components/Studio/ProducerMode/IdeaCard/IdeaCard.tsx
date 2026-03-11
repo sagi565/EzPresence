@@ -3,7 +3,7 @@ import { VideoIdea } from '@models/VideoIdea';
 import { VideoModelType } from '@models/VideoModel';
 import IdeaFocusView from './IdeaFocusView';
 import IdeaDetailView from './IdeaDetailView';
-import { styles } from './styles';
+import { CardContainer, IdeaText } from './styles';
 
 interface IdeaCardProps {
   idea: VideoIdea;
@@ -41,24 +41,17 @@ const IdeaCard: React.FC<IdeaCardProps> = ({
     setShowDetail(true);
   };
 
-  const cardStyle = {
-    ...styles.ideaCard,
-    ...(isHovered ? styles.ideaCardHover : {}),
-  };
-
   return (
     <>
-      {/* Always render the card */}
-      <div
-        style={cardStyle}
+      <CardContainer
+        $isHovered={isHovered}
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <span style={styles.ideaText}>{idea.idea}</span>
-      </div>
+        <IdeaText>{idea.idea}</IdeaText>
+      </CardContainer>
 
-      {/* Render dialogs as overlays when needed */}
       {isFocused && !showDetail && (
         <IdeaFocusView
           idea={idea}

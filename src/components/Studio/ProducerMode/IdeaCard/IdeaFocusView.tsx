@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { VideoIdea } from '@models/VideoIdea';
-import { styles } from './styles';
-import { theme } from '@theme/theme';
+import { 
+  Overlay, 
+  FocusedCard, 
+  FocusedTextArea, 
+  PreviewBtn, 
+  LoadingDotsContainer 
+} from './styles';
 
 interface IdeaFocusViewProps {
   idea: VideoIdea;
@@ -39,22 +44,11 @@ const IdeaFocusView: React.FC<IdeaFocusViewProps> = ({
     }
   };
 
-  const buttonStyle = {
-    ...styles.ideaPreviewBtn,
-    ...(isButtonHovered ? {
-      background: 'rgba(20, 184, 166, 0.05)',
-      borderColor: theme.colors.teal,
-      transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(20, 184, 166, 0.1)',
-    } : {}),
-  };
-
   return ReactDOM.createPortal(
     <>
-    <div style={styles.focusOverlay} onClick={onClose} />
-      <div style={styles.ideaCardFocused}>
-        <textarea
-          style={styles.ideaTextArea}
+      <Overlay onClick={onClose} />
+      <FocusedCard>
+        <FocusedTextArea
           value={ideaText}
           onChange={(e) => setIdeaText(e.target.value)}
           onBlur={handleBlur}
@@ -63,29 +57,28 @@ const IdeaFocusView: React.FC<IdeaFocusViewProps> = ({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {showPreviewLoading && (
-            <div className="loading-dots" style={styles.loadingDotsContainer}>
+            <LoadingDotsContainer className="loading-dots">
               <span></span>
               <span></span>
               <span></span>
-            </div>
+            </LoadingDotsContainer>
           )}
 
-          <button
-            style={buttonStyle}
+          <PreviewBtn
             onClick={onPreviewDetails}
             onMouseEnter={() => setIsButtonHovered(true)}
             onMouseLeave={() => setIsButtonHovered(false)}
+            $isHovered={isButtonHovered}
             disabled={showPreviewLoading}
-            data-tooltip="See video plan, duration and cost before creating"
+            title="See video plan, duration and cost before creating"
           >
             Preview Details
-          </button>
+          </PreviewBtn>
         </div>
-      </div>
+      </FocusedCard>
     </>,
     document.body
   );
 };
-
 
 export default IdeaFocusView;

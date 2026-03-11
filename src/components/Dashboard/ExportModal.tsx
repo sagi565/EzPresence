@@ -1,7 +1,25 @@
 import React, { useState } from 'react';
-import { theme } from '@theme/theme';
 import type { DashboardStats } from '@/hooks/dashboard/useDashboardStats';
 import type { DashboardPost } from '@/hooks/dashboard/useDashboardPosts';
+import {
+  ModalBackdrop,
+  ModalContainer,
+  ModalHeader,
+  ModalHeaderContent,
+  ModalTitle,
+  ModalSubtitle,
+  CloseButton,
+  ModalBody,
+  SectionLabel,
+  ExportOption,
+  CustomCheckbox,
+  OptionIcon,
+  OptionText,
+  OptionDescription,
+  ModalFooter,
+  CancelButton,
+  ActionButton
+} from './styles';
 
 interface ExportModalProps {
   stats: DashboardStats | null;
@@ -157,79 +175,32 @@ const ExportModal: React.FC<ExportModalProps> = ({
   return (
     <>
       {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{
-          position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.35)',
-          zIndex: 2000,
-          animation: 'fadeIn 0.15s ease',
-        }}
-      />
+      <ModalBackdrop onClick={onClose} />
 
       {/* Modal */}
-      <div style={{
-        position: 'fixed', top: '50%', left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 2001,
-        width: 480, maxWidth: '95vw',
-        background: 'white',
-        borderRadius: theme.borderRadius.lg,
-        boxShadow: '0 24px 80px rgba(0,0,0,0.18)',
-        animation: 'focusAppear 0.2s ease',
-        overflow: 'hidden',
-      }}>
+      <ModalContainer>
         {/* Header */}
-        <div style={{
-          background: theme.gradients.momentum,
-          padding: '20px 24px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'white' }}>
-              Export to Excel
-            </h2>
-            <p style={{ margin: '2px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.75)' }}>
-              Choose what to include in the export
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'rgba(255,255,255,0.2)', border: 'none',
-              borderRadius: '50%', width: 32, height: 32,
-              cursor: 'pointer', color: 'white', fontSize: 18,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            ×
-          </button>
-        </div>
+        <ModalHeader>
+          <ModalHeaderContent>
+            <ModalTitle>Export to Excel</ModalTitle>
+            <ModalSubtitle>Choose what to include in the export</ModalSubtitle>
+          </ModalHeaderContent>
+          <CloseButton onClick={onClose}>×</CloseButton>
+        </ModalHeader>
 
         {/* Sections */}
-        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <p style={{ fontSize: '12px', color: theme.colors.muted, margin: '0 0 4px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-            Select sheets to export
-          </p>
+        <ModalBody>
+          <SectionLabel>Select sheets to export</SectionLabel>
 
           {SECTIONS.map(section => {
             const isSelected = selected.has(section.id);
             const isDisabled = section.id === 'timeSeries' && !stats;
 
             return (
-              <label
+              <ExportOption
                 key={section.id}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '14px 16px',
-                  border: `1.5px solid ${isSelected ? theme.colors.primary : '#e5e7eb'}`,
-                  borderRadius: theme.borderRadius.md,
-                  background: isSelected ? `${theme.colors.primary}08` : '#fafafa',
-                  cursor: isDisabled ? 'not-allowed' : 'pointer',
-                  opacity: isDisabled ? 0.5 : 1,
-                  transition: 'all 0.15s',
-                  userSelect: 'none',
-                }}
+                $selected={isSelected}
+                $disabled={isDisabled}
               >
                 <input
                   type="checkbox"
@@ -239,64 +210,33 @@ const ExportModal: React.FC<ExportModalProps> = ({
                   style={{ display: 'none' }}
                 />
                 {/* Custom checkbox */}
-                <div style={{
-                  width: 20, height: 20, borderRadius: 5, flexShrink: 0,
-                  border: `2px solid ${isSelected ? theme.colors.primary : '#d1d5db'}`,
-                  background: isSelected ? theme.colors.primary : 'white',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.15s',
-                }}>
+                <CustomCheckbox $selected={isSelected}>
                   {isSelected && (
                     <svg width="11" height="8" viewBox="0 0 11 8" fill="none">
                       <path d="M1 4L4 7L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   )}
-                </div>
+                </CustomCheckbox>
 
-                <span style={{ fontSize: '22px', flexShrink: 0 }}>{section.icon}</span>
+                <OptionIcon>{section.icon}</OptionIcon>
 
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '14px', color: theme.colors.text }}>
-                    {section.label}
-                  </div>
-                  <div style={{ fontSize: '12px', color: theme.colors.muted, marginTop: 1 }}>
-                    {section.description}
-                  </div>
+                  <OptionText>{section.label}</OptionText>
+                  <OptionDescription>{section.description}</OptionDescription>
                 </div>
-              </label>
+              </ExportOption>
             );
           })}
-        </div>
+        </ModalBody>
 
         {/* Footer */}
-        <div style={{
-          padding: '16px 24px',
-          borderTop: '1px solid #f0f0f0',
-          display: 'flex', gap: 10, justifyContent: 'flex-end',
-        }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '9px 20px', borderRadius: theme.borderRadius.md,
-              border: '1.5px solid #e5e7eb', background: 'white',
-              color: theme.colors.muted, fontWeight: 600, fontSize: '14px', cursor: 'pointer',
-            }}
-          >
-            Cancel
-          </button>
-          <button
+        <ModalFooter>
+          <CancelButton onClick={onClose}>Cancel</CancelButton>
+          <ActionButton
             onClick={handleExport}
+            $done={done}
+            $disabled={!selected.size || exporting || done}
             disabled={!selected.size || exporting || done}
-            style={{
-              padding: '9px 24px', borderRadius: theme.borderRadius.md,
-              border: 'none',
-              background: done ? '#14b8a6' : theme.gradients.momentum,
-              color: 'white', fontWeight: 700, fontSize: '14px',
-              cursor: !selected.size || exporting || done ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center', gap: 8,
-              transition: 'opacity 0.2s',
-              opacity: !selected.size ? 0.5 : 1,
-            }}
           >
             {done ? '✅ Done!' : exporting ? '⏳ Exporting…' : (
               <>
@@ -308,11 +248,12 @@ const ExportModal: React.FC<ExportModalProps> = ({
                 Export {selected.size} Sheet{selected.size !== 1 ? 's' : ''}
               </>
             )}
-          </button>
-        </div>
-      </div>
+          </ActionButton>
+        </ModalFooter>
+      </ModalContainer>
     </>
   );
 };
 
 export default ExportModal;
+

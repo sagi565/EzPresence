@@ -192,7 +192,7 @@ const CreateUserPage: React.FC = () => {
           )}
         </LogoutButton>
         <Header>
-          <Title>Tell Us Who You Are</Title>
+          <Title>Tell Us <br className="mobile-only" /> Who You Are</Title>
           <Subtitle>Help us set up your profile in just a few steps</Subtitle>
         </Header>
 

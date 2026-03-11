@@ -10,8 +10,19 @@ import {
 } from 'recharts';
 import { theme } from '@theme/theme';
 import type { DayStats } from '@/hooks/dashboard/useDashboardStats';
+import {
+  ChartContainer,
+  LegendContainer,
+  LegendButton,
+  LegendDot,
+  TooltipContainer,
+  TooltipLabel,
+  TooltipItem,
+  TooltipDot,
+  TooltipValue
+} from './styles';
 
-export type MetricKey = 'views' | 'likes' | 'shares' | 'posts';
+export type MetricKey = 'views' | 'likes' | 'shares' | 'comments';
 
 interface SeriesConfig {
   key: MetricKey;
@@ -23,7 +34,7 @@ const SERIES: SeriesConfig[] = [
   { key: 'views', label: 'Views', color: theme.colors.primary },
   { key: 'likes', label: 'Likes', color: theme.colors.pink },
   { key: 'shares', label: 'Shares', color: theme.colors.teal },
-  { key: 'posts', label: 'Posts', color: theme.colors.secondary },
+  { key: 'comments', label: 'Comments', color: theme.colors.secondary },
 ];
 
 function formatNum(n: number): string {
@@ -51,23 +62,17 @@ interface TimelineChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{
-      background: 'rgba(17, 24, 39, 0.93)',
-      borderRadius: '10px',
-      padding: '10px 14px',
-      boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-      minWidth: 140,
-    }}>
-      <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: '0 0 6px' }}>{label}</p>
+    <TooltipContainer>
+      <TooltipLabel>{label}</TooltipLabel>
       {payload.map((entry: any) => (
-        <div key={entry.dataKey} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: entry.color, flexShrink: 0 }} />
-          <span style={{ fontSize: '12px', color: 'white', fontWeight: 600 }}>
+        <TooltipItem key={entry.dataKey}>
+          <TooltipDot $color={entry.color} />
+          <TooltipValue>
             {entry.name}: {formatNum(entry.value)}
-          </span>
-        </div>
+          </TooltipValue>
+        </TooltipItem>
       ))}
-    </div>
+    </TooltipContainer>
   );
 };
 
@@ -89,7 +94,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data, timeRange }) => {
   };
 
   // Max ~8 visible ticks regardless of data length
-  const MAX_TICKS = 8;
+  const MAX_TICKS = 5;
   const tickInterval = Math.max(1, Math.ceil(data.length / MAX_TICKS));
 
   const chartData = data.map(d => ({
@@ -98,40 +103,24 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data, timeRange }) => {
   }));
 
   return (
-    <div style={{
-      background: 'white',
-      borderRadius: theme.borderRadius.lg,
-      padding: '24px',
-      boxShadow: theme.shadows.md,
-    }}>
+    <ChartContainer>
       {/* Series toggle legend */}
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+      <LegendContainer>
         {SERIES.map(s => {
           const active = activeSeries.has(s.key);
           return (
-            <button
+            <LegendButton
               key={s.key}
               onClick={() => toggleSeries(s.key)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '5px 13px', borderRadius: '20px',
-                border: `1.5px solid ${active ? s.color : '#e5e7eb'}`,
-                background: active ? `${s.color}15` : 'transparent',
-                color: active ? s.color : theme.colors.muted,
-                fontWeight: 600, fontSize: '13px',
-                cursor: 'pointer', transition: 'all 0.18s',
-              }}
+              $active={active}
+              $color={s.color}
             >
-              <span style={{
-                width: 9, height: 9, borderRadius: '50%',
-                background: active ? s.color : '#d1d5db',
-                display: 'inline-block',
-              }} />
+              <LegendDot $active={active} $color={s.color} />
               {s.label}
-            </button>
+            </LegendButton>
           );
         })}
-      </div>
+      </LegendContainer>
 
       <ResponsiveContainer width="100%" height={280}>
         <LineChart data={chartData} margin={{ top: 5, right: 16, bottom: 5, left: 0 }}>
@@ -142,6 +131,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data, timeRange }) => {
             axisLine={false}
             tickLine={false}
             interval={tickInterval - 1}
+            minTickGap={30}
           />
           <YAxis
             tickFormatter={formatNum}
@@ -171,8 +161,9 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data, timeRange }) => {
           ))}
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </ChartContainer>
   );
 };
 
 export default TimelineChart;
+

@@ -57,7 +57,7 @@ export const SlideContent = styled.div<{ $isMobile?: boolean }>`
   ${props => props.$isMobile && css`
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 20px;
     text-align: center;
   `}
 `;
@@ -89,9 +89,9 @@ export const PreviewDisplay = styled.div<{ $isActive: boolean; $type: string; $i
   `}
 
   ${props => props.$isMobile && css`
-    width: 180px;
-    height: calc(180px * 16 / 9);
-    border-radius: 18px;
+    width: 120px;
+    height: calc(120px * 16 / 9);
+    border-radius: 12px;
   `}
 `;
 
@@ -132,7 +132,7 @@ export const CreatorDetails = styled.div<{ $isMobile?: boolean }>`
   gap: 24px;
 
   ${props => props.$isMobile && css`
-    gap: 16px;
+    gap: 12px;
     align-items: center;
   `}
 `;
@@ -146,7 +146,7 @@ export const CreatorSubtitle = styled.div`
 `;
 
 export const CreatorTitle = styled.h1<{ $isMobile?: boolean }>`
-  font-size: ${props => props.$isMobile ? '32px' : 'clamp(3rem, 5vw, 4rem)'};
+  font-size: ${props => props.$isMobile ? '24px' : 'clamp(3rem, 5vw, 4rem)'};
   font-weight: 800;
   background: ${theme.gradients.innovator};
   -webkit-background-clip: text;
@@ -158,7 +158,7 @@ export const CreatorTitle = styled.h1<{ $isMobile?: boolean }>`
 `;
 
 export const CreatorDescription = styled.p<{ $isMobile?: boolean }>`
-  font-size: ${props => props.$isMobile ? '14px' : '17px'};
+  font-size: ${props => props.$isMobile ? '13px' : '17px'};
   line-height: 1.7;
   color: ${theme.colors.muted};
   max-width: 600px;
@@ -166,7 +166,7 @@ export const CreatorDescription = styled.p<{ $isMobile?: boolean }>`
 
   ${props => props.$isMobile && css`
     display: -webkit-box;
-    -webkit-line-clamp: 4;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   `}

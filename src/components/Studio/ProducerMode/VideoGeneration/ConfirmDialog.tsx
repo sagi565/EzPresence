@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
-import { styles } from './styles';
+import { 
+  ConfirmOverlay, 
+  ConfirmDialogContainer, 
+  ConfirmTitle, 
+  ConfirmMessage, 
+  ConfirmButtons, 
+  ConfirmBtn 
+} from './styles';
 
 interface ConfirmDialogProps {
   onConfirm: () => void;
@@ -10,49 +17,39 @@ interface ConfirmDialogProps {
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ onConfirm, onCancel }) => {
   const [hoveredButton, setHoveredButton] = useState<'cancel' | 'confirm' | null>(null);
 
-  const cancelStyle = {
-    ...styles.confirmBtn,
-    ...styles.confirmBtnCancel,
-    ...(hoveredButton === 'cancel' ? styles.confirmBtnCancelHover : {}),
-  };
-
-  const confirmStyle = {
-    ...styles.confirmBtn,
-    ...styles.confirmBtnProceed,
-    ...(hoveredButton === 'confirm' ? styles.confirmBtnProceedHover : {}),
-  };
-
   return (
     <>
       {ReactDOM.createPortal(
-        <div style={styles.confirmOverlay} onClick={onCancel} />,
+        <ConfirmOverlay onClick={onCancel} />,
         document.body
       )}
       {ReactDOM.createPortal(
-        <div style={styles.confirmDialog}>
-          <div style={styles.confirmTitle}>Are you sure you want to continue?</div>
-          <div style={styles.confirmMessage}>
+        <ConfirmDialogContainer>
+          <ConfirmTitle>Are you sure you want to continue?</ConfirmTitle>
+          <ConfirmMessage>
             This will use credits, start video generation, and may take some time—but you'll be notified once it's ready.
-          </div>
-          <div style={styles.confirmButtons}>
-            <button
-              style={cancelStyle}
+          </ConfirmMessage>
+          <ConfirmButtons>
+            <ConfirmBtn
+              $type="cancel"
+              $isHovered={hoveredButton === 'cancel'}
               onClick={onCancel}
               onMouseEnter={() => setHoveredButton('cancel')}
               onMouseLeave={() => setHoveredButton(null)}
             >
               Cancel
-            </button>
-            <button
-              style={confirmStyle}
+            </ConfirmBtn>
+            <ConfirmBtn
+              $type="confirm"
+              $isHovered={hoveredButton === 'confirm'}
               onClick={onConfirm}
               onMouseEnter={() => setHoveredButton('confirm')}
               onMouseLeave={() => setHoveredButton(null)}
             >
               Generate
-            </button>
-          </div>
-        </div>,
+            </ConfirmBtn>
+          </ConfirmButtons>
+        </ConfirmDialogContainer>,
         document.body
       )}
     </>

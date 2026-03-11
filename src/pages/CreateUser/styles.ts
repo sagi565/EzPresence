@@ -81,9 +81,18 @@ export const Title = styled.h1`
   background-clip: text;
   margin-bottom: 14px;
   letter-spacing: -0.5px;
+  text-align: center;
+
+  br {
+    display: none;
+  }
 
   ${media.tablet} {
     font-size: 32px;
+    
+    br {
+      display: block;
+    }
   }
 `;
 

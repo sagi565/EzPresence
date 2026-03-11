@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { theme } from '@theme/theme';
+import {
+  MetricCardContainer,
+  MetricCardGlow,
+  MetricHeader,
+  MetricLabelWrapper,
+  MetricIconBox,
+  MetricLabel,
+  DeltaBadge,
+  MetricValue,
+  SparklineWrapper
+} from './styles';
 
 interface MetricCardProps {
   label: string;
@@ -91,91 +101,37 @@ const MetricCard: React.FC<MetricCardProps> = ({
   const isPositive = delta >= 0;
 
   return (
-    <div
+    <MetricCardContainer
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        background: '#fff',
-        borderRadius: theme.borderRadius.lg,
-        padding: '20px 24px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        boxShadow: hovered
-          ? `0 8px 32px rgba(0,0,0,0.12), 0 0 0 2px ${color}25`
-          : theme.shadows.md,
-        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
-        transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        cursor: 'default',
-        flex: '1 1 0',
-        minWidth: 0,
-        position: 'relative',
-        overflow: 'hidden',
-      }}
+      $hovered={hovered}
+      $color={color}
+      $gradient={gradient}
     >
-      {/* Gradient top glow strip */}
-      <div style={{
-        position: 'absolute',
-        top: 0, left: 0, right: 0,
-        height: '3px',
-        background: gradient,
-        borderRadius: '16px 16px 0 0',
-      }} />
+      <MetricCardGlow $gradient={gradient} />
 
-      {/* Icon + label */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '10px',
-        }}>
-          <div style={{
-            width: 38, height: 38, borderRadius: '10px',
-            background: `${color}18`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '18px',
-            transition: 'transform 0.2s',
-            transform: hovered ? 'scale(1.1) rotate(-5deg)' : 'scale(1) rotate(0)',
-          }}>
+      <MetricHeader>
+        <MetricLabelWrapper>
+          <MetricIconBox $color={color} $hovered={hovered}>
             {icon}
-          </div>
-          <span style={{
-            fontSize: '13px', fontWeight: 600,
-            color: theme.colors.muted, letterSpacing: '0.05em', textTransform: 'uppercase',
-          }}>
-            {label}
-          </span>
-        </div>
+          </MetricIconBox>
+          <MetricLabel>{label}</MetricLabel>
+        </MetricLabelWrapper>
 
-        {/* Delta badge */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '3px',
-          background: delta === 0
-            ? 'rgba(107, 114, 128, 0.1)'
-            : isPositive ? 'rgba(20, 184, 166, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-          color: delta === 0
-            ? theme.colors.muted
-            : isPositive ? '#14b8a6' : '#ef4444',
-          borderRadius: '20px', padding: '3px 8px',
-          fontSize: '12px', fontWeight: 700,
-        }}>
+        <DeltaBadge $isPositive={isPositive} $isZero={delta === 0}>
           {delta !== 0 && <span>{isPositive ? '↑' : '↓'}</span>}
           <span>{Math.abs(delta)}%</span>
-        </div>
-      </div>
+        </DeltaBadge>
+      </MetricHeader>
 
-      {/* Big number */}
-      <div style={{
-        fontSize: '34px', fontWeight: 800,
-        color: theme.colors.text, letterSpacing: '-1.5px', lineHeight: 1,
-      }}>
-        {formatValue(value)}
-      </div>
+      <MetricValue>{formatValue(value)}</MetricValue>
 
-      {/* Sparkline */}
-      <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+      <SparklineWrapper>
         <Sparkline values={sparkline} color={color} />
-      </div>
-    </div>
+      </SparklineWrapper>
+    </MetricCardContainer>
   );
 };
 
 export default MetricCard;
+

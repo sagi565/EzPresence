@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 import CelebrationAnimation from './CelebrationAnimation';
-import { styles } from './styles';
+import { GenerateBtnWrapper, StyledGenerateBtn, ShimmerBar, BtnIcon } from './styles';
 
 interface GenerateButtonProps {
   onClick: () => void;
   isGenerating: boolean;
-  onClose?: () => void;  // Add this prop
+  onClose?: () => void;
 }
 
 const GenerateButton: React.FC<GenerateButtonProps> = ({ onClick, isGenerating, onClose }) => {
@@ -25,7 +25,6 @@ const GenerateButton: React.FC<GenerateButtonProps> = ({ onClick, isGenerating, 
     setShowCelebration(true);
     setTimeout(() => {
       setShowCelebration(false);
-      // Close the dialog after celebration
       if (onClose) {
         onClose();
       }
@@ -36,27 +35,12 @@ const GenerateButton: React.FC<GenerateButtonProps> = ({ onClick, isGenerating, 
     setShowConfirm(false);
   };
 
-  // merge base + hover + active styles
-  const buttonStyle = {
-    ...styles.generateBtn,
-    ...(isHovered ? styles.generateBtnHover : {}),
-    ...(isActive ? styles.generateBtnActive : {}),
-  };
-
-  // shimmering bar (like ::before)
-  const beforeStyle = {
-    ...styles.generateBtnBefore,
-    left: isHovered ? '100%' : '-100%',
-  };
-
   return (
     <>
-      <div
-        className="generate-button-wrapper"
-        style={{ position: 'relative', overflow: 'hidden', borderRadius: '14px' }}
-      >
-        <button
-          style={buttonStyle}
+      <GenerateBtnWrapper>
+        <StyledGenerateBtn
+          $isHovered={isHovered}
+          $isActive={isActive}
           onClick={handleClick}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => {
@@ -67,11 +51,11 @@ const GenerateButton: React.FC<GenerateButtonProps> = ({ onClick, isGenerating, 
           onMouseUp={() => setIsActive(false)}
           disabled={isGenerating}
         >
-          <span style={beforeStyle} />
-          <span style={styles.generateBtnIcon}>▶</span>
+          <ShimmerBar $isHovered={isHovered} />
+          <BtnIcon>▶</BtnIcon>
           <span>Generate!</span>
-        </button>
-      </div>
+        </StyledGenerateBtn>
+      </GenerateBtnWrapper>
 
       {showConfirm && (
         <ConfirmDialog onConfirm={handleConfirm} onCancel={handleCancel} />

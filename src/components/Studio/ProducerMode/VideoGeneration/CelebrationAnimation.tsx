@@ -1,41 +1,43 @@
 import React, { useEffect, useState } from 'react';
-import { styles } from './styles';
+import { 
+  CelebrationWrapper, 
+  CelebrationContent, 
+  CelebrationIcon, 
+  CelebrationText, 
+  ConfettiPiece 
+} from './styles';
 
 const CelebrationAnimation: React.FC = () => {
   const [confetti, setConfetti] = useState<Array<{ id: number; left: string; delay: string; size: string; color: string }>>([]);
 
   useEffect(() => {
-    const colors = ['var(--color-primary)', 'var(--color-secondary)', 'var(--color-pink)', 'var(--color-blue)', 'var(--color-teal)'];
-    const newConfetti = Array.from({ length: 20 }, (_, i) => ({
+    const colors = ['#9b5de5', '#3b82f6', '#ec4899', '#2563eb', '#14b8a6'];
+    const newConfetti = Array.from({ length: 25 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 0.5}s`,
-      size: `${Math.random() * 10 + 5}px`,
+      delay: `${Math.random() * 0.8}s`,
+      size: `${Math.random() * 10 + 6}px`,
       color: colors[Math.floor(Math.random() * colors.length)],
     }));
     setConfetti(newConfetti);
   }, []);
 
   return (
-    <div style={styles.celebrationContainer}>
-      <div style={styles.celebrationContent}>
-        <div style={styles.celebrationIcon}>🎉</div>
-        <div style={styles.celebrationText}>Video Created!</div>
-      </div>
+    <CelebrationWrapper>
+      <CelebrationContent>
+        <CelebrationIcon>🎉</CelebrationIcon>
+        <CelebrationText>Video Created!</CelebrationText>
+      </CelebrationContent>
       {confetti.map((piece) => (
-        <div
+        <ConfettiPiece
           key={piece.id}
-          style={{
-            ...styles.confetti,
-            left: piece.left,
-            animationDelay: piece.delay,
-            width: piece.size,
-            height: piece.size,
-            background: piece.color,
-          }}
+          $left={piece.left}
+          $delay={piece.delay}
+          $size={piece.size}
+          $color={piece.color}
         />
       ))}
-    </div>
+    </CelebrationWrapper>
   );
 };
 

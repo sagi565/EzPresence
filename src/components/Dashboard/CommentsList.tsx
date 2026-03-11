@@ -1,6 +1,17 @@
 import React from 'react';
-import { theme } from '@theme/theme';
 import type { DashboardComment } from '@/hooks/dashboard/useDashboardPosts';
+import {
+  CommentsContainer,
+  EmptyComments,
+  CommentItem,
+  CommentAvatar,
+  CommentContent,
+  CommentHeader,
+  CommentUser,
+  CommentDate,
+  CommentLikes,
+  CommentText
+} from './styles';
 
 interface CommentsListProps {
   comments: DashboardComment[];
@@ -20,76 +31,51 @@ function timeAgo(iso: string): string {
 const CommentsList: React.FC<CommentsListProps> = ({ comments }) => {
   if (!comments.length) {
     return (
-      <div style={{
-        padding: '16px 20px',
-        color: theme.colors.muted,
-        fontSize: '13px',
-        fontStyle: 'italic',
-      }}>
+      <EmptyComments>
         No comments yet.
-      </div>
+      </EmptyComments>
     );
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      borderTop: '1px solid #f3f4f6',
-      animation: 'fadeInUp 0.2s ease',
-    }}>
+    <CommentsContainer>
       {comments.map((c, i) => (
-        <div
+        <CommentItem
           key={c.id}
-          style={{
-            display: 'flex',
-            gap: '10px',
-            padding: '12px 16px',
-            background: i % 2 === 0 ? '#fafafa' : 'white',
-            alignItems: 'flex-start',
-          }}
+          $even={i % 2 === 0}
         >
           {/* Avatar */}
-          <div style={{
-            width: 32, height: 32, borderRadius: '50%',
-            flexShrink: 0,
-            background: `hsl(${c.username.charCodeAt(0) * 37 % 360}, 65%, 70%)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '12px', fontWeight: 700, color: 'white',
-          }}>
+          <CommentAvatar $hue={c.username.charCodeAt(0) * 37 % 360}>
             {c.username[0].toUpperCase()}
-          </div>
+          </CommentAvatar>
 
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
-              <span style={{ fontWeight: 700, fontSize: '13px', color: theme.colors.text }}>
+          <CommentContent>
+            <CommentHeader>
+              <CommentUser>
                 @{c.username}
-              </span>
-              <span style={{ fontSize: '11px', color: theme.colors.muted }}>
+              </CommentUser>
+              <CommentDate>
                 {timeAgo(c.publishedAt)}
-              </span>
+              </CommentDate>
               {/* Likes — pushed to right */}
               {c.likes > 0 && (
-                <span style={{
-                  marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 3,
-                  fontSize: '12px', fontWeight: 600, color: '#ef4444',
-                  flexShrink: 0,
-                }}>
+                <CommentLikes>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                   </svg>
                   {c.likes}
-                </span>
+                </CommentLikes>
               )}
-            </div>
-            <p style={{ fontSize: '13px', color: '#374151', margin: 0, lineHeight: 1.4 }}>
+            </CommentHeader>
+            <CommentText>
               {c.text}
-            </p>
-          </div>
-        </div>
+            </CommentText>
+          </CommentContent>
+        </CommentItem>
       ))}
-    </div>
+    </CommentsContainer>
   );
 };
 
 export default CommentsList;
+
