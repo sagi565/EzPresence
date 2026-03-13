@@ -48,9 +48,23 @@ export const SocialConnectionCard: React.FC<SocialConnectionCardProps> = ({
     setTimeout(() => setIsAnimating(false), 600);
 
     try {
+      // Dispatch connecting event for background animation
+      window.dispatchEvent(new CustomEvent('ezp:platformConnecting', {
+        detail: { platform }
+      }));
+
       await connect();
+
+      // Dispatch connected event for background animation
+      window.dispatchEvent(new CustomEvent('ezp:platformConnected', {
+        detail: { platform }
+      }));
     } catch (error) {
       console.error(`Failed to connect ${platform}:`, error);
+      // Clean up connecting state on error
+      window.dispatchEvent(new CustomEvent('ezp:platformConnectionFinished', {
+        detail: { platform }
+      }));
     }
   };
 

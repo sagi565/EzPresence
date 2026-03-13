@@ -23,12 +23,14 @@ export const Selector = styled.div<{ $isHovered: boolean }>`
   box-shadow: ${props => props.$isHovered ? '0 8px 25px rgba(251, 191, 36, 0.3)' : 'none'};
   transform: ${props => props.$isHovered ? 'translateY(-2px)' : 'none'};
 
-  /* ── Collapse to icon-only at the same point nav labels disappear ── */
   @media (max-width: 1050px) {
-    width: auto;
-    padding: 5px 6px;
+    width: 180px;
+    padding: 5px 10px;
     border-radius: 12px;
-    justify-content: center;
+  }
+
+  ${media.phone} {
+    width: 150px;
   }
 `;
 
@@ -42,9 +44,8 @@ export const TenantName = styled.span`
   white-space: nowrap;
   text-overflow: ellipsis;
 
-  /* Hidden whenever selector collapses */
   @media (max-width: 1050px) {
-    display: none;
+    font-size: 14px;
   }
 `;
 
@@ -62,12 +63,11 @@ export const BrandIcon = styled.div`
   flex-shrink: 0;
   margin-left: 10px;
 
-  /* No margin once name is hidden */
   @media (max-width: 1050px) {
-    margin-left: 0;
     width: 36px;
     height: 36px;
     font-size: 18px;
+    margin-left: 8px;
   }
 
   ${media.phone} {
@@ -75,6 +75,7 @@ export const BrandIcon = styled.div`
     height: 32px;
     font-size: 16px;
     border-radius: 8px;
+    margin-left: 6px;
   }
 `;
 

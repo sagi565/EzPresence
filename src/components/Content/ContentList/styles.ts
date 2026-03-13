@@ -1,5 +1,6 @@
 import styled, { css } from 'styled-components';
 import { theme } from '@theme/theme';
+import { media } from '@/styles/breakpoints';
 
 export const ListContainer = styled.div<{ $isMobile?: boolean }>`
   position: relative;
@@ -44,8 +45,8 @@ export const ListIcon = styled.div<{ $isEditable?: boolean; $isHovered?: boolean
   `}
 
   ${props => props.$isMobile && css`
-    font-size: 24px;
-    padding: 2px;
+    font-size: 44px;
+    padding: 6px;
   `}
 `;
 
@@ -69,7 +70,7 @@ export const ListTitle = styled.h2<{ $isMobile?: boolean }>`
   margin: 0;
 
   ${props => props.$isMobile && css`
-    font-size: 16px;
+    font-size: 26px; /* Larger title for mobile */
   `}
 `;
 
@@ -106,8 +107,8 @@ export const ListTitleEditable = styled.input<{ $isFocused?: boolean; $isMobile?
   `}
 
   ${props => props.$isMobile && css`
-    font-size: 16px;
-    max-width: 120px;
+    font-size: 26px;
+    max-width: 250px;
   `}
 `;
 
@@ -186,10 +187,15 @@ export const ListScrollWrapper = styled.div<{ $isDropTarget?: boolean; $isInvali
     display: none;
   }
 
+  ${media.phone} {
+    padding: 24px 12px;
+    gap: 16px;
+  }
+
   ${props => props.$isDropTarget && css`
-    background-color: rgba(34, 197, 94, 0.08);
-    border: 3px dashed rgba(34, 197, 94, 0.5);
-    box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.1);
+    background-color: ${theme.colors.primary}1A;
+    border: 3px dashed ${theme.colors.primary}80;
+    box-shadow: inset 0 0 30px ${theme.colors.primary}1A;
     transform: scale(1.01);
   `}
 

@@ -24,6 +24,7 @@ export const Nav = styled.nav`
   ${media.phone} {
     padding: 8px 10px;
     gap: 6px;
+    flex-wrap: wrap;
   }
 `;
 
@@ -55,17 +56,12 @@ export const Logo = styled.a`
   white-space: nowrap;
   flex-shrink: 0;
 
-  /* "presence" part — hidden on small screens, leaving just "EZ" */
   .logo-presence {
     display: inline;
   }
 
   ${media.phone} {
-    font-size: 20px;
-
-    .logo-presence {
-      display: none;
-    }
+    font-size: 18px;
   }
 `;
 
@@ -81,6 +77,14 @@ export const NavCenter = styled.div`
 
   ${media.tablet} {
     gap: 2px;
+  }
+
+  ${media.phone} {
+    order: 3;
+    flex: 1 1 100%;
+    margin-top: 0px;
+    padding-top: 0;
+    justify-content: space-between;
   }
 `;
 
@@ -142,7 +146,7 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
 
   /* ── Small phones: tighter padding ── */
   ${media.phone} {
-    padding: 8px 8px;
+    padding: 6px 4px;
 
     .nav-icon {
       font-size: 17px;

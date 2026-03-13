@@ -40,9 +40,10 @@ export const ScrollNavContainer = styled.nav`
   pointer-events: none;
 
   ${media.phone} {
-    right: -245px;
-    transform: scale(0.9);
+    right: -255px; /* Adjust right position slightly since it's bigger */
+    transform: scale(0.75);
     font-size: 22px;
+    top: -50px; /* Shift the whole component up */
   }
 `;
 
@@ -235,6 +236,17 @@ export const ScrollArrow = styled.button<{ $visible?: boolean; $isHovered?: bool
     background: ${theme.colors.primary}1A;
     color: ${theme.colors.primary};
   `}
+
+  ${media.phone} {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 12px;
+    
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
 `;
 
 export const ContextMenu = styled.div<{ $top: number; $left: number }>`

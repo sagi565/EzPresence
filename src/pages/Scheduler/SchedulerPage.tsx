@@ -6,6 +6,7 @@ import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
 import SchedulerBar from '@components/Scheduler/SchedulerBar/DateNavigation';
 import CalendarGrid from '@components/Scheduler/Calendar/GridView/CalendarGrid';
 import FourDaysView from '@components/Scheduler/Calendar/FourDaysView/FourDaysView';
+import CalendarSkeleton from '@components/Scheduler/Calendar/CalendarSkeleton/CalendarSkeleton';
 import ContentDrawer from '@components/Scheduler/ContentDrawer/ContentDrawer';
 import NewStoryModal from '@components/Scheduler/CreateModals/NewStoryModal/NewStoryModal';
 import NewPostModal from '@components/Scheduler/CreateModals/NewPostModal/NewPostModal';
@@ -23,7 +24,6 @@ import {
   ErrorTitle,
   ErrorText,
   RetryButton,
-  CalendarLoadingContainer,
   CalendarErrorContainer
 } from './styles';
 import { ContentItem } from '@/models/ContentList';
@@ -402,10 +402,7 @@ const SchedulerPage: React.FC = () => {
         />
 
         {schedulesLoading ? (
-          <CalendarLoadingContainer>
-            <Spinner />
-            <LoadingText>Loading schedules...</LoadingText>
-          </CalendarLoadingContainer>
+          <CalendarSkeleton viewMode={viewMode} />
         ) : schedulesError ? (
           <CalendarErrorContainer>
             <ErrorText>{schedulesError}</ErrorText>

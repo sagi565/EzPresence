@@ -57,6 +57,11 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
     }
 
     try {
+      // Dispatch connecting event for background animation
+      window.dispatchEvent(new CustomEvent('ezp:platformConnecting', {
+        detail: { platform }
+      }));
+
       await connect();
 
       // Dispatch custom event for background animation
@@ -70,6 +75,10 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
       }
     } catch (error) {
       console.error(`Failed to connect ${platform}:`, error);
+      // Clean up connecting state on error
+      window.dispatchEvent(new CustomEvent('ezp:platformConnectionFinished', {
+        detail: { platform }
+      }));
     }
   };
 

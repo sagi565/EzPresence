@@ -17,9 +17,9 @@ export const UploadButtonContainer = styled.div<{ $isHovered?: boolean; $isMobil
   height: 480px;
 
   ${props => props.$isMobile && css`
-    width: 70px;
-    height: 124px;
-    border-radius: 8px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
   `}
 
   ${props => props.$isHovered && css`

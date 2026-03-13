@@ -7,8 +7,13 @@ export const fadeIn = keyframes`
 `;
 
 export const scaleIn = keyframes`
-  from { transform: scale(0.95); opacity: 0; }
+  from { transform: scale(0.97); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
+`;
+
+export const slideUp = keyframes`
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 `;
 
 export const Overlay = styled.div`
@@ -21,6 +26,11 @@ export const Overlay = styled.div`
   align-items: center;
   justify-content: center;
   animation: ${fadeIn} 0.2s ease-out;
+
+  @media (max-width: 768px) {
+    align-items: flex-end;
+    background: rgba(0, 0, 0, 0.6);
+  }
 `;
 
 export const Modal = styled.div`
@@ -32,6 +42,21 @@ export const Modal = styled.div`
   height: 600px;
   position: relative;
   animation: ${scaleIn} 0.3s ease-out;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    animation: ${slideUp} 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+`;
+
+export const DragHandle = styled.div`
+  display: none;
 `;
 
 export const CloseButton = styled.button`
@@ -56,12 +81,31 @@ export const CloseButton = styled.button`
     color: #111827;
     transform: rotate(90deg);
   }
+
+  @media (max-width: 768px) {
+    display: flex;
+    top: max(16px, env(safe-area-inset-top));
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.05);
+  }
 `;
 
 export const ContentWrapper = styled.div`
   display: flex;
   flex-direction: row;
   height: 100%;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    height: 100%;
+    flex: 1;
+    overflow: hidden;
+  }
 `;
 
 export const MediaSection = styled.div`
@@ -72,16 +116,43 @@ export const MediaSection = styled.div`
   justify-content: center;
   height: 600px;
   min-height: 600px;
+
+  @media (max-width: 768px) {
+    flex: 0 0 55%;
+    height: 55%;
+    min-height: unset;
+    width: 100%;
+    background: #0a0a0a;
+  }
 `;
 
 export const Media = styled.div<{ $isVideo?: boolean }>`
   max-width: 100%;
   max-height: 100%;
-  
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   img, video {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+    border-radius: 12px;
+  }
+
+  @media (max-width: 768px) {
+    height: 100%;
+    padding: 10px;
+    
+    img, video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
   }
 `;
 
@@ -113,12 +184,31 @@ export const InfoSection = styled.div`
     background: rgba(0, 0, 0, 0.1);
     border-radius: 3px;
   }
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+    width: 100%;
+    flex: 1;
+    height: auto;
+    padding: 24px 20px;
+    gap: 20px;
+    background: white;
+    border-top-left-radius: 32px;
+    border-top-right-radius: 32px;
+    margin-top: -32px;
+    z-index: 2;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
+  }
 `;
 
 export const TitleSection = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+
+  @media (max-width: 768px) {
+    gap: 10px;
+  }
 `;
 
 export const Title = styled.h2`
@@ -128,6 +218,12 @@ export const Title = styled.h2`
   margin: 0;
   flex: 1;
   word-break: break-word;
+
+  @media (max-width: 768px) {
+    font-size: 24px;
+    letter-spacing: -0.5px;
+    color: #000;
+  }
 `;
 
 export const RenameInput = styled.input`
@@ -145,6 +241,11 @@ export const RenameInput = styled.input`
   border-radius: 8px 8px 0 0;
   outline: none;
   transition: background 0.2s ease;
+
+  @media (max-width: 768px) {
+    font-size: 18px;
+    max-width: 100%;
+  }
 `;
 
 export const IconButton = styled.button<{ $type?: 'edit' | 'favorite' | 'save' | 'cancel' | 'download'; $active?: boolean; $isHovered?: boolean }>`
@@ -193,6 +294,21 @@ export const IconButton = styled.button<{ $type?: 'edit' | 'favorite' | 'save' |
     color: #dc2626;
     &:hover { background: rgba(239, 68, 68, 0.25); }
   `}
+
+  @media (max-width: 768px) {
+    width: ${props => props.$type === 'favorite' ? '48px' : '40px'};
+    height: ${props => props.$type === 'favorite' ? '48px' : '40px'};
+    min-width: unset;
+    min-height: unset;
+    
+    ${props => props.$type === 'favorite' && css`
+      position: absolute;
+      top: -100px;
+      right: 20px;
+      background: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    `}
+  }
 `;
 
 export const MetadataContainer = styled.div`
@@ -202,24 +318,53 @@ export const MetadataContainer = styled.div`
   padding: 20px;
   background: #f9fafb;
   border-radius: 16px;
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 14px;
+  }
 `;
 
 export const MetaItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
 `;
 
 export const MetaLabel = styled.span`
   font-size: 14px;
   font-weight: 500;
   color: #6b7280;
+
+  @media (max-width: 768px) {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    flex-shrink: 0;
+  }
 `;
 
 export const MetaValue = styled.span`
   font-size: 14px;
   font-weight: 600;
   color: #111827;
+
+  @media (max-width: 768px) {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    text-align: right;
+  }
 `;
 
 export const ActionContainer = styled.div`
@@ -227,6 +372,28 @@ export const ActionContainer = styled.div`
   flex-direction: column;
   gap: 12px;
   margin-top: auto;
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+    gap: 10px;
+    margin-top: 4px;
+    padding: 16px 0 max(20px, env(safe-area-inset-bottom));
+    position: sticky;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(0,0,0,0.05);
+    /* Fade edge */
+    &::before {
+      content: '';
+      position: absolute;
+      top: -20px;
+      left: 0;
+      right: 0;
+      height: 20px;
+      background: linear-gradient(to bottom, transparent, white);
+      pointer-events: none;
+    }
+  }
 `;
 
 export const ActionButton = styled.button<{ $variant: 'download' | 'delete'; $isHovered?: boolean }>`
@@ -254,14 +421,35 @@ export const ActionButton = styled.button<{ $variant: 'download' | 'delete'; $is
   `}
 
   ${props => props.$variant === 'delete' && css`
-    background: transparent;
-    color: #ef4444;
-    border: 2px solid #ef4444;
+    background: #ef4444;
+    color: white;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    border: none;
     &:hover {
-      background: #ef4444;
-      color: white;
+      background: #dc2626;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45);
     }
   `}
+
+  @media (max-width: 768px) {
+    padding: 14px 16px;
+    font-size: 14px;
+    border-radius: 14px;
+    &:hover { transform: none; }
+    &:active { transform: scale(0.97); }
+
+    ${props => props.$variant === 'download' && css`
+      flex: 1;
+    `}
+
+    ${props => props.$variant === 'delete' && css`
+      flex: 0 0 auto;
+      width: 50px;
+      height: 50px;
+      padding: 0;
+      border-radius: 14px;
+      font-size: 18px;
+    `}
+  }
 `;

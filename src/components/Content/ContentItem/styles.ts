@@ -34,10 +34,10 @@ export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: bo
   height: 480px;
 
   ${props => props.$isMobile && css`
-    width: 70px;
-    height: 124px;
-    margin: 4px;
-    border-radius: 8px;
+    width: 100px;
+    height: 178px;
+    margin: 8px;
+    border-radius: 12px;
   `}
 
   ${props => props.$isHovered && !props.$isUploading && !props.$isDragging && css`
@@ -111,6 +111,13 @@ export const ActionsContainer = styled.div<{ $isVisible?: boolean }>`
   opacity: ${props => props.$isVisible ? 1 : 0};
   transition: opacity 0.3s ease;
   z-index: 20;
+
+  @media (max-width: 768px) {
+    top: 6px;
+    left: 6px;
+    gap: 4px;
+    opacity: 1; /* Always show small icons on mobile for UX */
+  }
 `;
 
 export const ActionButton = styled.button<{ $active?: boolean; $isHovered?: boolean }>`
@@ -138,6 +145,13 @@ export const ActionButton = styled.button<{ $active?: boolean; $isHovered?: bool
     background: rgba(0, 0, 0, 0.6);
     border-color: rgba(255, 255, 255, 0.4);
   `}
+
+  @media (max-width: 768px) {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    border-width: 1px;
+  }
 `;
 
 export const MoreOptionsButton = styled.button<{ $isVisible?: boolean; $isHovered?: boolean }>`
@@ -164,6 +178,16 @@ export const MoreOptionsButton = styled.button<{ $isVisible?: boolean; $isHovere
     border-color: rgba(255, 255, 255, 0.3);
     transform: scale(1.1);
   `}
+
+  @media (max-width: 768px) {
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    opacity: 1;
+    border-width: 1px;
+  }
 `;
 
 export const MenuDropdown = styled.div`

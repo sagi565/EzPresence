@@ -36,10 +36,9 @@ const NavItem: React.FC<{
   currentIndex: number;
   showAllLabels: boolean;
   hideLines: boolean;
-  isMobile: boolean;
   onNavigate: (index: number) => void;
   onContextMenu: (e: React.MouseEvent, list: ContentList) => void;
-}> = ({ list, index, totalLists, currentIndex, showAllLabels, hideLines, isMobile, onNavigate, onContextMenu }) => {
+}> = ({ list, index, totalLists, currentIndex, showAllLabels, hideLines, onNavigate, onContextMenu }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isCelebrating, setIsCelebrating] = useState(false);
   const { activeData, isDragging: isDndKitDragging, lastDropTimeRef } = useDndState();
@@ -86,8 +85,9 @@ const NavItem: React.FC<{
       {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => {
         const shouldShowLabel = 
           isHovered || 
-          (isMobile ? (isDropTarget || snapshot.isDragging) : showAllLabels) || 
-          (isDropTarget && !isMobile);
+          showAllLabels || 
+          isDropTarget || 
+          snapshot.isDragging;
 
         return (
           <ScrollItem
@@ -194,7 +194,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
   const [hoveredArrow, setHoveredArrow] = useState<'up' | 'down' | null>(null);
 
   const MAX_VISIBLE = isMobile ? 5 : 7;
-  const ITEM_HEIGHT = isMobile ? 64 : 84;
+  const ITEM_HEIGHT = isMobile ? 84 : 84; // Give more space between icons on mobile
 
   const checkScroll = () => {
     const el = scrollContainerRef.current;
@@ -229,9 +229,15 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
     const clientHeight = el.clientHeight;
 
     if (itemTop < scrollTop) {
-      el.scrollTo({ top: itemTop, behavior: 'smooth' });
+      el.scrollTo({ top: itemTop - (clientHeight / 2) + (ITEM_HEIGHT / 2), behavior: 'smooth' });
     } else if (itemBottom > scrollTop + clientHeight) {
-      el.scrollTo({ top: itemBottom - clientHeight, behavior: 'smooth' });
+      el.scrollTo({ top: itemBottom - (clientHeight / 2) - (ITEM_HEIGHT / 2), behavior: 'smooth' });
+    }
+    
+    // Always center the active item on mobile for better UX
+    if (isMobile) {
+      const centerPosition = itemTop - (clientHeight / 2) + (ITEM_HEIGHT / 2);
+      el.scrollTo({ top: centerPosition, behavior: 'smooth' });
     }
   }, [currentIndex]);
 
@@ -315,7 +321,6 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                         currentIndex={currentIndex}
                         showAllLabels={isDndKitDragging || isListDragging}
                         hideLines={isListDragging || isDndKitDragging}
-                        isMobile={isMobile}
                         onNavigate={onNavigate}
                         onContextMenu={handleContextMenu}
                       />

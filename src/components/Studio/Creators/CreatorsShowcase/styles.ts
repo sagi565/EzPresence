@@ -39,9 +39,11 @@ export const SlideSection = styled.section<{ $isMobile?: boolean }>`
   position: relative;
 
   ${props => props.$isMobile && css`
-    padding: 20px;
-    height: calc(100vh - 80px);
+    padding: 24px 20px;
+    height: calc(100dvh - 130px);
+    box-sizing: border-box;
     min-height: auto;
+    justify-content: center;
   `}
 `;
 
@@ -57,8 +59,10 @@ export const SlideContent = styled.div<{ $isMobile?: boolean }>`
   ${props => props.$isMobile && css`
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     text-align: center;
+    max-height: 100%;
+    margin: auto 0;
   `}
 `;
 
@@ -89,9 +93,10 @@ export const PreviewDisplay = styled.div<{ $isActive: boolean; $type: string; $i
   `}
 
   ${props => props.$isMobile && css`
-    width: 120px;
-    height: calc(120px * 16 / 9);
-    border-radius: 12px;
+    width: auto;
+    height: clamp(220px, 40vh, 340px);
+    aspect-ratio: 9 / 16;
+    border-radius: 16px;
   `}
 `;
 
@@ -145,6 +150,16 @@ export const CreatorSubtitle = styled.div`
   letter-spacing: 0.12em;
 `;
 
+export const TitleRow = styled.div<{ $isMobile?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  ${props => props.$isMobile && css`
+    justify-content: center;
+  `}
+`;
+
 export const CreatorTitle = styled.h1<{ $isMobile?: boolean }>`
   font-size: ${props => props.$isMobile ? '24px' : 'clamp(3rem, 5vw, 4rem)'};
   font-weight: 800;
@@ -180,7 +195,7 @@ export const CreatorMeta = styled.div`
   justify-content: inherit;
 `;
 
-export const Pill = styled.span<{ $type?: 'video' | 'image' | 'credits' }>`
+export const Pill = styled.span<{ $type?: 'video' | 'image' | 'credits'; $isInline?: boolean }>`
   padding: 10px 18px;
   border-radius: 999px;
   font-size: 14px;
@@ -206,6 +221,14 @@ export const Pill = styled.span<{ $type?: 'video' | 'image' | 'credits' }>`
     background: rgba(20, 184, 166, 0.1);
     color: ${theme.colors.teal};
     border-color: rgba(20, 184, 166, 0.3);
+  `}
+
+  ${props => props.$isInline && css`
+    @media (max-width: 768px) {
+      padding: 6px 10px;
+      font-size: 11px;
+      height: fit-content;
+    }
   `}
 
   @media (max-width: 768px) {

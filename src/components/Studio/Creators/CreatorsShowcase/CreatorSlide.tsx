@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { 
   SlideSection, 
   SlideContent, 
@@ -9,6 +9,7 @@ import {
   CreatorDetails,
   CreatorSubtitle,
   CreatorTitle,
+  TitleRow,
   CreatorDescription,
   CreatorMeta,
   Pill,
@@ -23,7 +24,6 @@ interface CreatorSlideProps {
     subtitle: string;
     description: string;
     mediaType: string;
-    credits: number;
     previewClass: string;
     icon: string;
   };
@@ -53,21 +53,29 @@ const CreatorSlide = forwardRef<HTMLElement, CreatorSlideProps>(
 
           <CreatorDetails $isMobile={isMobile}>
             <CreatorSubtitle>{creator.subtitle}</CreatorSubtitle>
-            <CreatorTitle $isMobile={isMobile}>{creator.name}</CreatorTitle>
+            
+            <TitleRow $isMobile={isMobile}>
+              {isMobile && (
+                <Pill $type={creator.mediaType === 'Video' ? 'video' : 'image'} $isInline>
+                  <span>{creator.mediaType === 'Video' ? '🎥' : '🖼️'}</span>
+                  <span>{creator.mediaType}</span>
+                </Pill>
+              )}
+              <CreatorTitle $isMobile={isMobile}>{creator.name}</CreatorTitle>
+            </TitleRow>
+
             <CreatorDescription $isMobile={isMobile}>
               {creator.description}
             </CreatorDescription>
 
-            <CreatorMeta>
-              <Pill $type={creator.mediaType === 'Video' ? 'video' : 'image'}>
-                <span>{creator.mediaType === 'Video' ? '🎥' : '🖼️'}</span>
-                <span>{creator.mediaType}</span>
-              </Pill>
-              <Pill $type="credits">
-                <span>💎</span>
-                <span>{creator.credits} Credits</span>
-              </Pill>
-            </CreatorMeta>
+            {!isMobile && (
+              <CreatorMeta>
+                <Pill $type={creator.mediaType === 'Video' ? 'video' : 'image'}>
+                  <span>{creator.mediaType === 'Video' ? '🎥' : '🖼️'}</span>
+                  <span>{creator.mediaType}</span>
+                </Pill>
+              </CreatorMeta>
+            )}
 
             <CreatorActions>
               <Button $primary onClick={() => onTry(creator.id)}>

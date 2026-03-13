@@ -54,11 +54,11 @@ const WIND = 1.5;
 /** Base downward drift speed (px/frame). Higher = icons fall faster. */
 const GRAVITY_MIN = 1;
 
-/** Smallest icon size in CSS px. */
-const SIZE_MIN = 14;
+/** Base smallest icon size in CSS px. Scaled by screen size. */
+const BASE_SIZE_MIN = 14;
 
-/** Largest icon size in CSS px. */
-const SIZE_MAX = 32;
+/** Base largest icon size in CSS px. Scaled by screen size. */
+const BASE_SIZE_MAX = 32;
 
 /** Minimum icon opacity (most transparent). */
 const OPACITY_MIN = 0.10;
@@ -107,7 +107,7 @@ const HEART_WIND_OFFSET_MAX = 45;
 // ─────────────────────────────────────────────
 
 /** How long it takes for icons to travel into the heart shape. */
-const HEART_GATHER_DURATION = 4500;
+const HEART_GATHER_DURATION = 8000;
 
 /** How long the completed heart is held before dissolving.
  *  Set to 0 to skip holding entirely and jump straight to releasing. */
@@ -130,11 +130,11 @@ const WIND_RAMP_FRAMES = 40;
 
 /** Starting spring stiffness at the beginning of the gather (t=0).
  *  Very low → icons barely move at first, like caught lazily by wind. */
-const SPRING_K_START = 0.004;
+const SPRING_K_START = 0.002;
 
 /** Ending spring stiffness at the end of the gather (t=1).
  *  Higher → icons lock firmly into their heart slot near the finish. */
-const SPRING_K_END = 0.032;
+const SPRING_K_END = 0.0017;
 
 /** Starting velocity damping at t=0. Higher = more of the existing velocity is kept each frame,
  *  so icons carry their wind momentum longer. */
@@ -316,6 +316,8 @@ const SocialsBackground: React.FC = () => {
     active: false, platform: null, endTime: 0, extrasSpawned: 0,
   });
 
+  const connectingPlatformsRef = useRef<Set<string>>(new Set());
+
   const heartRef = useRef<HeartState>({
     phase: 'idle', startTime: 0, cx: 0, cy: 0,
     gatherDuration: HEART_GATHER_DURATION,
@@ -341,7 +343,15 @@ const SocialsBackground: React.FC = () => {
 
   const makeParticle = (img: HTMLImageElement, w: number, h: number, isExtra = false): Particle => {
     const z = 0.2 + Math.random() * 0.6;
-    const size = SIZE_MIN + z * (SIZE_MAX - SIZE_MIN);
+
+    // Calculate dynamic size based on screen dimensions
+    const screenRef = Math.min(w, h);
+    // Scale factor: 1.0 at 1000px, 0.6 at 400px, capped between 0.6 and 1.2
+    const sizeFactor = Math.max(0.6, Math.min(1.2, screenRef / 1000));
+
+    const minS = BASE_SIZE_MIN * sizeFactor;
+    const maxS = BASE_SIZE_MAX * sizeFactor;
+    const size = minS + z * (maxS - minS);
     let x, y;
     if (isExtra) {
       const fromTop = Math.random() < 0.5;
@@ -402,7 +412,18 @@ const SocialsBackground: React.FC = () => {
     sizeRef.current = { cssW: rect.width, cssH: rect.height, dpr };
     const rx = rect.width / oldW, ry = rect.height / oldH;
     if (isFinite(rx) && isFinite(ry) && rx > 0 && ry > 0) {
-      for (const p of particlesRef.current) { p.x *= rx; p.y *= ry; }
+      const screenRef = Math.min(rect.width, rect.height);
+      const sizeFactor = Math.max(0.6, Math.min(1.2, screenRef / 1000));
+
+      for (const p of particlesRef.current) {
+        p.x *= rx;
+        p.y *= ry;
+
+        // Update size responsively as well
+        const minS = BASE_SIZE_MIN * sizeFactor;
+        const maxS = BASE_SIZE_MAX * sizeFactor;
+        p.size = minS + p.z * (maxS - minS);
+      }
     }
   };
 
@@ -421,6 +442,19 @@ const SocialsBackground: React.FC = () => {
       burstRef.current = { active: false, platform: null, endTime: 0, extrasSpawned: 0 };
     }
     const isBursting = burstRef.current.active;
+    const isConnecting = connectingPlatformsRef.current.size > 0;
+
+    // Loading/Connecting spawn logic
+    if (isConnecting) {
+      const connectingList = Array.from(connectingPlatformsRef.current);
+      const targetCount = COUNT + connectingList.length * 20; // Increase target count while connecting
+      if (particlesRef.current.length < targetCount && Math.random() < 0.3) {
+        const platform = connectingList[Math.floor(Math.random() * connectingList.length)];
+        const img = dict[platform] || Object.values(dict)[Math.floor(Math.random() * Object.values(dict).length)];
+        particlesRef.current.push(makeParticle(img, w, h, true));
+      }
+    }
+
     if (isBursting && burstRef.current.extrasSpawned < 40 && burstRef.current.platform && dict[burstRef.current.platform]) {
       if (Math.random() < 0.2) {
         burstRef.current.extrasSpawned++;
@@ -619,8 +653,19 @@ const SocialsBackground: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseout', handleMouseLeave);
 
+    const handlePlatformConnecting = (e: Event) => {
+      const { platform } = (e as CustomEvent<{ platform: string }>).detail;
+      connectingPlatformsRef.current.add(platform);
+    };
+
+    const handlePlatformConnectionFinished = (e: Event) => {
+      const { platform } = (e as CustomEvent<{ platform: string }>).detail;
+      connectingPlatformsRef.current.delete(platform);
+    };
+
     const handlePlatformConnected = (e: Event) => {
       const { platform } = (e as CustomEvent<{ platform: string }>).detail;
+      connectingPlatformsRef.current.delete(platform); // Ensure it's removed from connecting set
       burstRef.current = { active: true, platform, endTime: Date.now() + HEART_BURST_DURATION, extrasSpawned: 0 };
 
       const { cssW: w, cssH: h } = sizeRef.current;
@@ -636,6 +681,8 @@ const SocialsBackground: React.FC = () => {
       };
     };
 
+    window.addEventListener('ezp:platformConnecting', handlePlatformConnecting);
+    window.addEventListener('ezp:platformConnectionFinished', handlePlatformConnectionFinished);
     window.addEventListener('ezp:platformConnected', handlePlatformConnected);
 
     loadIcons()
@@ -661,6 +708,8 @@ const SocialsBackground: React.FC = () => {
       window.removeEventListener('orientationchange', configureCanvas);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseout', handleMouseLeave);
+      window.removeEventListener('ezp:platformConnecting', handlePlatformConnecting);
+      window.removeEventListener('ezp:platformConnectionFinished', handlePlatformConnectionFinished);
       window.removeEventListener('ezp:platformConnected', handlePlatformConnected);
       if (typeof window.visualViewport !== 'undefined' && window.visualViewport !== null)
         window.visualViewport.removeEventListener('resize', configureCanvas);

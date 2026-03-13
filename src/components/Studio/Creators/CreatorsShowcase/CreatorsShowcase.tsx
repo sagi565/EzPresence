@@ -11,7 +11,6 @@ interface Creator {
   subtitle: string;
   description: string;
   mediaType: string;
-  credits: number;
   previewClass: string;
   icon: string;
 }
@@ -23,7 +22,6 @@ const CREATORS: Creator[] = [
     subtitle: 'Idea → Short Video',
     description: "Bring your idea to life as a cinematic short video. Matrix isn't generative AI—it's a decision-making AI agent that curates, selects, and assembles resources from online stock libraries on your behalf. It analyzes your concept, allocates the right visuals, audio, and pacing, and transforms your idea into a polished short video that feels both intentional and alive.",
     mediaType: 'Video',
-    credits: 380,
     previewClass: 'show-time',
     icon: '⏰',
   },
@@ -33,7 +31,6 @@ const CREATORS: Creator[] = [
     subtitle: 'Idea → Short Video',
     description: "Bring your idea to life as a cinematic short video. Matrix isn't generative AI—it's a decision-making AI agent that curates, selects, and assembles resources from online stock libraries on your behalf. It analyzes your concept, allocates the right visuals, audio, and pacing, and transforms your idea into a polished short video that feels both intentional and alive.",
     mediaType: 'Video',
-    credits: 180,
     previewClass: 'matrix',
     icon: '🎥',
   },
@@ -43,7 +40,6 @@ const CREATORS: Creator[] = [
     subtitle: 'Write Your Thoughts',
     description: "Turn your words into cinematic moments. Choose from a curated gallery of elegant note themes, type your thoughts, and watch them come alive as if handwritten or typed in real-time. Notes frames your ideas with dynamic camera motion and atmospheric styling—turning a simple entry into a visually captivating scene.",
     mediaType: 'Video',
-    credits: 200,
     previewClass: 'notes',
     icon: '📝',
   },
@@ -53,7 +49,6 @@ const CREATORS: Creator[] = [
     subtitle: 'Your Own Artist',
     description: "Collaborate with your personal AI artist. With Picasso, you can edit images directly or simply chat through a mini prompt interface. Describe your vision and watch as Picasso updates your image in real time—whether it's swapping backgrounds from online sources, adjusting effects for the perfect look, or suggesting creative enhancements. Picasso transforms editing into a conversation, making every image feel crafted just for you.",
     mediaType: 'Image',
-    credits: 100,
     previewClass: 'picasso',
     icon: '🎨',
   },

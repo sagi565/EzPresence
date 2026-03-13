@@ -74,10 +74,11 @@ export const ListSection = styled.div<{ $isDeleting?: boolean }>`
     transform-origin: center center;
   `}
 
-  ${media.tablet} {
-    padding: 40px 20px;
-    justify-content: center;
-    min-height: auto;
+  ${media.phone} {
+    padding: 32px 20px 80px 20px;
+    align-items: flex-start;
+    justify-content: flex-start;
+    min-height: 100%; /* Ensure each list has full screen space on mobile */
   }
 `;
 
@@ -97,6 +98,9 @@ export const AddListButtonWrapper = styled.div`
   ${media.phone} {
     width: 100%;
     bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0 24px;
   }
 `;
 
