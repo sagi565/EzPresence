@@ -323,48 +323,20 @@ if (typeof document !== 'undefined') {
         100% { transform: scale(0.6) translate(0, 50px) rotate(5deg); opacity: 0; filter: blur(10px); }
       }
       @media (max-width: 768px) {
-         .section-icon {
-             display: none !important;
-         }
-         .npm-title-input {
+         .npm-title-input, .nsm-title-input {
              width: 100% !important;
              margin-left: 0 !important;
-             text-align: center !important;
+             padding: 0 0 6px 0 !important;
              font-size: 20px !important;
-             padding: 10px 0 !important;
+             box-sizing: border-box !important;
          }
-         .schedule-modal-layout-left {
-             align-items: center !important;
-             width: 100% !important;
-         }
-         .schedule-modal-layout-left > div {
-             width: 100% !important;
-             justify-content: center !important;
-             align-items: center !important;
-         }
-         .schedule-modal-layout-left .section-content-wrapper {
-             align-items: center !important;
-         }
-         .chip-row-container {
-             flex-wrap: nowrap !important;
-             width: 100% !important;
-             justify-content: space-between !important;
-             gap: 4px !important;
-         }
-         .chip-button {
-             min-width: 0 !important;
-             max-width: none !important;
-             padding: 6px 8px !important;
-             font-size: 11px !important;
-             flex: 1 !important;
-         }
-         .chip-arrow-icon {
-             margin-left: 4px !important;
-         }
-         .nsm-content-preview {
-             height: 140px !important;
-             width: 80px !important;
-             margin: 0 auto !important;
+         #npmContentPreview {
+             width: 110px !important;
+             max-width: 110px !important;
+             height: 100% !important;
+             min-height: 150px !important;
+             margin: 0 !important;
+             box-sizing: border-box !important;
          }
          .time-picker, .date-picker, .timezone-selector, .repeat-selector {
              position: fixed !important;

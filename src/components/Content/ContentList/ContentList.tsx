@@ -8,7 +8,8 @@ import {
   ListContainer, 
   ListScrollWrapper, 
   ScrollArrow,
-  DraggableItemWrapper
+  DraggableItemWrapper,
+  MobileUploadContainer
 } from './styles';
 import { useDraggable } from '@dnd-kit/core';
 import { useDroppable } from '@dnd-kit/core';
@@ -241,7 +242,10 @@ const ContentList: React.FC<ContentListProps> = ({
           $isDropTarget={isDropTarget}
           $isInvalidDropTarget={isInvalidDropTarget}
         >
-          <UploadButton listType={list.listType} onUpload={onUpload} onNavigate={onAddNavigate} />
+          {/* Always show the upload button inline on desktop */}
+          {!isMobile && (
+            <UploadButton listType={list.listType} onUpload={onUpload} onNavigate={onAddNavigate} />
+          )}
 
           {list.items.map((item) => (
             <DraggableItem
@@ -256,7 +260,15 @@ const ContentList: React.FC<ContentListProps> = ({
               onToggleFavorite={onToggleFavorite}
             />
           ))}
+          
+          {/* Add a spacer on mobile at the start to simulate where the upload button would go, or just spacing */}
         </ListScrollWrapper>
+
+        {isMobile && (
+          <MobileUploadContainer $isEmpty={list.items.length === 0}>
+            <UploadButton listType={list.listType} onUpload={onUpload} onNavigate={onAddNavigate} />
+          </MobileUploadContainer>
+        )}
 
         <ScrollArrow
           $side="left"

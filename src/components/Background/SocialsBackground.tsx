@@ -21,16 +21,12 @@ interface Particle {
   isExtra?: boolean;
   markedForDeletion?: boolean;
 
-  // Heart formation — only set on chosen particles
   inHeart: boolean;
   heartOffsetX: number;
   heartOffsetY: number;
   heartArrivalDelay: number;
-  // Initial positional offset that decays to zero — creates a curved arc without overshoot
   windStartOffsetX: number;
   windStartOffsetY: number;
-
-  // Wind ramp: 0 = just released (current velocity), 1 = fully back to wind speed
   windRampT: number;
 }
 
@@ -45,284 +41,257 @@ const ICON_PATHS = [
 //  WIND / PARTICLE BEHAVIOUR
 // ─────────────────────────────────────────────
 
-/** Total number of background particles floating at once. */
-const COUNT = 30;
+const COUNT = 15;
+const CONNECTING_EXTRA = 60;
+const CONNECTING_SPAWN_RATE = 0.45;
 
-/** Base horizontal wind speed (px/frame). Higher = icons drift right faster. */
-const WIND = 1.5;
-
-/** Base downward drift speed (px/frame). Higher = icons fall faster. */
-const GRAVITY_MIN = 1;
-
-/** Base smallest icon size in CSS px. Scaled by screen size. */
-const BASE_SIZE_MIN = 14;
-
-/** Base largest icon size in CSS px. Scaled by screen size. */
-const BASE_SIZE_MAX = 32;
-
-/** Minimum icon opacity (most transparent). */
-const OPACITY_MIN = 0.10;
-
-/** Maximum icon opacity (most visible). */
-const OPACITY_MAX = 0.30;
+const WIND         = 1.5;
+const GRAVITY_MIN  = 1;
+const BASE_SIZE_MIN = 13;
+const BASE_SIZE_MAX = 30;
+const OPACITY_MIN  = 0.10;
+const OPACITY_MAX  = 0.30;
 
 // ─────────────────────────────────────────────
 //  MOUSE INTERACTION
 // ─────────────────────────────────────────────
 
-/** Pixel radius around the cursor within which icons get pushed away. */
 const INTERACTION_RADIUS = 70;
-
-/** How hard icons are pushed away from the cursor (multiplier). */
-const REPULSION_FORCE = 1;
-
-/** How much swirl/spin is added on top of the repulsion push. */
-const SWIRL_FORCE = 0.2;
+const REPULSION_FORCE    = 1;
+const SWIRL_FORCE        = 0.2;
 
 // ─────────────────────────────────────────────
-//  HEART FORMATION — COUNTS & SCALE
+//  SHAPE FORMATION
 // ─────────────────────────────────────────────
 
-/** Maximum icons that join the heart shape. Must be ≤ COUNT. */
-const HEART_PARTICLE_COUNT = 40;
+const SHAPE_PARTICLE_COUNT     = 90; // Increased slightly for better definition
+const SHAPE_SCALE_FACTOR       = 0.013;
+const SHAPE_MAX_JOIN_DISTANCE  = 800;
+const SHAPE_WIND_OFFSET_MIN    = 15;
+const SHAPE_WIND_OFFSET_MAX    = 80;
 
-/** Minimum icons that must join. If fewer are nearby, closest ones are pulled in regardless of distance. */
-const HEART_MIN_PARTICLE_COUNT = 30;
+const SHAPE_GATHER_DURATION  = 6500; // Decreased from 7000 for a much quicker formation
+const SHAPE_HOLD_DURATION    = 0;
+const SHAPE_RELEASE_DURATION = 1000;
+const BURST_DURATION         = 2000;
+const WIND_RAMP_FRAMES       = 40;
 
-/** Heart size as a fraction of the smaller canvas dimension (width or height).
- *  0.011 = small heart. Increase for larger. */
-const HEART_SCALE_FACTOR = 0.011;
-
-/** Max pixel distance from the heart center a particle can be and still volunteer to join.
- *  Particles beyond this are only used if needed to meet HEART_MIN_PARTICLE_COUNT. */
-const HEART_MAX_JOIN_DISTANCE = 500;
-
-/** Min/max random pixel offset applied to each particle's starting target position.
- *  Creates the initial wind-drift arc. Smaller = heart looks more like a heart immediately. */
-const HEART_WIND_OFFSET_MIN = 20;
-const HEART_WIND_OFFSET_MAX = 45;
-
-// ─────────────────────────────────────────────
-//  HEART FORMATION — TIMING  (all in milliseconds)
-// ─────────────────────────────────────────────
-
-/** How long it takes for icons to travel into the heart shape. */
-const HEART_GATHER_DURATION = 8000;
-
-/** How long the completed heart is held before dissolving.
- *  Set to 0 to skip holding entirely and jump straight to releasing. */
-const HEART_HOLD_DURATION = 0;
-
-/** How long it takes for icons to drift back to normal wind flow after the heart dissolves.
- *  Set to 0 to snap instantly back to wind — icons resume normal movement immediately. */
-const HEART_RELEASE_DURATION = 100;
-
-/** How long the icon burst (extra spawned icons) lasts after a platform is connected. */
-const HEART_BURST_DURATION = 2000;
-
-/** How many frames it takes for a released icon to ease back to its natural wind speed.
- *  Higher = longer gentle float before resuming full drift. ~60 frames = ~1 second. */
-const WIND_RAMP_FRAMES = 40;
-
-// ─────────────────────────────────────────────
-//  HEART FORMATION — SPRING PHYSICS
-// ─────────────────────────────────────────────
-
-/** Starting spring stiffness at the beginning of the gather (t=0).
- *  Very low → icons barely move at first, like caught lazily by wind. */
-const SPRING_K_START = 0.002;
-
-/** Ending spring stiffness at the end of the gather (t=1).
- *  Higher → icons lock firmly into their heart slot near the finish. */
-const SPRING_K_END = 0.0017;
-
-/** Starting velocity damping at t=0. Higher = more of the existing velocity is kept each frame,
- *  so icons carry their wind momentum longer. */
+const SPRING_K_START    = 0.002;
+const SPRING_K_END      = 0.0017;
 const SPRING_DAMP_START = 0.92;
+const SPRING_DAMP_END   = 0.86;
+const OFFSET_DECAY_EXP  = 2.6;
 
-/** Ending velocity damping at t=1. Lower = snappier, settles quicker into position. */
-const SPRING_DAMP_END = 0.86;
-
-/** Exponent for the offset-decay curve. Higher = offset holds longer at the start
- *  and collapses rapidly near the end. Controls how "late" the convergence feels. */
-const OFFSET_DECAY_EXPONENT = 2.6;
-
-// ─────────────────────────────────────────────
-//  HEART DRIFT  (idle float while holding)
-// ─────────────────────────────────────────────
-
-/** Horizontal amplitude of the whole heart's gentle float while holding (px). */
-const DRIFT_AMP_X = 4;
-
-/** Vertical amplitude of the whole heart's gentle float while holding (px). */
-const DRIFT_AMP_Y = 3;
-
-/** Horizontal drift oscillation speed (rad/ms). Lower = slower sway. */
+const DRIFT_AMP_X  = 4;
+const DRIFT_AMP_Y  = 3;
 const DRIFT_FREQ_X = 0.0008;
-
-/** Vertical drift oscillation speed (rad/ms). Slightly different from X for organic figure-eight motion. */
 const DRIFT_FREQ_Y = 0.0012;
 
-type HeartPhase = 'idle' | 'gathering' | 'holding' | 'releasing';
+type ShapePhase = 'idle' | 'gathering' | 'holding' | 'releasing';
 
-interface HeartState {
-  phase: HeartPhase;
+interface ShapeState {
+  phase: ShapePhase;
   startTime: number;
   cx: number;
   cy: number;
   gatherDuration: number;
   holdDuration: number;
   releaseDuration: number;
+  platform: string;
 }
 
-// Pure outline: N evenly spaced points on the heart perimeter
-const generateHeartOffsets = (count: number, scale: number): { x: number; y: number }[] =>
-  Array.from({ length: count }, (_, i) => {
+// ─────────────────────────────────────────────
+//  SVG PATHS FOR PERFECT SHAPES
+// ─────────────────────────────────────────────
+
+type Vec2 = { x: number; y: number };
+
+const PATHS: Record<string, string> = {
+  facebook: "M65,10 h15 v20 h-15 c-5.5,0 -10,4.5 -10,10 v10 h25 l-5,20 h-20 v40 h-25 v-40 h-15 v-20 h15 v-10 c0,-16.5 13.5,-30 30,-30 z",
+  instagram: "M30,10 h40 c11,0 20,9 20,20 v40 c0,11 -9,20 -20,20 h-40 c-11,0 -20,-9 -20,-20 v-40 c0,-11 9,-20 20,-20 z M50,30 a20,20 0 1,1 0,40 a20,20 0 1,1 0,-40 z M75,20 a4,4 0 1,1 0,8 a4,4 0 1,1 0,-8 z",
+  tiktok: "M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z",
+  youtube: "M20,20 h60 c11,0 20,9 20,20 v20 c0,11 -9,20 -20,20 h-60 c-11,0 -20,-9 -20,-20 v-20 c0,-11 9,-20 20,-20 z M40,35 l25,15 l-25,15 z",
+};
+
+function heartOutline(count: number, scale: number): Vec2[] {
+  return Array.from({ length: count }, (_, i) => {
     const t = (i / count) * Math.PI * 2;
     return {
       x:  16 * Math.pow(Math.sin(t), 3) * scale,
       y: -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * scale,
     };
   });
+}
 
-// Max pixel distance from heart center a particle can be and still join
-const MAX_JOIN_DISTANCE = HEART_MAX_JOIN_DISTANCE;
+function generateShapeOffsets(platform: string, count: number, scale: number): Vec2[] {
+  const px = scale * 16;
+  
+  if (!PATHS[platform]) return heartOutline(count, scale);
 
-const assignHeartSlots = (
+  const svgNS = "http://www.w3.org/2000/svg";
+  const pathElem = document.createElementNS(svgNS, "path");
+  pathElem.setAttribute("d", PATHS[platform]);
+  
+  const len = pathElem.getTotalLength();
+  const rawPts: Vec2[] = [];
+  
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+  // Sample points exactly along the vector path
+  for (let i = 0; i < count; i++) {
+    const p = pathElem.getPointAtLength((i / count) * len);
+    rawPts.push({ x: p.x, y: p.y });
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
+  }
+
+  // Normalize points relative to center, then scale to canvas pixels
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const maxDim = Math.max(maxX - minX, maxY - minY) / 2;
+
+  return rawPts.map(p => ({
+    x: ((p.x - cx) / maxDim) * px,
+    y: ((p.y - cy) / maxDim) * px,
+  }));
+}
+
+// ─────────────────────────────────────────────
+//  SLOT ASSIGNMENT WITH GUARANTEED FILL
+// ─────────────────────────────────────────────
+
+const WIND_GATE_X_STRICT   =   0;
+const WIND_GATE_Y_STRICT   =  40;
+const WIND_GATE_X_FALLBACK =  60;
+const WIND_GATE_Y_FALLBACK = 140;
+
+const assignShapeSlots = (
   particles: Particle[],
-  cx: number,
-  cy: number,
-  scale: number,
-  minCount: number,
-  maxCount: number,
+  cx: number, cy: number, scale: number, targetCount: number, platform: string,
+  dict: Record<string, HTMLImageElement>, w: number, h: number,
+  makeParticle: (img: HTMLImageElement, w: number, h: number, isExtra?: boolean) => Particle
 ) => {
-  for (const p of particles) { p.inHeart = false; }
+  for (const p of particles) p.inHeart = false;
 
-  const allByDist = [...particles]
-    .map(p => ({ p, dist: Math.sqrt((p.x - cx) ** 2 + (p.y - cy) ** 2) }))
-    .sort((a, b) => a.dist - b.dist);
+  const offsets = generateShapeOffsets(platform, targetCount, scale);
+  const slotWorld = offsets.map(o => ({ x: cx + o.x, y: cy + o.y }));
 
-  const withinRange = allByDist.filter(({ dist }) => dist <= MAX_JOIN_DISTANCE);
-  const nearCount = Math.min(maxCount, withinRange.length);
-  const needed = Math.max(nearCount, Math.min(minCount, allByDist.length));
-  const chosen = allByDist.slice(0, needed).map(({ p }) => p);
+  const usedParticle = new Set<Particle>();
+  const usedSlot     = new Set<number>();
+  const assignments: Array<{ p: Particle; slotIdx: number }> = [];
 
-  const actualCount = chosen.length;
-  if (actualCount === 0) return;
-
-  const offsets = generateHeartOffsets(actualCount, scale);
-
-  const usedSlot = new Set<number>();
-  for (const p of chosen) {
-    let bestDist = Infinity;
-    let bestIdx = -1;
-    for (let j = 0; j < offsets.length; j++) {
+  // Pass Helper
+  const runPass = (gateX: number, gateY: number) => {
+    for (let j = 0; j < slotWorld.length; j++) {
       if (usedSlot.has(j)) continue;
-      const tx = cx + offsets[j].x;
-      const ty = cy + offsets[j].y;
-      const d = (p.x - tx) ** 2 + (p.y - ty) ** 2;
-      if (d < bestDist) { bestDist = d; bestIdx = j; }
+      const sx = slotWorld[j].x, sy = slotWorld[j].y;
+      let bestDist = Infinity, bestP: Particle | null = null;
+      for (const p of particles) {
+        if (usedParticle.has(p)) continue;
+        const dx = sx - p.x;
+        const dy = sy - p.y;
+        if (dx < -gateX || dy < -gateY) continue; 
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < SHAPE_MAX_JOIN_DISTANCE && dist < bestDist) { bestDist = dist; bestP = p; }
+      }
+      if (bestP) {
+        usedSlot.add(j);
+        usedParticle.add(bestP);
+        assignments.push({ p: bestP, slotIdx: j });
+      }
     }
-    if (bestIdx !== -1) {
-      usedSlot.add(bestIdx);
-      p.inHeart = true;
-      p.heartOffsetX = offsets[bestIdx].x;
-      p.heartOffsetY = offsets[bestIdx].y;
-      p.heartArrivalDelay = 0;
-      p.vx = p.speedX;
-      p.vy = p.speedY;
-      const offMag = HEART_WIND_OFFSET_MIN + Math.random() * (HEART_WIND_OFFSET_MAX - HEART_WIND_OFFSET_MIN);
-      const offAngle = Math.random() * Math.PI * 2;
-      p.windStartOffsetX = Math.cos(offAngle) * offMag;
-      p.windStartOffsetY = Math.sin(offAngle) * offMag;
+  };
+
+  // 1. Strict wind-friendly pass
+  runPass(WIND_GATE_X_STRICT, WIND_GATE_Y_STRICT);
+  // 2. Fallback looser wind pass
+  runPass(WIND_GATE_X_FALLBACK, WIND_GATE_Y_FALLBACK);
+
+  // 3. Force-fill pass: Take ANY available particle for remaining slots
+  for (let j = 0; j < slotWorld.length; j++) {
+    if (usedSlot.has(j)) continue;
+    let fallbackP = particles.find(p => !usedParticle.has(p));
+    
+    // 4. Guarantee fill: If completely out of particles, spawn a new one upstream!
+    if (!fallbackP) {
+      const imgValues = Object.values(dict);
+      const randomImg = imgValues[Math.floor(Math.random() * imgValues.length)];
+      fallbackP = makeParticle(randomImg, w, h, true);
+      // Spawn slightly upstream so it drifts in naturally
+      fallbackP.x = cx - 300 - Math.random() * 200;
+      fallbackP.y = cy - 200 - Math.random() * 200;
+      particles.push(fallbackP);
     }
+
+    usedSlot.add(j);
+    usedParticle.add(fallbackP);
+    assignments.push({ p: fallbackP, slotIdx: j });
+  }
+
+  // Apply properties to assigned particles
+  for (const { p, slotIdx } of assignments) {
+    p.inHeart           = true;
+    p.heartOffsetX      = offsets[slotIdx].x;
+    p.heartOffsetY      = offsets[slotIdx].y;
+    // Stagger their arrival delays heavily for an organic feel
+    p.heartArrivalDelay = Math.random() * 1500; 
+    p.vx                = p.speedX;
+    p.vy                = p.speedY;
+    
+    const mag   = SHAPE_WIND_OFFSET_MIN + Math.random() * (SHAPE_WIND_OFFSET_MAX - SHAPE_WIND_OFFSET_MIN);
+    const angle = (Math.random() - 0.5) * Math.PI * 0.5;
+    p.windStartOffsetX  = -Math.abs(Math.cos(angle)) * mag;
+    p.windStartOffsetY  = -Math.abs(Math.sin(angle)) * mag * 0.4;
   }
 };
 
-const densityHeartCenter = (
-  particles: Particle[],
-  w: number,
-  h: number,
-  heartScale: number,
-): { cx: number; cy: number } => {
-  const padX = Math.ceil(16 * heartScale) + 20;
-  const padY = Math.ceil(17 * heartScale) + 20;
+const randomShapeCenter = (w: number, h: number, scale: number) => {
+  // Increased padding so the shape doesn't clip off the edges of the screen
+  const padX = scale * 16 + 80; 
+  const padY = scale * 16 + 80;
 
-  const stripW = w * 0.28;
-  const COLS_PER_STRIP = 3;
-  const ROWS = 5;
-  const RADIUS = 280;
-  const candidates: { cx: number; cy: number; score: number }[] = [];
+  // 50% chance to pick the left side, 50% chance for the right side
+  const isLeft = Math.random() < 0.5;
+  
+  // Defines the tighter boundaries (Left: 0% to 20% of width, Right: 80% to 100% of width)
+  const minX = isLeft ? padX : w * 0.80;
+  const maxX = isLeft ? w * 0.20 : w - padX;
 
-  for (let row = 0; row < ROWS; row++) {
-    const cy = padY + (row / (ROWS - 1)) * (h - padY * 2);
+  // Fallback for smaller screens to prevent negative/flipped math
+  const safeMinX = Math.min(minX, maxX);
+  const safeMaxX = Math.max(minX, maxX);
 
-    for (let col = 0; col < COLS_PER_STRIP; col++) {
-      const cx = padX + (col / (COLS_PER_STRIP - 1)) * (stripW - padX * 2);
-      if (cx < padX || cx > w - padX) continue;
-      let score = 0;
-      for (const p of particles) {
-        if ((p.x - cx) ** 2 + (p.y - cy) ** 2 < RADIUS * RADIUS) score++;
-      }
-      candidates.push({ cx, cy, score });
-    }
+  // Pick random coordinates within the new, tighter vertical columns
+  const cx = safeMinX + Math.random() * (safeMaxX - safeMinX);
+  const cy = padY + Math.random() * (h - padY * 2);
 
-    for (let col = 0; col < COLS_PER_STRIP; col++) {
-      const cx = (w - stripW) + padX + (col / (COLS_PER_STRIP - 1)) * (stripW - padX * 2);
-      if (cx < padX || cx > w - padX) continue;
-      let score = 0;
-      for (const p of particles) {
-        if ((p.x - cx) ** 2 + (p.y - cy) ** 2 < RADIUS * RADIUS) score++;
-      }
-      candidates.push({ cx, cy, score });
-    }
-  }
-
-  candidates.sort((a, b) => b.score - a.score);
-  const topN = Math.max(1, Math.floor(candidates.length * 0.35));
-  const pick = candidates[Math.floor(Math.random() * topN)];
-
-  const nudge = Math.min(w, h) * 0.04;
-  const cx = Math.max(padX, Math.min(w - padX, pick.cx + (Math.random() - 0.5) * nudge));
-  const cy = Math.max(padY, Math.min(h - padY, pick.cy + (Math.random() - 0.5) * nudge));
   return { cx, cy };
 };
+const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-const easeInOutCubic = (t: number) =>
-  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-/**
- * Release all heart particles back to wind — but keep their current velocity
- * so they ease back to wind speed naturally rather than snapping.
- * windRampT = 0 means "just released, blend from current velocity".
- */
-const releaseToWind = (particles: Particle[], heart: HeartState) => {
-  heart.phase = 'idle';
-  for (const p of particles) {
-    p.inHeart = false;
-    p.windRampT = 0; // start the ramp from current velocity, not from wind speed
-  }
+const releaseToWind = (particles: Particle[], shape: ShapeState) => {
+  shape.phase = 'idle';
+  for (const p of particles) { p.inHeart = false; p.windRampT = 0; }
 };
 
 const SocialsBackground: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
+  const ctxRef       = useRef<CanvasRenderingContext2D | null>(null);
   const particlesRef = useRef<Particle[]>([]);
-  const rafRef = useRef<number>();
-  const sizeRef = useRef<{ cssW: number; cssH: number; dpr: number }>({ cssW: 0, cssH: 0, dpr: 1 });
-  const mouseRef = useRef<{ x: number; y: number }>({ x: -9999, y: -9999 });
+  const rafRef       = useRef<number>();
+  const sizeRef      = useRef<{ cssW: number; cssH: number; dpr: number }>({ cssW: 0, cssH: 0, dpr: 1 });
+  const mouseRef     = useRef<{ x: number; y: number }>({ x: -9999, y: -9999 });
 
   const burstRef = useRef<{ active: boolean; platform: string | null; endTime: number; extrasSpawned: number }>({
     active: false, platform: null, endTime: 0, extrasSpawned: 0,
   });
-
   const connectingPlatformsRef = useRef<Set<string>>(new Set());
 
-  const heartRef = useRef<HeartState>({
+  const shapeRef = useRef<ShapeState>({
     phase: 'idle', startTime: 0, cx: 0, cy: 0,
-    gatherDuration: HEART_GATHER_DURATION,
-    holdDuration: HEART_HOLD_DURATION,
-    releaseDuration: HEART_RELEASE_DURATION,
+    gatherDuration: SHAPE_GATHER_DURATION, holdDuration: SHAPE_HOLD_DURATION, releaseDuration: SHAPE_RELEASE_DURATION, platform: 'heart',
   });
 
   const loadIcons = (): Promise<Record<string, HTMLImageElement>> =>
@@ -335,23 +304,13 @@ const SocialsBackground: React.FC = () => {
           img.onerror = reject;
         })
       )
-    ).then(results => {
-      const dict: Record<string, HTMLImageElement> = {};
-      results.forEach(r => { dict[r.name] = r.img; });
-      return dict;
-    });
+    ).then(results => results.reduce((acc, r) => ({ ...acc, [r.name]: r.img }), {}));
 
   const makeParticle = (img: HTMLImageElement, w: number, h: number, isExtra = false): Particle => {
     const z = 0.2 + Math.random() * 0.6;
-
-    // Calculate dynamic size based on screen dimensions
-    const screenRef = Math.min(w, h);
-    // Scale factor: 1.0 at 1000px, 0.6 at 400px, capped between 0.6 and 1.2
-    const sizeFactor = Math.max(0.6, Math.min(1.2, screenRef / 1000));
-
-    const minS = BASE_SIZE_MIN * sizeFactor;
-    const maxS = BASE_SIZE_MAX * sizeFactor;
-    const size = minS + z * (maxS - minS);
+    const sf = Math.max(0.6, Math.min(1.2, Math.min(w, h) / 1000));
+    const size = (BASE_SIZE_MIN + z * (BASE_SIZE_MAX - BASE_SIZE_MIN)) * sf;
+    
     let x, y;
     if (isExtra) {
       const fromTop = Math.random() < 0.5;
@@ -362,37 +321,30 @@ const SocialsBackground: React.FC = () => {
       x = fromTop ? Math.random() * w : -Math.random() * w * 0.2;
       y = fromTop ? -Math.random() * h * 0.2 : Math.random() * h * 0.6;
     }
+
     const speedX = WIND * (0.9 + Math.random() * 0.3) + z * 0.2;
     const speedY = GRAVITY_MIN * (0.9 + Math.random() * 0.3) + z * 0.2;
-    const baseRotationSpeed = (Math.random() - 0.5) * 0.02;
+    const baseRot = (Math.random() - 0.5) * 0.02;
+
     return {
       x, y, vx: speedX, vy: speedY, z, size, speedX, speedY,
-      rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: baseRotationSpeed, baseRotationSpeed,
-      opacity: OPACITY_MIN + z * (OPACITY_MAX - OPACITY_MIN),
-      img,
-      flutterPhase: Math.random() * Math.PI * 2,
-      flutterSpeed: Math.random() * 0.02 + 0.01,
-      swayXAmplitude: Math.random() * 1.5 + 0.5,
-      swayYAmplitude: Math.random() * 0.5 + 0.2,
+      rotation: Math.random() * Math.PI * 2, rotationSpeed: baseRot, baseRotationSpeed: baseRot,
+      opacity: OPACITY_MIN + z * (OPACITY_MAX - OPACITY_MIN), img,
+      flutterPhase: Math.random() * Math.PI * 2, flutterSpeed: Math.random() * 0.02 + 0.01,
+      swayXAmplitude: Math.random() * 1.5 + 0.5, swayYAmplitude: Math.random() * 0.5 + 0.2,
       isExtra, markedForDeletion: false,
-      inHeart: false, heartOffsetX: 0, heartOffsetY: 0, heartArrivalDelay: 0,
-      windStartOffsetX: 0, windStartOffsetY: 0,
-      windRampT: 1, // 1 = already at full wind speed (normal state)
+      inHeart: false, heartOffsetX: 0, heartOffsetY: 0, heartArrivalDelay: 0, windStartOffsetX: 0, windStartOffsetY: 0, windRampT: 1,
     };
   };
 
   const initParticles = (dict: Record<string, HTMLImageElement>, w: number, h: number) => {
     const imgs = Object.values(dict);
-    particlesRef.current = Array.from({ length: COUNT }, () =>
-      makeParticle(imgs[Math.floor(Math.random() * imgs.length)], w, h)
-    );
+    particlesRef.current = Array.from({ length: COUNT }, () => makeParticle(imgs[Math.floor(Math.random() * imgs.length)], w, h));
   };
 
   const respawn = (p: Particle, dict: Record<string, HTMLImageElement>, w: number, h: number) => {
     const bc = burstRef.current;
-    const imgs = bc.active && bc.platform && dict[bc.platform]
-      ? [dict[bc.platform]] : Object.values(dict);
+    const imgs = bc.active && bc.platform && dict[bc.platform] ? [dict[bc.platform]] : Object.values(dict);
     Object.assign(p, makeParticle(imgs[Math.floor(Math.random() * imgs.length)], w, h));
   };
 
@@ -401,34 +353,21 @@ const SocialsBackground: React.FC = () => {
     const ctx = ctxRef.current!;
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    const oldW = sizeRef.current.cssW || rect.width;
-    const oldH = sizeRef.current.cssH || rect.height;
-    const newW = Math.max(1, Math.round(rect.width * dpr));
-    const newH = Math.max(1, Math.round(rect.height * dpr));
-    if (canvas.width !== newW || canvas.height !== newH) {
-      canvas.width = newW; canvas.height = newH;
-    }
+    const newW = Math.max(1, Math.round(rect.width * dpr)), newH = Math.max(1, Math.round(rect.height * dpr));
+    
+    if (canvas.width !== newW || canvas.height !== newH) { canvas.width = newW; canvas.height = newH; }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    
+    const rx = rect.width / (sizeRef.current.cssW || rect.width), ry = rect.height / (sizeRef.current.cssH || rect.height);
     sizeRef.current = { cssW: rect.width, cssH: rect.height, dpr };
-    const rx = rect.width / oldW, ry = rect.height / oldH;
-    if (isFinite(rx) && isFinite(ry) && rx > 0 && ry > 0) {
-      const screenRef = Math.min(rect.width, rect.height);
-      const sizeFactor = Math.max(0.6, Math.min(1.2, screenRef / 1000));
-
+    
+    if (isFinite(rx) && rx > 0) {
+      const sf = Math.max(0.6, Math.min(1.2, Math.min(rect.width, rect.height) / 1000));
       for (const p of particlesRef.current) {
-        p.x *= rx;
-        p.y *= ry;
-
-        // Update size responsively as well
-        const minS = BASE_SIZE_MIN * sizeFactor;
-        const maxS = BASE_SIZE_MAX * sizeFactor;
-        p.size = minS + p.z * (maxS - minS);
+        p.x *= rx; p.y *= ry;
+        p.size = (BASE_SIZE_MIN + p.z * (BASE_SIZE_MAX - BASE_SIZE_MIN)) * sf;
       }
     }
-  };
-
-  const checkDpr = () => {
-    if (Math.abs(sizeRef.current.dpr - (window.devicePixelRatio || 1)) > 0.001) configureCanvas();
   };
 
   const animate = (dict: Record<string, HTMLImageElement>) => {
@@ -437,21 +376,14 @@ const SocialsBackground: React.FC = () => {
     const { x: mX, y: mY } = mouseRef.current;
     const now = Date.now();
 
-    // Burst housekeeping
-    if (burstRef.current.active && now > burstRef.current.endTime) {
-      burstRef.current = { active: false, platform: null, endTime: 0, extrasSpawned: 0 };
-    }
-    const isBursting = burstRef.current.active;
-    const isConnecting = connectingPlatformsRef.current.size > 0;
+    if (burstRef.current.active && now > burstRef.current.endTime) burstRef.current = { active: false, platform: null, endTime: 0, extrasSpawned: 0 };
+    const isBursting = burstRef.current.active, isConnecting = connectingPlatformsRef.current.size > 0;
 
-    // Loading/Connecting spawn logic
-    if (isConnecting) {
-      const connectingList = Array.from(connectingPlatformsRef.current);
-      const targetCount = COUNT + connectingList.length * 20; // Increase target count while connecting
-      if (particlesRef.current.length < targetCount && Math.random() < 0.3) {
-        const platform = connectingList[Math.floor(Math.random() * connectingList.length)];
-        const img = dict[platform] || Object.values(dict)[Math.floor(Math.random() * Object.values(dict).length)];
-        particlesRef.current.push(makeParticle(img, w, h, true));
+    if (isConnecting && w >= 768) {
+      const list = Array.from(connectingPlatformsRef.current);
+      if (particlesRef.current.length < COUNT + CONNECTING_EXTRA * list.length && Math.random() < CONNECTING_SPAWN_RATE) {
+        const platform = list[Math.floor(Math.random() * list.length)];
+        particlesRef.current.push(makeParticle(dict[platform] ?? Object.values(dict)[0], w, h, true));
       }
     }
 
@@ -462,36 +394,20 @@ const SocialsBackground: React.FC = () => {
       }
     }
 
-    // Heart state machine — skip zero-duration phases immediately
-    const heart = heartRef.current;
-    const phaseElapsed = now - heart.startTime;
-    if (heart.phase === 'gathering' && phaseElapsed >= heart.gatherDuration) {
-      if (heart.holdDuration <= 0) {
-        if (heart.releaseDuration <= 0) {
-          releaseToWind(particlesRef.current, heart);
-        } else {
-          heart.phase = 'releasing'; heart.startTime = now;
-        }
-      } else {
-        heart.phase = 'holding'; heart.startTime = now;
-      }
-    } else if (heart.phase === 'holding' && phaseElapsed >= heart.holdDuration) {
-      if (heart.releaseDuration <= 0) {
-        releaseToWind(particlesRef.current, heart);
-      } else {
-        heart.phase = 'releasing'; heart.startTime = now;
-      }
-    } else if (heart.phase === 'releasing' && phaseElapsed >= heart.releaseDuration) {
-      releaseToWind(particlesRef.current, heart);
+    const shape = shapeRef.current;
+    const phaseElapsed = now - shape.startTime;
+    
+    if (shape.phase === 'gathering' && phaseElapsed >= shape.gatherDuration) {
+      shape.holdDuration <= 0 ? (shape.releaseDuration <= 0 ? releaseToWind(particlesRef.current, shape) : (shape.phase = 'releasing', shape.startTime = now)) : (shape.phase = 'holding', shape.startTime = now);
+    } else if (shape.phase === 'holding' && phaseElapsed >= shape.holdDuration) {
+      shape.releaseDuration <= 0 ? releaseToWind(particlesRef.current, shape) : (shape.phase = 'releasing', shape.startTime = now);
+    } else if (shape.phase === 'releasing' && phaseElapsed >= shape.releaseDuration) {
+      releaseToWind(particlesRef.current, shape);
     }
 
-    const isForming = heart.phase !== 'idle';
-
-    // Live heart center drift
-    const driftX = isForming ? Math.sin(now * DRIFT_FREQ_X) * DRIFT_AMP_X : 0;
-    const driftY = isForming ? Math.cos(now * DRIFT_FREQ_Y) * DRIFT_AMP_Y : 0;
-    const heartCX = heart.cx + driftX;
-    const heartCY = heart.cy + driftY;
+    const isForming = shape.phase !== 'idle';
+    const shapeCX = shape.cx + (isForming ? Math.sin(now * DRIFT_FREQ_X) * DRIFT_AMP_X : 0);
+    const shapeCY = shape.cy + (isForming ? Math.cos(now * DRIFT_FREQ_Y) * DRIFT_AMP_Y : 0);
 
     ctx.clearRect(0, 0, w, h);
     particlesRef.current.sort((a, b) => a.z - b.z);
@@ -500,68 +416,69 @@ const SocialsBackground: React.FC = () => {
       p.flutterPhase += isBursting ? p.flutterSpeed * 1.5 : p.flutterSpeed;
 
       if (isForming && p.inHeart) {
-        // ── Heart particle ──
-        const elapsed = now - heart.startTime;
+        const elapsed = now - shape.startTime;
 
-        if (heart.phase === 'gathering') {
+        if (shape.phase === 'gathering') {
           const afterDelay = elapsed - p.heartArrivalDelay;
-
+          
           if (afterDelay <= 0) {
+            // Wait for delay to pass
             p.x += p.speedX + Math.cos(p.flutterPhase) * p.swayXAmplitude;
             p.y += p.speedY + Math.sin(p.flutterPhase) * p.swayYAmplitude;
-            p.rotationSpeed = p.baseRotationSpeed;
           } else {
-            const trueTargetX = heartCX + p.heartOffsetX;
-            const trueTargetY = heartCY + p.heartOffsetY;
+            const trueX = shapeCX + p.heartOffsetX;
+            const trueY = shapeCY + p.heartOffsetY;
+            const gatherT = Math.min(afterDelay / shape.gatherDuration, 1);
+            const decay = Math.pow(1 - gatherT, OFFSET_DECAY_EXP);
+            
+            const toX = (trueX + p.windStartOffsetX * decay) - p.x;
+            const toY = (trueY + p.windStartOffsetY * decay) - p.y;
+            
+            // Slightly softer spring for a more relaxed pull
+            const K = (SPRING_K_START * 0.8) + gatherT * gatherT * (SPRING_K_END - SPRING_K_START);
+            const damp = SPRING_DAMP_START - gatherT * (SPRING_DAMP_START - SPRING_DAMP_END);
+            
+            const distToTrue = Math.sqrt(toX * toX + toY * toY);
+            
+            // 1 & 2: WEAKER, ASYMMETRIC SWIRL
+            // Use the particle's inherent rotation to randomly flip the swirl direction (left vs right curl)
+            const swirlDir = p.baseRotationSpeed > 0 ? 1 : -1;
+            // Greatly reduced the strength and made it scale based on the particle's depth (p.z)
+            const swirlStr = Math.max(0, distToTrue / 250); 
+            const swirlIntensity = 0.035 * (p.z + 0.5); 
+            
+            const swirlX = -toY * swirlStr * swirlIntensity * swirlDir;
+            const swirlY = toX * swirlStr * swirlIntensity * swirlDir;
 
-            const gatherT = Math.min(afterDelay / heart.gatherDuration, 1);
-            const offsetDecay = Math.pow(1 - gatherT, OFFSET_DECAY_EXPONENT);
-            const curTargetX = trueTargetX + p.windStartOffsetX * offsetDecay;
-            const curTargetY = trueTargetY + p.windStartOffsetY * offsetDecay;
-
-            const toX = curTargetX - p.x;
-            const toY = curTargetY - p.y;
-
-            const SPRING_K    = SPRING_K_START + gatherT * gatherT * (SPRING_K_END - SPRING_K_START);
-            const SPRING_DAMP = SPRING_DAMP_START - gatherT * (SPRING_DAMP_START - SPRING_DAMP_END);
-            p.vx = (p.vx + toX * SPRING_K) * SPRING_DAMP;
-            p.vy = (p.vy + toY * SPRING_K) * SPRING_DAMP;
-
-            const distToTrue = Math.sqrt(
-              (trueTargetX - p.x) ** 2 + (trueTargetY - p.y) ** 2
-            );
+            p.vx = (p.vx + (toX + swirlX) * K) * damp;
+            p.vy = (p.vy + (toY + swirlY) * K) * damp;
+            
+            // 3: TURBULENT NOISE
             const farness = Math.min(1, distToTrue / 60);
-            p.vx += Math.cos(p.flutterPhase) * p.swayXAmplitude * 0.025 * farness;
-            p.vy += Math.sin(p.flutterPhase) * p.swayYAmplitude * 0.025 * farness;
-
+            // Injecting Date.now() (the 'now' variable) creates a continuous wobbly wind effect
+            const noiseX = Math.cos(p.flutterPhase + now * 0.002) * p.swayXAmplitude * 0.12 * farness;
+            const noiseY = Math.sin(p.flutterPhase + now * 0.003) * p.swayYAmplitude * 0.12 * farness;
+            
+            p.vx += noiseX;
+            p.vy += noiseY;
+            
             p.x += p.vx;
             p.y += p.vy;
-
-            const nearness = Math.max(0, 1 - distToTrue / 80);
-            p.rotationSpeed = p.baseRotationSpeed * (1 - nearness * 0.88);
+            p.rotationSpeed = p.baseRotationSpeed * (1 - Math.max(0, 1 - distToTrue / 80) * 0.88);
           }
-
-        } else if (heart.phase === 'holding') {
-          const targetX = heartCX + p.heartOffsetX;
-          const targetY = heartCY + p.heartOffsetY;
+        } else if (shape.phase === 'holding') {
           const swayX = Math.cos(p.flutterPhase * 0.6 + p.heartOffsetX * 0.1) * p.swayXAmplitude * 0.45;
           const swayY = Math.sin(p.flutterPhase * 0.5 + p.heartOffsetY * 0.1) * p.swayYAmplitude * 0.45;
-          p.vx = (p.vx + (targetX + swayX - p.x) * 0.07) * 0.72;
-          p.vy = (p.vy + (targetY + swayY - p.y) * 0.07) * 0.72;
-          p.x += p.vx;
-          p.y += p.vy;
+          p.vx = (p.vx + (shapeCX + p.heartOffsetX + swayX - p.x) * 0.07) * 0.72;
+          p.vy = (p.vy + (shapeCY + p.heartOffsetY + swayY - p.y) * 0.07) * 0.72;
+          p.x += p.vx; p.y += p.vy;
           p.rotationSpeed = p.baseRotationSpeed * 0.18;
 
-        } else if (heart.phase === 'releasing') {
-          const t = easeInOutCubic(Math.min(phaseElapsed / heart.releaseDuration, 1));
-          const swayX = Math.cos(p.flutterPhase) * p.swayXAmplitude;
-          const swayY = Math.sin(p.flutterPhase) * p.swayYAmplitude;
-          const targetVx = p.speedX + swayX;
-          const targetVy = p.speedY + swayY;
-          p.vx += (targetVx - p.vx) * t * 0.09;
-          p.vy += (targetVy - p.vy) * t * 0.09;
-          p.x += p.vx;
-          p.y += p.vy;
+        } else if (shape.phase === 'releasing') {
+          const t = easeInOutCubic(Math.min(phaseElapsed / shape.releaseDuration, 1));
+          p.vx += (p.speedX + Math.cos(p.flutterPhase) * p.swayXAmplitude - p.vx) * t * 0.09;
+          p.vy += (p.speedY + Math.sin(p.flutterPhase) * p.swayYAmplitude - p.vy) * t * 0.09;
+          p.x += p.vx; p.y += p.vy;
           p.rotationSpeed = p.baseRotationSpeed * (0.18 + t * 0.82);
         }
 
@@ -574,38 +491,25 @@ const SocialsBackground: React.FC = () => {
         ctx.restore();
 
       } else {
-        // ── Normal wind particle ──
-        const swayX = Math.cos(p.flutterPhase) * p.swayXAmplitude;
-        const swayY = Math.sin(p.flutterPhase) * p.swayYAmplitude;
-        const targetDx = p.speedX + swayX;
-        const targetDy = p.speedY + swayY;
+        const targetDx = p.speedX + Math.cos(p.flutterPhase) * p.swayXAmplitude;
+        const targetDy = p.speedY + Math.sin(p.flutterPhase) * p.swayYAmplitude;
 
-        // If this particle was just released from the heart, ramp its velocity
-        // back to wind speed gradually so it doesn't snap to full speed instantly.
-        let dx: number;
-        let dy: number;
+        let dx, dy;
         if (p.windRampT < 1) {
           p.windRampT = Math.min(1, p.windRampT + 1 / WIND_RAMP_FRAMES);
           const ease = easeInOutCubic(p.windRampT);
           dx = p.vx + (targetDx - p.vx) * ease * 0.08;
           dy = p.vy + (targetDy - p.vy) * ease * 0.08;
         } else {
-          dx = targetDx;
-          dy = targetDy;
+          dx = targetDx; dy = targetDy;
         }
 
-        const pCx = p.x + p.size / 2;
-        const pCy = p.y + p.size / 2;
-        const distX = pCx - mX;
-        const distY = pCy - mY;
-        const dist = Math.sqrt(distX * distX + distY * distY);
+        const dX = p.x + p.size / 2 - mX, dY = p.y + p.size / 2 - mY;
+        const dist = Math.sqrt(dX * dX + dY * dY);
         if (dist < INTERACTION_RADIUS && dist > 1) {
-          const force = (INTERACTION_RADIUS - dist) / INTERACTION_RADIUS;
-          const mag = force * REPULSION_FORCE * (p.z + 0.5);
-          const normX = distX / dist;
-          const normY = distY / dist;
-          dx += normX * mag + (-normY) * mag * SWIRL_FORCE * 2.5;
-          dy += normY * mag + normX * mag * SWIRL_FORCE * 2.5;
+          const mag = ((INTERACTION_RADIUS - dist) / INTERACTION_RADIUS) * REPULSION_FORCE * (p.z + 0.5);
+          dx += (dX / dist) * mag + (-dY / dist) * mag * SWIRL_FORCE * 2.5;
+          dy += (dY / dist) * mag + (dX / dist) * mag * SWIRL_FORCE * 2.5;
           p.rotationSpeed = p.baseRotationSpeed * 5;
         } else {
           p.rotationSpeed = p.baseRotationSpeed + Math.sin(p.flutterPhase) * 0.01;
@@ -616,7 +520,7 @@ const SocialsBackground: React.FC = () => {
         p.rotation += p.rotationSpeed;
 
         if (p.y > h + p.size || p.x > w + p.size) {
-          if (p.isExtra && !isBursting) p.markedForDeletion = true;
+          if (p.isExtra && !isBursting && !isConnecting) p.markedForDeletion = true;
           else respawn(p, dict, w, h);
         }
 
@@ -630,7 +534,7 @@ const SocialsBackground: React.FC = () => {
     }
 
     particlesRef.current = particlesRef.current.filter(p => !p.markedForDeletion);
-    checkDpr();
+    if (Math.abs(sizeRef.current.dpr - (window.devicePixelRatio || 1)) > 0.001) configureCanvas();
     rafRef.current = requestAnimationFrame(() => animate(dict));
   };
 
@@ -641,91 +545,65 @@ const SocialsBackground: React.FC = () => {
     if (!ctx) return;
     ctxRef.current = ctx;
 
-    let mounted = true;
-    let ro: ResizeObserver | null = null;
+    let mounted = true, ro: ResizeObserver | null = null;
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!canvasRef.current) return;
-      const rect = canvasRef.current.getBoundingClientRect();
-      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (rect) mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
     const handleMouseLeave = () => { mouseRef.current = { x: -9999, y: -9999 }; };
+
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseout', handleMouseLeave);
+    window.addEventListener('mouseout',  handleMouseLeave);
 
-    const handlePlatformConnecting = (e: Event) => {
-      const { platform } = (e as CustomEvent<{ platform: string }>).detail;
-      connectingPlatformsRef.current.add(platform);
-    };
-
-    const handlePlatformConnectionFinished = (e: Event) => {
-      const { platform } = (e as CustomEvent<{ platform: string }>).detail;
-      connectingPlatformsRef.current.delete(platform);
-    };
-
+    const handlePlatformConnecting = (e: Event) => connectingPlatformsRef.current.add((e as CustomEvent).detail.platform);
+    const handlePlatformConnectionFinished = (e: Event) => connectingPlatformsRef.current.delete((e as CustomEvent).detail.platform);
+    
     const handlePlatformConnected = (e: Event) => {
       const { platform } = (e as CustomEvent<{ platform: string }>).detail;
-      connectingPlatformsRef.current.delete(platform); // Ensure it's removed from connecting set
-      burstRef.current = { active: true, platform, endTime: Date.now() + HEART_BURST_DURATION, extrasSpawned: 0 };
+      connectingPlatformsRef.current.delete(platform);
+      burstRef.current = { active: true, platform, endTime: Date.now() + BURST_DURATION, extrasSpawned: 0 };
 
       const { cssW: w, cssH: h } = sizeRef.current;
-      const scale = Math.min(w, h) * HEART_SCALE_FACTOR;
-      const { cx, cy } = densityHeartCenter(particlesRef.current, w, h, scale);
-      assignHeartSlots(particlesRef.current, cx, cy, scale, HEART_MIN_PARTICLE_COUNT, HEART_PARTICLE_COUNT);
+      if (w < 768) return;
 
-      heartRef.current = {
-        phase: 'gathering', startTime: Date.now(), cx, cy,
-        gatherDuration: HEART_GATHER_DURATION,
-        holdDuration: HEART_HOLD_DURATION,
-        releaseDuration: HEART_RELEASE_DURATION,
-      };
+      const scale = Math.min(w, h) * SHAPE_SCALE_FACTOR;
+      const { cx, cy } = randomShapeCenter(w, h, scale);          
+      // Pass dict and makeParticle downward so missing particles can be spawned if needed
+      loadIcons().then(dict => {
+        assignShapeSlots(particlesRef.current, cx, cy, scale, SHAPE_PARTICLE_COUNT, platform, dict, w, h, makeParticle);
+        shapeRef.current = { phase: 'gathering', startTime: Date.now(), cx, cy, gatherDuration: SHAPE_GATHER_DURATION, holdDuration: SHAPE_HOLD_DURATION, releaseDuration: SHAPE_RELEASE_DURATION, platform };
+      });
     };
 
     window.addEventListener('ezp:platformConnecting', handlePlatformConnecting);
     window.addEventListener('ezp:platformConnectionFinished', handlePlatformConnectionFinished);
     window.addEventListener('ezp:platformConnected', handlePlatformConnected);
 
-    loadIcons()
-      .then(dict => {
-        if (!mounted) return;
-        configureCanvas();
-        initParticles(dict, sizeRef.current.cssW, sizeRef.current.cssH);
-        animate(dict);
-        ro = new ResizeObserver(() => configureCanvas());
-        ro.observe(canvas);
-        if (typeof window.visualViewport !== 'undefined' && window.visualViewport !== null)
-          window.visualViewport.addEventListener('resize', configureCanvas);
-        window.addEventListener('resize', configureCanvas);
-        window.addEventListener('orientationchange', configureCanvas);
-      })
-      .catch(e => console.error('Failed to load social icons:', e));
+    loadIcons().then(dict => {
+      if (!mounted) return;
+      configureCanvas();
+      initParticles(dict, sizeRef.current.cssW, sizeRef.current.cssH);
+      animate(dict);
+      ro = new ResizeObserver(() => configureCanvas());
+      ro.observe(canvas);
+      window.addEventListener('resize', configureCanvas);
+    });
 
     return () => {
       mounted = false;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (ro) ro.disconnect();
       window.removeEventListener('resize', configureCanvas);
-      window.removeEventListener('orientationchange', configureCanvas);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseout', handleMouseLeave);
       window.removeEventListener('ezp:platformConnecting', handlePlatformConnecting);
       window.removeEventListener('ezp:platformConnectionFinished', handlePlatformConnectionFinished);
       window.removeEventListener('ezp:platformConnected', handlePlatformConnected);
-      if (typeof window.visualViewport !== 'undefined' && window.visualViewport !== null)
-        window.visualViewport.removeEventListener('resize', configureCanvas);
     };
   }, []);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'absolute', inset: 0,
-        width: '100%', height: '100%',
-        display: 'block', zIndex: 0, pointerEvents: 'none',
-      }}
-    />
-  );
+  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', zIndex: 0, pointerEvents: 'none' }} />;
 };
 
 export default React.memo(SocialsBackground);

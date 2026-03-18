@@ -75,7 +75,7 @@ export const ListSection = styled.div<{ $isDeleting?: boolean }>`
   `}
 
   ${media.phone} {
-    padding: 32px 20px 80px 20px;
+    padding: 32px 10px 80px 10px;
     align-items: flex-start;
     justify-content: flex-start;
     min-height: 100%; /* Ensure each list has full screen space on mobile */
@@ -183,6 +183,10 @@ export const ItemPreview = styled.div`
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  ${media.phone} {
+    width: 100px;
   }
 `;
 

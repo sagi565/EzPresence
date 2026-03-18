@@ -28,7 +28,7 @@ export const ScrollNavContainer = styled.nav`
   position: fixed;
   right: -220px;
   top: 0;
-  bottom: 0;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;

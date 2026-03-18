@@ -57,14 +57,14 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
     }
 
     try {
-      // Dispatch connecting event for background animation
+      // Dispatch connecting event — background shows animated particles for this platform
       window.dispatchEvent(new CustomEvent('ezp:platformConnecting', {
         detail: { platform }
       }));
 
       await connect();
 
-      // Dispatch custom event for background animation
+      // Dispatch connected event — background forms the platform logo shape
       window.dispatchEvent(new CustomEvent('ezp:platformConnected', {
         detail: { platform }
       }));
@@ -185,4 +185,4 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
       />
     </>
   );
-};
+}

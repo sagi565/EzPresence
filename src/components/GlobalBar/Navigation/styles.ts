@@ -67,7 +67,7 @@ export const Logo = styled.a`
 
 export const NavCenter = styled.div`
   display: flex;
-  gap: 4px;
+  gap: 16px;
   background: transparent;
   padding: 4px;
   border-radius: 12px;
@@ -84,7 +84,8 @@ export const NavCenter = styled.div`
     flex: 1 1 100%;
     margin-top: 0px;
     padding-top: 0;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 30px;
   }
 `;
 
@@ -98,24 +99,32 @@ export const NavItemWrapper = styled.div`
 export const NavBtn = styled.a<{ $active?: boolean }>`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
+  gap: 8px;
+  padding: 6px 12px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   text-decoration: none;
-  color: ${props => props.$active ? '#fff' : theme.colors.muted};
-  background: ${props => props.$active ? theme.gradients.momentum : 'transparent'};
+  color: ${props => props.$active ? theme.colors.primary : theme.colors.muted};
+  background: transparent;
   font-size: 14px;
-  box-shadow: ${props => props.$active ? '0 4px 12px rgba(155, 93, 229, 0.3)' : 'none'};
   white-space: nowrap;
 
   .nav-icon {
-    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: ${props => props.$active ? '38px' : '24px'};
+    height: ${props => props.$active ? '38px' : '24px'};
+    font-size: ${props => props.$active ? '18px' : '16px'};
+    border-radius: 10px;
     flex-shrink: 0;
     line-height: 1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: ${props => props.$active ? theme.gradients.momentum : 'transparent'};
+    box-shadow: ${props => props.$active ? '0 6px 16px rgba(155, 93, 229, 0.3)' : 'none'};
   }
 
   .nav-label {
@@ -132,7 +141,7 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
 
   /* ── Medium screens: hide labels, keep emoji ── */
   @media (max-width: 1050px) {
-    padding: 10px 10px;
+    padding: 6px 6px;
     gap: 0;
 
     .nav-label {
@@ -140,16 +149,54 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
     }
 
     .nav-icon {
-      font-size: 18px;
+      font-size: ${props => props.$active ? '18px' : '18px'};
     }
   }
 
   /* ── Small phones: tighter padding ── */
   ${media.phone} {
-    padding: 6px 4px;
+    padding: 4px;
 
     .nav-icon {
-      font-size: 17px;
+      width: ${props => props.$active ? '34px' : '24px'};
+      height: ${props => props.$active ? '34px' : '24px'};
+      font-size: ${props => props.$active ? '16px' : '17px'};
+    }
+  }
+
+  /* ── PC view only styles ── */
+  @media (min-width: 1051px) {
+    padding: 8px 20px;
+    gap: 12px;
+    background: ${props => props.$active ? theme.gradients.momentum : 'transparent'};
+    color: ${props => props.$active ? '#fff' : theme.colors.muted};
+    box-shadow: ${props => props.$active ? '0 8px 20px rgba(155, 93, 229, 0.25)' : 'none'};
+
+    .nav-label {
+      background: none;
+      -webkit-text-fill-color: initial;
+      background-clip: initial;
+      color: inherit;
+      font-weight: 700;
+    }
+
+    .nav-icon {
+      background: transparent;
+      box-shadow: none;
+      width: 24px;
+      height: 24px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    &:hover {
+      ${props => !props.$active && `
+        background: rgba(155, 93, 229, 0.08);
+        color: ${theme.colors.primary};
+        transform: translateY(-2px);
+      `}
     }
   }
 `;
@@ -247,24 +294,4 @@ export const Avatar = styled.button<{ $hovered?: boolean; $bgColor?: string }>`
     height: 34px;
     font-size: 13px;
   }
-`;
-
-export const ComingSoonBadge = styled.span`
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 2px 8px;
-  font-size: 8px;
-  font-weight: 800;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
-  white-space: nowrap;
-  pointer-events: none;
-  border: none;
-  z-index: 10;
 `;

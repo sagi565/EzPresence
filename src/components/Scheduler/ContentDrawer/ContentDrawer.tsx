@@ -80,7 +80,9 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({
       >
         <div className="content-drawer-handle" style={styles.drawerHandle} onClick={onToggle}>
           <span style={{ ...styles.drawerArrow, ...(isOpen ? styles.drawerArrowOpen : {}) }}>▲</span>
-          <span className="content-drawer-title" style={styles.drawerTitle}>My Content</span>
+          {!isOpen && (
+            <span className="content-drawer-title" style={styles.drawerTitle}>My Content</span>
+          )}
         </div>
 
         <div className="content-drawer-content" style={styles.drawerContent}>
@@ -94,7 +96,7 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <div style={styles.contentList}>
+              <div className="content-list-mobile" style={styles.contentList}>
                 {filteredContent.length === 0 ? (
                   <div style={{ padding: '20px', fontSize: '13px', color: '#6b7280' }}>
                     No content found.

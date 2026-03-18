@@ -120,7 +120,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
         // Keep isDragOver true — don't call setIsDragOver here, counter manages it
     };
 
-    const handleDragLeave = (e: React.DragEvent) => {
+    const handleDragLeave = (_e: React.DragEvent) => {
         dragCounter.current -= 1;
         if (dragCounter.current <= 0) {
             dragCounter.current = 0;
@@ -788,13 +788,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                                 if (validationErrors.title) setValidationErrors(prev => ({ ...prev, title: undefined }));
                             }}
                         />
-                        {validationErrors.title && (
-                            <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginLeft: '28px', marginTop: '4px' }}>{validationErrors.title}</span>
-                        )}
+                        {validationErrors.title && <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginLeft: 0, marginTop: '4px' }}>{validationErrors.title}</span>}
                     </div>
                 }
                 rightColumn={
-                    <div style={{ position: 'relative', height: '100%' }}>
+                    <div className="npm-right-column-wrapper" style={{ position: 'relative' }}>
                         <ContentPreview
                             id="npmContentPreview"
                             content={getSelectedContent()}
@@ -830,27 +828,25 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             >
                 <SectionContainer icon="🕐" className="npm-date-section">
                     <div className="chip-row-container" style={styles.chipRow}>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                            <ChipButton className="chip-button" minWidth="180px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
+                        <div style={{ position: 'relative' }}>
+                            <ChipButton className="chip-button" minWidth="140px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
                                 <span>{formData.date ? formData.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Date'}</span><ChipArrow />
                             </ChipButton>
                             <DatePicker selectedDate={formData.date} onChange={handleDateChange} minDate={new Date()} show={showDatePicker} onClose={() => setShowDatePicker(false)} />
                         </div>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                            <ChipButton className="chip-button" minWidth="90px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
+                        <div style={{ position: 'relative' }}>
+                            <ChipButton className="chip-button" minWidth="80px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
                                 <span>{formData.time}</span><ChipArrow />
                             </ChipButton>
                             <TimePicker selectedTime={formData.time} onChange={handleTimeChange} show={showTimePicker} onClose={() => setShowTimePicker(false)} />
                         </div>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                            <ChipButton className="chip-button" minWidth="110px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
-                                <span style={{ minWidth: '60px', display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formData.timezone ? getTimezoneLabel(formData.timezone) : 'Timezone'}</span><ChipArrow />
+                        <div style={{ position: 'relative' }}>
+                            <ChipButton className="chip-button" minWidth="90px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
+                                <span style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formData.timezone ? getTimezoneLabel(formData.timezone) : 'TZ'}</span><ChipArrow />
                             </ChipButton>
                             <TimezoneSelector selectedTimezone={formData.timezone || 'America/New_York'} onChange={(tz) => { setFormData(prev => ({ ...prev, timezone: tz })); setShowTimezoneSelector(false); }} show={showTimezoneSelector} onClose={() => setShowTimezoneSelector(false)} />
                         </div>
-                    </div>
-                    <div className="chip-row-container" style={{ ...styles.chipRow, marginTop: '8px' }}>
-                        <div style={{ position: 'relative', width: '100%' }}>
+                        <div style={{ position: 'relative' }}>
                             <ChipButton className="chip-button" minWidth="100%" maxWidth="100%" style={{ position: 'relative' }} onClick={() => { closeAllPickers(); setShowRepeatSelector(true); }}>
                                 <span>{formData.repeat.label}</span><ChipArrow />
                             </ChipButton>
@@ -859,7 +855,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                     </div>
                 </SectionContainer>
 
-                <SectionContainer icon="📲">
+                <SectionContainer icon="📲" className="npm-platform-section">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {platforms.filter(p => p.isConnected).length === 0 && (
                             <div style={{ padding: '20px', textAlign: 'center', color: theme.colors.muted, fontSize: '13px' }}>No connected platforms. Please connect a platform to create posts.</div>

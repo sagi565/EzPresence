@@ -6,7 +6,7 @@ styleSheet.innerText = `
 
   @media (max-width: 768px) {
     .content-drawer {
-      transform: translateY(calc(100% - 48px)) !important;
+      transform: translateY(calc(100% - 60px)) !important;
     }
     .content-drawer.drawer-open {
       transform: translateY(0) !important;
@@ -18,23 +18,28 @@ styleSheet.innerText = `
       font-size: 12px !important;
     }
     .content-drawer-content {
-      height: 240px !important;
+      height: 275px !important;
     }
     .content-drawer-inner {
       padding: 8px 0px !important;
       flex-direction: column !important;
       gap: 12px !important;
+      overflow: hidden !important;
     }
     .content-drawer-controls {
       padding: 0 12px !important;
+      width: 100vw !important;
+      box-sizing: border-box !important;
     }
     .content-drawer-search {
       max-width: 100% !important;
     }
     .content-drawer-lists {
-      width: 100% !important;
+      width: 100vw !important;
+      box-sizing: border-box !important;
       border-left: none !important;
       border-top: 1px solid #f3f4f6 !important;
+      display: flex !important;
       flex-direction: row !important;
       max-height: 48px !important;
       overflow-x: auto !important;
@@ -42,6 +47,11 @@ styleSheet.innerText = `
       flex-wrap: nowrap !important;
       -webkit-overflow-scrolling: touch !important;
       padding: 0 !important;
+      scrollbar-width: none !important; /* Firefox */
+      -ms-overflow-style: none !important;  /* IE and Edge */
+    }
+    .content-drawer-lists::-webkit-scrollbar {
+      display: none !important;
     }
     .content-drawer-list-pill {
       padding: 8px 12px !important;
@@ -58,6 +68,19 @@ styleSheet.innerText = `
     .content-drawer-list-pill-all-active {
       border-left: none !important;
       border-bottom: 4px solid #6d28d9 !important;
+    }
+    .content-list-mobile {
+      width: 100vw !important;
+      box-sizing: border-box !important;
+      padding-right: 24px !important; /* to account for previous padding */
+      display: flex !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    .content-list-mobile::-webkit-scrollbar {
+      display: none !important;
     }
     .content-card {
       width: 80px !important;

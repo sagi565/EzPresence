@@ -28,21 +28,20 @@ export const ShowcaseContainer = styled.div`
 `;
 
 export const SlideSection = styled.section<{ $isMobile?: boolean }>`
-  height: calc(100vh - 76px);
+  height: 100%;
   min-height: 600px;
-  scroll-snap-align: center;
+  scroll-snap-align: start;
   scroll-snap-stop: always;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 60px 100px 60px 80px;
   position: relative;
+  box-sizing: border-box;
 
   ${props => props.$isMobile && css`
     padding: 24px 20px;
-    height: calc(100dvh - 130px);
-    box-sizing: border-box;
-    min-height: auto;
+    min-height: 100%;
     justify-content: center;
   `}
 `;
@@ -156,7 +155,9 @@ export const TitleRow = styled.div<{ $isMobile?: boolean }>`
   gap: 12px;
   
   ${props => props.$isMobile && css`
+    position: relative;
     justify-content: center;
+    width: 100%;
   `}
 `;
 
@@ -225,6 +226,10 @@ export const Pill = styled.span<{ $type?: 'video' | 'image' | 'credits'; $isInli
 
   ${props => props.$isInline && css`
     @media (max-width: 768px) {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
       padding: 6px 10px;
       font-size: 11px;
       height: fit-content;

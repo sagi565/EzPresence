@@ -233,17 +233,16 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
                 </div>
               ) : (
                 <>
-                  <Title>{item.title || 'Untitled'}</Title>
-                  <IconButton
-                    $type="edit"
+                  <Title 
+                    style={{ cursor: 'pointer' }}
                     onClick={() => {
                       setRenameValue(item.title || '');
                       setIsRenaming(true);
                     }}
-                    title="Rename"
+                    title="Click to rename"
                   >
-                    ✏️
-                  </IconButton>
+                    {item.title || 'Untitled'}
+                  </Title>
                   <IconButton
                     $type="favorite"
                     $active={item.favorite}

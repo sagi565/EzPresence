@@ -26,7 +26,7 @@ import ChipButton from '../ChipButton/ChipButton';
 import ChipArrow from '../ChipArrow/ChipArrow';
 import SectionContainer from '../SectionContainer/SectionContainer';
 import RecurringActionDialog from '../RecurringActionDialog/RecurringActionDialog';
-import { styles } from './styles';
+
 
 interface NewStoryModalProps {
     isOpen: boolean;
@@ -115,7 +115,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         e.dataTransfer.dropEffect = 'copy';
     };
 
-    const handleDragLeave = (e: React.DragEvent) => {
+    const handleDragLeave = (_e: React.DragEvent) => {
         dragCounter.current -= 1;
         if (dragCounter.current <= 0) {
             dragCounter.current = 0;
@@ -533,7 +533,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                             }}
                             maxLength={80}
                         />
-                        {validationErrors.title && <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginLeft: '28px', marginTop: '4px' }}>{validationErrors.title}</span>}
+                        {validationErrors.title && <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginLeft: 0, marginTop: '4px' }}>{validationErrors.title}</span>}
                     </div>
                 }
                 rightColumn={
@@ -571,27 +571,25 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
             >
                 <SectionContainer icon="🕐" className="nsm-date-section">
                     <div className="chip-row-container" style={chipRowStyle}>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                            <ChipButton className="chip-button" minWidth="180px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
+                        <div style={{ position: 'relative' }}>
+                            <ChipButton className="chip-button" minWidth="140px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
                                 <span>{formatDateLabel(formData.date)}</span><ChipArrow />
                             </ChipButton>
                             <DatePicker selectedDate={formData.date} onChange={handleDateChange} minDate={new Date()} show={showDatePicker} onClose={() => setShowDatePicker(false)} />
                         </div>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                            <ChipButton className="chip-button" minWidth="90px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
+                        <div style={{ position: 'relative' }}>
+                            <ChipButton className="chip-button" minWidth="80px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
                                 <span>{formData.time}</span><ChipArrow />
                             </ChipButton>
                             <TimePicker selectedTime={formData.time} onChange={handleTimeChange} show={showTimePicker} onClose={() => setShowTimePicker(false)} />
                         </div>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                            <ChipButton className="chip-button" minWidth="110px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
-                                <span style={{ minWidth: '60px', display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formData.timezone ? getTimezoneLabel(formData.timezone) : 'Timezone'}</span><ChipArrow />
+                        <div style={{ position: 'relative' }}>
+                            <ChipButton className="chip-button" minWidth="90px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
+                                <span style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formData.timezone ? getTimezoneLabel(formData.timezone) : 'TZ'}</span><ChipArrow />
                             </ChipButton>
                             <TimezoneSelector selectedTimezone={formData.timezone || 'America/New_York'} onChange={(tz) => { setFormData(prev => ({ ...prev, timezone: tz })); setShowTimezoneSelector(false); }} show={showTimezoneSelector} onClose={() => setShowTimezoneSelector(false)} />
                         </div>
-                    </div>
-                    <div className="chip-row-container" style={{ ...chipRowStyle, marginTop: '8px' }}>
-                        <div style={{ position: 'relative', width: '100%' }}>
+                        <div style={{ position: 'relative' }}>
                             <ChipButton className="chip-button" minWidth="100%" maxWidth="100%" style={{ position: 'relative' }} onClick={() => { closeAllPickers(); setShowRepeatSelector(true); }}>
                                 <span>{formData.repeat.label}</span><ChipArrow />
                             </ChipButton>
@@ -600,7 +598,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     </div>
                 </SectionContainer>
 
-                <SectionContainer icon="📲">
+                <SectionContainer icon="📲" className="nsm-platform-section">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {platforms.filter(p => (p.platform === 'instagram' || p.platform === 'facebook') && p.isConnected).length === 0 && (
                             <div style={{ padding: '20px', textAlign: 'center', color: theme.colors.muted, fontSize: '13px' }}>No connected platforms. Please connect Instagram or Facebook to create stories.</div>

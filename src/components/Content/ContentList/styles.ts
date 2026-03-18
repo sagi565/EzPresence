@@ -11,6 +11,7 @@ export const ListContainer = styled.div<{ $isMobile?: boolean }>`
 
   ${props => props.$isMobile && css`
     min-height: auto;
+    margin-bottom: 24px;
   `}
 `;
 
@@ -188,8 +189,10 @@ export const ListScrollWrapper = styled.div<{ $isDropTarget?: boolean; $isInvali
   }
 
   ${media.phone} {
-    padding: 24px 12px;
-    gap: 16px;
+    padding: 24px 10px;
+    gap: 8px;
+    scroll-padding-left: 10px;
+    min-height: 140px; /* Make empty lists visible as drop targets */
   }
 
   ${props => props.$isDropTarget && css`
@@ -204,6 +207,13 @@ export const ListScrollWrapper = styled.div<{ $isDropTarget?: boolean; $isInvali
     filter: grayscale(0.5);
     cursor: not-allowed;
   `}
+`;
+
+export const MobileUploadContainer = styled.div<{ $isEmpty?: boolean }>`
+  display: flex;
+  justify-content: center;
+  margin-top: ${props => props.$isEmpty ? '60px' : '12px'};
+  width: 100%;
 `;
 
 export const ScrollArrow = styled.button<{ $side: 'left' | 'right'; $visible?: boolean; $isHovered?: boolean }>`

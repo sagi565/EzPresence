@@ -73,7 +73,7 @@ export const styles: Record<string, CSSProperties> = {
     },
     rightColumn: {
         flexShrink: 0,
-        width: '200px',
+        width: '240px',
         display: 'flex',
         flexDirection: 'column',
         height: '100%',

@@ -198,7 +198,11 @@ const TimezoneSelector: React.FC<TimezoneSelectorProps> = ({
 
 export const getTimezoneLabel = (value: string): string => {
     const tz = TIMEZONES.find((t) => t.value === value);
-    return tz ? `(UTC${tz.offset}) ${tz.label}` : value;
+    if (!tz) return value;
+    // Return a much shorter label to prevent the ChipButton from expanding too much
+    // on mobile screens, e.g., "UTC-05:00" or just the city name if preferred.
+    // The user asked to make it short so the size of the component doesn't change.
+    return `UTC${tz.offset}`;
 };
 
 export default TimezoneSelector;

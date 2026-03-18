@@ -77,8 +77,6 @@ export const CloseButton = styled.button`
   z-index: 10;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.12);
-    color: #111827;
     transform: rotate(90deg);
   }
 
