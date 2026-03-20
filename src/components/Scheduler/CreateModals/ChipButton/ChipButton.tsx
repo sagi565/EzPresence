@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { styles } from './styles';
+import { StyledChip } from './styles';
 
 export { chipHoverStyle } from './styles';
 
@@ -9,7 +9,7 @@ interface ChipButtonProps {
     minWidth?: string;
     maxWidth?: string;
     small?: boolean;
-    style?: React.CSSProperties;
+    style?: React.CSSProperties; // Keep for external overrides if any
     className?: string;
 }
 
@@ -23,22 +23,20 @@ const ChipButton: React.FC<ChipButtonProps> = ({
     minWidth,
     maxWidth,
     small = false,
-    style = {}
+    style = {},
+    className
 }) => {
     return (
-        <div
-            className={`chip-button ${small ? 'chip-button-small' : ''}`}
-            style={{
-                ...styles.chip,
-                ...(small ? styles.chipSmall : {}),
-                ...(minWidth ? { minWidth } : {}),
-                ...(maxWidth ? { maxWidth } : {}),
-                ...style
-            }}
+        <StyledChip
+            className={className}
+            $small={small}
+            $minWidth={minWidth}
+            $maxWidth={maxWidth}
+            style={style}
             onClick={onClick}
         >
             {children}
-        </div>
+        </StyledChip>
     );
 };
 

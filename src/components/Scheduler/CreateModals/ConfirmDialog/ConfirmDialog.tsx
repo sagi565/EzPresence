@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { theme } from '@/theme/theme';
-import { styles } from './styles';
+import * as S from './styles';
 
 interface ConfirmDialogProps {
     isOpen: boolean;
@@ -33,56 +32,28 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     if (!isOpen || !mounted) return null;
 
     return createPortal(
-        <>
-            <div
-                style={styles.overlay}
-                onClick={onCancel}
-            >
-                <div
-                    style={styles.dialog}
-                    onClick={e => e.stopPropagation()}
-                >
-                    <div style={styles.titleRow}>
-                        <h3 style={styles.title}>
-                            {title}
-                        </h3>
-                    </div>
+        <S.Overlay onClick={onCancel}>
+            <S.Dialog onClick={e => e.stopPropagation()}>
+                <S.TitleRow>
+                    <S.Title>{title}</S.Title>
+                </S.TitleRow>
 
-                    <p style={styles.message}>
-                        {message}
-                    </p>
+                <S.Message>{message}</S.Message>
 
-                    <div style={styles.actions}>
-                        <button
-                            type="button"
-                            onClick={onCancel}
-                            style={styles.cancelBtn}
-                        >
-                            {cancelLabel}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={onConfirm}
-                            style={{
-                                ...styles.confirmBtn,
-                                background: danger ? '#EF4444' : theme.gradients.innovator,
-                                boxShadow: danger
-                                    ? '0 3px 12px rgba(239, 68, 68, 0.3)'
-                                    : '0 3px 12px rgba(155, 93, 229, 0.25)',
-                            }}
-                        >
-                            {confirmLabel}
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <style>{`
-                @keyframes confirmDialogFadeIn {
-                    from { opacity: 0; transform: scale(0.95); }
-                    to { opacity: 1; transform: scale(1); }
-                }
-            `}</style>
-        </>,
+                <S.Actions>
+                    <S.CancelBtn type="button" onClick={onCancel}>
+                        {cancelLabel}
+                    </S.CancelBtn>
+                    <S.ConfirmBtn
+                        type="button"
+                        onClick={onConfirm}
+                        $danger={danger}
+                    >
+                        {confirmLabel}
+                    </S.ConfirmBtn>
+                </S.Actions>
+            </S.Dialog>
+        </S.Overlay>,
         document.body
     );
 };

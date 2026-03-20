@@ -1,107 +1,110 @@
+import styled, { css } from 'styled-components';
 import { theme } from '@/theme/theme';
-import { CSSProperties } from 'react';
 
-export const styles: Record<string, CSSProperties> = {
-    container: {
-        position: 'absolute',
-        top: 'calc(100% + 6px)',
-        left: 0,
-        background: theme.colors.surface,
-        borderRadius: '12px',
-        boxShadow: '0 12px 40px rgba(0,0,0,.18)',
-        border: `1px solid rgba(155, 93, 229, .12)`,
-        padding: '16px',
-        zIndex: 50,
-        width: '280px',
-    },
+export const Container = styled.div`
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background: ${theme.colors.surface};
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.18);
+    border: 1px solid rgba(155, 93, 229, .12);
+    padding: 16px;
+    z-index: 50;
+    width: 280px;
+`;
 
-    header: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '12px',
-    },
+export const Header = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    marginBottom: 12px;
+`;
 
-    title: {
-        fontSize: '14px',
-        fontWeight: 700,
-        color: theme.colors.text,
-    },
+export const Title = styled.span`
+    font-size: 14px;
+    font-weight: 700;
+    color: ${theme.colors.text};
+`;
 
-    arrow: {
-        width: '28px',
-        height: '28px',
-        border: 'none',
-        borderRadius: '6px',
-        background: 'transparent',
-        cursor: 'pointer',
-        fontSize: '14px',
-        color: theme.colors.muted,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'background .15s',
-    },
+export const Arrow = styled.button`
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: ${theme.colors.muted};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s;
 
-    grid: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(7, 1fr)',
-        gap: '2px',
-        textAlign: 'center' as const,
-    },
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+`;
 
-    dayHeader: {
-        fontSize: '11px',
-        fontWeight: 600,
-        color: theme.colors.muted,
-        padding: '4px 0',
-    },
+export const Grid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    text-align: center;
+`;
 
-    day: {
-        width: '34px',
-        height: '34px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        fontSize: '13px',
-        fontWeight: 500,
-        color: theme.colors.text,
-        transition: 'all .15s',
-        border: 'none',
-        background: 'transparent',
-        margin: 'auto',
-    },
+export const DayHeader = styled.div`
+    font-size: 11px;
+    font-weight: 600;
+    color: ${theme.colors.muted};
+    padding: 4px 0;
+`;
 
-    dayToday: {
-        fontWeight: 700,
-        color: theme.colors.primary,
-    },
+export const Day = styled.button<{ $isToday?: boolean; $isSelected?: boolean; $isOtherMonth?: boolean }>`
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    fontSize: 13px;
+    font-weight: 500;
+    color: ${theme.colors.text};
+    transition: all .15s;
+    border: none;
+    background: transparent;
+    margin: auto;
 
-    daySelected: {
-        background: theme.colors.primary,
-        color: '#fff',
-        fontWeight: 700,
-    },
+    ${props => props.$isToday && css`
+        font-weight: 700;
+        color: ${theme.colors.primary};
+    `}
 
-    dayOtherMonth: {
-        width: '34px',
-        height: '34px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '13px',
-        color: '#d1d5db',
-        border: 'none',
-        background: 'transparent',
-        margin: 'auto',
-        cursor: 'default',
-    },
+    ${props => props.$isSelected && css`
+        background: ${theme.colors.primary} !important;
+        color: #fff !important;
+        font-weight: 700;
+    `}
 
-    dayDisabled: {
-        color: '#d1d5db',
-        cursor: 'not-allowed',
-        opacity: 0.5,
-    },
-};
+    ${props => props.$isOtherMonth && css`
+        color: #d1d5db;
+        cursor: default;
+    `}
+
+    &:hover:not(:disabled) {
+        background-color: rgba(155, 93, 229, 0.1);
+        font-weight: 600;
+
+        ${props => props.$isSelected && css`
+            background-color: ${theme.colors.primary} !important;
+            color: #fff !important;
+        `}
+    }
+
+    &:disabled {
+        color: #d1d5db;
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+`;

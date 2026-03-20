@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { styles } from './styles';
+import * as S from './styles';
 import { useContentLists } from '@/hooks/contents/useContentLists';
 import { ContentItem } from '@/models/ContentList';
 
@@ -70,133 +70,119 @@ const ContentPickerModal: React.FC<ContentPickerModalProps> = ({
     if (!isOpen) return null;
 
     return ReactDOM.createPortal(
-        <div style={styles.overlay} onClick={onClose}>
-            <div style={styles.modal} onClick={e => e.stopPropagation()}>
+        <S.Overlay onClick={onClose}>
+            <S.Modal onClick={e => e.stopPropagation()}>
                 {/* Header */}
-                <div style={styles.header}>
-                    <div style={styles.titleRow}>
-                        <span style={styles.titleIcon}>📂</span>
-                        <span style={styles.title}>Select Content</span>
-                    </div>
-                    <button style={styles.closeBtn} onClick={onClose}>✕</button>
-                </div>
+                <S.Header>
+                    <S.TitleRow>
+                        <S.TitleIcon>📂</S.TitleIcon>
+                        <S.Title>Select Content</S.Title>
+                    </S.TitleRow>
+                    <S.CloseBtn onClick={onClose}>✕</S.CloseBtn>
+                </S.Header>
 
-                <div style={styles.body}>
+                <S.Body>
                     {/* Sidebar */}
-                    <div style={styles.sidebar}>
-                        <div
-                            style={{ ...styles.sidebarItem, ...(selectedListId === 'all' ? styles.sidebarItemActive : {}) }}
+                    <S.Sidebar>
+                        <S.SidebarItem
+                            $active={selectedListId === 'all'}
                             onClick={() => setSelectedListId('all')}
                         >
-                            <span style={styles.sidebarIcon}>📑</span>
+                            <S.SidebarIcon>📑</S.SidebarIcon>
                             All Content
-                        </div>
-                        <div
-                            style={{ ...styles.sidebarItem, ...(selectedListId === 'videos' ? styles.sidebarItemActive : {}) }}
+                        </S.SidebarItem>
+                        <S.SidebarItem
+                            $active={selectedListId === 'videos'}
                             onClick={() => setSelectedListId('videos')}
                         >
-                            <span style={styles.sidebarIcon}>🎥</span>
+                            <S.SidebarIcon>🎥</S.SidebarIcon>
                             Videos
-                        </div>
-                        <div
-                            style={{ ...styles.sidebarItem, ...(selectedListId === 'images' ? styles.sidebarItemActive : {}) }}
+                        </S.SidebarItem>
+                        <S.SidebarItem
+                            $active={selectedListId === 'images'}
                             onClick={() => setSelectedListId('images')}
                         >
-                            <span style={styles.sidebarIcon}>🖼️</span>
+                            <S.SidebarIcon>🖼️</S.SidebarIcon>
                             Images
-                        </div>
+                        </S.SidebarItem>
 
-                        <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)', margin: '8px 0' }} />
+                        <S.Divider />
 
                         {lists.map(list => (
-                            <div
+                            <S.SidebarItem
                                 key={list.id}
-                                style={{ ...styles.sidebarItem, ...(selectedListId === list.id ? styles.sidebarItemActive : {}) }}
+                                $active={selectedListId === list.id}
                                 onClick={() => setSelectedListId(list.id)}
                             >
-                                <span style={styles.sidebarIcon}>{list.icon || '📁'}</span>
+                                <S.SidebarIcon>{list.icon || '📁'}</S.SidebarIcon>
                                 {list.title}
-                            </div>
+                            </S.SidebarItem>
                         ))}
-                    </div>
+                    </S.Sidebar>
 
                     {/* Main Content */}
-                    <div style={styles.contentArea}>
+                    <S.ContentArea>
                         {/* Toolbar */}
-                        <div style={styles.toolbar}>
-                            <div style={styles.searchBox}>
-                                <span style={styles.searchIcon}>🔍</span>
-                                <input
+                        <S.Toolbar>
+                            <S.SearchBox>
+                                <S.SearchIcon>🔍</S.SearchIcon>
+                                <S.SearchInput
                                     type="text"
-                                    style={styles.searchInput}
                                     placeholder="Search content..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     autoFocus
                                 />
-                            </div>
-                            <div style={{ fontSize: '13px', color: '#666' }}>
+                            </S.SearchBox>
+                            <S.CardMeta style={{ color: '#666' }}>
                                 {filteredContent.length} items found
-                            </div>
-                        </div>
+                            </S.CardMeta>
+                        </S.Toolbar>
 
                         {/* Grid */}
-                        <div style={styles.grid}>
+                        <S.Grid>
                             {filteredContent.length === 0 ? (
-                                <div style={styles.emptyState}>
-                                    <span style={styles.emptyIcon}>📭</span>
+                                <S.EmptyState>
+                                    <S.EmptyIcon>📭</S.EmptyIcon>
                                     <span>No content found</span>
-                                </div>
+                                </S.EmptyState>
                             ) : (
                                 filteredContent.map(item => (
-                                    <div
+                                    <S.Card
                                         key={item.id}
-                                        style={styles.card}
                                         onClick={() => onSelect(item)}
-                                        className="content-card-hover"
-                                        onMouseEnter={e => {
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                            e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.08)';
-                                            e.currentTarget.style.borderColor = '#9b5de5'; // Primary color
-                                        }}
-                                        onMouseLeave={e => {
-                                            e.currentTarget.style.transform = 'none';
-                                            e.currentTarget.style.boxShadow = 'none';
-                                            e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.06)';
-                                        }}
                                     >
-                                        <div style={styles.thumbnailContainer}>
-                                            <img
+                                        <S.ThumbnailContainer>
+                                            <S.Thumbnail
                                                 src={item.thumbnail || '/placeholder-image.png'}
                                                 alt={item.title}
-                                                style={styles.thumbnail}
                                                 onError={(e) => {
                                                     (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=No+Image';
                                                 }}
                                             />
-                                            <div style={styles.typeIcon}>
+                                            <S.TypeIcon>
                                                 {item.type === 'video' ? '▶' : '🖼'}
-                                            </div>
+                                            </S.TypeIcon>
                                             {item.durationSec && (
-                                                <div style={styles.duration}>
+                                                <S.Duration>
                                                     {Math.floor(item.durationSec / 60)}:{(item.durationSec % 60).toString().padStart(2, '0')}
-                                                </div>
+                                                </S.Duration>
                                             )}
-                                        </div>
-                                        <div style={styles.cardInfo}>
-                                            <div style={styles.cardTitle}>{item.title}</div>
-                                            <div style={styles.cardMeta}>
+                                        </S.ThumbnailContainer>
+                                        <S.CardInfo>
+                                            <S.CardTitle>{item.title}</S.CardTitle>
+                                            <S.CardMeta>
                                                 <span>{new Date(item.createdAt || Date.now()).toLocaleDateString()}</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                            </S.CardMeta>
+                                        </S.CardInfo>
+                                    </S.Card>
                                 ))
                             )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>,
+                        </S.Grid>
+                    </S.ContentArea>
+                </S.Body>
+            </S.Modal>
+        </S.Overlay>,
         document.body
     );
 };

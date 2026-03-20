@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { styles } from './styles';
+import * as S from './styles';
 
 export interface TimezoneOption {
     value: string; // IANA timezone identifier
@@ -11,7 +11,7 @@ export interface TimezoneOption {
 
 interface TimezoneSelectorProps {
     selectedTimezone: string;
-    onChange: (timezone: string) => void;
+    onSelect: (timezone: string) => void;
     show: boolean;
     onClose: () => void;
 }
@@ -84,12 +84,11 @@ export const TIMEZONES: TimezoneOption[] = [
 
 const TimezoneSelector: React.FC<TimezoneSelectorProps> = ({
     selectedTimezone,
-    onChange,
+    onSelect,
     show,
     onClose,
 }) => {
     const [searchQuery, setSearchQuery] = useState('');
-    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -117,7 +116,7 @@ const TimezoneSelector: React.FC<TimezoneSelectorProps> = ({
 
     useEffect(() => {
         if (show && selectedTimezone && dropdownRef.current) {
-            const selectedItem = dropdownRef.current.querySelector('.ntz-item[data-selected="true"]');
+            const selectedItem = dropdownRef.current.querySelector('[data-selected="true"]');
             if (selectedItem) {
                 selectedItem.scrollIntoView({ block: 'center', behavior: 'auto' });
             }
@@ -138,7 +137,7 @@ const TimezoneSelector: React.FC<TimezoneSelectorProps> = ({
             e.preventDefault();
             e.stopPropagation();
         }
-        onChange(timezone);
+        onSelect(timezone);
         setSearchQuery('');
         onClose();
     };
@@ -146,62 +145,51 @@ const TimezoneSelector: React.FC<TimezoneSelectorProps> = ({
     if (!show) return null;
 
     return (
-        <div ref={dropdownRef} style={styles.container} className="timezone-selector" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-            <div style={styles.searchBox}>
-                <span style={styles.searchIcon}>🔍</span>
-                <input
+        <S.Container ref={dropdownRef} $show={show} className="timezone-selector" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+            <S.SearchBox>
+                <S.SearchIcon>🔍</S.SearchIcon>
+                <S.SearchInput
                     ref={searchInputRef}
                     type="text"
                     placeholder="Search timezone or country..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    style={styles.searchInput}
                 />
-            </div>
+            </S.SearchBox>
 
-            <div style={styles.list}>
+            <S.List>
                 {filteredTimezones.length === 0 ? (
-                    <div style={styles.noResults}>No timezones found</div>
+                    <S.NoResults>No timezones found</S.NoResults>
                 ) : (
-                    filteredTimezones.map((tz, index) => (
-                        <div
+                    filteredTimezones.map((tz) => (
+                        <S.Item
                             key={tz.value}
-                            className="ntz-item"
                             data-selected={tz.value === selectedTimezone}
-                            style={{
-                                ...styles.item,
-                                ...(hoveredIndex === index ? styles.itemHovered : {}),
-                                ...(tz.value === selectedTimezone ? styles.itemSelected : {}),
-                            }}
+                            $isSelected={tz.value === selectedTimezone}
                             onMouseDown={(e) => handleSelect(tz.value, e)}
-                            onMouseEnter={() => setHoveredIndex(index)}
-                            onMouseLeave={() => setHoveredIndex(null)}
                         >
-                            <span style={styles.flag}>{tz.flag}</span>
-                            <div style={styles.info}>
-                                <div style={styles.labelRow}>
-                                    <span style={styles.label}>{tz.label}</span>
-                                    <span style={styles.offset}>{tz.offset}</span>
-                                </div>
-                                <div style={styles.country}>{tz.country}</div>
-                            </div>
+                            <S.Flag>{tz.flag}</S.Flag>
+                            <S.Info>
+                                <S.LabelRow>
+                                    <S.Label>{tz.label}</S.Label>
+                                    <S.Offset>{tz.offset}</S.Offset>
+                                </S.LabelRow>
+                                <S.Country>{tz.country}</S.Country>
+                            </S.Info>
                             {tz.value === selectedTimezone && (
-                                <span style={styles.checkmark}>✓</span>
+                                <S.Checkmark>✓</S.Checkmark>
                             )}
-                        </div>
+                        </S.Item>
                     ))
                 )}
-            </div>
-        </div >
+            </S.List>
+        </S.Container >
     );
 };
 
 export const getTimezoneLabel = (value: string): string => {
     const tz = TIMEZONES.find((t) => t.value === value);
     if (!tz) return value;
-    // Return a much shorter label to prevent the ChipButton from expanding too much
-    // on mobile screens, e.g., "UTC-05:00" or just the city name if preferred.
-    // The user asked to make it short so the size of the component doesn't change.
     return `UTC${tz.offset}`;
 };
 

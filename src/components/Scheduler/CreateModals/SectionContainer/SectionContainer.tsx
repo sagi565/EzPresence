@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { styles } from './styles';
+import * as S from './styles';
 
 interface SectionContainerProps {
     icon: string | ReactNode;
@@ -14,12 +14,12 @@ interface SectionContainerProps {
  */
 const SectionContainer: React.FC<SectionContainerProps> = ({ icon, children, className, style }) => {
     return (
-        <div className={className} style={{ ...styles.section, ...style }}>
-            {icon && <div className="section-icon" style={styles.sectionIcon as React.CSSProperties}>{icon}</div>}
-            <div className="section-content-wrapper" style={styles.sectionContent as React.CSSProperties}>
+        <S.Container className={className} style={style}>
+            {icon && <S.Icon className="section-icon">{icon}</S.Icon>}
+            <S.Content className="section-content-wrapper">
                 {children}
-            </div>
-        </div>
+            </S.Content>
+        </S.Container>
     );
 };
 

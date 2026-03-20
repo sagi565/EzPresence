@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import { styles } from './styles';
+import React, { useRef } from 'react';
+import * as S from './styles';
 
 interface HashtagTextareaProps {
     value: string;
@@ -8,6 +8,7 @@ interface HashtagTextareaProps {
     maxLength?: number;
     showCharCount?: boolean;
     rows?: number;
+    minHeight?: string;
 }
 
 const HashtagTextarea: React.FC<HashtagTextareaProps> = ({
@@ -17,6 +18,7 @@ const HashtagTextarea: React.FC<HashtagTextareaProps> = ({
     maxLength,
     showCharCount = false,
     rows = 3,
+    minHeight,
 }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const backdropRef = useRef<HTMLDivElement>(null);
@@ -69,19 +71,15 @@ const HashtagTextarea: React.FC<HashtagTextareaProps> = ({
     };
 
     return (
-        <div style={styles.container}>
-            <div style={styles.wrapper}>
+        <S.Container style={{ minHeight }}>
+            <S.Wrapper style={{ minHeight }}>
                 {/* Backdrop with highlighted text */}
-                <div
-                    ref={backdropRef}
-                    style={styles.backdrop}
-                    className="npm-hashtag-backdrop"
-                >
+                <S.Backdrop ref={backdropRef}>
                     {renderHighlightedText(value)}
-                </div>
+                </S.Backdrop>
 
                 {/* Transparent textarea */}
-                <textarea
+                <S.Textarea
                     ref={textareaRef}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
@@ -89,17 +87,15 @@ const HashtagTextarea: React.FC<HashtagTextareaProps> = ({
                     placeholder={placeholder}
                     maxLength={maxLength}
                     rows={rows}
-                    style={styles.textarea}
-                    className="npm-field-textarea"
                 />
-            </div>
+            </S.Wrapper>
 
             {showCharCount && maxLength && (
-                <div style={styles.charCount}>
+                <S.CharCount>
                     {value.length}/{maxLength}
-                </div>
+                </S.CharCount>
             )}
-        </div>
+        </S.Container>
     );
 };
 

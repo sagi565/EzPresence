@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { styles } from './styles';
+import * as S from './styles';
 
 interface DatePickerProps {
     selectedDate: Date;
@@ -86,13 +86,13 @@ const DatePicker: React.FC<DatePickerProps> = ({
         for (let i = firstDay - 1; i >= 0; i--) {
             const day = daysInPrevMonth - i;
             days.push(
-                <button
+                <S.Day
                     key={`prev-${day}`}
-                    style={styles.dayOtherMonth}
+                    $isOtherMonth
                     disabled
                 >
                     {day}
-                </button>
+                </S.Day>
             );
         }
 
@@ -105,29 +105,20 @@ const DatePicker: React.FC<DatePickerProps> = ({
             const isSelected = date.getTime() === selectedDateNormalized.getTime();
             const isPast = minDateStart && date < minDateStart;
 
-            const dayStyle = {
-                ...styles.day,
-                ...(isToday ? styles.dayToday : {}),
-                ...(isSelected ? styles.daySelected : {}),
-                ...(isPast ? styles.dayDisabled : {}),
-            };
-
-            const dayClass = `nsm-dp-day ${isSelected ? 'selected' : ''}`;
-
             days.push(
-                <button
+                <S.Day
                     key={`current-${day}`}
-                    className={dayClass}
-                    style={dayStyle}
+                    $isToday={isToday}
+                    $isSelected={isSelected}
                     type="button"
-                    onMouseDown={(e) => {
+                    onMouseDown={(e: React.MouseEvent) => {
                         e.preventDefault(); // Prevent focus loss/blur
                         handleDayClick(day);
                     }}
                     disabled={!!isPast}
                 >
                     {day}
-                </button>
+                </S.Day>
             );
         }
 
@@ -135,40 +126,28 @@ const DatePicker: React.FC<DatePickerProps> = ({
     };
 
     return (
-        <div style={styles.container} className="date-picker" onClick={(e) => e.stopPropagation()}>
-            <style>
-                {`
-                    .nsm-dp-day:hover:not(:disabled) {
-                        background-color: rgba(155, 93, 229, 0.1) !important;
-                        font-weight: 600;
-                    }
-                    .nsm-dp-day.selected:hover {
-                        background-color: var(--color-primary, #9b5de5) !important;
-                        color: #fff !important;
-                    }
-                `}
-            </style>
-            <div style={styles.header}>
-                <button style={styles.arrow} onClick={() => navigate(-1)}>
+        <S.Container onClick={(e) => e.stopPropagation()}>
+            <S.Header>
+                <S.Arrow onClick={() => navigate(-1)}>
                     ‹
-                </button>
-                <span style={styles.title}>
+                </S.Arrow>
+                <S.Title>
                     {monthNames[viewMonth]} {viewYear}
-                </span>
-                <button style={styles.arrow} onClick={() => navigate(1)}>
+                </S.Title>
+                <S.Arrow onClick={() => navigate(1)}>
                     ›
-                </button>
-            </div>
+                </S.Arrow>
+            </S.Header>
 
-            <div style={styles.grid}>
+            <S.Grid>
                 {dayNames.map((name) => (
-                    <div key={name} style={styles.dayHeader}>
+                    <S.DayHeader key={name}>
                         {name}
-                    </div>
+                    </S.DayHeader>
                 ))}
                 {renderCalendar()}
-            </div>
-        </div>
+            </S.Grid>
+        </S.Container>
     );
 };
 

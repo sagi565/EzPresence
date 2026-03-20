@@ -1,264 +1,288 @@
+import styled, { keyframes, css } from 'styled-components';
 import { theme } from '@/theme/theme';
-import { CSSProperties } from 'react';
 
-export const styles: Record<string, CSSProperties> = {
-    overlay: {
-        position: 'fixed' as const,
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 2100, // Higher than NewPostModal (1600)
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+const slideUp = keyframes`
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+`;
 
-    modal: {
-        width: '900px',
-        maxWidth: '95vw',
-        height: '85vh',
-        backgroundColor: '#fff',
-        borderRadius: '16px',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
-        display: 'flex',
-        flexDirection: 'column' as const,
-        overflow: 'hidden',
-        animation: 'slideUp 0.3s ease-out',
-        border: '1px solid rgba(0, 0, 0, 0.05)',
-    },
+export const Overlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 2100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+`;
 
-    header: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '20px 24px',
-        borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        backgroundColor: '#fff',
-    },
+export const Modal = styled.div`
+    width: 900px;
+    max-width: 95vw;
+    height: 85vh;
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: ${slideUp} 0.3s ease-out;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+`;
 
-    titleRow: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-    },
+export const Header = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    background-color: #fff;
+`;
 
-    titleIcon: {
-        fontSize: '24px',
-    },
+export const TitleRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+`;
 
-    title: {
-        fontSize: '20px',
-        fontWeight: 600,
-        color: theme.colors.text,
-    },
+export const TitleIcon = styled.span`
+    fontSize: 24px;
+`;
 
-    closeBtn: {
-        background: 'none',
-        border: 'none',
-        fontSize: '24px',
-        color: theme.colors.muted,
-        cursor: 'pointer',
-        padding: '4px',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '32px',
-        height: '32px',
-        transition: 'all 0.2s',
-    },
+export const Title = styled.span`
+    font-size: 20px;
+    font-weight: 600;
+    color: ${theme.colors.text};
+`;
 
-    body: {
-        flex: 1,
-        display: 'flex',
-        overflow: 'hidden',
-        backgroundColor: '#f9fafb',
-    },
+export const CloseBtn = styled.button`
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: ${theme.colors.muted};
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    transition: all 0.2s;
 
-    sidebar: {
-        width: '240px',
-        borderRight: '1px solid rgba(0, 0, 0, 0.06)',
-        backgroundColor: '#fff',
-        display: 'flex',
-        flexDirection: 'column' as const,
-        padding: '16px 0',
-        overflowY: 'auto' as const,
-    },
+    &:hover {
+        background-color: #f3f4f6;
+        color: ${theme.colors.text};
+    }
+`;
 
-    sidebarItem: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '10px 24px',
-        cursor: 'pointer',
-        transition: 'all 0.15s',
-        fontSize: '14px',
-        color: theme.colors.text,
-        fontWeight: 500,
-        borderLeft: '3px solid transparent',
-    },
+export const Body = styled.div`
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    background-color: #f9fafb;
+`;
 
-    sidebarItemActive: {
-        backgroundColor: 'rgba(155, 93, 229, 0.08)',
-        color: theme.colors.primary,
-        borderLeftColor: theme.colors.primary,
-    },
+export const Sidebar = styled.div`
+    width: 240px;
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 0;
+    overflow-y: auto;
+`;
 
-    sidebarIcon: {
-        fontSize: '18px',
-        width: '24px',
-        textAlign: 'center' as const,
-    },
+export const SidebarItem = styled.div<{ $active?: boolean }>`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+    color: ${theme.colors.text};
+    font-weight: 500;
+    border-left: 3px solid transparent;
 
-    contentArea: {
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column' as const,
-        overflow: 'hidden',
-    },
+    ${props => props.$active && css`
+        background-color: rgba(155, 93, 229, 0.08);
+        color: ${theme.colors.primary};
+        border-left-color: ${theme.colors.primary};
+    `}
 
-    toolbar: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '16px 24px',
-        backgroundColor: '#fff',
-        borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
-    },
+    &:hover {
+        background-color: #f9fafb;
+        ${props => props.$active && css`background-color: rgba(155, 93, 229, 0.08);`}
+    }
+`;
 
-    searchBox: {
-        display: 'flex',
-        alignItems: 'center',
-        background: '#f3f4f6',
-        borderRadius: '8px',
-        padding: '8px 12px',
-        width: '300px',
-        gap: '8px',
-        transition: 'all 0.2s',
-    },
+export const SidebarIcon = styled.span`
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+`;
 
-    searchIcon: {
-        color: theme.colors.muted,
-        fontSize: '16px',
-    },
+export const Divider = styled.div`
+    height: 1px;
+    background: rgba(0,0,0,0.06);
+    margin: 8px 0;
+`;
 
-    searchInput: {
-        border: 'none',
-        background: 'transparent',
-        fontSize: '14px',
-        color: theme.colors.text,
-        outline: 'none',
-        width: '100%',
-    },
+export const ContentArea = styled.div`
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+`;
 
-    grid: {
-        flex: 1,
-        padding: '24px',
-        overflowY: 'auto' as const,
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-        gap: '20px',
-        alignContent: 'start',
-    },
+export const Toolbar = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+`;
 
-    card: {
-        backgroundColor: '#fff',
-        borderRadius: '12px',
-        border: '1px solid rgba(0, 0, 0, 0.06)',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-        position: 'relative' as const,
-        display: 'flex',
-        flexDirection: 'column' as const,
-        aspectRatio: '1 / 1.1', // Slightly taller than square
-    },
+export const SearchBox = styled.div`
+    display: flex;
+    align-items: center;
+    background: #f3f4f6;
+    border-radius: 8px;
+    padding: 8px 12px;
+    width: 300px;
+    gap: 8px;
+    transition: all 0.2s;
 
-    cardHover: {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.08)',
-        borderColor: theme.colors.primary,
-    },
+    &:focus-within {
+        background-color: #fff;
+        box-shadow: 0 0 0 2px rgba(155, 93, 229, 0.2);
+    }
+`;
 
-    thumbnailContainer: {
-        flex: 1,
-        position: 'relative' as const,
-        backgroundColor: '#f0f0f0',
-        overflow: 'hidden',
-    },
+export const SearchIcon = styled.span`
+    color: ${theme.colors.muted};
+    font-size: 16px;
+`;
 
-    thumbnail: {
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover' as const,
-    },
+export const SearchInput = styled.input`
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: ${theme.colors.text};
+    outline: none;
+    width: 100%;
+`;
 
-    typeIcon: {
-        position: 'absolute' as const,
-        top: '8px',
-        right: '8px',
-        width: '24px',
-        height: '24px',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        backdropFilter: 'blur(4px)',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#fff',
-        fontSize: '12px',
-    },
+export const Grid = styled.div`
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    align-content: start;
+`;
 
-    duration: {
-        position: 'absolute' as const,
-        bottom: '8px',
-        right: '8px',
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        color: '#fff',
-        fontSize: '10px',
-        padding: '2px 6px',
-        borderRadius: '4px',
-        fontWeight: 500,
-    },
+export const Card = styled.div`
+    background-color: #fff;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: 1 / 1.1;
 
-    cardInfo: {
-        padding: '12px',
-        borderTop: '1px solid rgba(0, 0, 0, 0.04)',
-    },
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        border-color: ${theme.colors.primary};
+    }
+`;
 
-    cardTitle: {
-        fontSize: '13px',
-        fontWeight: 500,
-        color: theme.colors.text,
-        whiteSpace: 'nowrap' as const,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        marginBottom: '4px',
-    },
+export const ThumbnailContainer = styled.div`
+    flex: 1;
+    position: relative;
+    background-color: #f0f0f0;
+    overflow: hidden;
+`;
 
-    cardMeta: {
-        fontSize: '11px',
-        color: theme.colors.muted,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
+export const Thumbnail = styled.img`
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+`;
 
-    emptyState: {
-        display: 'flex',
-        flexDirection: 'column' as const,
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        color: theme.colors.muted,
-        gap: '12px',
-    },
+export const TypeIcon = styled.div`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 12px;
+`;
 
-    emptyIcon: {
-        fontSize: '48px',
-        opacity: 0.5,
-    },
-};
+export const Duration = styled.div`
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+`;
+
+export const CardInfo = styled.div`
+    padding: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+`;
+
+export const CardTitle = styled.div`
+    font-size: 13px;
+    font-weight: 500;
+    color: ${theme.colors.text};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+`;
+
+export const CardMeta = styled.div`
+    font-size: 11px;
+    color: ${theme.colors.muted};
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+`;
+
+export const EmptyState = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: ${theme.colors.muted};
+    gap: 12px;
+`;
+
+export const EmptyIcon = styled.span`
+    font-size: 48px;
+    opacity: 0.5;
+`;

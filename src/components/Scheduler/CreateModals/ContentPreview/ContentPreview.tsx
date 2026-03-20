@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ContentItem } from '@/models/ContentList';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
-import './styles';
+import * as S from './styles';
 
 export interface ContentPreviewProps {
     id: string;
@@ -140,65 +140,47 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
         }
     };
 
-    const classNames = [
-        'nsm-content-preview',
-        hasValidContent ? 'has-content'  : '',
-        isDragOver      ? 'drop-hover'   : '',
-    ].filter(Boolean).join(' ');
-
     const showShimmer = hasValidContent && isLoading;
     const showFilled  = hasValidContent && !isLoading;
 
     return (
-        <div
+        <S.PreviewShell
             ref={divRef}
             id={id}
-            className={classNames}
+            $hasContent={hasValidContent}
+            $dropHover={isDragOver}
             onClick={handleClick}
         >
             {/* ── Empty placeholder ──────────────────────────────────────────── */}
-            <div
-                className="nsm-content-placeholder"
-                style={{ display: hasValidContent ? 'none' : 'flex', pointerEvents: 'none' }}
-            >
-                <span className="placeholder-icon">🎞️</span>
-                <span className="placeholder-text">{placeholderText}</span>
-            </div>
+            {!hasValidContent && (
+                <S.Placeholder>
+                    <S.PlaceholderIcon>🎞️</S.PlaceholderIcon>
+                    <S.PlaceholderText>{placeholderText}</S.PlaceholderText>
+                </S.Placeholder>
+            )}
 
             {/* ── Loading shimmer — shown until media fires onLoad / canplay ─── */}
             {showShimmer && (
-                <div className="nsm-content-loading" style={{ pointerEvents: 'none' }}>
-                    <div
-                        className="nsm-shimmer-bar"
+                <S.LoadingContainer>
+                    <S.ShimmerBar
                         style={{ width: '55%', height: '11px', borderRadius: '6px', marginBottom: '8px' }}
                     />
-                    <div
-                        className="nsm-shimmer-bar"
+                    <S.ShimmerBar
                         style={{ width: '38%', height: '9px', borderRadius: '6px' }}
                     />
-                    <div className="nsm-loading-dots">
-                        <div className="nsm-loading-dot" style={{ animationDelay: '0ms' }} />
-                        <div className="nsm-loading-dot" style={{ animationDelay: '150ms' }} />
-                        <div className="nsm-loading-dot" style={{ animationDelay: '300ms' }} />
-                    </div>
-                </div>
+                    <S.LoadingDots>
+                        <S.LoadingDot $delay="0ms" />
+                        <S.LoadingDot $delay="150ms" />
+                        <S.LoadingDot $delay="300ms" />
+                    </S.LoadingDots>
+                </S.LoadingContainer>
             )}
 
             {/* ── Filled content ─────────────────────────────────────────────── */}
-            <div
-                className="nsm-content-filled"
-                style={{
-                    display: showFilled ? 'flex' : 'none',
-                    backgroundImage: (!isVideo && thumbSrc) ? `url(${thumbSrc})` : 'none',
-                    backgroundColor:
-                        showFilled && !thumbSrc && !isVideo
-                            ? 'rgba(155, 93, 229, 0.08)'
-                            : 'transparent',
-                    pointerEvents: 'none',
-                    animation: mediaReady
-                        ? 'contentFadeIn 0.28s cubic-bezier(0.16,1,0.3,1) forwards'
-                        : 'none',
-                }}
+            <S.FilledContent
+                $ready={mediaReady && showFilled}
+                $bgImage={(!isVideo && thumbSrc) ? thumbSrc : undefined}
+                $isEmptyFallback={Boolean(showFilled && !thumbSrc && !isVideo)}
             >
                 {/* Hidden img fires onLoad so we know when the thumbnail is painted */}
                 {!isVideo && thumbSrc && (
@@ -213,15 +195,9 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                 )}
 
                 {isVideo && videoUrl && (
-                    <video
+                    <S.VideoPlayer
                         key={videoUrl}
                         src={videoUrl}
-                        style={{
-                            position: 'absolute', inset: 0,
-                            width: '100%', height: '100%',
-                            objectFit: 'cover', zIndex: 1,
-                            pointerEvents: 'none',
-                        }}
                         autoPlay muted loop playsInline
                         onCanPlay={handleMediaLoaded}
                     />
@@ -229,32 +205,26 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
 
                 {/* Emoji fallback when no media src */}
                 {!thumbSrc && !videoUrl && content && (
-                    <div
-                        style={{
-                            position: 'absolute', inset: 0,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '32px', zIndex: 1, opacity: 0.5, pointerEvents: 'none',
-                        }}
-                    >
+                    <S.EmotionFallback>
                         {isVideo ? '🎬' : '🖼️'}
-                    </div>
+                    </S.EmotionFallback>
                 )}
 
-                <div className="filled-title" style={{ pointerEvents: 'none' }}>
+                <S.FilledTitle>
                     {content?.title}
-                </div>
-            </div>
+                </S.FilledTitle>
+            </S.FilledContent>
 
             {/* ── Remove button ──────────────────────────────────────────────── */}
-            <button
-                className="nsm-remove-content"
-                style={{ display: showFilled ? 'flex' : 'none' }}
-                onClick={(e) => { e.stopPropagation(); onRemove(e); }}
-                title="Remove content"
-            >
-                ✕
-            </button>
-        </div>
+            {showFilled && (
+                <S.RemoveButton
+                    onClick={(e) => { e.stopPropagation(); onRemove(e); }}
+                    title="Remove content"
+                >
+                    ✕
+                </S.RemoveButton>
+            )}
+        </S.PreviewShell>
     );
 };
 

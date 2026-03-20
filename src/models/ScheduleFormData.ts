@@ -1,4 +1,4 @@
-import { Platform } from './Post';
+import { Platform, PostStatus } from './Post';
 
 // ============================================
 // Repeat/Recurrence Types
@@ -63,6 +63,7 @@ export interface ScheduleFormData {
     type: 'post' | 'story';
     scheduleUuid?: string;
     calendarItemId?: string;
+    status?: PostStatus;
 
     // Scheduling
     date: Date;

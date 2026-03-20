@@ -1,9 +1,9 @@
 import React from 'react';
 import { RepeatOption, RepeatFrequency, generateRepeatLabel, generateRruleText } from '@/models/ScheduleFormData';
-import { styles } from './styles';
+import * as S from './styles';
 
 interface RepeatSelectorProps {
-    selectedRepeat: RepeatOption;
+    repeat: RepeatOption;
     onChange: (repeat: RepeatOption) => void;
     baseDate: Date;
     show: boolean;
@@ -11,7 +11,7 @@ interface RepeatSelectorProps {
 }
 
 const RepeatSelector: React.FC<RepeatSelectorProps> = ({
-    selectedRepeat,
+    repeat,
     onChange,
     baseDate,
     show,
@@ -29,31 +29,28 @@ const RepeatSelector: React.FC<RepeatSelectorProps> = ({
 
         const label = generateRepeatLabel(frequency, baseDate);
         const rruleText = generateRruleText(frequency, baseDate);
-        onChange({ ...selectedRepeat, frequency, label, rruleText });
+        onChange({ ...repeat, frequency, label, rruleText });
         onClose();
     };
 
     return (
-        <div style={styles.container} className="repeat-selector" onClick={(e) => e.stopPropagation()}>
+        <S.Container $show={show} className="repeat-selector" onClick={(e) => e.stopPropagation()}>
             {frequencies.map((freq) => {
                 const label = generateRepeatLabel(freq, baseDate);
-                const isActive = selectedRepeat.frequency === freq;
+                const isActive = repeat.frequency === freq;
 
                 return (
-                    <button
+                    <S.Option
                         key={freq}
                         className="nsm-repeat-option"
-                        style={{
-                            ...styles.option,
-                            ...(isActive ? styles.optionActive : {}),
-                        }}
+                        $isActive={isActive}
                         onClick={() => handleSelect(freq)}
                     >
                         {label}
-                    </button>
+                    </S.Option>
                 );
             })}
-        </div>
+        </S.Container>
     );
 };
 

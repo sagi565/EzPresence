@@ -1,5 +1,5 @@
 import React from 'react';
-import { styles } from './styles';
+import * as S from './styles';
 
 interface RadioOption {
     label: string;
@@ -16,20 +16,17 @@ interface RadioGroupProps {
 
 const RadioGroup: React.FC<RadioGroupProps> = ({ options, value, onChange, style, className }) => {
     return (
-        <div style={{ ...styles.radioGroup, ...style }} className={className}>
+        <S.Container style={style} className={className}>
             {options.map((opt) => (
-                <div
+                <S.RadioPill
                     key={opt.value}
-                    style={{
-                        ...styles.radioPill,
-                        ...(value === opt.value ? styles.radioPillActive : {})
-                    }}
+                    $isActive={value === opt.value}
                     onClick={() => onChange(opt.value)}
                 >
                     {opt.label}
-                </div>
+                </S.RadioPill>
             ))}
-        </div>
+        </S.Container>
     );
 };
 
