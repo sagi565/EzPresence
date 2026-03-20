@@ -50,7 +50,15 @@ export const useContentPicking = ({ onPick, targetType }: UseContentPickingProps
         ['nsmContentPreview', 'npmContentPreview'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
+                // Fade back in smoothly
                 el.style.visibility = '';
+                el.style.opacity = '0';
+                el.style.transition = 'opacity 0.2s ease';
+                el.style.pointerEvents = '';
+                requestAnimationFrame(() => {
+                    el.style.opacity = '';
+                    setTimeout(() => { el.style.transition = ''; }, 220);
+                });
                 el.classList.remove('pick-elevated');
             }
         });
@@ -83,51 +91,86 @@ export const useContentPicking = ({ onPick, targetType }: UseContentPickingProps
 
         const rect = preview.getBoundingClientRect();
 
-        // These constants match the HTML demo exactly
-        const CLONE_BG = '#f8f7fc';
-        const CLONE_BG_HOVER = '#f0ecf7';
+        // ── 1. Fade out original smoothly ───────────────────────────────────
+        preview.style.transition = 'opacity 0.18s ease';
+        preview.style.opacity = '0';
+        preview.style.pointerEvents = 'none';
+        setTimeout(() => {
+            preview.style.visibility = 'hidden';
+            preview.style.opacity = '';
+            preview.style.transition = '';
+        }, 180);
 
-        // ── 1. Hide original ────────────────────────────────────────────────
-        preview.style.visibility = 'hidden';
+        // ── 2. Inject keyframes (versioned so stale rules never linger) ──────
+        const KF_ID = 'pick-halo-keyframes-v2';
+        document.getElementById('pick-halo-keyframes')?.remove();
+        if (!document.getElementById(KF_ID)) {
+            const kf = document.createElement('style');
+            kf.id = KF_ID;
+            kf.textContent = `
+                @keyframes pickGlowBreath {
+                    0%, 100% { opacity: 0.7;  }
+                    50%       { opacity: 1.0; }
+                }
+                @keyframes pickGlowIn {
+                    from { opacity: 0; }
+                    to   { opacity: 0.85; }
+                }
+                #pickGlow { animation: pickGlowIn 0.4s ease forwards, pickGlowBreath 3s ease-in-out 0.4s infinite; }
+            `;
+            document.head.appendChild(kf);
+        }
 
-        // ── 2. Yellow glow (matches demo's rgba(251, 191, 36) glow) ─────────
-        const glowPad = 28;
+        // ── 3. Smooth warm ambient halo — glow outside only ─────────────────
+        // The glow sits AROUND the clone, not on top of it.
+        // We use box-shadow on a transparent frame so the amber light
+        // radiates outward only — nothing bleeds into the drop zone interior.
+        const haloPad = 28;
+        const haloR   = 22;
         const glow = document.createElement('div');
         glow.id = 'pickGlow';
         glow.style.cssText = `
             position: fixed;
-            top: ${rect.top - glowPad}px;
-            left: ${rect.left - glowPad}px;
-            width: ${rect.width + glowPad * 2}px;
-            height: ${rect.height + glowPad * 2}px;
-            z-index: 1659;
+            top:    ${rect.top}px;
+            left:   ${rect.left}px;
+            width:  ${rect.width}px;
+            height: ${rect.height}px;
+            z-index: 1658;
             pointer-events: none;
-            border-radius: ${14 + glowPad}px;
-            background: radial-gradient(ellipse at center,
-                rgba(251, 191, 36, .45) 0%,
-                rgba(251, 191, 36, .25) 40%,
-                rgba(251, 191, 36, .08) 70%,
-                transparent 100%);
+            border-radius: ${haloR}px;
+            background: transparent;
+            box-shadow:
+                0 0  0   1.5px rgba(251,191,36, 0.55),
+                0 0  20px 6px  rgba(251,191,36, 0.28),
+                0 0  45px 14px rgba(249,115,22, 0.18),
+                0 0  80px 24px rgba(251,191,36, 0.09);
         `;
+        glow.appendChild((() => {
+            // Breathing animation target — just re-applies opacity on #pickGlow itself
+            const b = document.createElement('span');
+            b.className = 'g-bloom';
+            b.style.cssText = 'display:none';
+            return b;
+        })());
+
         document.body.appendChild(glow);
         pickGlowRef.current = glow;
 
-        // ── 2b. Dark scrim (dims everything behind clone/drawer) ─────────────
+        // ── 4. Dark scrim ────────────────────────────────────────────────────
         let scrim = document.getElementById('contentPickScrim') as HTMLElement | null;
         if (!scrim) {
             scrim = document.createElement('div');
             scrim.id = 'contentPickScrim';
             document.body.appendChild(scrim);
         }
-        // trigger fade-in on next frame
         requestAnimationFrame(() => scrim!.classList.add('active'));
         pickScrimRef.current = scrim;
 
-        // ── 3. Visual clone (the actual drop zone) ───────────────────────────
+        // ── 5. Visual clone — shows "Drop here" immediately, content visible beneath ──
+        // Clone the real preview DOM so content is preserved underneath
         const clone = preview.cloneNode(true) as HTMLElement;
         clone.id = 'pickClone';
         clone.removeAttribute('onclick');
-        // Style matches the HTML demo clone setup exactly
         clone.style.cssText = `
             position: fixed;
             top: ${rect.top}px;
@@ -136,60 +179,98 @@ export const useContentPicking = ({ onPick, targetType }: UseContentPickingProps
             height: ${rect.height}px;
             z-index: 1660;
             pointer-events: auto;
-            margin: 0;
-            border-color: #9b5de5;
-            background: ${CLONE_BG};
-            border-radius: 14px;
-            border-width: 2px;
-            border-style: dashed;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            border-radius: ${haloR}px;
+            border: none;
             overflow: hidden;
+            transition: box-shadow 0.15s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
         `;
 
-        // Prevent children from stealing drag events (causes flickering)
-        clone.querySelectorAll('*').forEach((child: any) => {
-            child.style.pointerEvents = 'none';
+        // Disable pointer events on all children so drag events land on clone only
+        clone.querySelectorAll('*').forEach((el: any) => {
+            el.style.pointerEvents = 'none';
         });
 
-        // dragover → solid border + deeper bg (matches demo)
+        // "Drop here" overlay — visible immediately (user clicked, not dragging yet)
+        const dropOverlay = document.createElement('div');
+        dropOverlay.style.cssText = `
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.2s ease, background 0.2s ease;
+            background: rgba(0,0,0,0.52);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+        `;
+        dropOverlay.innerHTML = `
+            <div style="
+                width: 44px; height: 44px;
+                border-radius: 50%;
+                border: 2px solid rgba(251,191,36,0.8);
+                display: flex; align-items: center; justify-content: center;
+                font-size: 20px;
+            ">🎞️</div>
+            <div style="
+                font-size: 11px;
+                font-weight: 700;
+                color: rgba(255,255,255,0.9);
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            ">Drop here</div>
+        `;
+        clone.appendChild(dropOverlay);
+
+        // dragover — content still visible, overlay intensifies
         clone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            e.stopPropagation();
             e.dataTransfer!.dropEffect = 'copy';
-            clone.style.borderStyle = 'solid';
-            clone.style.background = CLONE_BG_HOVER;
+            dropOverlay.style.background = 'rgba(0,0,0,0.65)';
+            clone.style.boxShadow = '0 0 0 2px rgba(251,191,36,0.9), 0 12px 40px rgba(251,191,36,0.25)';
         });
 
-        // dragleave → revert to dashed (matches demo)
+        // dragleave — back to default overlay state
         clone.addEventListener('dragleave', (e) => {
-            e.stopPropagation();
             if (e.relatedTarget && clone.contains(e.relatedTarget as Node)) return;
-            clone.style.borderStyle = 'dashed';
-            clone.style.background = CLONE_BG;
+            dropOverlay.style.background = 'rgba(0,0,0,0.52)';
+            clone.style.boxShadow = '0 8px 32px rgba(0,0,0,0.18)';
         });
 
-        // drop → parse item data and call onPick (matches demo)
+        // drop — confirm flash then pick
         clone.addEventListener('drop', (e) => {
             e.preventDefault();
             e.stopPropagation();
-
+            dropOverlay.style.background = 'rgba(0,0,0,0.7)';
+            dropOverlay.innerHTML = `
+                <div style="
+                    width: 44px; height: 44px;
+                    border-radius: 50%;
+                    background: rgba(251,191,36,0.2);
+                    border: 2px solid rgba(251,191,36,1);
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 20px; color: white;
+                ">✓</div>
+            `;
             let item = null;
             try {
                 const itemData = e.dataTransfer!.getData('item');
                 if (itemData) item = JSON.parse(itemData);
             } catch (_) { }
-
-            if (item) {
-                cleanup();
-                onPick(item);
-            }
+            setTimeout(() => {
+                if (item) { cleanup(); onPick(item); }
+            }, 150);
         });
 
         document.body.appendChild(clone);
         pickCloneRef.current = clone;
 
-        // ── 4. Activate overlay & open drawer in picking mode ────────────────
+        // ── 6. Activate overlay & open drawer in picking mode ────────────────
         document.getElementById('contentPickOverlay')?.classList.add('active');
         const drawer = document.getElementById('contentDrawer');
         if (drawer) {

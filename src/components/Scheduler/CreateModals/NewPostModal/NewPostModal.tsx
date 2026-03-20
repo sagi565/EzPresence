@@ -29,11 +29,12 @@ import { styles } from './styles';
 import { theme } from '@/theme/theme';
 import ScheduleModalLayout from '../ScheduleModalLayout/ScheduleModalLayout';
 import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
-import ContentPreview from '../ContentPreview';
+import ContentPreview from '../ContentPreview/ContentPreview';
 import ChipButton from '../ChipButton/ChipButton';
 import ChipArrow from '../ChipArrow/ChipArrow';
 import SectionContainer from '../SectionContainer/SectionContainer';
 import RecurringActionDialog from '../RecurringActionDialog/RecurringActionDialog';
+import ContentDetailModal from '@/components/Content/ContentDetailModal/ContentDetailModal';
 
 interface NewPostModalProps {
     isOpen: boolean;
@@ -68,7 +69,10 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     const { createSchedule, updateSchedule, deleteSchedule } = useSchedules(currentBrand?.id || '');
 
     const [formData, setFormData] = useState<PostFormData>(initialData ? { ...getDefaultPostFormData(), ...initialData } : getDefaultPostFormData());
-
+    const [detailModal, setDetailModal] = useState<{
+        isOpen: boolean;
+        item: ContentItem | null;
+    }>({ isOpen: false, item: null });
     const isPast = useMemo(() => {
         if (!formData.date) return false;
         try {
@@ -793,21 +797,22 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 }
                 rightColumn={
                     <div className="npm-right-column-wrapper" style={{ position: 'relative' }}>
-                        <ContentPreview
-                            id="npmContentPreview"
-                            content={getSelectedContent()}
-                            isDragOver={isDragOver}
-                            onRemove={handleRemoveContent}
-                            onOpenDrawer={() => {
-                                startPicking();
-                                onOpenDrawer(true);
-                            }}
-                            onDrop={handleManualDrop}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDragEnter={handleDragEnter}
-                            placeholderText="Click to add content"
-                        />
+                    <ContentPreview
+                        id="npmContentPreview"
+                        content={getSelectedContent()}
+                        isDragOver={isDragOver}
+                        onRemove={handleRemoveContent}
+                        onOpenDrawer={() => {
+                            startPicking();
+                            onOpenDrawer(true);
+                        }}
+                        onClickDetail={(item) => setDetailModal({ isOpen: true, item })}
+                        onDrop={handleManualDrop}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDragEnter={handleDragEnter}
+                        placeholderText="Click to add content"
+                    />
                         {validationErrors.content && (
                             <div style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, textAlign: 'center', marginTop: '8px' }}>{validationErrors.content}</div>
                         )}
@@ -873,6 +878,28 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
             <ConfirmDialog isOpen={showDeleteConfirm} title="Delete Post" message="Are you sure you want to delete this post? This action cannot be undone." onConfirm={confirmDelete} onCancel={() => setShowDeleteConfirm(false)} />
             <RecurringActionDialog isOpen={showRecurringDialog} mode={recurringDialogMode} onConfirm={handleRecurringConfirm} onCancel={() => setShowRecurringDialog(false)} />
+            <ContentDetailModal
+                isOpen={detailModal.isOpen}
+                item={detailModal.item}
+                onClose={() => setDetailModal({ isOpen: false, item: null })}
+                onRename={(newName) => {
+                    setFormData(prev => ({ ...prev, contentTitle: newName }));
+                    setDetailModal(prev => ({
+                        ...prev,
+                        item: prev.item ? { ...prev.item, title: newName } : null,
+                    }));
+                }}
+                onDelete={() => {
+                    setFormData(prev => ({ ...prev, contentId: '', contentTitle: '', contentThumbnail: '' }));
+                    setDetailModal({ isOpen: false, item: null });
+                }}
+                onToggleFavorite={() => {
+                    setDetailModal(prev => ({
+                        ...prev,
+                        item: prev.item ? { ...prev.item, favorite: !prev.item.favorite } : null,
+                    }));
+                }}
+            />
         </div>
     );
 };
