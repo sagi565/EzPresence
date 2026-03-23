@@ -8,7 +8,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { theme } from '@theme/theme';
+import { useTheme } from 'styled-components';
+import { Theme } from '@theme/theme';
 import type { DayStats } from '@/hooks/dashboard/useDashboardStats';
 import {
   ChartContainer,
@@ -27,14 +28,14 @@ export type MetricKey = 'views' | 'likes' | 'shares' | 'comments';
 interface SeriesConfig {
   key: MetricKey;
   label: string;
-  color: string;
+  colorKey: keyof Theme['colors'];
 }
 
-const SERIES: SeriesConfig[] = [
-  { key: 'views', label: 'Views', color: theme.colors.primary },
-  { key: 'likes', label: 'Likes', color: theme.colors.pink },
-  { key: 'shares', label: 'Shares', color: theme.colors.teal },
-  { key: 'comments', label: 'Comments', color: theme.colors.secondary },
+const SERIES_CONFIG: SeriesConfig[] = [
+  { key: 'views', label: 'Views', colorKey: 'primary' },
+  { key: 'likes', label: 'Likes', colorKey: 'pink' },
+  { key: 'shares', label: 'Shares', colorKey: 'teal' },
+  { key: 'comments', label: 'Comments', colorKey: 'secondary' },
 ];
 
 function formatNum(n: number): string {
@@ -77,6 +78,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const TimelineChart: React.FC<TimelineChartProps> = ({ data, timeRange }) => {
+  const theme = useTheme() as Theme;
   const [activeSeries, setActiveSeries] = useState<Set<MetricKey>>(
     new Set(['views', 'likes', 'shares']),
   );
@@ -102,11 +104,16 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data, timeRange }) => {
     displayDate: formatXDate(d.date, timeRange),
   }));
 
+  const series = SERIES_CONFIG.map(s => ({
+    ...s,
+    color: theme.colors[s.colorKey]
+  }));
+
   return (
     <ChartContainer>
       {/* Series toggle legend */}
       <LegendContainer>
-        {SERIES.map(s => {
+        {series.map(s => {
           const active = activeSeries.has(s.key);
           return (
             <LegendButton
@@ -124,7 +131,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data, timeRange }) => {
 
       <ResponsiveContainer width="100%" height={280}>
         <LineChart data={chartData} margin={{ top: 5, right: 16, bottom: 5, left: 0 }}>
-          <CartesianGrid strokeDasharray="4 4" stroke="#f3f4f6" vertical={false} />
+          <CartesianGrid strokeDasharray="4 4" stroke={`${theme.colors.primary}1A`} vertical={false} />
           <XAxis
             dataKey="displayDate"
             tick={{ fontSize: 11, fill: theme.colors.muted }}
@@ -140,9 +147,12 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data, timeRange }) => {
             tickLine={false}
             width={44}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(0,0,0,0.08)', strokeWidth: 1 }} />
+          <Tooltip 
+            content={<CustomTooltip />} 
+            cursor={{ stroke: `${theme.colors.primary}26`, strokeWidth: 1 }} 
+          />
 
-          {SERIES.filter(s => activeSeries.has(s.key)).map(s => (
+          {series.filter(s => activeSeries.has(s.key)).map(s => (
             <Line
               key={s.key}
               type="monotone"
@@ -154,7 +164,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data, timeRange }) => {
               activeDot={{
                 r: 5,
                 fill: s.color,
-                stroke: 'white',
+                stroke: theme.colors.surface,
                 strokeWidth: 2,
               }}
             />

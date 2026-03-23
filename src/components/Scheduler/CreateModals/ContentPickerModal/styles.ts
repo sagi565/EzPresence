@@ -1,4 +1,4 @@
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 import { CSSProperties } from 'react';
 
 export const styles: Record<string, CSSProperties> = {
@@ -20,7 +20,7 @@ export const styles: Record<string, CSSProperties> = {
         width: '900px',
         maxWidth: '95vw',
         height: '85vh',
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--color-surface)',
         borderRadius: '16px',
         boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
         display: 'flex',
@@ -36,7 +36,7 @@ export const styles: Record<string, CSSProperties> = {
         justifyContent: 'space-between',
         padding: '20px 24px',
         borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--color-surface)',
     },
 
     titleRow: {
@@ -52,14 +52,14 @@ export const styles: Record<string, CSSProperties> = {
     title: {
         fontSize: '20px',
         fontWeight: 600,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
     },
 
     closeBtn: {
         background: 'none',
         border: 'none',
         fontSize: '24px',
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         cursor: 'pointer',
         padding: '4px',
         borderRadius: '50%',
@@ -75,13 +75,13 @@ export const styles: Record<string, CSSProperties> = {
         flex: 1,
         display: 'flex',
         overflow: 'hidden',
-        backgroundColor: '#f9fafb',
+        backgroundColor: 'var(--color-bg)',
     },
 
     sidebar: {
         width: '240px',
         borderRight: '1px solid rgba(0, 0, 0, 0.06)',
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--color-surface)',
         display: 'flex',
         flexDirection: 'column' as const,
         padding: '16px 0',
@@ -96,15 +96,15 @@ export const styles: Record<string, CSSProperties> = {
         cursor: 'pointer',
         transition: 'all 0.15s',
         fontSize: '14px',
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         fontWeight: 500,
         borderLeft: '3px solid transparent',
     },
 
     sidebarItemActive: {
         backgroundColor: 'rgba(155, 93, 229, 0.08)',
-        color: theme.colors.primary,
-        borderLeftColor: theme.colors.primary,
+        color: 'var(--color-primary)',
+        borderLeftColor: 'var(--color-primary)',
     },
 
     sidebarIcon: {
@@ -125,7 +125,7 @@ export const styles: Record<string, CSSProperties> = {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '16px 24px',
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--color-surface)',
         borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
     },
 
@@ -141,7 +141,7 @@ export const styles: Record<string, CSSProperties> = {
     },
 
     searchIcon: {
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         fontSize: '16px',
     },
 
@@ -149,7 +149,7 @@ export const styles: Record<string, CSSProperties> = {
         border: 'none',
         background: 'transparent',
         fontSize: '14px',
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         outline: 'none',
         width: '100%',
     },
@@ -165,7 +165,7 @@ export const styles: Record<string, CSSProperties> = {
     },
 
     card: {
-        backgroundColor: '#fff',
+        backgroundColor: 'var(--color-surface)',
         borderRadius: '12px',
         border: '1px solid rgba(0, 0, 0, 0.06)',
         overflow: 'hidden',
@@ -180,7 +180,7 @@ export const styles: Record<string, CSSProperties> = {
     cardHover: {
         transform: 'translateY(-2px)',
         boxShadow: '0 10px 25px rgba(0, 0, 0, 0.08)',
-        borderColor: theme.colors.primary,
+        borderColor: 'var(--color-primary)',
     },
 
     thumbnailContainer: {
@@ -232,7 +232,7 @@ export const styles: Record<string, CSSProperties> = {
     cardTitle: {
         fontSize: '13px',
         fontWeight: 500,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         whiteSpace: 'nowrap' as const,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -241,7 +241,7 @@ export const styles: Record<string, CSSProperties> = {
 
     cardMeta: {
         fontSize: '11px',
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -253,7 +253,7 @@ export const styles: Record<string, CSSProperties> = {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100%',
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         gap: '12px',
     },
 

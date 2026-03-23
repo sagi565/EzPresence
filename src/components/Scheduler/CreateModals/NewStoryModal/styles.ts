@@ -1,4 +1,4 @@
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 import { CSSProperties } from 'react';
 
 export const styles: Record<string, CSSProperties> = {
@@ -17,7 +17,7 @@ export const styles: Record<string, CSSProperties> = {
         left: '50%',
         transform: 'translate(-50%, -50%)',
         zIndex: 1600,
-        background: theme.colors.surface,
+        background: 'var(--color-surface)',
         borderRadius: '16px',
         boxShadow: '0 20px 60px rgba(0, 0, 0, .15), 0 0 0 1px rgba(0, 0, 0, .04)',
         width: '820px',
@@ -33,9 +33,9 @@ export const styles: Record<string, CSSProperties> = {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '18px 28px',
-        background: '#f8f9fb',
+        background: 'var(--color-bg)',
         borderRadius: '16px 16px 0 0',
-        borderBottom: '1px solid rgba(0, 0, 0, .05)',
+        borderBottom: '1px solid var(--color-bg)',
         flexShrink: 0,
     },
 
@@ -52,8 +52,8 @@ export const styles: Record<string, CSSProperties> = {
         justifyContent: 'center',
         border: 'none',
         borderRadius: '50%',
-        background: 'rgba(0, 0, 0, .06)',
-        color: theme.colors.muted,
+        background: 'rgba(var(--color-text-rgb, 0, 0, 0), .06)',
+        color: 'var(--color-muted)',
         fontSize: '18px',
         cursor: 'pointer',
         transition: 'all .2s',
@@ -66,7 +66,7 @@ export const styles: Record<string, CSSProperties> = {
         outline: 'none',
         fontSize: '22px',
         fontWeight: 700,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         padding: '16px 0 6px',
         marginLeft: '28px',
         background: 'transparent',
@@ -135,7 +135,7 @@ export const styles: Record<string, CSSProperties> = {
         background: '#fff',
         fontSize: '14px',
         fontWeight: 500,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         cursor: 'pointer',
         transition: 'all .18s',
         display: 'inline-flex',
@@ -149,13 +149,13 @@ export const styles: Record<string, CSSProperties> = {
     chipSmall: {
         padding: '5px 10px',
         fontSize: '12px',
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         minWidth: 'auto',
     },
 
     chipArrow: {
         fontSize: '10px',
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         marginLeft: '10px',
         flexShrink: 0,
     },
@@ -176,7 +176,7 @@ export const styles: Record<string, CSSProperties> = {
         background: '#fff',
         fontSize: '13px',
         fontWeight: 500,
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         cursor: 'pointer',
         transition: 'all .2s ease',
         position: 'relative' as const,
@@ -184,9 +184,9 @@ export const styles: Record<string, CSSProperties> = {
     },
 
     platformBtnSelected: {
-        borderColor: theme.colors.primary,
-        background: 'rgba(155, 93, 229, .08)',
-        color: theme.colors.text,
+        borderColor: 'var(--color-primary)',
+        background: 'rgba(var(--color-primary-rgb, 155, 93, 229), .08)',
+        color: 'var(--color-text)',
     },
 
     platformIcon: {
@@ -224,7 +224,7 @@ export const styles: Record<string, CSSProperties> = {
         flexDirection: 'column' as const,
         alignItems: 'center',
         gap: '6px',
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
     },
 
     placeholderIcon: {
@@ -263,8 +263,8 @@ export const styles: Record<string, CSSProperties> = {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '16px 28px',
-        background: '#f8f9fb',
-        borderTop: '1px solid rgba(0, 0, 0, .05)',
+        background: 'var(--color-bg)',
+        borderTop: '1px solid var(--color-bg)',
         borderRadius: '0 0 16px 16px',
         flexShrink: 0,
     },
@@ -276,7 +276,7 @@ export const styles: Record<string, CSSProperties> = {
         background: '#fff',
         fontSize: '14px',
         fontWeight: 600,
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         cursor: 'pointer',
         transition: 'all .18s',
         boxShadow: '0 1px 4px rgba(0, 0, 0, .08)',
@@ -286,7 +286,7 @@ export const styles: Record<string, CSSProperties> = {
         padding: '10px 28px',
         border: 'none',
         borderRadius: '10px',
-        background: theme.gradients.innovator,
+        background: 'linear-gradient(135deg, #9b5de5 0%, #fbbf24 100%)',
         color: '#fff',
         fontSize: '14px',
         fontWeight: 700,
@@ -305,34 +305,34 @@ if (typeof document !== 'undefined') {
         style.textContent = `
       .nsm-close:hover {
         background: rgba(0, 0, 0, .12) !important;
-        color: ${theme.colors.text} !important;
+        color: var(--color-text) !important;
       }
       .nsm-title-input:hover {
         border-bottom: 1px solid #b796df !important;
       }
       .nsm-title-input:focus {
-        border-bottom: 2.5px solid ${theme.colors.primary} !important;
+        border-bottom: 2.5 solid var(--color-primary) !important;
       }
       .nsm-chip:hover {
-        border-color: ${theme.colors.primary} !important;
-        background: rgba(155, 93, 229, .03) !important;
+        border-color: var(--color-primary) !important;
+        background: rgba(var(--color-primary-rgb, 155, 93, 229), .03) !important;
       }
       .nsm-platform-btn:hover {
-        border-color: rgba(155, 93, 229, .2) !important;
-        background: #faf8ff !important;
-        color: ${theme.colors.text} !important;
+        border-color: rgba(var(--color-primary-rgb, 155, 93, 229), .2) !important;
+        background: var(--color-bg) !important;
+        color: var(--color-text) !important;
       }
       .nsm-content-preview:hover {
-        border-color: ${theme.colors.primary} !important;
-        background: rgba(155, 93, 229, .04) !important;
+        border-color: var(--color-primary) !important;
+        background: rgba(var(--color-primary-rgb, 155, 93, 229), .04) !important;
       }
       .nsm-draft-btn:hover {
-        color: ${theme.colors.primary} !important;
-        box-shadow: 0 2px 8px rgba(155, 93, 229, .15) !important;
+        color: var(--color-primary) !important;
+        box-shadow: 0 2px 8px rgba(var(--color-primary-rgb, 155, 93, 229), .15) !important;
       }
       .nsm-schedule-btn:hover {
         transform: translateY(-1px) !important;
-        box-shadow: 0 5px 18px rgba(155, 93, 229, .35) !important;
+        box-shadow: 0 5px 18px rgba(var(--color-primary-rgb, 155, 93, 229), .35) !important;
       }
       .new-story-modal-wrapper {
         transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease, filter 0.5s ease;

@@ -1,5 +1,4 @@
 import styled, { keyframes } from 'styled-components';
-import { theme } from '@theme/theme';
 import { media } from '@/styles/breakpoints';
 
 const ripple = keyframes`
@@ -28,11 +27,11 @@ export const Container = styled.div`
 export const Content = styled.div`
   width: 100%;
   max-width: 800px;
-  background: rgba(255, 255, 255, 0.95);
+  background: ${props => props.theme.colors.surface}F2;
   border-radius: 24px;
   padding: 56px 72px;
   box-shadow: 0 20px 60px rgba(155, 93, 229, 0.15);
-  border: 2px solid rgba(200, 200, 200, 0.3);
+  border: 2px solid ${props => props.theme.colors.primary}1A;
   position: relative;
   z-index: 1;
 
@@ -54,7 +53,7 @@ export const Header = styled.div`
 export const Title = styled.h1`
   font-size: 40px;
   font-weight: 630;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   margin-bottom: 12px;
   letter-spacing: -0.5px;
 
@@ -67,7 +66,7 @@ export const TitleHighlight = styled.span`
   font-family: "Playfair Display", serif;
   font-weight: 750;
   font-style: italic;
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -75,7 +74,7 @@ export const TitleHighlight = styled.span`
 
 export const Subtitle = styled.p`
   font-size: 16px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   line-height: 1.6;
 
   ${media.tablet} {
@@ -128,7 +127,7 @@ export const FormGroupRight = styled.div`
 export const Label = styled.label`
   font-size: 15px;
   font-weight: 600;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   display: flex;
   align-items: center;
   gap: 4px;
@@ -142,7 +141,7 @@ export const Required = styled.span`
 export const LogoCenterLabel = styled.label`
   font-size: 15px;
   font-weight: 600;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   text-align: center;
   gap: 4px;
 `;
@@ -163,8 +162,13 @@ export const LogoPreview = styled.img`
   height: 100%;
   object-fit: cover;
   border-radius: 16px;
-  border: 3px solid ${theme.colors.primary};
-  box-shadow: ${theme.shadows.md};
+  border: 3px solid ${props => props.theme.colors.primary};
+  box-shadow: ${props => props.theme.shadows.md};
+
+  ${media.phone} {
+    width: 140px;
+    height: 140px;
+  }
 `;
 
 export const RemoveLogoBtn = styled.button`
@@ -202,11 +206,16 @@ export const LogoUploadPlaceholder = styled.div<{ $isHovered?: boolean }>`
   background: rgba(155, 93, 229, 0.03);
 
   ${props => props.$isHovered ? `
-    border-color: rgba(155, 93, 229, 0.6);
-    background: rgba(155, 93, 229, 0.08);
+    border-color: ${props.theme.colors.primary}80;
+    background: ${props.theme.colors.primary}14;
     transform: scale(1.01);
     box-shadow: 0 4px 12px rgba(155, 93, 229, 0.15);
   ` : ``}
+
+  ${media.phone} {
+    width: 140px;
+    height: 140px;
+  }
 `;
 
 export const UploadIcon = styled.span`
@@ -216,7 +225,7 @@ export const UploadIcon = styled.span`
 export const UploadText = styled.span`
   font-size: 14px;
   font-weight: 600;
-  color: ${theme.colors.primary};
+  color: ${props => props.theme.colors.primary};
 `;
 
 export const FormGroup = styled.div`
@@ -228,18 +237,18 @@ export const FormGroup = styled.div`
 export const Input = styled.input<{ $isError?: boolean }>`
   height: 52px;
   padding: 0 18px;
-  border: 2px solid rgba(155, 93, 229, 0.2);
+  border: 2px solid ${props => props.theme.colors.primary}33;
   border-radius: 12px;
   font-size: 15px;
   outline: none;
   transition: border-color 0.2s;
-  background: white;
-  color: ${theme.colors.text};
+  background: ${props => props.theme.colors.surface};
+  color: ${props => props.theme.colors.text};
   font-family: inherit;
   width: 100%;
 
   &:hover, &:focus {
-    border-color: rgba(155, 93, 229, 0.35);
+    border-color: ${props => props.theme.colors.primary}59;
   }
 
   ${props => props.$isError ? `
@@ -259,7 +268,7 @@ export const CharCountInside = styled.span`
   top: 50%;
   transform: translateY(-50%);
   font-size: 12px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   pointer-events: none;
 `;
 
@@ -269,14 +278,14 @@ export const CategorySelect = styled.select`
   width: 100%;
   height: 52px;
   padding: 0 52px 0 20px;
-  border: 2px solid rgba(155, 93, 229, 0.25);
+  border: 2px solid ${props => props.theme.colors.primary}40;
   border-radius: 14px;
   font-size: 15px;
   font-weight: 500;
   outline: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: white;
-  color: ${theme.colors.text};
+  background: ${props => props.theme.colors.surface};
+  color: ${props => props.theme.colors.text};
   font-family: inherit;
   cursor: pointer;
   appearance: none;
@@ -288,24 +297,24 @@ export const CategorySelect = styled.select`
     padding: 14px 20px;
     font-size: 15px;
     font-weight: 500;
-    background: white;
+    background: ${props => props.theme.colors.surface};
     color: #333;
     border-bottom: 1px solid rgba(155, 93, 229, 0.1);
   }
   & option:hover {
-    background: rgba(155, 93, 229, 0.08);
-    color: ${theme.colors.primary};
+    background: ${props => props.theme.colors.primary}14;
+    color: ${props => props.theme.colors.primary};
   }
   & option:checked {
-    background: linear-gradient(135deg, rgba(155, 93, 229, 0.15), rgba(155, 93, 229, 0.08));
-    color: ${theme.colors.primary};
+    background: linear-gradient(135deg, ${props => props.theme.colors.primary}26, ${props => props.theme.colors.primary}14);
+    color: ${props => props.theme.colors.primary};
     font-weight: 600;
   }
   &:hover {
     border-color: rgba(155, 93, 229, 0.5);
   }
   &:focus {
-    border-color: ${theme.colors.primary};
+    border-color: ${props => props.theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(155, 93, 229, 0.1);
   }
 `;
@@ -337,6 +346,10 @@ export const Actions = styled.div`
   display: flex;
   gap: 16px;
   margin-top: 8px;
+
+  ${media.phone} {
+    margin-top: 16px;
+  }
 `;
 
 export const SubmitBtn = styled.button<{ $isSubmitting?: boolean; $isHovered?: boolean; $isActive?: boolean }>`
@@ -344,7 +357,7 @@ export const SubmitBtn = styled.button<{ $isSubmitting?: boolean; $isHovered?: b
   height: 56px;
   border: none;
   border-radius: 14px;
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   color: white;
   font-size: 17px;
   font-weight: 700;
@@ -368,20 +381,10 @@ export const BackButton = styled.button`
   position: absolute;
   top: 24px;
   right: 24px;
-  background: transparent;
-  border: none;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #9b5de5;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 50;
   border-radius: 50%;
 
   &:hover {
-    background: rgba(155, 93, 229, 0.1);
+    background: ${props => props.theme.colors.primary}1A;
     transform: scale(1.1);
   }
 
@@ -392,6 +395,14 @@ export const BackButton = styled.button`
   ${media.tablet} {
     top: 16px;
     right: 16px;
+  }
+
+  ${media.phone} {
+    top: 12px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    background: ${props => props.theme.colors.primary}0D;
   }
 `;
 

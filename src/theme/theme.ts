@@ -1,4 +1,5 @@
 export const theme = {
+  mode: 'light' as 'light' | 'dark',
   colors: {
     primary: '#9b5de5',
     primaryLight: '#faf5ff',
@@ -46,9 +47,36 @@ export const theme = {
     sm: '0 1px 3px rgba(155, 93, 229, 0.1)',
     md: '0 4px 20px rgba(0, 0, 0, 0.08)',
     lg: '0 10px 40px rgba(0, 0, 0, 0.15)',
-    primary: '0 4px 20px rgba(155, 93, 229, 0.08)',
+    primary: '0 4px 12px rgba(155, 93, 229, 0.1)',
     secondary: '0 8px 25px rgba(251, 191, 36, 0.3)',
   },
 };
 
 export type Theme = typeof theme;
+
+export const darkTheme: Theme = {
+  ...theme,
+  mode: 'dark' as const,
+  colors: {
+    ...theme.colors,
+    bg: '#0a0e17',
+    surface: '#121926',
+    text: '#ffffff',
+    muted: '#d1d5db',
+    primaryLight: 'rgba(155, 93, 229, 0.15)',
+  },
+  gradients: {
+    ...theme.gradients,
+    background: `radial-gradient(circle at 20% 20%, rgba(155, 93, 229, 0.1) 0%, transparent 50%), 
+                 radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+                 #0a0e17`,
+  },
+  shadows: {
+    ...theme.shadows,
+    sm: '0 1px 3px rgba(0, 0, 0, 0.5)',
+    md: '0 4px 20px rgba(0, 0, 0, 0.4)',
+    lg: '0 10px 40px rgba(0, 0, 0, 0.5)',
+    primary: '0 8px 30px rgba(155, 93, 229, 0.45)',
+    secondary: '0 8px 25px rgba(251, 191, 36, 0.1)',
+  }
+};

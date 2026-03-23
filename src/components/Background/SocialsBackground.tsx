@@ -1,4 +1,7 @@
 import React, { useRef, useEffect } from 'react';
+import { useTheme } from 'styled-components';
+import { Theme } from '@theme/theme';
+import { getIsMobile } from '@hooks/useIsMobile';
 
 interface Particle {
   x: number;
@@ -70,14 +73,14 @@ const SHAPE_MAX_JOIN_DISTANCE  = 800;
 const SHAPE_WIND_OFFSET_MIN    = 15;
 const SHAPE_WIND_OFFSET_MAX    = 80;
 
-const SHAPE_GATHER_DURATION  = 6500; // Decreased from 7000 for a much quicker formation
+const SHAPE_GATHER_DURATION  = 3500; // duaration for particles to leave the shape from the time they start gather together.
 const SHAPE_HOLD_DURATION    = 0;
 const SHAPE_RELEASE_DURATION = 1000;
 const BURST_DURATION         = 2000;
 const WIND_RAMP_FRAMES       = 40;
 
-const SPRING_K_START    = 0.002;
-const SPRING_K_END      = 0.0017;
+const SPRING_K_START = 0.004; // start speed
+const SPRING_K_END   = 0.003; // end speed
 const SPRING_DAMP_START = 0.92;
 const SPRING_DAMP_END   = 0.86;
 const OFFSET_DECAY_EXP  = 2.6;
@@ -283,6 +286,8 @@ const SocialsBackground: React.FC = () => {
   const rafRef       = useRef<number>();
   const sizeRef      = useRef<{ cssW: number; cssH: number; dpr: number }>({ cssW: 0, cssH: 0, dpr: 1 });
   const mouseRef     = useRef<{ x: number; y: number }>({ x: -9999, y: -9999 });
+  const theme = useTheme() as Theme;
+  const isDark = theme.colors.bg === '#0a0e17'; // Simple check for dark mode
 
   const burstRef = useRef<{ active: boolean; platform: string | null; endTime: number; extrasSpawned: number }>({
     active: false, platform: null, endTime: 0, extrasSpawned: 0,
@@ -329,7 +334,7 @@ const SocialsBackground: React.FC = () => {
     return {
       x, y, vx: speedX, vy: speedY, z, size, speedX, speedY,
       rotation: Math.random() * Math.PI * 2, rotationSpeed: baseRot, baseRotationSpeed: baseRot,
-      opacity: OPACITY_MIN + z * (OPACITY_MAX - OPACITY_MIN), img,
+      opacity: (isDark ? 0.15 : OPACITY_MIN) + z * ((isDark ? 0.45 : OPACITY_MAX) - (isDark ? 0.15 : OPACITY_MIN)), img,
       flutterPhase: Math.random() * Math.PI * 2, flutterSpeed: Math.random() * 0.02 + 0.01,
       swayXAmplitude: Math.random() * 1.5 + 0.5, swayYAmplitude: Math.random() * 0.5 + 0.2,
       isExtra, markedForDeletion: false,
@@ -378,8 +383,9 @@ const SocialsBackground: React.FC = () => {
 
     if (burstRef.current.active && now > burstRef.current.endTime) burstRef.current = { active: false, platform: null, endTime: 0, extrasSpawned: 0 };
     const isBursting = burstRef.current.active, isConnecting = connectingPlatformsRef.current.size > 0;
+    const isMobile = getIsMobile();
 
-    if (isConnecting && w >= 768) {
+    if (isConnecting && !isMobile && w >= 768) {
       const list = Array.from(connectingPlatformsRef.current);
       if (particlesRef.current.length < COUNT + CONNECTING_EXTRA * list.length && Math.random() < CONNECTING_SPAWN_RATE) {
         const platform = list[Math.floor(Math.random() * list.length)];
@@ -565,7 +571,7 @@ const SocialsBackground: React.FC = () => {
       burstRef.current = { active: true, platform, endTime: Date.now() + BURST_DURATION, extrasSpawned: 0 };
 
       const { cssW: w, cssH: h } = sizeRef.current;
-      if (w < 768) return;
+      if (getIsMobile() || w < 768) return;
 
       const scale = Math.min(w, h) * SHAPE_SCALE_FACTOR;
       const { cx, cy } = randomShapeCenter(w, h, scale);          

@@ -1,26 +1,26 @@
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '@theme/theme';
+// theme import removed to use dynamic props.theme
 import { media } from '@/styles/breakpoints';
 
 export const celebrate = keyframes`
   0% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 ${theme.colors.primary}B3;
+    box-shadow: 0 0 0 0 ${props => props.theme.colors.primary}B3;
   }
   30% {
     transform: scale(1.3);
-    box-shadow: 0 0 20px 10px ${theme.colors.primary}66;
+    box-shadow: 0 0 20px 10px ${props => props.theme.colors.primary}66;
   }
   50% {
     transform: scale(1.1);
   }
   70% {
     transform: scale(1.2);
-    box-shadow: 0 0 30px 15px ${theme.colors.primary}00;
+    box-shadow: 0 0 30px 15px ${props => props.theme.colors.primary}00;
   }
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 ${theme.colors.primary}00;
+    box-shadow: 0 0 0 0 ${props => props.theme.colors.primary}00;
   }
 `;
 
@@ -40,10 +40,13 @@ export const ScrollNavContainer = styled.nav`
   pointer-events: none;
 
   ${media.phone} {
-    right: -255px; /* Adjust right position slightly since it's bigger */
-    transform: scale(0.75);
-    font-size: 22px;
-    top: -50px; /* Shift the whole component up */
+    right: 2px;
+    top: 55%;
+    transform: translateY(-50%) scale(0.8);
+    height: auto;
+    width: auto;
+    padding: 0;
+    font-size: 20px;
   }
 `;
 
@@ -70,6 +73,11 @@ export const InnerContainer = styled.div`
   flex-direction: column;
   align-items: center;
   pointer-events: auto;
+
+  ${media.phone} {
+    flex-direction: column;
+    gap: 0;
+  }
 `;
 
 export const ScrollItem = styled.div`
@@ -81,6 +89,12 @@ export const ScrollItem = styled.div`
   padding: 20px 5px;
   width: 100%;
   gap: 12px;
+
+  ${media.phone} {
+    padding: 20px 5px;
+    width: 100%;
+    justify-content: flex-end;
+  }
 `;
 
 export const ScrollLabel = styled.span<{ $visible?: boolean }>`
@@ -88,32 +102,26 @@ export const ScrollLabel = styled.span<{ $visible?: boolean }>`
   right: 64px;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: ${props => props.theme.colors.text};
   white-space: nowrap;
   opacity: ${props => props.$visible ? 1 : 0};
   transform: ${props => props.$visible ? 'translateX(0)' : 'translateX(8px)'};
   transition: all 0.2s ease;
   pointer-events: none;
   text-align: right;
-  background: white;
+  background: ${props => props.theme.colors.surface};
   padding: 4px 10px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: ${props => props.theme.shadows.sm};
 
   ${media.phone} {
     right: 56px;
     padding: 4px 10px;
     font-size: 12px;
-    background: rgba(255, 255, 255, 0.98);
-  }
-
-  .nav-grad-text {
-    display: inline-block;
-    font-weight: 800;
-    background: ${theme.gradients.innovator};
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: ${props => props.theme.colors.surface}FA;
+    transform: ${props => props.$visible ? 'translateX(0)' : 'translateX(8px)'};
+    bottom: auto;
+    left: auto;
   }
 `;
 
@@ -130,7 +138,7 @@ export const ScrollDot = styled.div<{
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.04);
+  background: ${props => props.theme.colors.primary}0D;
   border: 2px solid transparent;
   transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
   display: flex;
@@ -142,11 +150,11 @@ export const ScrollDot = styled.div<{
   z-index: 2;
 
   ${props => props.$isSystem ? css`
-    background: ${theme.colors.secondary}1A;
-    border-color: ${theme.colors.secondary}4D;
+    background: ${props.theme.colors.secondary}1A;
+    border-color: ${props.theme.colors.secondary}4D;
   ` : css`
-    background: ${theme.colors.primary}1A;
-    border-color: ${theme.colors.primary}4D;
+    background: ${props.theme.colors.primary}1A;
+    border-color: ${props.theme.colors.primary}4D;
   `}
 
   ${props => props.$isItemDragging && !props.$isDropTarget && css`
@@ -155,14 +163,14 @@ export const ScrollDot = styled.div<{
 
   ${props => props.$isHovered && !props.$isActive && !props.$isDragging && css`
     transform: scale(1.15);
-    background: ${props.$isSystem ? `${theme.colors.secondary}33` : `${theme.colors.primary}33`};
-    border-color: ${props.$isSystem ? `${theme.colors.secondary}80` : `${theme.colors.primary}80`};
+    background: ${props.$isSystem ? `${props.theme.colors.secondary}33` : `${props.theme.colors.primary}33`};
+    border-color: ${props.$isSystem ? `${props.theme.colors.secondary}80` : `${props.theme.colors.primary}80`};
   `}
 
   ${props => props.$isActive && css`
-    background: ${props.$isSystem ? `${theme.colors.secondary}40` : `${theme.colors.primary}40`};
-    border-color: ${props.$isSystem ? `${theme.colors.secondary}BF` : `${theme.colors.primary}BF`};
-    box-shadow: 0 0 18px ${props.$isSystem ? `${theme.colors.secondary}73` : `${theme.colors.primary}73`};
+    background: ${props.$isSystem ? `${props.theme.colors.secondary}40` : `${props.theme.colors.primary}40`};
+    border-color: ${props.$isSystem ? `${props.theme.colors.secondary}BF` : `${props.theme.colors.primary}BF`};
+    box-shadow: 0 0 18px ${props.$isSystem ? `${props.theme.colors.secondary}73` : `${props.theme.colors.primary}73`};
     transform: scale(1.18);
   `}
 
@@ -170,9 +178,9 @@ export const ScrollDot = styled.div<{
     width: 52px;
     height: 52px;
     opacity: 1;
-    background: ${props.$isSystem ? `${theme.colors.secondary}4D` : `${theme.colors.primary}4D`};
-    border-color: ${props.$isSystem ? `${theme.colors.secondary}B3` : `${theme.colors.primary}B3`};
-    box-shadow: 0 0 24px ${props.$isSystem ? `${theme.colors.secondary}80` : `${theme.colors.primary}80`};
+    background: ${props.$isSystem ? `${props.theme.colors.secondary}4D` : `${props.theme.colors.primary}4D`};
+    border-color: ${props.$isSystem ? `${props.theme.colors.secondary}B3` : `${props.theme.colors.primary}B3`};
+    box-shadow: 0 0 24px ${props.$isSystem ? `${props.theme.colors.secondary}80` : `${props.theme.colors.primary}80`};
   `}
 
   ${props => props.$isInvalidDropTarget && css`
@@ -187,8 +195,11 @@ export const ScrollDot = styled.div<{
 
   ${props => props.$isDragging && css`
     z-index: 9999;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    transform: scale(1.1);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    transform: scale(1.15);
+    opacity: 1 !important;
+    background: ${props.$isSystem ? `${props.theme.colors.secondary}66` : `${props.theme.colors.primary}66`};
+    border-color: ${props.$isSystem ? props.theme.colors.secondary : props.theme.colors.primary};
   `}
 `;
 
@@ -204,7 +215,7 @@ export const ScrollLine = styled.div<{ $hidden?: boolean }>`
   top: 64px;
   width: 2px;
   height: 40px;
-  background: rgba(0, 0, 0, 0.08);
+  background: ${props => props.theme.mode === 'dark' ? `${props.theme.colors.primary}4D` : `${props.theme.colors.primary}26`};
   border-radius: 1px;
   transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateX(-50%);
@@ -214,6 +225,12 @@ export const ScrollLine = styled.div<{ $hidden?: boolean }>`
     height: 0px;
     opacity: 0;
   `}
+
+  ${media.phone} {
+    display: block;
+    top: 64px;
+    height: 40px;
+  }
 `;
 
 export const ScrollArrow = styled.button<{ $visible?: boolean; $isHovered?: boolean; $side?: 'up' | 'down' }>`
@@ -224,7 +241,7 @@ export const ScrollArrow = styled.button<{ $visible?: boolean; $isHovered?: bool
   justify-content: center;
   margin-bottom: 24px;
   cursor: pointer;
-  color: #9ca3af;
+  color: ${props => props.theme.colors.muted};
   transition: all 0.2s ease;
   border-radius: 50%;
   background: transparent;
@@ -233,19 +250,15 @@ export const ScrollArrow = styled.button<{ $visible?: boolean; $isHovered?: bool
   opacity: ${props => props.$visible ? 1 : 0};
 
   ${props => props.$isHovered && css`
-    background: ${theme.colors.primary}1A;
-    color: ${theme.colors.primary};
+    background: ${props.theme.colors.primary}1A;
+    color: ${props.theme.colors.primary};
   `}
 
   ${media.phone} {
     width: 36px;
     height: 36px;
     margin-bottom: 12px;
-    
-    svg {
-      width: 14px;
-      height: 14px;
-    }
+    display: flex;
   }
 `;
 
@@ -253,9 +266,9 @@ export const ContextMenu = styled.div<{ $top: number; $left: number }>`
   position: fixed;
   top: ${props => props.$top}px;
   left: ${props => props.$left}px;
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: ${props => props.theme.shadows.md};
   padding: 6px;
   z-index: 2000;
   min-width: 200px;

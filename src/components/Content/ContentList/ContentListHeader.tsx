@@ -8,7 +8,9 @@ import {
   ListTitleClickable, 
   ListTitleEditable, 
   ListSubtitle, 
-  BrandGradient
+  PrefixText,
+  BrandGradient,
+  AddContentButton
 } from './styles';
 import { formatSystemListTitle } from '@models/ContentList';
 
@@ -23,8 +25,10 @@ interface ContentListHeaderProps {
   isMobile?: boolean;
   onTitleChange: (newTitle: string) => void;
   onIconClick: (element: HTMLElement) => void;
-  onDelete: () => void;
   onSave?: () => void;
+  onUpload: (file: File) => void;
+  onAddNavigate?: () => void;
+  listType: 'video' | 'image';
 }
 
 const ContentListHeader: React.FC<ContentListHeaderProps> = ({
@@ -35,8 +39,10 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
   isNewList = false,
   onTitleChange,
   onIconClick,
-  onDelete,
   onSave,
+  onUpload,
+  onAddNavigate,
+  listType,
   isMobile,
 }) => {
   const [isEditMode, setIsEditMode] = useState(isNewList);
@@ -47,6 +53,7 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
   const iconRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setTitleValue(title);
@@ -125,13 +132,31 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
     }
   };
 
+  const handleAddClick = () => {
+    if (onAddNavigate) {
+      onAddNavigate();
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onUpload(file);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const renderTitle = () => {
     const gradientParts = formatSystemListTitle(title);
 
     if (gradientParts) {
       return (
         <ListTitle $isMobile={isMobile}>
-          <span style={{ color: '#111827' }}>{gradientParts.prefix}</span>
+          <PrefixText>{gradientParts.prefix}</PrefixText>
           <BrandGradient>{gradientParts.gradient}</BrandGradient>
         </ListTitle>
       );
@@ -184,6 +209,22 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
         </ListTitleContainer>
         {subtitle && <ListSubtitle>{subtitle}</ListSubtitle>}
       </ListTitleGroup>
+
+      {isMobile && (
+        <>
+          <AddContentButton onClick={handleAddClick} $isMobile={isMobile}>
+            <span className="icon">➕</span>
+          </AddContentButton>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={listType === 'video' ? 'video/*' : 'image/*'}
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+        </>
+      )}
     </ListHeader>
   );
 };

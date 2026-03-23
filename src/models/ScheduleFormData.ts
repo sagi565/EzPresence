@@ -4,13 +4,24 @@ import { Platform } from './Post';
 // Repeat/Recurrence Types
 // ============================================
 
-export type RepeatFrequency = 'none' | 'daily' | 'weekly' | 'monthly' | 'annually' | 'custom';
+export type RepeatFrequency = 'none' | 'daily' | 'weekly' | 'monthly' | 'annually' | 'custom' | 'specific_dates';
+
+export interface CustomRepeatConfig {
+    interval: number; // e.g. 1
+    frequency: 'daily' | 'weekly' | 'monthly' | 'annually'; // "Repeat every X [weeks]"
+    daysOfWeek?: number[]; // 0-6 (Sun-Sat) for weekly repeat
+    endType: 'never' | 'on_date' | 'after_occurrences';
+    endDate?: Date;
+    endOccurrences?: number;
+}
 
 export interface RepeatOption {
     frequency: RepeatFrequency;
     label: string;
     rruleText?: string; // iCal recurrence rule format
     endDate?: Date;
+    customConfig?: CustomRepeatConfig;
+    specificDates?: Date[]; // For "Specific Dates" option
 }
 
 // ============================================
@@ -241,6 +252,8 @@ export const generateRepeatLabel = (frequency: RepeatFrequency, date: Date): str
             return `Annually on ${monthNames[date.getMonth()]} ${date.getDate()}`;
         case 'custom':
             return 'Custom...';
+        case 'specific_dates':
+            return 'Specific Dates';
         default:
             return 'Does not repeat';
     }
@@ -266,7 +279,9 @@ export const generateRruleText = (frequency: RepeatFrequency, date: Date): strin
         case 'annually':
             return 'FREQ=YEARLY';
         case 'custom':
-            return undefined; // Handled by custom UI
+            return undefined; // Handled by CustomRepeatDialog and stored manually
+        case 'specific_dates':
+            return undefined; // Handled as separate individual events or RDATEs
         default:
             return undefined;
     }

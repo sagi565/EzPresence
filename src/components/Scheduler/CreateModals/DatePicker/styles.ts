@@ -1,4 +1,4 @@
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 import { CSSProperties } from 'react';
 
 export const styles: Record<string, CSSProperties> = {
@@ -6,7 +6,7 @@ export const styles: Record<string, CSSProperties> = {
         position: 'absolute',
         top: 'calc(100% + 6px)',
         left: 0,
-        background: theme.colors.surface,
+        background: 'var(--color-surface)',
         borderRadius: '12px',
         boxShadow: '0 12px 40px rgba(0,0,0,.18)',
         border: `1px solid rgba(155, 93, 229, .12)`,
@@ -25,7 +25,7 @@ export const styles: Record<string, CSSProperties> = {
     title: {
         fontSize: '14px',
         fontWeight: 700,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
     },
 
     arrow: {
@@ -36,7 +36,7 @@ export const styles: Record<string, CSSProperties> = {
         background: 'transparent',
         cursor: 'pointer',
         fontSize: '14px',
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -53,7 +53,7 @@ export const styles: Record<string, CSSProperties> = {
     dayHeader: {
         fontSize: '11px',
         fontWeight: 600,
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         padding: '4px 0',
     },
 
@@ -67,7 +67,7 @@ export const styles: Record<string, CSSProperties> = {
         cursor: 'pointer',
         fontSize: '13px',
         fontWeight: 500,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         transition: 'all .15s',
         border: 'none',
         background: 'transparent',
@@ -76,11 +76,11 @@ export const styles: Record<string, CSSProperties> = {
 
     dayToday: {
         fontWeight: 700,
-        color: theme.colors.primary,
+        color: 'var(--color-primary)',
     },
 
     daySelected: {
-        background: theme.colors.primary,
+        background: 'var(--color-primary)',
         color: '#fff',
         fontWeight: 700,
     },

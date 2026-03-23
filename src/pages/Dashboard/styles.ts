@@ -1,5 +1,4 @@
 import styled, { keyframes } from 'styled-components';
-import { theme } from '@theme/theme';
 
 export const fadeInUp = keyframes`
   from {
@@ -18,7 +17,10 @@ export const shimmer = keyframes`
 `;
 
 export const ShimmerBase = styled.div`
-  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, 
+    ${props => props.theme.colors.bg} 25%, 
+    ${props => props.theme.colors.surface} 50%, 
+    ${props => props.theme.colors.bg} 75%);
   background-size: 800px 100%;
   animation: ${shimmer} 1.4s infinite linear;
   border-radius: 8px;
@@ -28,7 +30,7 @@ export const PageContainer = styled.div`
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: ${theme.gradients.background};
+  background: ${props => props.theme.gradients.background};
 `;
 
 export const DashboardContent = styled.div`
@@ -72,7 +74,7 @@ export const PageTitle = styled.h1`
 `;
 
 export const TitleGradient = styled.span`
-  background: ${theme.gradients.momentum};
+  background: ${props => props.theme.gradients.momentum};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -91,10 +93,10 @@ export const FilterSection = styled.div`
 export const TimeRangeWrapper = styled.div`
   display: flex;
   gap: 3px;
-  background: white;
-  border-radius: ${theme.borderRadius.full};
+  background: ${props => props.theme.colors.surface};
+  border-radius: ${props => props.theme.borderRadius.full};
   padding: 4px;
-  box-shadow: ${theme.shadows.sm};
+  box-shadow: ${props => props.theme.shadows.sm};
   overflow-x: auto;
   
   /* Hide scrollbar but keep functionality */
@@ -107,17 +109,17 @@ export const TimeRangeWrapper = styled.div`
 
 export const TimeRangeButton = styled.button<{ $active: boolean; $hovered: boolean }>`
   padding: 6px 14px;
-  border-radius: ${theme.borderRadius.full};
+  border-radius: ${props => props.theme.borderRadius.full};
   border: none;
   background: ${props => props.$active
-    ? theme.gradients.momentum
-    : props.$hovered ? '#f3f4f6' : 'transparent'};
-  color: ${props => props.$active ? 'white' : props.$hovered ? theme.colors.text : theme.colors.muted};
+    ? props.theme.gradients.momentum
+    : props.$hovered ? props.theme.colors.bg : 'transparent'};
+  color: ${props => props.$active ? 'white' : props.$hovered ? props.theme.colors.text : props.theme.colors.muted};
   font-weight: ${props => props.$active ? 700 : 500};
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: ${props => props.$active ? '0 2px 8px rgba(155,93,229,0.35)' : 'none'};
+  box-shadow: ${props => props.$active ? `0 2px 8px ${props.theme.colors.primary}59` : 'none'};
   @media (max-width: 400px) {
     padding: 6px 10px;
     font-size: 12px;
@@ -160,7 +162,7 @@ export const SectionHeader = styled.div`
 export const SectionTitle = styled.h2`
   font-size: 17px;
   font-weight: 700;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   margin: 0;
 
   @media (max-width: 480px) {
@@ -173,7 +175,7 @@ export const ViewAllButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  color: ${theme.colors.primary};
+  color: ${props => props.theme.colors.primary};
   font-weight: 700;
   font-size: 14px;
   padding: 0;
@@ -187,10 +189,10 @@ export const ViewAllButton = styled.button`
 // --- Skeleton Components ---
 
 export const ChartSkeletonContainer = styled.div`
-  background: white;
-  border-radius: ${theme.borderRadius.lg};
+  background: ${props => props.theme.colors.surface};
+  border-radius: ${props => props.theme.borderRadius.lg};
   padding: 24px;
-  box-shadow: ${theme.shadows.md};
+  box-shadow: ${props => props.theme.shadows.md};
 `;
 
 export const SkeletonRow = styled.div`
@@ -236,14 +238,14 @@ export const GridSkeleton = styled.div`
 
 export const GridLineSkeleton = styled.div`
   height: 1px;
-  background: #f3f4f6;
+  background: ${props => props.theme.colors.primary}12;
   width: 100%;
 `;
 
 export const ChartOverlaySkeleton = styled.div`
   position: absolute;
   inset: 0 0 24px 44px;
-  background: linear-gradient(180deg, rgba(155,93,229,0.07) 0%, transparent 100%);
+  background: linear-gradient(180deg, ${props => props.theme.colors.primary}12 0%, transparent 100%);
   border-radius: 4px;
 `;
 
@@ -262,10 +264,10 @@ export const XTickSkeleton = styled(ShimmerBase)`
 `;
 
 export const MetricSkeletonContainer = styled.div`
-  background: white;
-  border-radius: ${theme.borderRadius.lg};
+  background: ${props => props.theme.colors.surface};
+  border-radius: ${props => props.theme.borderRadius.lg};
   padding: 20px 24px;
-  box-shadow: ${theme.shadows.md};
+  box-shadow: ${props => props.theme.shadows.md};
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -331,11 +333,11 @@ export const PlatformTabsSkeletonContainer = styled.div`
 export const PlatformTabSkeletonCard = styled.div<{ $width: number }>`
   width: ${props => props.$width}px;
   height: 58px;
-  border-radius: ${theme.borderRadius.md};
+  border-radius: ${props => props.theme.borderRadius.md};
   position: relative;
   overflow: hidden;
-  background: white;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  background: ${props => props.theme.colors.surface};
+  box-shadow: ${props => props.theme.shadows.sm};
   display: flex;
   align-items: center;
   gap: 10px;
@@ -346,5 +348,5 @@ export const PlatformTabSkeletonCard = styled.div<{ $width: number }>`
 export const PlatformTabSkeletonShimmer = styled(ShimmerBase)`
   position: absolute;
   inset: 0;
-  border-radius: ${theme.borderRadius.md};
+  border-radius: ${props => props.theme.borderRadius.md};
 `;

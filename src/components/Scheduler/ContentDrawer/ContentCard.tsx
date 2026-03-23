@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { ContentItem } from '@models/ContentList';
-import { styles } from './styles';
+import { ContentItem } from '@/models/ContentList';
+import * as S from './ContentDrawer.styles';
 import { setDragItem } from '@/utils/dragState';
 
 interface ContentCardProps {
@@ -18,22 +18,8 @@ ghostCanvas.height = 1;
 ghostCanvas.style.cssText = 'position:fixed;top:-2px;left:-2px;width:1px;height:1px;opacity:0;pointer-events:none;';
 const ctx = ghostCanvas.getContext('2d');
 if (ctx) ctx.clearRect(0, 0, 1, 1);
-document.body.appendChild(ghostCanvas);
-
-const DIMMER_STYLE_ID = 'drag-dimmer-styles';
-if (!document.getElementById(DIMMER_STYLE_ID)) {
-  const s = document.createElement('style');
-  s.id = DIMMER_STYLE_ID;
-  s.textContent = `
-    body.content-dragging .content-drawer {
-      z-index: 2000 !important;
-    }
-    body.content-dragging .new-story-modal,
-    body.content-dragging .new-post-modal {
-      z-index: 1300 !important;
-    }
-  `;
-  document.head.appendChild(s);
+if (typeof document !== 'undefined') {
+  document.body.appendChild(ghostCanvas);
 }
 
 const DragCard: React.FC<{ content: ContentItem; pos: { x: number; y: number } }> = ({ content, pos }) => {
@@ -47,47 +33,21 @@ const DragCard: React.FC<{ content: ContentItem; pos: { x: number; y: number } }
     : null;
 
   return ReactDOM.createPortal(
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '80px',
-        aspectRatio: '9/16',
-        borderRadius: '10px',
-        overflow: 'hidden',
-        border: '2px solid #9b5de5',
-        background: '#f8f9fb',
-        boxShadow: '0 12px 24px -6px rgba(155, 93, 229, 0.45)',
-        transform: `translate(${pos.x - 40}px, ${pos.y - 80}px) rotate(-2deg) scale(1)`,
-        pointerEvents: 'none',
-        zIndex: 9999,
-        opacity: 0.95,
-      }}
-    >
+    <S.DragPreview $x={pos.x} $y={pos.y}>
       {thumbnailSrc ? (
         <img src={thumbnailSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       ) : (
-        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', background: 'rgba(155, 93, 229, 0.05)' }}>
+        <S.DragFallback>
           {content.type === 'video' ? '🎬' : '🖼️'}
-        </div>
+        </S.DragFallback>
       )}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        padding: '14px 10px 8px',
-        background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)',
-        color: 'white', fontSize: '12px', fontWeight: 700,
-        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-        textShadow: '0 1px 3px rgba(0,0,0,0.8)', zIndex: 2,
-      }}>
+      <S.DragTitle>
         {content.title}
-      </div>
-    </div>,
+      </S.DragTitle>
+    </S.DragPreview>,
     document.body,
   );
 };
-
-
 
 const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragStartProp, onSelect, onClickDetail }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -126,11 +86,6 @@ const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragS
   useEffect(() => {
     if (!isDragging) return;
 
-    // ✅ CRITICAL: must call preventDefault here too.
-    // The browser only fires dragover events continuously if at least one
-    // element is accepting the drag (calling preventDefault). If the overlay
-    // or any element under the cursor stops doing this, the browser halts
-    // dragover events and the DragCard stops tracking the cursor.
     const onDragOver = (e: DragEvent) => {
       e.preventDefault();
       setPointerPos({ x: e.clientX, y: e.clientY });
@@ -142,16 +97,10 @@ const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragS
 
   return (
     <>
-      <div
+      <S.CardContainer
         className="content-card"
-        style={{
-          ...styles.contentCard,
-          ...(isHovered && !isDragging ? styles.contentCardHover : {}),
-          cursor: isDragging ? 'grabbing' : 'grab',
-          opacity: isDragging ? 0 : 1,
-          userSelect: 'none',
-          transition: isDragging ? 'none' : (styles.contentCard as React.CSSProperties).transition,
-        }}
+        $isHovered={isHovered}
+        $isDragging={isDragging}
         draggable
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -161,17 +110,17 @@ const ContentCard: React.FC<ContentCardProps> = ({ content, onDragStart: onDragS
         onMouseLeave={() => setIsHovered(false)}
         title={content.title}
       >
-        <div style={styles.contentThumbnail}>
+        <S.ThumbnailContainer>
           {thumbnailSrc ? (
-            <img src={thumbnailSrc} alt={content.title} draggable={false} style={styles.thumbnailImage as React.CSSProperties} />
+            <S.ThumbnailImage src={thumbnailSrc} alt={content.title} draggable={false} />
           ) : (
-            <span style={{ fontSize: '24px' }}>
+            <S.FallbackIcon>
               {isEmoji ? content.thumbnail : content.type === 'video' ? '🎬' : '🖼️'}
-            </span>
+            </S.FallbackIcon>
           )}
-          <div className="content-card-title" style={styles.contentTitle}>{content.title}</div>
-        </div>
-      </div>
+          <S.CardTitle className="content-card-title">{content.title}</S.CardTitle>
+        </S.ThumbnailContainer>
+      </S.CardContainer>
 
       {isDragging && <DragCard content={content} pos={pointerPos} />}
     </>

@@ -1,5 +1,4 @@
 import styled, { keyframes } from 'styled-components';
-import { theme } from '@theme/theme';
 
 const spin = keyframes`
   0% { transform: rotate(0deg); }
@@ -42,15 +41,15 @@ export const Spinner = styled.div`
   width: 48px;
   height: 48px;
   border: 4px solid;
-  border-color: rgba(155, 93, 229, 0.2);
-  border-top-color: ${theme.colors.primary};
+  border-color: ${props => props.theme.colors.primary}33;
+  border-top-color: ${props => props.theme.colors.primary};
   border-radius: 50%;
   animation: ${spin} 0.8s linear infinite;
 `;
 
 export const LoadingText = styled.p`
   font-size: 16px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   font-weight: 500;
 `;
 
@@ -71,7 +70,7 @@ export const ErrorIcon = styled.div`
 export const ErrorTitle = styled.h2`
   font-size: 24px;
   font-weight: 700;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   margin: 0;
 `;
 
@@ -85,7 +84,7 @@ export const ErrorText = styled.p`
 
 export const RetryButton = styled.button`
   padding: 12px 24px;
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   color: white;
   border: none;
   border-radius: 12px;
@@ -93,7 +92,7 @@ export const RetryButton = styled.button`
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s;
-  box-shadow: ${theme.shadows.primary};
+  box-shadow: ${props => props.theme.shadows.primary};
 
   &:hover {
     transform: translateY(-2px);
@@ -107,10 +106,10 @@ export const CalendarLoadingContainer = styled.div`
   justify-content: center;
   min-height: 400px;
   gap: 16px;
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 16px;
   padding: 40px;
-  box-shadow: ${theme.shadows.md};
+  box-shadow: ${props => props.theme.shadows.md};
 `;
 
 export const CalendarErrorContainer = styled.div`
@@ -118,8 +117,8 @@ export const CalendarErrorContainer = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 16px;
   padding: 40px;
-  box-shadow: ${theme.shadows.md};
+  box-shadow: ${props => props.theme.shadows.md};
 `;

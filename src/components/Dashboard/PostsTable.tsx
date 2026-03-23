@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { theme } from '@theme/theme';
+import { useTheme } from 'styled-components';
+import { Theme } from '@theme/theme';
 import type { DashboardPost } from '@/hooks/dashboard/useDashboardPosts';
 import CommentsList from './CommentsList';
 import {
@@ -20,15 +21,9 @@ import {
   PostCaption,
   CommentsToggleWrapper,
   CommentsToggleButton,
-  ChevronIcon
+  ChevronIcon,
+  ShimmerBase
 } from './styles';
-
-const platformColor: Record<string, string> = {
-  instagram: '#E1306C',
-  facebook: '#1877F2',
-  tiktok: '#010101',
-  youtube: '#FF0000',
-};
 
 function formatNum(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -54,8 +49,18 @@ interface PostCardProps {
 }
 
 const PostCard: React.FC<PostCardProps> = ({ post, index }) => {
+  const theme = useTheme() as Theme;
+  const isDark = theme.colors.bg === '#0a0e17';
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
+
+  const platformColor: Record<string, string> = {
+    instagram: '#E1306C',
+    facebook: '#1877F2',
+    tiktok: isDark ? '#333333' : '#010101',
+    youtube: '#FF0000',
+  };
+
   const color = platformColor[post.platform] || theme.colors.primary;
 
   return (
@@ -106,7 +111,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, index }) => {
         {/* Stats row */}
         <StatsRow>
           <StatsGroup>
-            <StatItem $color="#ef4444">
+            <StatItem $color={theme.colors.pink}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
               </svg>
@@ -157,17 +162,17 @@ const PostCard: React.FC<PostCardProps> = ({ post, index }) => {
 // ── Loading skeleton ──────────────────────────────────────────────────────────
 const CardSkeleton: React.FC = () => (
   <PostCardContainer $hovered={false} $index={0}>
-    <div className="shimmer" style={{ height: 220 }} />
+    <ShimmerBase style={{ height: 220, borderRadius: 0 }} />
     <PostContent style={{ paddingBottom: 14 }}>
       <StatsGroup style={{ marginBottom: 12 }}>
-        <div className="shimmer" style={{ width: 60, height: 16 }} />
-        <div className="shimmer" style={{ width: 50, height: 16 }} />
+        <ShimmerBase style={{ width: 60, height: 16 }} />
+        <ShimmerBase style={{ width: 50, height: 16 }} />
       </StatsGroup>
-      <div className="shimmer" style={{ width: '90%', height: 13, marginBottom: 6 }} />
-      <div className="shimmer" style={{ width: '65%', height: 13, marginBottom: 14 }} />
+      <ShimmerBase style={{ width: '90%', height: 13, marginBottom: 6 }} />
+      <ShimmerBase style={{ width: '65%', height: 13, marginBottom: 14 }} />
     </PostContent>
     <CommentsToggleWrapper style={{ padding: '12px 16px' }}>
-      <div className="shimmer" style={{ width: 120, height: 13 }} />
+      <ShimmerBase style={{ width: 120, height: 13 }} />
     </CommentsToggleWrapper>
   </PostCardContainer>
 );

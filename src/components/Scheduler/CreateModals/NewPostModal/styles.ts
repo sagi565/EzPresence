@@ -1,4 +1,4 @@
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 import { CSSProperties } from 'react';
 
 export const styles: Record<string, CSSProperties> = {
@@ -6,11 +6,11 @@ export const styles: Record<string, CSSProperties> = {
     titleInput: {
         width: 'calc(70% - 28px)',
         border: 'none',
-        borderBottom: '1px solid rgba(0, 0, 0, .1)',
+        borderBottom: '1px solid var(--color-bg)',
         outline: 'none',
         fontSize: '22px',
         fontWeight: 700,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         padding: '16px 0 6px',
         marginLeft: '28px',
         background: 'transparent',
@@ -55,12 +55,12 @@ export const styles: Record<string, CSSProperties> = {
 
     chip: {
         padding: '7px 14px',
-        border: '1.5px solid rgba(0, 0, 0, .1)',
+        border: '1.5px solid var(--color-bg)',
         borderRadius: '8px',
-        background: '#fff',
+        background: 'var(--color-surface)',
         fontSize: '14px',
         fontWeight: 500,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         cursor: 'pointer',
         transition: 'all .18s',
         display: 'inline-flex',
@@ -73,13 +73,12 @@ export const styles: Record<string, CSSProperties> = {
     chipSmall: {
         padding: '5px 10px',
         fontSize: '12px',
-        color: theme.colors.muted,
-        minWidth: 'auto',
+        color: 'var(--color-muted)',
     },
 
     chipArrow: {
         fontSize: '10px',
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         marginLeft: '10px',
         flexShrink: 0,
     },
@@ -87,12 +86,12 @@ export const styles: Record<string, CSSProperties> = {
     // Platform Accordion Styles
     platformSection: {
         borderRadius: '12px',
-        border: '1.5px solid rgba(0,0,0,.06)',
+        border: '1.5px solid var(--color-bg)',
         borderLeftWidth: '3px',
         overflow: 'visible',
         transition: 'all .25s cubic-bezier(.4,0,.2,1)',
         marginBottom: '12px',
-        background: '#fff',
+        background: 'var(--color-surface)',
     },
 
     platformHeader: {
@@ -134,21 +133,21 @@ export const styles: Record<string, CSSProperties> = {
     platformName: {
         fontSize: '13.5px',
         fontWeight: 400,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
     },
 
     platformUsername: {
         fontSize: '11px',
         fontWeight: 600,
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
     },
 
     platformToggle: {
         width: '18px',
         height: '18px',
         borderRadius: '5px',
-        border: '1.5px solid rgba(0,0,0,.15)',
-        background: '#fff',
+        border: '1.5px solid var(--color-bg)',
+        background: 'var(--color-surface)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -156,8 +155,8 @@ export const styles: Record<string, CSSProperties> = {
     },
 
     platformToggleSelected: {
-        background: theme.colors.primary,
-        borderColor: theme.colors.primary,
+        background: 'var(--color-primary)',
+        borderColor: 'var(--color-primary)',
         color: '#fff',
     },
 
@@ -166,8 +165,8 @@ export const styles: Record<string, CSSProperties> = {
         display: 'flex',
         flexDirection: 'column' as const,
         gap: '14px',
-        borderTop: '1px solid rgba(0,0,0,.06)',
-        background: 'rgba(0,0,0,.02)',
+        borderTop: '1px solid var(--color-bg)',
+        background: 'var(--color-bg)',
     },
 
     // Form Fields
@@ -180,7 +179,7 @@ export const styles: Record<string, CSSProperties> = {
     fieldLabel: {
         fontSize: '12px',
         fontWeight: 600,
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
@@ -189,12 +188,12 @@ export const styles: Record<string, CSSProperties> = {
     fieldInput: {
         width: '100%',
         padding: '8px 12px',
-        border: '1.5px solid rgba(0, 0, 0, .1)',
+        border: '1.5px solid var(--color-bg)',
         borderRadius: '8px',
         fontSize: '13px',
         fontFamily: 'inherit',
-        color: theme.colors.text,
-        background: '#fff',
+        color: 'var(--color-text)',
+        background: 'var(--color-surface)',
         outline: 'none',
         transition: 'all .18s',
     },
@@ -208,20 +207,20 @@ export const styles: Record<string, CSSProperties> = {
 
     radioPill: {
         padding: '6px 14px',
-        border: '1.5px solid rgba(0, 0, 0, .1)',
+        border: '1.5px solid var(--color-bg)',
         borderRadius: '20px',
-        background: '#fff',
+        background: 'var(--color-surface)',
         fontSize: '12px',
         fontWeight: 500,
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         cursor: 'pointer',
         transition: 'all .18s',
     },
 
     radioPillActive: {
-        borderColor: theme.colors.primary,
-        background: 'rgba(155, 93, 229, .1)',
-        color: theme.colors.primary,
+        borderColor: 'var(--color-primary)',
+        background: 'var(--color-bg)',
+        color: 'var(--color-primary)',
         fontWeight: 600,
     },
 
@@ -236,7 +235,7 @@ export const styles: Record<string, CSSProperties> = {
     toggleLabel: {
         fontSize: '13px',
         fontWeight: 500,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
@@ -246,7 +245,7 @@ export const styles: Record<string, CSSProperties> = {
         position: 'relative' as const,
         width: '38px',
         height: '22px',
-        background: '#d1d5db',
+        background: 'var(--color-bg)',
         borderRadius: '11px',
         cursor: 'pointer',
         transition: 'background .2s',
@@ -254,7 +253,7 @@ export const styles: Record<string, CSSProperties> = {
     },
 
     toggleSwitchOn: {
-        background: theme.colors.primary,
+        background: 'var(--color-primary)',
     },
 
     toggleThumb: {
@@ -274,8 +273,8 @@ export const styles: Record<string, CSSProperties> = {
         padding: '10px 22px',
         borderRadius: '10px',
         border: 'none',
-        background: '#fff',
-        color: theme.colors.muted,
+        background: 'var(--color-surface)',
+        color: 'var(--color-muted)',
         fontSize: '14px',
         fontWeight: 600,
         cursor: 'pointer',
@@ -287,7 +286,7 @@ export const styles: Record<string, CSSProperties> = {
         padding: '10px 28px',
         borderRadius: '10px',
         border: 'none',
-        background: theme.gradients.innovator,
+        background: 'linear-gradient(135deg, #9b5de5 0%, #fbbf24 100%)',
         color: '#fff',
         fontSize: '14px',
         fontWeight: 700,
@@ -300,15 +299,18 @@ export const styles: Record<string, CSSProperties> = {
 // Add global hover styles
 if (typeof document !== 'undefined') {
     const styleId = 'new-post-modal-global-styles';
-    if (!document.getElementById(styleId)) {
-        const style = document.createElement('style');
+    let style = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!style) {
+        style = document.createElement('style');
         style.id = styleId;
-        style.textContent = `
+        document.head.appendChild(style);
+    }
+    style.textContent = `
       .npm-title-input:hover {
         border-bottom: 1px solid #b796df !important;
       }
       .npm-title-input:focus {
-        border-bottom: 2.5px solid ${theme.colors.primary} !important;
+        border-bottom: 2.5px solid var(--color-primary) !important;
       }
       .new-post-modal-wrapper {
         transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease, filter 0.5s ease;
@@ -324,17 +326,17 @@ if (typeof document !== 'undefined') {
       }
       @media (max-width: 768px) {
          .npm-title-input, .nsm-title-input {
-             width: 100% !important;
+             width: 85% !important;
              margin-left: 0 !important;
              padding: 0 0 6px 0 !important;
              font-size: 20px !important;
              box-sizing: border-box !important;
          }
          #npmContentPreview {
-             width: 110px !important;
-             max-width: 110px !important;
-             height: 100% !important;
-             min-height: 150px !important;
+             width: 100% !important;
+             max-width: 100% !important;
+             height: auto !important;
+             min-height: 180px !important;
              margin: 0 !important;
              box-sizing: border-box !important;
          }
@@ -347,6 +349,4 @@ if (typeof document !== 'undefined') {
          }
       }
     `;
-        document.head.appendChild(style);
-    }
 }

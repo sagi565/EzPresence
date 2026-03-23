@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { ContentList } from '@models/ContentList';
 import { formatSystemListTitle } from '@models/ContentList';
 import { 
@@ -89,7 +90,7 @@ const NavItem: React.FC<{
           isDropTarget || 
           snapshot.isDragging;
 
-        return (
+        const child = (
           <ScrollItem
             ref={provided.innerRef}
             {...provided.draggableProps}
@@ -141,6 +142,12 @@ const NavItem: React.FC<{
           )}
           </ScrollItem>
         );
+
+        if (snapshot.isDragging) {
+          return ReactDOM.createPortal(child, document.body);
+        }
+
+        return child;
       }}
     </Draggable>
   );

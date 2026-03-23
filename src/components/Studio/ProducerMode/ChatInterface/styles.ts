@@ -1,5 +1,5 @@
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '@theme/theme';
+// theme import removed to use dynamic props.theme
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -8,8 +8,8 @@ const fadeInUp = keyframes`
 
 export const ChatContainer = styled.div<{ $isInitial?: boolean; $isExpanded?: boolean }>`
   flex: 1;
-  background: rgba(255, 255, 255, 0.8);
-  border: 2px solid rgba(155, 93, 229, 0.1);
+  background: ${props => props.theme.colors.surface}CC;
+  border: 2px solid ${props => props.theme.colors.primary}1A;
   border-radius: 20px;
   display: flex;
   flex-direction: column;
@@ -41,7 +41,7 @@ export const ChatContainer = styled.div<{ $isInitial?: boolean; $isExpanded?: bo
 export const InitialTitle = styled.h2`
   font-size: 40px;
   font-weight: 700;
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -69,8 +69,8 @@ export const InitialChatInputArea = styled.div`
 export const ChatHeader = styled.div`
   padding: 24px;
   text-align: center;
-  border-bottom: 1px solid rgba(155, 93, 229, 0.1);
-  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid ${props => props.theme.colors.primary}1A;
+  background: ${props => props.theme.colors.surface}E6;
   display: none;
 `;
 
@@ -108,12 +108,12 @@ export const MessageAvatar = styled.div<{ $isAgent?: boolean }>`
   margin-top: -9px;
 
   ${props => props.$isAgent ? css`
-    background: ${theme.gradients.innovator};
+    background: ${props.theme.gradients.innovator};
     color: #fff;
     font-weight: 700;
     font-size: 16px;
   ` : css`
-    background: rgba(155, 93, 229, 0.1);
+    background: ${props.theme.colors.primary}1A;
   `}
 
   @media (max-width: 768px) {
@@ -132,7 +132,7 @@ export const MessageContent = styled.div`
 export const MessageText = styled.div`
   font-size: 14px;
   line-height: 1.6;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   margin-bottom: 12px;
   direction: ltr;
   word-wrap: break-word;
@@ -161,8 +161,8 @@ export const IdeasList = styled.div`
 
 export const ChatInputArea = styled.div`
   padding: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  border-top: 1px solid rgba(155, 93, 229, 0.1);
+  background: ${props => props.theme.colors.surface}F2;
+  border-top: 1px solid ${props => props.theme.colors.primary}1A;
   display: flex;
   gap: 12px;
   align-items: center;
@@ -177,12 +177,12 @@ export const ChatInputArea = styled.div`
 export const ChatInput = styled.textarea<{ $isFocused?: boolean }>`
   flex: 1;
   padding: 16px 24px;
-  border: 1px solid rgba(155, 93, 229, 0.1);
+  border: 1px solid ${props => props.theme.colors.primary}1A;
   border-radius: 25px;
   font-size: 15px;
   outline: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: rgba(249, 250, 251, 0.8);
+  background: ${props => props.theme.colors.bg}CC;
   backdrop-filter: blur(10px);
   text-align: left;
   direction: ltr;
@@ -195,8 +195,8 @@ export const ChatInput = styled.textarea<{ $isFocused?: boolean }>`
   font-weight: 500;
 
   ${props => props.$isFocused && css`
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 3px rgba(155, 93, 229, 0.1);
+    background: ${props.theme.colors.surface}F2;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 3px ${props.theme.colors.primary}1A;
     transform: translateY(-1px);
   `}
 

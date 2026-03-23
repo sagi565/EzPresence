@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { theme } from '@theme/theme';
 import { media } from '@/styles/breakpoints';
 
 export const Container = styled.div`
@@ -7,7 +6,7 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  overflow: clip;
 `;
 
 export const Content = styled.div`
@@ -34,7 +33,7 @@ export const GreetingSection = styled.div`
 export const Greeting = styled.h1`
   font-size: 48px;
   font-weight: 800;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   margin-bottom: 8px;
   letter-spacing: -1px;
   font-family: 'Figtree, ui-sans-serif, system-ui, sans-serif';
@@ -45,7 +44,7 @@ export const Greeting = styled.h1`
 `;
 
 export const NameHighlight = styled.span`
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -53,7 +52,7 @@ export const NameHighlight = styled.span`
 
 export const Subtitle = styled.p`
   font-size: 18px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
 
   ${media.phone} {
     font-size: 16px;
@@ -61,13 +60,13 @@ export const Subtitle = styled.p`
 `;
 
 export const GridContainer = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 28px;
   padding: 32px;
   max-width: 1000px;
   margin: 0 auto;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(155, 93, 229, 0.08);
+  box-shadow: ${props => props.theme.shadows.md};
+  border: 1px solid ${props => props.theme.colors.primary}1A;
 
   ${media.phone} {
     padding: 20px;

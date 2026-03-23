@@ -1,5 +1,4 @@
 import styled, { css } from 'styled-components';
-import { theme } from '@theme/theme';
 
 export const PageContainer = styled.div`
   min-height: 100vh;
@@ -50,12 +49,13 @@ export const ContentHeader = styled.div`
 export const ContentTitle = styled.h1`
   font-size: 48px;
   font-weight: 800;
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin-bottom: 16px;
   letter-spacing: -1px;
+  text-shadow: ${props => props.theme.colors.bg === '#0a0e17' ? '0 2px 10px rgba(155, 93, 229, 0.3)' : 'none'};
 
   @media (max-width: 768px) {
     font-size: 32px;
@@ -64,7 +64,7 @@ export const ContentTitle = styled.h1`
 
 export const ContentSubtitle = styled.p`
   font-size: 18px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.6;
@@ -83,8 +83,8 @@ export const StudioFeatures = styled.div`
 `;
 
 export const FeatureCard = styled.div<{ $isPremium?: boolean }>`
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(155, 93, 229, 0.1);
+  background: ${props => props.theme.colors.surface}E6; /* ~90% opacity */
+  border: 2px solid ${props => props.theme.colors.primary}1A;
   border-radius: 20px;
   padding: 32px;
   text-align: center;
@@ -93,13 +93,13 @@ export const FeatureCard = styled.div<{ $isPremium?: boolean }>`
 
   ${props => props.$isPremium && css`
     box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
-    border-color: ${theme.colors.secondary};
+    border-color: ${props => props.theme.colors.secondary};
   `}
 
   &:hover {
     transform: translateY(-5px);
-    border-color: ${theme.colors.primary};
-    background: white;
+    border-color: ${props => props.theme.colors.primary};
+    background: ${props => props.theme.colors.surface};
   }
 `;
 
@@ -112,12 +112,12 @@ export const FeatureIcon = styled.span`
 export const FeatureTitle = styled.h3`
   font-size: 24px;
   font-weight: 700;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   margin-bottom: 12px;
 `;
 
 export const FeatureDescription = styled.p`
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   line-height: 1.6;
 `;
 

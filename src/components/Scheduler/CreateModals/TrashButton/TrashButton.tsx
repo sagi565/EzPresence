@@ -1,7 +1,7 @@
 import React, { useState, ReactNode, CSSProperties } from 'react';
 
 interface TrashButtonProps {
-    onClick?: () => void;
+    onClick?: (e: React.MouseEvent) => void;
     disabled?: boolean;
     title?: string;
     children?: ReactNode;

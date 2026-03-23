@@ -142,7 +142,7 @@ export const styles: Record<string, CSSProperties> = {
   },
 
   drawerContent: {
-    height: '340px',
+    height: '385px',
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
@@ -179,6 +179,8 @@ export const styles: Record<string, CSSProperties> = {
     display: 'flex',
     gap: '12px',
     overflowX: 'auto',
+    overflowY: 'hidden',
+    flexWrap: 'nowrap',
     paddingBottom: '20px',
     alignItems: 'flex-start',
   },
@@ -240,8 +242,8 @@ export const styles: Record<string, CSSProperties> = {
 
   contentCard: {
     flexShrink: 0,
-    width: '120px',
-    height: '213px',
+    width: '140px',
+    height: '249px',
     background: '#ffffff',
     padding: '6px',
     cursor: 'pointer',

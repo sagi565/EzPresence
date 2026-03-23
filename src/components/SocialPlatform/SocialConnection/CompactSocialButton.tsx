@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SocialPlatform, PLATFORM_COLORS, PLATFORM_NAMES } from '@models/SocialAccount';
 import { ConnectedPlatform } from '@/models/Platform';
 import { useConnectPlatform } from '@/hooks/platforms/useConnectPlatform';
+import { useAppTheme } from '@/theme/ThemeContext';
 import ConfirmDialog from '@/components/Scheduler/CreateModals/ConfirmDialog/ConfirmDialog';
 import { 
   CompactButton, 
@@ -42,8 +43,10 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
   const displayUsername = connectedPlatform?.username || connectedPlatform?.displayName;
   const displayProfilePic = connectedPlatform?.profilePicture;
 
+  const { isDarkMode } = useAppTheme();
   const platformColors = PLATFORM_COLORS[platform];
   const platformName = PLATFORM_NAMES[platform];
+  const platformGradient = (isDarkMode && platformColors.darkGradient) ? platformColors.darkGradient : platformColors.gradient;
 
   const handleAction = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -119,7 +122,7 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
         $isHovered={isHovered}
         $isLoading={loading}
         $platformPrimary={platformColors.primary}
-        $platformGradient={platformColors.gradient}
+        $platformGradient={platformGradient}
         onClick={handleAction}
         disabled={loading}
         onMouseEnter={() => setIsHovered(true)}
@@ -129,7 +132,7 @@ export const CompactSocialButton: React.FC<CompactSocialButtonProps> = ({
           $isConnected={isConnected}
           $isHovered={isHovered}
           $isLoading={loading}
-          $platformGradient={platformColors.gradient}
+          $platformGradient={platformGradient}
           $hasProfilePic={!!displayProfilePic}
         >
           {displayProfilePic ? (

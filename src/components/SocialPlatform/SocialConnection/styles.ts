@@ -1,5 +1,5 @@
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '@theme/theme';
+// theme import removed as it's now accessed via props.theme
 
 // Animations
 export const gradientShift = keyframes`
@@ -32,7 +32,7 @@ export const spin = keyframes`
 // SocialConnectionCard Styled Components
 export const CardContainer = styled.div<{ $isConnected?: boolean; $isHovered?: boolean; $isLoading?: boolean; $isAnimating?: boolean; $platformGradient?: string }>`
   position: relative;
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 20px;
   padding: 20px;
   border: 2px solid;
@@ -104,7 +104,7 @@ export const CardNameSection = styled.div`
 export const CardPlatformName = styled.h3`
   font-size: 16px;
   font-weight: 700;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   margin: 0;
   text-align: right;
 `;
@@ -123,14 +123,14 @@ export const CardConnectedBadge = styled.span`
 
 export const CardAccountName = styled.p`
   font-size: 13px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   margin: 0;
   font-weight: 500;
 `;
 
 export const CardNotConnectedText = styled.p`
   font-size: 13px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   margin: 0;
 `;
 
@@ -187,7 +187,7 @@ export const CompactButton = styled.button<{ $isConnected?: boolean; $isHovered?
   border-radius: 12px;
   border: ${props => props.$isConnected ? 'none' : '2px solid'};
   border-color: ${props => props.$isConnected ? 'transparent' : props.$platformPrimary};
-  background: ${props => props.$isConnected ? props.$platformGradient : 'white'};
+  background: ${props => props.$isConnected ? props.$platformGradient : props.theme.colors.surface};
   background-size: ${props => props.$isConnected ? '400% 400%' : 'auto'};
   animation: ${props => props.$isConnected ? css`${gradientShift} 8s ease infinite` : 'none'};
   cursor: ${props => props.$isLoading ? 'not-allowed' : 'pointer'};
@@ -206,13 +206,13 @@ export const CompactIconContainer = styled.div<{ $isConnected?: boolean; $isHove
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${props => props.$hasProfilePic ? 'white' : props.$platformGradient};
+  background: ${props => props.$hasProfilePic ? props.theme.colors.surface : props.$platformGradient};
   transition: all 0.3s;
   flex-shrink: 0;
   transform: ${props => props.$isHovered && !props.$isLoading ? 'rotate(5deg) scale(1.05)' : 'rotate(0) scale(1)'};
   position: relative;
   z-index: 1;
-  border: ${props => props.$hasProfilePic ? '2px solid white' : 'none'};
+  border: ${props => props.$hasProfilePic ? `2px solid ${props.theme.colors.surface}` : 'none'};
 `;
 
 export const CompactIcon = styled.img<{ $hasProfilePic?: boolean }>`
@@ -229,7 +229,7 @@ export const CompactPlatformOverlay = styled.div`
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: white;
+  background: ${props => props.theme.colors.surface};
   padding: 2px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
   display: flex;
@@ -246,7 +246,7 @@ export const CompactPlatformOverlayIcon = styled.img`
 export const CompactText = styled.span<{ $isConnected?: boolean }>`
   font-size: 14px;
   font-weight: 700;
-  color: ${props => props.$isConnected ? 'white' : '#666'};
+  color: ${props => props.$isConnected ? 'white' : props.theme.colors.muted};
   text-align: left;
   flex: 1;
   position: relative;

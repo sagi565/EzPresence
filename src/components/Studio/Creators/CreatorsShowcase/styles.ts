@@ -1,5 +1,5 @@
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '@theme/theme';
+// theme import removed to use dynamic props.theme
 
 const pulse = keyframes`
   0% { transform: scale(1); opacity: 0.6; }
@@ -16,13 +16,13 @@ export const ShowcaseContainer = styled.div`
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: none;
   scrollbar-width: thin;
-  scrollbar-color: rgba(155, 93, 229, 0.3) transparent;
+  scrollbar-color: ${props => props.theme.colors.primary}4D transparent;
 
   &::-webkit-scrollbar {
     width: 6px;
   }
   &::-webkit-scrollbar-thumb {
-    background: rgba(155, 93, 229, 0.3);
+    background: ${props => props.theme.colors.primary}4D;
     border-radius: 10px;
   }
 `;
@@ -103,12 +103,12 @@ export const PreviewLabel = styled.div`
   position: absolute;
   top: 20px;
   left: 20px;
-  background: rgba(255, 255, 255, 0.95);
+  background: ${props => props.theme.colors.surface}F2;
   padding: 10px 16px;
   border-radius: 10px;
   font-size: 12px;
   font-weight: 600;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -124,9 +124,9 @@ export const PreviewLabel = styled.div`
 export const PreviewDot = styled.div`
   width: 8px;
   height: 8px;
-  background: ${theme.colors.teal};
+  background: ${props => props.theme.colors.teal};
   border-radius: 50%;
-  box-shadow: 0 0 8px rgba(20, 184, 166, 0.6);
+  box-shadow: 0 0 8px ${props => props.theme.colors.teal}99;
   animation: ${pulse} 2s infinite;
 `;
 
@@ -144,7 +144,7 @@ export const CreatorDetails = styled.div<{ $isMobile?: boolean }>`
 export const CreatorSubtitle = styled.div`
   font-size: 14px;
   font-weight: 700;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   text-transform: uppercase;
   letter-spacing: 0.12em;
 `;
@@ -164,7 +164,7 @@ export const TitleRow = styled.div<{ $isMobile?: boolean }>`
 export const CreatorTitle = styled.h1<{ $isMobile?: boolean }>`
   font-size: ${props => props.$isMobile ? '24px' : 'clamp(3rem, 5vw, 4rem)'};
   font-weight: 800;
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -176,7 +176,7 @@ export const CreatorTitle = styled.h1<{ $isMobile?: boolean }>`
 export const CreatorDescription = styled.p<{ $isMobile?: boolean }>`
   font-size: ${props => props.$isMobile ? '13px' : '17px'};
   line-height: 1.7;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   max-width: 600px;
   margin: 0;
 
@@ -207,9 +207,9 @@ export const Pill = styled.span<{ $type?: 'video' | 'image' | 'credits'; $isInli
   gap: 8px;
 
   ${props => props.$type === 'video' && css`
-    background: rgba(59, 130, 246, 0.1);
-    color: ${theme.colors.blue};
-    border-color: rgba(59, 130, 246, 0.3);
+    background: ${props.theme.colors.blue}1A;
+    color: ${props.theme.colors.blue};
+    border-color: ${props.theme.colors.blue}4D;
   `}
 
   ${props => props.$type === 'image' && css`
@@ -219,9 +219,9 @@ export const Pill = styled.span<{ $type?: 'video' | 'image' | 'credits'; $isInli
   `}
 
   ${props => props.$type === 'credits' && css`
-    background: rgba(20, 184, 166, 0.1);
-    color: ${theme.colors.teal};
-    border-color: rgba(20, 184, 166, 0.3);
+    background: ${props.theme.colors.teal}1A;
+    color: ${props.theme.colors.teal};
+    border-color: ${props.theme.colors.teal}4D;
   `}
 
   ${props => props.$isInline && css`
@@ -263,7 +263,7 @@ export const Button = styled.button<{ $primary?: boolean }>`
   border: 2px solid transparent;
 
   ${props => props.$primary ? css`
-    background: ${theme.gradients.innovator};
+    background: ${props.theme.gradients.innovator};
     color: white;
     box-shadow: 0 8px 24px rgba(155, 93, 229, 0.3);
     border: none;
@@ -274,11 +274,11 @@ export const Button = styled.button<{ $primary?: boolean }>`
     }
   ` : css`
     background: transparent;
-    color: ${theme.colors.primary};
-    border-color: ${theme.colors.primary};
+    color: ${props.theme.colors.primary};
+    border-color: ${props.theme.colors.primary};
 
     &:hover {
-      background: rgba(155, 93, 229, 0.08);
+      background: ${props.theme.colors.primary}14;
       transform: translateY(-2px);
     }
   `}

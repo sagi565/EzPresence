@@ -396,7 +396,6 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
                 <ContentList
                   list={list}
                   isNewList={newlyCreatedListId === list.id}
-                  onDelete={() => handleDeleteListWithAnimation(list.id)}
                   onTitleChange={(newTitle) => updateListTitle(list.id, newTitle)}
                   onIconClick={(element: HTMLElement) => handleIconClick(list.id, element)}
                   onItemMove={() => {}}

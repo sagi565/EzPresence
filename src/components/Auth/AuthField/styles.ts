@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { theme } from '@theme/theme';
 
 export const Wrapper = styled.label`
   display: flex;
@@ -9,7 +8,7 @@ export const Wrapper = styled.label`
 
 export const Label = styled.span`
   font-size: 13px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
 `;
 
 export const Input = styled.input`
@@ -18,5 +17,6 @@ export const Input = styled.input`
   border: 1px solid rgba(0, 0, 0, 0.08);
   outline: none;
   padding: 0 12px;
-  background: ${theme.colors.surface};
+  background: ${props => props.theme.colors.surface};
+  color: ${props => props.theme.colors.text};
 `;

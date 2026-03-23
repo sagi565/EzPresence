@@ -1,11 +1,11 @@
 import styled from 'styled-components';
-import { theme } from '@theme/theme';
+// Removed static theme import to use dynamic props.theme
 
 export const Container = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 16px;
   padding: 16px;
-  box-shadow: ${theme.shadows.md};
+  box-shadow: ${props => props.theme.shadows.md};
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -31,7 +31,7 @@ export const HeaderRow = styled.div`
   display: grid;
   grid-template-columns: 80px repeat(4, 1fr);
   gap: 1px;
-  background: rgba(107, 114, 128, 0.1);
+  background: ${props => props.theme.colors.muted}40;
   border-radius: 12px 12px 0 0;
   overflow: hidden;
   margin-bottom: 1px;
@@ -42,11 +42,11 @@ export const HeaderRow = styled.div`
 `;
 
 export const TimeHeader = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   padding: 12px 8px;
   font-weight: 600;
   font-size: 14px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,14 +58,14 @@ export const TimeHeader = styled.div`
 `;
 
 export const DayHeader = styled.div<{ $isToday?: boolean }>`
-  background: ${props => props.$isToday ? 'rgba(155, 93, 229, 0.1)' : 'white'};
+  background: ${props => props.$isToday ? `${props.theme.colors.primary}1A` : props.theme.colors.surface};
   padding: 12px 8px;
   text-align: center;
   font-weight: 600;
   transition: all 0.2s;
   ${props => props.$isToday && `
-    border-bottom: 3px solid ${theme.colors.primary};
-    color: ${theme.colors.primary};
+    border-bottom: 3px solid ${props.theme.colors.primary};
+    color: ${props.theme.colors.primary};
   `}
   
   @media (max-width: 768px) {
@@ -75,7 +75,7 @@ export const DayHeader = styled.div<{ $isToday?: boolean }>`
 
 export const DayName = styled.div`
   font-size: 12px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   margin-bottom: 4px;
   
   @media (max-width: 768px) {
@@ -86,7 +86,7 @@ export const DayName = styled.div`
 
 export const DayDate = styled.div`
   font-size: 14px;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   
   @media (max-width: 768px) {
     font-size: 11px;
@@ -103,7 +103,7 @@ export const TimeRow = styled.div`
   display: grid;
   grid-template-columns: 80px repeat(4, 1fr);
   gap: 1px;
-  background: rgba(107, 114, 128, 0.1);
+  background: ${props => props.theme.colors.muted}40;
   min-height: 60px;
   
   @media (max-width: 768px) {
@@ -112,15 +112,15 @@ export const TimeRow = styled.div`
 `;
 
 export const TimeLabel = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   padding: 8px;
   font-size: 12px;
   font-weight: 500;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  border-top: 1px solid rgba(107, 114, 128, 0.1);
+  border-top: 1px solid ${props => props.theme.colors.muted}1a;
   
   @media (max-width: 768px) {
     padding: 4px;
@@ -129,11 +129,17 @@ export const TimeLabel = styled.div`
 `;
 
 export const DayCell = styled.div<{ $isToday?: boolean; $isPast?: boolean; $isHovered?: boolean; $isDragOver?: boolean }>`
-  background: ${props => 
-    props.$isPast ? 'rgba(249, 250, 251, 0.5)' : 
-    props.$isHovered ? (props.$isToday ? 'rgba(155, 93, 229, 0.08)' : 'rgba(155, 93, 229, 0.02)') :
-    props.$isToday ? 'rgba(155, 93, 229, 0.05)' : 
-    'white'};
+  background: ${props => {
+    if (props.$isHovered) return props.$isToday ? `${props.theme.colors.primary}14` : `${props.theme.colors.primary}05`;
+    if (props.$isToday) return `${props.theme.colors.primary}0D`;
+    return props.theme.colors.surface;
+  }};
+
+  ${props => props.$isPast && `
+    box-shadow: inset 0 0 0 1000px ${props.theme.mode === 'dark' 
+      ? `${props.theme.colors.muted}04` 
+      : `${props.theme.colors.muted}0D`};
+  `}
     
   padding: 4px;
   position: relative;
@@ -143,14 +149,14 @@ export const DayCell = styled.div<{ $isToday?: boolean; $isPast?: boolean; $isHo
   cursor: ${props => props.$isPast ? 'default' : 'pointer'};
   overflow: visible;
 
-  border-top: ${props => props.$isHovered && !props.$isPast ? '1px dashed rgba(155, 93, 229, 0.4)' : '1px solid rgba(107, 114, 128, 0.1)'};
-  border-right: ${props => props.$isHovered && !props.$isPast && !props.$isToday ? '1px dashed rgba(155, 93, 229, 0.4)' : '1px solid rgba(107, 114, 128, 0.1)'};
-  border-bottom: ${props => props.$isHovered && !props.$isPast ? '1px dashed rgba(155, 93, 229, 0.4)' : '1px solid transparent'};
-  border-left: ${props => props.$isHovered && !props.$isPast && !props.$isToday ? '1px dashed rgba(155, 93, 229, 0.4)' : '1px solid transparent'};
+  border-top: ${props => props.$isHovered && !props.$isPast ? `1px dashed ${props.theme.colors.primary}66` : `1px solid ${props.theme.colors.muted}40`};
+  border-right: ${props => props.$isHovered && !props.$isPast && !props.$isToday ? `1px dashed ${props.theme.colors.primary}66` : `1px solid ${props.theme.colors.muted}40`};
+  border-bottom: ${props => props.$isHovered && !props.$isPast ? `1px dashed ${props.theme.colors.primary}66` : '1px solid transparent'};
+  border-left: ${props => props.$isHovered && !props.$isPast && !props.$isToday ? `1px dashed ${props.theme.colors.primary}66` : '1px solid transparent'};
 
   ${props => props.$isToday && `
-    border-left: 2px solid ${theme.colors.primary};
-    border-right: 2px solid ${theme.colors.primary};
+    border-left: 2px solid ${props.theme.colors.primary};
+    border-right: 2px solid ${props.theme.colors.primary};
   `}
 `;
 
@@ -164,9 +170,9 @@ export const OverflowIndicator = styled.div`
   position: absolute;
   bottom: 4px;
   right: 6px;
-  background: rgba(155, 93, 229, 0.1);
-  color: ${theme.colors.primary};
-  border: 1px solid rgba(155, 93, 229, 0.3);
+  background: ${props => props.theme.colors.primary}1A;
+  color: ${props => props.theme.colors.primary};
+  border: 1px solid ${props => props.theme.colors.primary}4D;
   border-radius: 10px;
   padding: 1px 6px;
   font-size: 9px;
@@ -210,13 +216,13 @@ export const TimeIndicatorLine = styled.div`
 `;
 
 export const PostCard = styled.div<{ $isHalf?: boolean }>`
-  background: ${theme.colors.surface};
+  background: ${props => props.theme.colors.surface};
   border-radius: 6px;
   padding: 4px 6px;
   font-size: 10px;
-  box-shadow: ${theme.shadows.sm};
+  box-shadow: ${props => props.theme.shadows.sm};
   transition: all 0.2s;
-  border-left: 3px solid ${theme.colors.primary};
+  border-left: 3px solid ${props => props.theme.colors.primary};
   height: 100%;
   flex: 1;
   display: flex;
@@ -279,8 +285,8 @@ export const BlackTooltip = styled.div`
   bottom: 17px;
   left: 50%;
   transform: translateX(-50%);
-  background: ${theme.colors.text};
-  color: white;
+  background: ${props => props.theme.colors.text};
+  color: ${props => props.theme.colors.bg};
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 10px;
@@ -292,7 +298,7 @@ export const BlackTooltip = styled.div`
 
 export const PostTime = styled.span`
   font-weight: 600;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   white-space: nowrap;
   font-size: 9px;
   
@@ -311,7 +317,7 @@ export const MediaIcon = styled.span`
 
 export const PostTitleWrapper = styled.div`
   font-weight: 700;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   font-size: 10px;
   line-height: 1.2;
   overflow: hidden;
@@ -348,9 +354,9 @@ export const BadgeWrapper = styled.div<{ $platform: string }>`
   letter-spacing: 0.2px;
   
   background: ${props => props.$platform === 'yt' ? '#ff0033' 
-    : props.$platform === 'ig' ? theme.gradients.vibe 
-    : props.$platform === 'tt' ? theme.colors.text 
-    : theme.colors.blue};
+    : props.$platform === 'ig' ? props.theme.gradients.vibe 
+    : props.$platform === 'tt' ? props.theme.colors.text 
+    : props.theme.colors.blue};
     
   @media (max-width: 768px) {
     width: 10px;

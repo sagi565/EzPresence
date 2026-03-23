@@ -1,4 +1,4 @@
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 import { CSSProperties } from 'react';
 
 export const styles: Record<string, CSSProperties> = {
@@ -13,7 +13,7 @@ export const styles: Record<string, CSSProperties> = {
         justifyContent: 'center',
     },
     dialog: {
-        background: '#fff',
+        background: 'var(--color-surface)',
         borderRadius: '24px',
         padding: '32px',
         width: '420px',
@@ -28,7 +28,7 @@ export const styles: Record<string, CSSProperties> = {
     title: {
         fontSize: '20px',
         fontWeight: 700,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         margin: 0,
     },
     optionsList: {
@@ -41,19 +41,19 @@ export const styles: Record<string, CSSProperties> = {
         alignItems: 'center',
         padding: '12px 16px',
         borderRadius: '12px',
-        background: '#F9FAFB',
+        background: 'var(--color-bg)',
         cursor: 'pointer',
         fontSize: '15px',
         fontWeight: 500,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         userSelect: 'none',
         transition: 'all 0.2s',
-        border: '1px solid #E5E7EB',
+        border: '1px solid var(--color-bg)',
     },
     radioInput: {
         width: '18px',
         height: '18px',
-        accentColor: theme.colors.primary,
+        accentColor: 'var(--color-primary)',
         cursor: 'pointer',
         marginRight: '12px',
     },
@@ -76,14 +76,14 @@ export const styles: Record<string, CSSProperties> = {
         border: 'none',
     },
     confirmBtn: {
-        background: theme.gradients.innovator,
+        background: 'linear-gradient(135deg, #9b5de5 0%, #fbbf24 100%)',
         color: '#fff',
         boxShadow: '0 4px 12px rgba(155, 93, 229, 0.25)',
     },
     cancelBtn: {
-        background: '#fff',
-        color: theme.colors.text,
-        border: '1px solid #E5E7EB',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
+        border: '1px solid var(--color-bg)',
     },
 };
 

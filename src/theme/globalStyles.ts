@@ -1,6 +1,6 @@
-import { theme } from './theme';
+import { createGlobalStyle } from 'styled-components';
 
-export const globalStyles = `
+export const GlobalStyles = createGlobalStyle`
   * {
     margin: 0;
     padding: 0;
@@ -10,13 +10,15 @@ export const globalStyles = `
   html, body {
     height: 100%;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   body {
     font-family: Figtree, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    background: ${theme.gradients.background};
+    background: ${props => props.theme.gradients.background};
+    color: ${props => props.theme.colors.text};
     min-height: 100vh;
+    transition: background 0.3s ease, color 0.3s ease;
   }
 
   #root {
@@ -28,11 +30,19 @@ export const globalStyles = `
   }
 
   :root {
-    --color-primary: #9b5de5;
-    --color-secondary: #fbbf24;
-    --color-teal: #14b8a6;
-    --color-blue: #3b82f6;
-    --color-pink: #ec4899;
+    --color-primary: ${props => props.theme.colors.primary};
+    --color-secondary: ${props => props.theme.colors.secondary};
+    --color-teal: ${props => props.theme.colors.teal};
+    --color-blue: ${props => props.theme.colors.blue};
+    --color-pink: ${props => props.theme.colors.pink};
+    --color-bg: ${props => props.theme.colors.bg};
+    --color-surface: ${props => props.theme.colors.surface};
+    --color-text: ${props => props.theme.colors.text};
+    --color-muted: ${props => props.theme.colors.muted};
+    --color-text-rgb: ${props => props.theme.colors.text === '#ffffff' ? '255, 255, 255' : '17, 24, 39'};
+    --color-surface-rgb: ${props => props.theme.colors.surface === '#121926' ? '18, 25, 38' : '255, 255, 255'};
+    --color-primary-rgb: 155, 93, 229;
+    --color-muted-rgb: ${props => props.theme.colors.muted === '#d1d5db' ? '209, 213, 219' : '107, 114, 128'};
   }
 
   @keyframes spin {

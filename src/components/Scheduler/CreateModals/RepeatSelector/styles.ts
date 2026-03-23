@@ -1,4 +1,4 @@
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 import { CSSProperties } from 'react';
 
 export const styles: Record<string, CSSProperties> = {
@@ -6,7 +6,7 @@ export const styles: Record<string, CSSProperties> = {
         position: 'absolute' as const,
         top: 'calc(100% + 6px)',
         left: 0,
-        background: theme.colors.surface,
+        background: 'var(--color-surface)',
         borderRadius: '14px',
         boxShadow: '0 12px 40px rgba(0, 0, 0, .14)',
         border: '1px solid rgba(0, 0, 0, .06)',
@@ -26,15 +26,15 @@ export const styles: Record<string, CSSProperties> = {
         borderRadius: '8px',
         fontSize: '13px',
         fontWeight: 500,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         cursor: 'pointer',
         textAlign: 'left' as const,
         transition: 'all .12s',
     },
 
     optionActive: {
-        background: 'rgba(155, 93, 229, .06)',
-        color: theme.colors.primary,
+        background: 'var(--color-bg)',
+        color: 'var(--color-primary)',
         fontWeight: 600,
     },
 };
@@ -47,7 +47,11 @@ if (typeof document !== 'undefined') {
         style.id = styleId;
         style.textContent = `
       .nsm-repeat-option:hover {
-        background: #f0f1f3 !important;
+        background: 'var(--color-bg) !important;
+        color: var(--color-text) !important;
+      }
+      .nsm-repeat-option:hover svg {
+        color: var(--color-primary) !important;
       }
     `;
         document.head.appendChild(style);

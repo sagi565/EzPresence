@@ -1,5 +1,5 @@
 import { CSSProperties } from 'react';
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 
 export const styles: Record<string, CSSProperties> = {
     radioGroup: {
@@ -9,19 +9,19 @@ export const styles: Record<string, CSSProperties> = {
     },
     radioPill: {
         padding: '6px 14px',
-        border: '1.5px solid rgba(0, 0, 0, .1)',
+        border: '1.5px solid var(--color-bg)',
         borderRadius: '20px',
-        background: '#fff',
+        background: 'var(--color-surface)',
         fontSize: '12px',
         fontWeight: 500,
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         cursor: 'pointer',
         transition: 'all .18s',
     },
     radioPillActive: {
-        borderColor: theme.colors.primary,
-        background: 'rgba(155, 93, 229, .1)',
-        color: theme.colors.primary,
+        borderColor: 'var(--color-primary)',
+        background: 'var(--color-bg)',
+        color: 'var(--color-primary)',
         fontWeight: 600,
     },
 };

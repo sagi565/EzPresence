@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Brand, getLogoDataUrl } from '@models/Brand';
-import { Container, Selector, TenantName, BrandIcon, Dropdown, Option, OptIcon, AddBrandBtn, AddIcon, LogoImage } from './styles';
+import { Container, Selector, TenantName, BrandIcon, Dropdown, Option, OptIcon, AddBrandBtn, AddIcon, LogoImage, Scrim, MobileHandle, MobileHeader, MobileTitle, CloseButton } from './styles';
 
 interface BrandSelectorProps {
   brands: Brand[];
@@ -82,45 +83,101 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
       </Selector>
 
       {isOpen && (
-        <Dropdown>
-          {brands.map((brand) => {
-            const isActive = brand.id === currentBrand.id;
-            const isOptionHovered = hoveredOption === brand.id;
-            const brandLogo = getLogoDataUrl(brand.logo);
+        <>
+          <Scrim onClick={() => setIsOpen(false)} />
+          {window.innerWidth <= 600 
+            ? createPortal(
+                <Dropdown onClick={(e) => e.stopPropagation()}>
+                  <MobileHandle />
+                  <MobileHeader>
+                    <MobileTitle>Switch Brand</MobileTitle>
+                    <CloseButton onClick={() => setIsOpen(false)}>✕</CloseButton>
+                  </MobileHeader>
 
-            return (
-              <Option
-                key={brand.id}
-                $isActive={isActive}
-                $isHovered={isOptionHovered}
-                onClick={() => handleBrandSelect(brand.id)}
-                onMouseEnter={() => setHoveredOption(brand.id)}
-                onMouseLeave={() => setHoveredOption(null)}
-              >
-                <OptIcon>
-                  {brandLogo ? (
-                    <LogoImage
-                      src={brandLogo}
-                      alt={`${brand.name} logo`}
-                    />
-                  ) : (
-                    brand.icon
-                  )}
-                </OptIcon>
-                <span>{brand.name}</span>
-              </Option>
-            );
-          })}
-          <AddBrandBtn
-            $isHovered={hoveredAddBtn}
-            onClick={handleAddBrand}
-            onMouseEnter={() => setHoveredAddBtn(true)}
-            onMouseLeave={() => setHoveredAddBtn(false)}
-          >
-            <AddIcon>➕</AddIcon>
-            <span>Add a new Brand</span>
-          </AddBrandBtn>
-        </Dropdown>
+                  {brands.map((brand) => {
+                    const isActive = brand.id === currentBrand.id;
+                    const isOptionHovered = hoveredOption === brand.id;
+                    const brandLogo = getLogoDataUrl(brand.logo);
+
+                    return (
+                      <Option
+                        key={brand.id}
+                        $isActive={isActive}
+                        $isHovered={isOptionHovered}
+                        onClick={() => handleBrandSelect(brand.id)}
+                        onMouseEnter={() => setHoveredOption(brand.id)}
+                        onMouseLeave={() => setHoveredOption(null)}
+                      >
+                        <OptIcon>
+                          {brandLogo ? (
+                            <LogoImage
+                              src={brandLogo}
+                              alt={`${brand.name} logo`}
+                            />
+                          ) : (
+                            brand.icon
+                          )}
+                        </OptIcon>
+                        <span>{brand.name}</span>
+                      </Option>
+                    );
+                  })}
+                  <AddBrandBtn
+                    $isHovered={hoveredAddBtn}
+                    onClick={handleAddBrand}
+                    onMouseEnter={() => setHoveredAddBtn(true)}
+                    onMouseLeave={() => setHoveredAddBtn(false)}
+                  >
+                    <AddIcon>➕</AddIcon>
+                    <span>Add a new Brand</span>
+                  </AddBrandBtn>
+                </Dropdown>,
+                document.body
+              )
+            : (
+                <Dropdown onClick={(e) => e.stopPropagation()}>
+                  {/* PC view: standard dropdown behavior */}
+                  {brands.map((brand) => {
+                    const isActive = brand.id === currentBrand.id;
+                    const isOptionHovered = hoveredOption === brand.id;
+                    const brandLogo = getLogoDataUrl(brand.logo);
+
+                    return (
+                      <Option
+                        key={brand.id}
+                        $isActive={isActive}
+                        $isHovered={isOptionHovered}
+                        onClick={() => handleBrandSelect(brand.id)}
+                        onMouseEnter={() => setHoveredOption(brand.id)}
+                        onMouseLeave={() => setHoveredOption(null)}
+                      >
+                        <OptIcon>
+                          {brandLogo ? (
+                            <LogoImage
+                              src={brandLogo}
+                              alt={`${brand.name} logo`}
+                            />
+                          ) : (
+                            brand.icon
+                          )}
+                        </OptIcon>
+                        <span>{brand.name}</span>
+                      </Option>
+                    );
+                  })}
+                  <AddBrandBtn
+                    $isHovered={hoveredAddBtn}
+                    onClick={handleAddBrand}
+                    onMouseEnter={() => setHoveredAddBtn(true)}
+                    onMouseLeave={() => setHoveredAddBtn(false)}
+                  >
+                    <AddIcon>➕</AddIcon>
+                    <span>Add a new Brand</span>
+                  </AddBrandBtn>
+                </Dropdown>
+              )
+          }
+        </>
       )}
     </Container>
   );

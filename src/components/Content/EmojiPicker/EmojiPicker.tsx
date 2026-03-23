@@ -6,10 +6,13 @@ import {
 } from './styles';
 
 const EMOJIS = [
-  '🎨', '🚀', '✨', '🔥', '💡',
-  '🎯', '🌟', '💫', '🎪', '🎭',
-  '🎸', '🎮', '🍕', '🌈', '⚡',
-  '🦄', '🎉', '💎', '🏆', '🌺'
+  '✨', '🔥', '🚀', '🎨', '💡', '🎯',
+  '😀', '😂', '😍', '😊', '😎', '🙌',
+  '🎬', '📸', '🎵', '🎮', '🏆', '🎪',
+  '💻', '📱', '🔋', '💎', '🎉', '🌟',
+  '🌈', '⚡', '🍕', '☕', '🎸', '🎹',
+  '🌺', '🌍', '🌙', '🌊', '🐾', '🦋',
+  '🍎', '🍀', '🦄', '🐳', '🍭', '🧸'
 ];
 
 interface EmojiPickerProps {
@@ -33,23 +36,28 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({
     if (isOpen && anchorElement && pickerRef.current) {
       const iconRect = anchorElement.getBoundingClientRect();
       const pickerRect = pickerRef.current.getBoundingClientRect();
-      const pickerWidth = pickerRect.width || 280;
       const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      const pickerWidth = pickerRect.width || 320;
+      const pickerHeight = pickerRect.height || 360;
 
       let left = iconRect.left + (iconRect.width / 2) - (pickerWidth / 2);
+      let top = iconRect.bottom + 10;
 
-      if (left < 10) {
-        left = 10;
+      // Horizontal boundary check
+      if (left < 20) {
+        left = 20;
+      } else if (left + pickerWidth > windowWidth - 20) {
+        left = windowWidth - pickerWidth - 20;
       }
 
-      if (left + pickerWidth > windowWidth - 10) {
-        left = windowWidth - pickerWidth - 10;
+      // Vertical boundary check (open upwards if not enough space below)
+      if (top + pickerHeight > windowHeight - 20) {
+        top = iconRect.top - pickerHeight - 10;
       }
 
-      setPosition({
-        top: iconRect.bottom + 10,
-        left,
-      });
+      setPosition({ top, left });
     }
   }, [isOpen, anchorElement]);
 
@@ -84,9 +92,9 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({
       $left={position.left}
     >
       <EmojiGrid>
-        {EMOJIS.map((emoji) => (
+        {EMOJIS.map((emoji, index) => (
           <EmojiOption
-            key={emoji}
+            key={`${emoji}-${index}`}
             $isHovered={hoveredEmoji === emoji}
             onClick={() => handleSelect(emoji)}
             onMouseEnter={() => setHoveredEmoji(emoji)}

@@ -1,5 +1,5 @@
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '@theme/theme';
+// theme import removed to use dynamic props.theme
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(-50%) translateX(-12px); }
@@ -48,8 +48,8 @@ export const Dot = styled.div<{ $isActive: boolean; $isHovered: boolean; $isMobi
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: rgba(155, 93, 229, 0.15);
-  border: 2px solid rgba(155, 93, 229, 0.3);
+  background: ${props => props.theme.mode === 'dark' ? `${props.theme.colors.primary}4D` : `${props.theme.colors.primary}26`};
+  border: 2px solid ${props => props.theme.colors.primary}4D;
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   align-items: center;
@@ -59,8 +59,8 @@ export const Dot = styled.div<{ $isActive: boolean; $isHovered: boolean; $isMobi
   ${props => props.$isHovered && !props.$isActive && css`
     width: 36px;
     height: 36px;
-    background: rgba(155, 93, 229, 0.1);
-    border-color: rgba(155, 93, 229, 0.5);
+    background: ${props => props.theme.colors.primary}1A;
+    border-color: ${props => props.theme.colors.primary}80;
 
     ${props.$isMobile && css`
       width: 28px;
@@ -71,9 +71,9 @@ export const Dot = styled.div<{ $isActive: boolean; $isHovered: boolean; $isMobi
   ${props => props.$isActive && css`
     width: 36px;
     height: 36px;
-    background: ${theme.colors.secondary};
-    border-color: ${theme.colors.secondary};
-    box-shadow: 0 0 24px rgba(251, 191, 36, 0.4);
+    background: ${props.theme.colors.secondary};
+    border-color: ${props.theme.colors.secondary};
+    box-shadow: 0 0 24px ${props.theme.colors.secondary}66;
 
     ${props.$isMobile && css`
       width: 28px;
@@ -97,7 +97,7 @@ export const NavLine = styled.div`
   left: 50%;
   width: 2px;
   height: 32px;
-  background: rgba(155, 93, 229, 0.1);
+  background: ${props => props.theme.mode === 'dark' ? `${props.theme.colors.primary}4D` : `${props.theme.colors.primary}1A`};
   transform: translateX(-50%);
 
   @media (max-width: 768px) {
@@ -113,11 +113,11 @@ export const Label = styled.div<{ $isMobile?: boolean }>`
   transform: translateY(-50%) translateX(-8px);
   font-size: 13px;
   font-weight: 600;
-  color: ${theme.colors.text};
-  background: rgba(255, 255, 255, 0.98);
+  color: ${props => props.theme.colors.text};
+  background: ${props => props.theme.colors.surface}FA;
   padding: 8px 14px;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: ${props => props.theme.shadows.sm};
   white-space: nowrap;
   animation: ${fadeIn} 0.3s ease;
   pointer-events: none;

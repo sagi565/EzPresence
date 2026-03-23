@@ -1,16 +1,16 @@
 import styled from 'styled-components';
-import { theme } from '@theme/theme';
+// theme import removed to use dynamic props.theme
 
 export const DateNavContainer = styled.div`
-  background: ${theme.colors.surface};
-  border: 1px solid rgba(251, 191, 36, 0.2);
+  background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.primary}33;
   border-radius: 16px;
   padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  box-shadow: 0 2px 12px rgba(251, 191, 36, 0.1);
+  box-shadow: 0 4px 16px ${props => props.theme.colors.primary}1A;
   
   @media (max-width: 768px) {
     padding: 8px 10px;
@@ -38,14 +38,14 @@ export const DateControls = styled.div`
 `;
 
 export const NavArrowBtn = styled.button<{ $isHovered?: boolean }>`
-  background: ${props => props.$isHovered ? 'rgba(155, 93, 229, 0.05)' : 'transparent'};
+  background: ${props => props.$isHovered ? `${props.theme.colors.primary}1A` : 'transparent'};
   border: none;
   font-size: 16px;
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 8px;
   transition: all 0.2s;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -60,7 +60,7 @@ export const NavArrowBtn = styled.button<{ $isHovered?: boolean }>`
 export const MonthYearDisplayContainer = styled.div<{ $isHovered?: boolean }>`
   font-size: 18px;
   font-weight: 600;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -71,7 +71,7 @@ export const MonthYearDisplayContainer = styled.div<{ $isHovered?: boolean }>`
   position: relative;
   min-width: 180px;
   justify-content: center;
-  background: ${props => props.$isHovered ? 'rgba(155, 93, 229, 0.05)' : 'transparent'};
+  background: ${props => props.$isHovered ? `${props.theme.colors.primary}1A` : 'transparent'};
 
   @media (max-width: 768px) {
     font-size: 13px;
@@ -83,7 +83,7 @@ export const MonthYearDisplayContainer = styled.div<{ $isHovered?: boolean }>`
 
 export const ViewToggle = styled.div`
   display: flex;
-  background: rgba(155, 93, 229, 0.1);
+  background: ${props => props.theme.colors.primary}1A;
   border-radius: 10px;
   padding: 4px;
 
@@ -97,8 +97,8 @@ export const ViewBtn = styled.button<{ $isActive?: boolean }>`
   width: 40px;
   height: 36px;
   border: none;
-  background: ${props => props.$isActive ? theme.colors.bg : 'transparent'};
-  color: ${props => props.$isActive ? 'white' : theme.colors.muted};
+  background: ${props => props.$isActive ? props.theme.colors.primary : 'transparent'};
+  color: ${props => props.$isActive ? 'white' : props.theme.colors.muted};
   border-radius: 8px;
   cursor: pointer;
   font-size: 18px;
@@ -108,7 +108,7 @@ export const ViewBtn = styled.button<{ $isActive?: boolean }>`
   justify-content: center;
   position: relative;
   outline: none;
-  ${props => props.$isActive && 'box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);'}
+  ${props => props.$isActive && `box-shadow: 0 4px 12px ${props.theme.colors.primary}40;`}
 
   @media (max-width: 768px) {
     width: 32px;
@@ -124,8 +124,8 @@ export const TooltipDesc = styled.div<{ $isTop?: boolean }>`
   top: ${props => props.$isTop ? '-32px' : 'auto'};
   left: 50%;
   transform: translateX(-50%);
-  background: ${theme.colors.text};
-  color: white;
+  background: ${props => props.theme.colors.text};
+  color: ${props => props.theme.colors.bg};
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 12px;
@@ -141,7 +141,7 @@ export const CreateBtnContainer = styled.div`
 `;
 
 export const CreateBtn = styled.button<{ $isHovered?: boolean }>`
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   color: white;
   border: 0px solid transparent;
   padding: 10px 16px;
@@ -157,7 +157,7 @@ export const CreateBtn = styled.button<{ $isHovered?: boolean }>`
   outline: none;
   ${props => props.$isHovered && `
     transform: scale(1.07);
-    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+    box-shadow: 0 6px 20px ${props.theme.colors.primary}66;
   `}
 
   @media (max-width: 768px) {
@@ -182,12 +182,12 @@ export const DropdownMenu = styled.div<{ $isFixed?: boolean; $top?: number; $lef
     margin-top: 8px;
     z-index: 100;
   `}
-  background: ${theme.colors.surface};
+  background: ${props => props.theme.colors.surface};
   border-radius: 12px;
-  box-shadow: ${theme.shadows.lg};
+  box-shadow: ${props => props.theme.shadows.lg};
   padding: 8px;
   min-width: 200px;
-  border: 1px solid ${theme.colors.secondary};
+  border: 1px solid ${props => props.theme.colors.primary}1A;
 `;
 
 export const DropdownItemRow = styled.div<{ $isHovered?: boolean; $isAi?: boolean }>`
@@ -199,7 +199,7 @@ export const DropdownItemRow = styled.div<{ $isHovered?: boolean; $isAi?: boolea
   gap: 12px;
   transition: all 0.2s;
   ${props => props.$isHovered && !props.$isAi && `
-    background: ${theme.gradients.balance};
+    background: ${props.theme.gradients.balance};
     color: white;
   `}
   ${props => props.$isAi && `
@@ -227,12 +227,12 @@ export const MiniCalWrapper = styled.div`
   left: 50%;
   transform: translateX(-50%);
   margin-top: 8px;
-  background: ${theme.colors.surface};
+  background: ${props => props.theme.colors.surface};
   border-radius: 12px;
-  box-shadow: ${theme.shadows.lg};
+  box-shadow: ${props => props.theme.shadows.lg};
   padding: 16px;
   z-index: 100;
-  border: 1px solid ${theme.colors.secondary};
+  border: 1px solid ${props => props.theme.colors.primary}1A;
   min-width: 280px;
 `;
 
@@ -250,7 +250,7 @@ export const MiniCalNavBtn = styled.button`
   font-weight: bold;
   cursor: pointer;
   padding: 4px 8px;
-  color: ${theme.colors.primary};
+  color: ${props => props.theme.colors.primary};
   transition: all 0.2s;
   border-radius: 6px;
   outline: none;
@@ -259,7 +259,7 @@ export const MiniCalNavBtn = styled.button`
 export const MiniCalMonthYear = styled.div`
   font-size: 14px;
   font-weight: 600;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
 `;
 
 export const MiniCalGrid = styled.div`
@@ -273,7 +273,7 @@ export const MiniCalDayHeader = styled.div`
   font-weight: bold;
   font-size: 10px;
   text-align: center;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
 `;
 
 export const MiniCalDay = styled.div<{ $isToday?: boolean; $isHovered?: boolean }>`
@@ -288,14 +288,14 @@ export const MiniCalDay = styled.div<{ $isToday?: boolean; $isHovered?: boolean 
   transition: all 0.2s;
   
   ${props => props.$isToday && `
-    background: rgba(155, 93, 229, 0.15);
-    color: ${theme.colors.primary};
+    background: ${props.theme.colors.primary}26;
+    color: ${props.theme.colors.primary};
     font-weight: bold;
-    border: 2px solid ${theme.colors.primary};
+    border: 2px solid ${props.theme.colors.primary};
   `}
   
   ${props => props.$isHovered && !props.$isToday && `
-    background: ${theme.colors.secondary};
+    background: ${props.theme.colors.secondary};
     color: white;
   `}
 `;

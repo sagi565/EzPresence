@@ -10,7 +10,8 @@ import TimelineChart from '@components/Dashboard/TimelineChart';
 import PostsTable from '@components/Dashboard/PostsTable';
 import ExportButton from '@components/Dashboard/ExportButton';
 import ExportModal from '@components/Dashboard/ExportModal';
-import { theme } from '@theme/theme';
+import { useTheme } from 'styled-components';
+import { Theme } from '@theme/theme';
 import {
   PageContainer,
   DashboardContent,
@@ -59,14 +60,10 @@ const TIME_RANGES: { id: TimeRange; label: string }[] = [
   { id: 'max', label: 'Max' },
 ];
 
-const METRIC_CONFIGS = [
-  { key: 'views' as const, label: 'Total Views', icon: '👁', color: theme.colors.primary, gradient: theme.gradients.momentum },
-  { key: 'likes' as const, label: 'Likes', icon: '❤️', color: theme.colors.pink, gradient: theme.gradients.vibe },
-  { key: 'comments' as const, label: 'Comments', icon: '💬', color: theme.colors.secondary, gradient: theme.gradients.innovator },
-  { key: 'shares' as const, label: 'Shares', icon: '↗️', color: theme.colors.teal, gradient: theme.gradients.balance },
-];
+// Moved inside component for dynamic theming
 
 const DashboardPage: React.FC = () => {
+  const theme = useTheme() as Theme;
   const { brands, currentBrand, switchBrand } = useBrands();
   const { platforms: connectedPlatforms, loading: platformsLoading } = useConnectedPlatforms();
 
@@ -143,9 +140,14 @@ const DashboardPage: React.FC = () => {
         {/* ── KPI Cards ── */}
         <KPISection>
           {initializing || !stats ? (
-            METRIC_CONFIGS.map((_m, i) => <MetricCardSkeleton key={i} />)
+            [1, 2, 3, 4].map((_, i) => <MetricCardSkeleton key={i} />)
           ) : (
-            METRIC_CONFIGS.map(m => {
+            [
+              { key: 'views' as const, label: 'Total Views', icon: '👁', color: theme.colors.primary, gradient: theme.gradients.momentum },
+              { key: 'likes' as const, label: 'Likes', icon: '❤️', color: theme.colors.pink, gradient: theme.gradients.vibe },
+              { key: 'comments' as const, label: 'Comments', icon: '💬', color: theme.colors.secondary, gradient: theme.gradients.innovator },
+              { key: 'shares' as const, label: 'Shares', icon: '↗️', color: theme.colors.teal, gradient: theme.gradients.balance },
+            ].map(m => {
               const total = stats.totals[m.key];
               const delta = stats.deltas[m.key];
               const sparkline = stats.timeSeries.map(d => d[m.key]);

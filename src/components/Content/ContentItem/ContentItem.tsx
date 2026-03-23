@@ -197,64 +197,66 @@ const ContentItem: React.FC<ContentItemProps> = ({
   };
 
   return (
-    <ItemContainer
-      ref={provided?.innerRef}
-      {...provided?.draggableProps}
-      {...provided?.dragHandleProps}
-      $isDragging={isDragging}
-      $isHovered={isHovered}
-      $isUploading={isUploading}
-      $isMobile={isMobile}
-      onClick={onClick}
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        if (onDoubleClick) onDoubleClick();
-      }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      style={provided?.draggableProps.style}
-    >
-      <MediaContainer>
-        {isUploading ? (
-          <>
-            {thumbnailSrc && <MediaCover src={thumbnailSrc} alt="Uploading..." />}
-            <LoadingOverlay>
-              <Spinner />
-              <span style={{ fontSize: '12px', marginTop: '8px', fontWeight: 600 }}>Uploading...</span>
-            </LoadingOverlay>
-          </>
-        ) : isVideo ? (
-          <>
-            {fetchedUrl && (
-              <VideoCover
-                ref={videoRef}
-                src={fetchedUrl}
-                loop
-                muted
-                playsInline
-                $isVisible={showPreview && !!fetchedUrl}
-              />
-            )}
-            {thumbnailSrc && (
-              <MediaCover
-                src={thumbnailSrc}
-                alt={item.title}
-                $isVisible={!(showPreview && fetchedUrl)}
-              />
-            )}
-          </>
-        ) : (
-          (fetchedUrl || thumbnailSrc) && (
-            <MediaCover src={(fetchedUrl || thumbnailSrc) as string} alt={item.title} />
-          )
-        )}
-      </MediaContainer>
+      <ItemContainer
+        ref={provided?.innerRef}
+        {...provided?.draggableProps}
+        {...provided?.dragHandleProps}
+        $isDragging={isDragging}
+        $isHovered={isHovered}
+        $isUploading={isUploading}
+        $isMobile={isMobile}
+        $showMenu={showMenu}
+        onClick={onClick}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          if (onDoubleClick) onDoubleClick();
+        }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        style={provided?.draggableProps.style}
+      >
+        <MediaContainer $isMobile={isMobile}>
+          {isUploading ? (
+            <>
+              {thumbnailSrc && <MediaCover src={thumbnailSrc} alt="Uploading..." />}
+              <LoadingOverlay>
+                <Spinner />
+                <span style={{ fontSize: '12px', marginTop: '8px', fontWeight: 600 }}>Uploading...</span>
+              </LoadingOverlay>
+            </>
+          ) : isVideo ? (
+            <>
+              {fetchedUrl && (
+                <VideoCover
+                  ref={videoRef}
+                  src={fetchedUrl}
+                  loop
+                  muted
+                  playsInline
+                  $isVisible={showPreview && !!fetchedUrl}
+                />
+              )}
+              {thumbnailSrc && (
+                <MediaCover
+                  src={thumbnailSrc}
+                  alt={item.title}
+                  $isVisible={!(showPreview && fetchedUrl)}
+                />
+              )}
+            </>
+          ) : (
+            (fetchedUrl || thumbnailSrc) && (
+              <MediaCover src={(fetchedUrl || thumbnailSrc) as string} alt={item.title} />
+            )
+          )}
+          {!isUploading && (
+            <GradientOverlay $isVisible={isHovered} />
+          )}
+        </MediaContainer>
 
-      {!isUploading && (
-        <>
-          <GradientOverlay $isVisible={isHovered} />
-
-          <ActionsContainer $isVisible={isHovered || item.favorite || showMenu}>
+        {!isUploading && (
+          <>
+            <ActionsContainer $isVisible={isHovered || item.favorite || showMenu}>
             <ActionButton
               $active={item.favorite}
               $isHovered={hoveredBtn === 'fav'}

@@ -21,7 +21,7 @@ export interface DisconnectSocialAccountRequest {
   platform: SocialPlatform;
 }
 
-export const PLATFORM_COLORS: Record<SocialPlatform, { primary: string; secondary: string; gradient: string }> = {
+export const PLATFORM_COLORS: Record<SocialPlatform, { primary: string; secondary: string; gradient: string; darkGradient?: string }> = {
   facebook: {
     primary: '#1877F2',
     secondary: '#4267B2',
@@ -36,6 +36,7 @@ export const PLATFORM_COLORS: Record<SocialPlatform, { primary: string; secondar
     primary: '#000000',
     secondary: '#FFFFFF',
     gradient: 'linear-gradient(135deg, #000000 0%, #1a1a1a 66%, #333333 86%, #4d4d4d 100%)',
+    darkGradient: 'linear-gradient(135deg, #1a1a1a 0%, #333333 66%, #4d4d4d 86%, #666666 100%)',
   },
   youtube: {
     primary: '#FF0000',

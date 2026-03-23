@@ -1,4 +1,4 @@
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 import { CSSProperties } from 'react';
 
 export const styles: Record<string, CSSProperties> = {
@@ -8,7 +8,7 @@ export const styles: Record<string, CSSProperties> = {
         left: 0,
         width: '280px',
         maxHeight: '300px',
-        background: theme.colors.surface,
+        background: 'var(--color-surface)',
         borderRadius: '12px',
         boxShadow: '0 12px 40px rgba(0, 0, 0, .14)',
         border: '1px solid rgba(0, 0, 0, .06)',
@@ -40,7 +40,7 @@ export const styles: Record<string, CSSProperties> = {
         outline: 'none',
         fontSize: '13px', // Smaller input font
         fontFamily: 'inherit',
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         background: 'transparent',
     },
 
@@ -62,11 +62,11 @@ export const styles: Record<string, CSSProperties> = {
     },
 
     itemHovered: {
-        background: 'rgba(155, 93, 229, .06)', // Lighter hover background
+        background: 'var(--color-bg)', // Lighter hover background
     },
 
     itemSelected: {
-        background: 'rgba(155, 93, 229, .1)',
+        background: 'rgba(var(--color-primary-rgb, 155, 93, 229), .1)',
     },
 
     flag: {
@@ -94,7 +94,7 @@ export const styles: Record<string, CSSProperties> = {
     label: {
         fontSize: '13px', // Smaller text
         fontWeight: 500,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         whiteSpace: 'nowrap' as const,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -103,14 +103,14 @@ export const styles: Record<string, CSSProperties> = {
     offset: {
         fontSize: '11px',
         fontWeight: 500,
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         fontFamily: 'monospace',
         flexShrink: 0,
     },
 
     country: {
         fontSize: '11px', // Smaller country text
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         whiteSpace: 'nowrap' as const,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -118,7 +118,7 @@ export const styles: Record<string, CSSProperties> = {
 
     checkmark: {
         fontSize: '14px',
-        color: theme.colors.primary,
+        color: 'var(--color-primary)',
         fontWeight: 700,
         flexShrink: 0,
         marginLeft: '4px',
@@ -128,6 +128,6 @@ export const styles: Record<string, CSSProperties> = {
         padding: '24px 16px',
         textAlign: 'center' as const,
         fontSize: '13px',
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
     },
 };

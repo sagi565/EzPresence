@@ -1,11 +1,10 @@
 import styled from 'styled-components';
-import { theme } from '@theme/theme';
 import { media } from '@/styles/breakpoints';
 
 export const Nav = styled.nav`
-  background: rgba(255, 255, 255, 0.95);
+  background: ${props => props.theme.colors.surface}F2;
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(155, 93, 229, 0.1);
+  border-bottom: 1px solid ${props => props.theme.colors.primary}1A;
   padding: 12px 24px;
   display: flex;
   align-items: center;
@@ -13,7 +12,7 @@ export const Nav = styled.nav`
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: ${theme.shadows.primary};
+  box-shadow: ${props => props.theme.shadows.primary};
   gap: 12px;
 
   ${media.tablet} {
@@ -22,8 +21,8 @@ export const Nav = styled.nav`
   }
 
   ${media.phone} {
-    padding: 8px 10px;
-    gap: 6px;
+    padding: 4px 12px;
+    gap: 0;
     flex-wrap: wrap;
   }
 `;
@@ -46,7 +45,7 @@ export const NavLeft = styled.div`
 export const Logo = styled.a`
   font-size: 24px;
   font-weight: 800;
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -81,11 +80,10 @@ export const NavCenter = styled.div`
 
   ${media.phone} {
     order: 3;
-    flex: 1 1 100%;
-    margin-top: 0px;
-    padding-top: 0;
-    justify-content: center;
-    gap: 30px;
+    flex: 0 0 100%;
+    margin-top: 6px;
+    padding: 0;
+    justify-content: space-evenly;
   }
 `;
 
@@ -107,7 +105,7 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
   cursor: pointer;
   transition: all 0.3s ease;
   text-decoration: none;
-  color: ${props => props.$active ? theme.colors.primary : theme.colors.muted};
+  color: ${props => props.$active ? props.theme.colors.primary : props.theme.colors.muted};
   background: transparent;
   font-size: 14px;
   white-space: nowrap;
@@ -123,8 +121,8 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
     flex-shrink: 0;
     line-height: 1;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: ${props => props.$active ? theme.gradients.momentum : 'transparent'};
-    box-shadow: ${props => props.$active ? '0 6px 16px rgba(155, 93, 229, 0.3)' : 'none'};
+    background: ${props => props.$active ? props.theme.gradients.momentum : 'transparent'};
+    box-shadow: ${props => props.$active ? `0 6px 16px ${props.theme.colors.primary}4D` : 'none'};
   }
 
   .nav-label {
@@ -134,8 +132,8 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
   &:hover {
     ${props => !props.$active && `
       transform: translateY(-1px);
-      color: ${theme.colors.primary};
-      background: rgba(155, 93, 229, 0.06);
+      color: ${props.theme.colors.primary};
+      background: ${props.theme.colors.primary}0F;
     `}
   }
 
@@ -153,14 +151,32 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
     }
   }
 
-  /* ── Small phones: tighter padding ── */
+  /* ── Small phones: tighter padding, larger icons, labels below ── */
   ${media.phone} {
-    padding: 4px;
+    padding: 4px 12px;
+    flex-direction: column;
+    gap: 0;
+    background: ${props => props.$active ? props.theme.gradients.momentum : 'transparent'};
+    border-radius: 8px;
+    min-width: 54px;
+    box-shadow: ${props => props.$active ? `0 4px 12px ${props.theme.colors.primary}33` : 'none'};
+
+    .nav-label {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: capitalize;
+      color: ${props => props.$active ? '#fff' : props.theme.colors.muted};
+      text-align: center;
+    }
 
     .nav-icon {
-      width: ${props => props.$active ? '34px' : '24px'};
-      height: ${props => props.$active ? '34px' : '24px'};
-      font-size: ${props => props.$active ? '16px' : '17px'};
+      width: 36px;
+      height: 29px;
+      font-size: ${props => props.$active ? '17px' : '18px'};
+      background: transparent;
+      box-shadow: none;
+      color: ${props => props.$active ? '#fff' : 'inherit'};
     }
   }
 
@@ -168,9 +184,9 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
   @media (min-width: 1051px) {
     padding: 8px 20px;
     gap: 12px;
-    background: ${props => props.$active ? theme.gradients.momentum : 'transparent'};
-    color: ${props => props.$active ? '#fff' : theme.colors.muted};
-    box-shadow: ${props => props.$active ? '0 8px 20px rgba(155, 93, 229, 0.25)' : 'none'};
+    background: ${props => props.$active ? props.theme.gradients.momentum : 'transparent'};
+    color: ${props => props.$active ? '#fff' : props.theme.colors.muted};
+    box-shadow: ${props => props.$active ? `0 8px 20px ${props.theme.colors.primary}40` : 'none'};
 
     .nav-label {
       background: none;
@@ -193,8 +209,8 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
 
     &:hover {
       ${props => !props.$active && `
-        background: rgba(155, 93, 229, 0.08);
-        color: ${theme.colors.primary};
+        background: ${props.theme.colors.primary}14;
+        color: ${props.theme.colors.primary};
         transform: translateY(-2px);
       `}
     }
@@ -225,7 +241,7 @@ export const IconBtn = styled.button<{ $variant?: 'danger' | 'default'; $hovered
     props.$hovered
       ? props.$variant === 'danger'
         ? '#fee2e2'
-        : 'rgba(155, 93, 229, 0.08)'
+        : `${props.theme.colors.primary}14`
       : 'transparent'};
   display: flex;
   align-items: center;
@@ -237,8 +253,8 @@ export const IconBtn = styled.button<{ $variant?: 'danger' | 'default'; $hovered
     props.$hovered
       ? props.$variant === 'danger'
         ? '#ef4444'
-        : theme.colors.primary
-      : theme.colors.muted};
+        : props.theme.colors.primary
+      : props.theme.colors.muted};
   transform: ${props => props.$hovered ? 'translateY(-1px)' : 'none'};
   box-shadow: ${props =>
     props.$hovered && props.$variant === 'danger'
@@ -271,10 +287,10 @@ export const Avatar = styled.button<{ $hovered?: boolean; $bgColor?: string }>`
   font-size: 16px;
   font-weight: 700;
   color: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.8);
+  border: none;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   text-transform: uppercase;
-  background: ${props => props.$bgColor || theme.colors.primary};
+  background: ${props => props.$bgColor || props.theme.colors.primary};
   cursor: default;
   transition: transform 0.2s;
   transform: ${props => props.$hovered ? 'scale(1.05)' : 'none'};

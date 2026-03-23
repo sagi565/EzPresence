@@ -34,6 +34,7 @@ import ChipButton from '../ChipButton/ChipButton';
 import ChipArrow from '../ChipArrow/ChipArrow';
 import SectionContainer from '../SectionContainer/SectionContainer';
 import RecurringActionDialog from '../RecurringActionDialog/RecurringActionDialog';
+import ContentDetailModal from '@/components/Content/ContentDetailModal/ContentDetailModal';
 
 interface NewPostModalProps {
     isOpen: boolean;
@@ -104,6 +105,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     const [recurringDialogMode, setRecurringDialogMode] = useState<'edit' | 'delete'>('edit');
     const [isShattering, setIsShattering] = useState(false);
     const [isDraftHovered, setIsDraftHovered] = useState(false);
+    const [selectedDetailContent, setSelectedDetailContent] = useState<ContentItem | null>(null);
 
     // ✅ THE FIX: counter in the PARENT so dragLeave from child crossings is absorbed here
     const dragCounter = useRef(0);
@@ -137,6 +139,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             const droppedContent = content.find(c => c.id === contentId);
             if (droppedContent) {
                 handleContentSelect(droppedContent);
+                cancelPicking(); // Ensure picking state and scrim are cleaned up
                 if (onContentDrop) onContentDrop();
             }
         }
@@ -802,6 +805,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                                 startPicking();
                                 onOpenDrawer(true);
                             }}
+                            onClickDetail={(item) => setSelectedDetailContent(item)}
                             onDrop={handleManualDrop}
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}
@@ -827,27 +831,27 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 }
             >
                 <SectionContainer icon="🕐" className="npm-date-section">
-                    <div className="chip-row-container" style={styles.chipRow}>
-                        <div style={{ position: 'relative' }}>
-                            <ChipButton className="chip-button" minWidth="140px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
+                    <div className="chip-row-container" style={{ display: 'flex', flexWrap: 'nowrap', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                            <ChipButton className="chip-button" minWidth="148px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
                                 <span>{formData.date ? formData.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Date'}</span><ChipArrow />
                             </ChipButton>
                             <DatePicker selectedDate={formData.date} onChange={handleDateChange} minDate={new Date()} show={showDatePicker} onClose={() => setShowDatePicker(false)} />
                         </div>
-                        <div style={{ position: 'relative' }}>
-                            <ChipButton className="chip-button" minWidth="80px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                            <ChipButton className="chip-button" minWidth="88px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
                                 <span>{formData.time}</span><ChipArrow />
                             </ChipButton>
                             <TimePicker selectedTime={formData.time} onChange={handleTimeChange} show={showTimePicker} onClose={() => setShowTimePicker(false)} />
                         </div>
-                        <div style={{ position: 'relative' }}>
-                            <ChipButton className="chip-button" minWidth="90px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
-                                <span style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formData.timezone ? getTimezoneLabel(formData.timezone) : 'TZ'}</span><ChipArrow />
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                            <ChipButton className="chip-button" minWidth="120px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
+                                <span style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>{formData.timezone ? getTimezoneLabel(formData.timezone) : 'Timezone'}</span><ChipArrow />
                             </ChipButton>
                             <TimezoneSelector selectedTimezone={formData.timezone || 'America/New_York'} onChange={(tz) => { setFormData(prev => ({ ...prev, timezone: tz })); setShowTimezoneSelector(false); }} show={showTimezoneSelector} onClose={() => setShowTimezoneSelector(false)} />
                         </div>
-                        <div style={{ position: 'relative' }}>
-                            <ChipButton className="chip-button" minWidth="100%" maxWidth="100%" style={{ position: 'relative' }} onClick={() => { closeAllPickers(); setShowRepeatSelector(true); }}>
+                        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                            <ChipButton className="chip-button" minWidth="100%" style={{ width: '100%', boxSizing: 'border-box' }} onClick={() => { closeAllPickers(); setShowRepeatSelector(true); }}>
                                 <span>{formData.repeat.label}</span><ChipArrow />
                             </ChipButton>
                             <RepeatSelector selectedRepeat={formData.repeat} onChange={(repeat) => { setFormData({ ...formData, repeat }); setShowRepeatSelector(false); }} baseDate={formData.date} show={showRepeatSelector} onClose={() => setShowRepeatSelector(false)} />
@@ -873,6 +877,14 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
             <ConfirmDialog isOpen={showDeleteConfirm} title="Delete Post" message="Are you sure you want to delete this post? This action cannot be undone." onConfirm={confirmDelete} onCancel={() => setShowDeleteConfirm(false)} />
             <RecurringActionDialog isOpen={showRecurringDialog} mode={recurringDialogMode} onConfirm={handleRecurringConfirm} onCancel={() => setShowRecurringDialog(false)} />
+            <ContentDetailModal 
+                isOpen={!!selectedDetailContent} 
+                item={selectedDetailContent} 
+                onClose={() => setSelectedDetailContent(null)} 
+                onRename={() => {}} 
+                onDelete={() => {}} 
+                onToggleFavorite={() => {}} 
+            />
         </div>
     );
 };

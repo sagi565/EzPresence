@@ -7,6 +7,7 @@ import {
   FacebookAuthProvider,
   OAuthProvider,
 } from "firebase/auth";
+import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,6 +20,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+// Initialize analytics only if user consented
+if (typeof window !== 'undefined' && localStorage.getItem('cookie-consent') === 'accepted') {
+  getAnalytics(app);
+}
 
 // Ensure user stays signed in between sessions
 setPersistence(auth, browserLocalPersistence);

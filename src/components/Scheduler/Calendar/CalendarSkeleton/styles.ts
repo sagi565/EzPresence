@@ -1,5 +1,5 @@
 import styled, { keyframes } from 'styled-components';
-import { theme } from '@theme/theme';
+// Removed static theme import to use dynamic props.theme
 
 export const shimmer = keyframes`
   0% { background-position: -400px 0; }
@@ -7,7 +7,9 @@ export const shimmer = keyframes`
 `;
 
 export const ShimmerBase = styled.div`
-  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background: ${props => props.theme.colors.bg === '#0a0e17' 
+    ? `linear-gradient(90deg, #1a1e26 25%, #2a2e36 50%, #1a1e26 75%)`
+    : `linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%)`};
   background-size: 800px 100%;
   animation: ${shimmer} 1.4s infinite linear;
   border-radius: 8px;
@@ -15,10 +17,10 @@ export const ShimmerBase = styled.div`
 
 // Month View Skeleton Styles
 export const MonthGridWrapper = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 16px;
   padding: 16px;
-  box-shadow: ${theme.shadows.md};
+  box-shadow: ${props => props.theme.shadows.md};
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -37,7 +39,7 @@ export const HeaderRow = styled.div`
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
   margin-bottom: 1px;
-  background: ${theme.colors.surface};
+  background: ${props => props.theme.colors.muted}1a;
   border-radius: 12px 12px 0 0;
   overflow: hidden;
 `;
@@ -47,7 +49,7 @@ export const DayHeaderCell = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: ${props => props.theme.colors.surface};
   
   @media (max-width: 768px) {
     padding: 8px 4px;
@@ -64,12 +66,12 @@ export const MonthBodyGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
-  background: ${theme.colors.surface};
+  background: ${props => props.theme.colors.muted}1a;
   flex: 1;
 `;
 
 export const MonthDayCell = styled.div<{ $isOtherMonth?: boolean }>`
-  background: ${props => props.$isOtherMonth ? 'rgba(245, 245, 250, 0.6)' : 'white'};
+  background: ${props => props.theme.colors.surface};
   padding: 8px;
   display: flex;
   flex-direction: column;
@@ -96,10 +98,10 @@ export const PostSkeleton = styled(ShimmerBase)`
 
 // 4 Days View Skeleton Styles
 export const FourDaysContainer = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 16px;
   padding: 16px;
-  box-shadow: ${theme.shadows.md};
+  box-shadow: ${props => props.theme.shadows.md};
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -136,7 +138,7 @@ export const FourDaysHeaderRow = styled.div`
 `;
 
 export const FourDaysTimeHeader = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   padding: 12px 8px;
   display: flex;
   align-items: center;
@@ -150,7 +152,7 @@ export const FourDaysTimeHeaderTextSkeleton = styled(ShimmerBase)`
 `;
 
 export const FourDaysDayHeader = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   padding: 12px 8px;
   display: flex;
   flex-direction: column;
@@ -180,7 +182,7 @@ export const FourDaysTimeRow = styled.div`
   display: grid;
   grid-template-columns: 80px repeat(4, 1fr);
   gap: 1px;
-  background: rgba(107, 114, 128, 0.1);
+  background: ${props => props.theme.colors.muted}1a;
   min-height: 60px;
   
   @media (max-width: 768px) {
@@ -189,12 +191,12 @@ export const FourDaysTimeRow = styled.div`
 `;
 
 export const FourDaysTimeLabel = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   padding: 8px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  border-top: 1px solid rgba(107, 114, 128, 0.1);
+  border-top: 1px solid ${props => props.theme.colors.muted}1a;
 `;
 
 export const FourDaysTimeLabelSkeleton = styled(ShimmerBase)`
@@ -204,12 +206,12 @@ export const FourDaysTimeLabelSkeleton = styled(ShimmerBase)`
 `;
 
 export const FourDaysDayCell = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   padding: 4px;
   min-height: 60px;
   max-height: 60px;
-  border-top: 1px solid rgba(107, 114, 128, 0.1);
-  border-right: 1px solid rgba(107, 114, 128, 0.1);
+  border-top: 1px solid ${props => props.theme.colors.muted}1a;
+  border-right: 1px solid ${props => props.theme.colors.muted}1a;
 `;
 
 export const FourDaysPostSkeleton = styled(ShimmerBase)`

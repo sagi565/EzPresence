@@ -2,28 +2,9 @@ import React, { useState, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { ContentItem } from '@/models/ContentList';
 import ContentCard from './ContentCard';
-import { styles } from './styles';
 import { useContentLists } from '@/hooks/contents/useContentLists';
 import ContentDetailModal from '@/components/Content/ContentDetailModal/ContentDetailModal';
-
-// Additional drawer styles
-if (typeof document !== 'undefined') {
-  const sid = 'content-drawer-picking-css';
-  if (!document.getElementById(sid)) {
-    const s = document.createElement('style');
-    s.id = sid;
-    s.textContent = `
-      .content-drawer.nsm-picking {
-        z-index: 1700 !important;
-      }
-      .content-drawer.nsm-picking .content-drawer-handle {
-        cursor: pointer;
-        pointer-events: auto;
-      }
-    `;
-    document.head.appendChild(s);
-  }
-}
+import * as S from './ContentDrawer.styles';
 
 interface ContentDrawerProps {
   brandId: string;
@@ -73,34 +54,33 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({
 
   const portal = (
     <>
-      <div
+      <S.GlobalDrawerStyles />
+      <S.DrawerContainer
         id="contentDrawer"
-        className={`content-drawer ${isOpen ? 'drawer-open' : ''} ${isPicking ? 'nsm-picking' : ''}`}
-        style={{ ...styles.drawer, ...(isOpen ? styles.drawerOpen : {}) }}
+        className="content-drawer"
+        $isOpen={isOpen}
+        $isPicking={isPicking}
       >
-        <div className="content-drawer-handle" style={styles.drawerHandle} onClick={onToggle}>
-          <span style={{ ...styles.drawerArrow, ...(isOpen ? styles.drawerArrowOpen : {}) }}>▲</span>
+        <S.DrawerHandle className="content-drawer-handle" onClick={onToggle}>
+          <S.DrawerArrow $isOpen={isOpen}>▲</S.DrawerArrow>
           {!isOpen && (
-            <span className="content-drawer-title" style={styles.drawerTitle}>My Content</span>
+            <S.DrawerTitle className="content-drawer-title">My Content</S.DrawerTitle>
           )}
-        </div>
+        </S.DrawerHandle>
 
-        <div className="content-drawer-content" style={styles.drawerContent}>
-          <div className="content-drawer-inner" style={styles.drawerInner}>
-            <div className="content-drawer-controls" style={styles.drawerControls}>
-              <input
+        <S.DrawerContent className="content-drawer-content">
+          <S.DrawerInner className="content-drawer-inner">
+            <S.DrawerControls className="content-drawer-controls">
+              <S.SearchBar
                 type="text"
                 className="content-drawer-search"
-                style={styles.searchBar}
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <div className="content-list-mobile" style={styles.contentList}>
+              <S.ContentList className="content-list-mobile">
                 {filteredContent.length === 0 ? (
-                  <div style={{ padding: '20px', fontSize: '13px', color: '#6b7280' }}>
-                    No content found.
-                  </div>
+                  <S.EmptyState>No content found.</S.EmptyState>
                 ) : (
                   filteredContent.map((item) => (
                     <ContentCard
@@ -120,36 +100,35 @@ const ContentDrawer: React.FC<ContentDrawerProps> = ({
                     />
                   ))
                 )}
-              </div>
-            </div>
+              </S.ContentList>
+            </S.DrawerControls>
 
-            <div className="content-drawer-lists" style={styles.listsContainer}>
-              <button
-                className={`content-drawer-list-pill ${selectedListId === 'all' ? 'content-drawer-list-pill-all-active' : ''}`}
-                style={{
-                  ...styles.listPill,
-                  ...(selectedListId === 'all' ? styles.listPillAllActive : {})
-                }}
+            <S.ListsContainer className="content-drawer-lists">
+              <S.ListPill
+                className="content-drawer-list-pill"
+                $isActive={selectedListId === 'all'}
+                $isAllActive={selectedListId === 'all'}
                 onClick={() => setSelectedListId('all')}
               >
-                <span style={styles.listPillIcon}>✨</span><span>All Content</span>
-              </button>
-              {lists.length > 0 && <div style={{ height: '1px', background: '#e5e7eb', margin: '4px 0' }} />}
+                <S.ListPillIcon>✨</S.ListPillIcon>
+                <span>All Content</span>
+              </S.ListPill>
+              {lists.length > 0 && <S.ListSeparator />}
               {lists.map(list => (
-                <button
+                <S.ListPill
                   key={list.id}
-                  className={`content-drawer-list-pill ${selectedListId === list.id ? 'content-drawer-list-pill-active' : ''}`}
-                  style={{ ...styles.listPill, ...(selectedListId === list.id ? styles.listPillActive : {}) }}
+                  className="content-drawer-list-pill"
+                  $isActive={selectedListId === list.id}
                   onClick={() => setSelectedListId(list.id)}
                 >
-                  <span style={styles.listPillIcon}>{list.icon || '📁'}</span>
+                  <S.ListPillIcon>{list.icon || '📁'}</S.ListPillIcon>
                   <span>{list.title}</span>
-                </button>
+                </S.ListPill>
               ))}
-            </div>
-          </div>
-        </div>
-      </div>
+            </S.ListsContainer>
+          </S.DrawerInner>
+        </S.DrawerContent>
+      </S.DrawerContainer>
 
       <ContentDetailModal
         isOpen={detailModal.isOpen}

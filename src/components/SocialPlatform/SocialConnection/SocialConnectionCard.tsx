@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SocialPlatform, PLATFORM_COLORS, PLATFORM_NAMES } from '@models/SocialAccount';
 import { useConnectPlatform } from '@/hooks/platforms/useConnectPlatform';
+import { useAppTheme } from '@/theme/ThemeContext';
 import ConfirmDialog from '@/components/Scheduler/CreateModals/ConfirmDialog/ConfirmDialog';
 import { 
   CardContainer, 
@@ -33,8 +34,10 @@ export const SocialConnectionCard: React.FC<SocialConnectionCardProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
+  const { isDarkMode } = useAppTheme();
   const platformColors = PLATFORM_COLORS[platform];
   const platformName = PLATFORM_NAMES[platform];
+  const platformGradient = (isDarkMode && platformColors.darkGradient) ? platformColors.darkGradient : platformColors.gradient;
 
   const handleAction = async () => {
     if (loading) return;
@@ -107,12 +110,12 @@ export const SocialConnectionCard: React.FC<SocialConnectionCardProps> = ({
     >
       <GradientOverlay
         $isConnected={isConnected}
-        $platformGradient={platformColors.gradient}
+        $platformGradient={platformGradient}
       />
 
       <CardTopSection>
         <CardIconContainer
-          $platformGradient={platformColors.gradient}
+          $platformGradient={platformGradient}
           $isHovered={isHovered}
           $isLoading={loading}
         >
@@ -145,7 +148,7 @@ export const SocialConnectionCard: React.FC<SocialConnectionCardProps> = ({
         $isConnected={isConnected}
         $isHovered={isHovered}
         $isLoading={loading}
-        $platformGradient={platformColors.gradient}
+        $platformGradient={platformGradient}
         onClick={handleAction}
         disabled={loading}
       >
@@ -160,7 +163,7 @@ export const SocialConnectionCard: React.FC<SocialConnectionCardProps> = ({
 
       {isConnected && (
         <CardAnimatedBorder
-          $platformGradient={platformColors.gradient}
+          $platformGradient={platformGradient}
         />
       )}
 

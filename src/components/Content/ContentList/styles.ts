@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components';
-import { theme } from '@theme/theme';
+// theme import removed – use dynamic props.theme
 import { media } from '@/styles/breakpoints';
 
 export const ListContainer = styled.div<{ $isMobile?: boolean }>`
@@ -36,13 +36,13 @@ export const ListIcon = styled.div<{ $isEditable?: boolean; $isHovered?: boolean
   `}
 
   ${props => props.$isHovered && css`
-    border-color: ${theme.colors.primary}80;
-    background: ${theme.colors.primary}0D;
+    border-color: ${props.theme.colors.primary}80;
+    background: ${props.theme.colors.primary}0D;
   `}
 
   ${props => props.$isEditMode && css`
-    border-color: ${theme.colors.primary};
-    background: ${theme.colors.primary}1A;
+    border-color: ${props.theme.colors.primary};
+    background: ${props.theme.colors.primary}1A;
   `}
 
   ${props => props.$isMobile && css`
@@ -67,7 +67,7 @@ export const ListTitleContainer = styled.div`
 export const ListTitle = styled.h2<{ $isMobile?: boolean }>`
   font-size: 32px;
   font-weight: 700;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   margin: 0;
 
   ${props => props.$isMobile && css`
@@ -84,15 +84,15 @@ export const ListTitleClickable = styled.div<{ $isHovered?: boolean }>`
   display: inline-block;
 
   ${props => props.$isHovered && css`
-    border-color: ${theme.colors.primary}80;
-    background: ${theme.colors.primary}0D;
+    border-color: ${props.theme.colors.primary}80;
+    background: ${props.theme.colors.primary}0D;
   `}
 `;
 
 export const ListTitleEditable = styled.input<{ $isFocused?: boolean; $isMobile?: boolean }>`
   font-size: 32px;
   font-weight: 700;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   background: transparent;
   border: 2px dashed transparent;
   padding: 6px 10px;
@@ -102,9 +102,9 @@ export const ListTitleEditable = styled.input<{ $isFocused?: boolean; $isMobile?
   transition: all 0.3s ease;
 
   ${props => props.$isFocused && css`
-    background: white;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 4px 20px ${theme.colors.primary}40;
+    background: ${props.theme.colors.surface};
+    border-color: ${props.theme.colors.primary};
+    box-shadow: 0 4px 20px ${props.theme.colors.primary}40;
   `}
 
   ${props => props.$isMobile && css`
@@ -116,13 +116,17 @@ export const ListTitleEditable = styled.input<{ $isFocused?: boolean; $isMobile?
 export const ListSubtitle = styled.p`
   font-size: 15px;
   font-weight: 500;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   margin: 0;
+`;
+
+export const PrefixText = styled.span`
+  color: ${props => props.theme.colors.text};
 `;
 
 export const BrandGradient = styled.span`
   font-weight: 800;
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -171,6 +175,44 @@ export const ActionButton = styled.button<{ $type: 'delete' | 'save'; $visible?:
   `}
 `;
 
+export const AddContentButton = styled.button<{ $isMobile?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: ${props => props.theme.colors.muted};
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: auto;
+  margin-top: 8px;
+
+  &:hover {
+    color: ${props => props.theme.colors.primary};
+    background: ${props => props.theme.colors.primary}0D;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  ${props => props.$isMobile && css`
+    padding: 4px 8px;
+    font-size: 13px;
+  `}
+
+  .icon {
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+`;
+
 export const ListScrollWrapper = styled.div<{ $isDropTarget?: boolean; $isInvalidDropTarget?: boolean }>`
   display: flex;
   gap: 20px;
@@ -180,7 +222,7 @@ export const ListScrollWrapper = styled.div<{ $isDropTarget?: boolean; $isInvali
   scroll-behavior: smooth;
   scrollbar-width: none;
   ms-overflow-style: none;
-  align-items: flex-start;
+  align-items: center;
   border-radius: 16px;
   transition: all 0.3s ease;
 
@@ -189,16 +231,19 @@ export const ListScrollWrapper = styled.div<{ $isDropTarget?: boolean; $isInvali
   }
 
   ${media.phone} {
-    padding: 24px 10px;
-    gap: 8px;
+    padding: 12px 10px;
+    gap: 2px;
     scroll-padding-left: 10px;
-    min-height: 140px; /* Make empty lists visible as drop targets */
+    min-height: 140px;
+    /* Fade effect on the right to make scroll dots visible */
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
   }
 
   ${props => props.$isDropTarget && css`
-    background-color: ${theme.colors.primary}1A;
-    border: 3px dashed ${theme.colors.primary}80;
-    box-shadow: inset 0 0 30px ${theme.colors.primary}1A;
+    background-color: ${props.theme.colors.primary}1A;
+    border: 3px dashed ${props.theme.colors.primary}80;
+    box-shadow: inset 0 0 30px ${props.theme.colors.primary}1A;
     transform: scale(1.01);
   `}
 
@@ -212,7 +257,7 @@ export const ListScrollWrapper = styled.div<{ $isDropTarget?: boolean; $isInvali
 export const MobileUploadContainer = styled.div<{ $isEmpty?: boolean }>`
   display: flex;
   justify-content: center;
-  margin-top: ${props => props.$isEmpty ? '60px' : '12px'};
+  margin-top: ${props => props.$isEmpty ? '60px' : '40px'};
   width: 100%;
 `;
 

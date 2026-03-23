@@ -136,16 +136,41 @@ const ScheduleModalLayout: React.FC<ScheduleModalLayoutProps> = ({
 
 if (typeof document !== 'undefined') {
     const styleId = 'modal-close-btn-animation';
-    if (!document.getElementById(styleId)) {
-        const style = document.createElement('style');
+    let style = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!style) {
+        style = document.createElement('style');
         style.id = styleId;
-        style.textContent = `
+        document.head.appendChild(style);
+    }
+    style.textContent = `
+            /* Internal dimmer for picking/dragging content */
+            body.content-picking .schedule-modal-layout::after,
+            body.content-dragging .schedule-modal-layout::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: rgba(0,0,0,0.15);
+                border-radius: inherit;
+                z-index: 1000;
+                pointer-events: none;
+                transition: opacity 0.2s;
+                opacity: 1;
+            }
+            .schedule-modal-layout::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: rgba(0,0,0,0);
+                z-index: -1;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s, background 0.2s, z-index 0s 0.2s;
+            }
+
             .modal-close-btn {
                 transition: all .2s ease;
             }
             .modal-close-btn:hover {
-                background: rgba(0, 0, 0, .12) !important;
-                color: ${theme.colors.text} !important;
                 transform: rotate(90deg);
             }
             @media (max-width: 768px) {
@@ -153,10 +178,10 @@ if (typeof document !== 'undefined') {
                     width: calc(100vw - 24px) !important;
                     height: max-content !important;
                     max-width: calc(100vw - 24px) !important;
-                    max-height: 94dvh !important;
+                    max-height: 90dvh !important;
                     border-radius: 20px !important;
                     left: 50% !important;
-                    top: 50% !important;
+                    top: 48% !important;
                     transform: translate(-50%, -50%) !important;
                     margin: 0 !important;
                     overflow-x: hidden !important;
@@ -165,26 +190,26 @@ if (typeof document !== 'undefined') {
                 .schedule-modal-layout-header {
                     padding: 14px 16px !important;
                     border-radius: 20px 20px 0 0 !important;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.02) !important;
                 }
                 /* Single scrollable container using grid */
                 .schedule-modal-scrollable-body {
                     display: grid !important;
-                    grid-template-columns: 1fr 38% !important;
+                    grid-template-columns: 1fr 34% !important;
                     grid-template-areas:
                         "title  preview"
                         "dates  preview"
-                        "platform preview" !important;
-                    padding: 3vw 4vw 4vw 4vw !important;
-                    gap: 2vw !important;
+                        "platform platform" !important;
+                    padding: 4vw 4vw 4vw 4vw !important;
+                    gap: 1.5vw 3vw !important;
                     overflow-y: auto !important;
-                    overflow-x: visible !important;
+                    overflow-x: hidden !important;
                     box-sizing: border-box !important;
                     width: 100% !important;
                     align-items: start !important;
                 }
-                .schedule-modal-layout-body {
-                    display: contents !important;
-                }
+                /* Unwrap inner elements so children participate in the grid */
+                .schedule-modal-layout-body,
                 .schedule-modal-layout-left {
                     display: contents !important;
                 }
@@ -192,24 +217,25 @@ if (typeof document !== 'undefined') {
                 .section-icon {
                     display: none !important;
                 }
-                /* Title — scales with viewport */
+                /* Title */
                 .schedule-modal-before-body {
                     grid-area: title !important;
                     display: flex !important;
-                    align-items: center !important;
+                    align-items: flex-end !important;
                     width: 100% !important;
                     box-sizing: border-box !important;
-                    overflow: hidden !important;
-                    min-height: 40px !important;
+                    overflow: visible !important;
+                    min-height: 48px !important;
+                    padding-top: 1vw !important;
                 }
                 .schedule-modal-before-body > div {
                     width: 100% !important;
-                    overflow: hidden !important;
+                    overflow: visible !important;
                 }
                 .npm-title-input, .nsm-title-input {
                     width: 100% !important;
                     margin-left: 0 !important;
-                    padding: 1vw 0 2vw 0 !important;
+                    padding: 1vw 0 1vw 0 !important;
                     font-size: clamp(16px, 5vw, 20px) !important;
                     font-weight: 700 !important;
                     line-height: 1.2 !important;
@@ -224,7 +250,8 @@ if (typeof document !== 'undefined') {
                     grid-area: dates !important;
                     overflow: visible !important;
                     box-sizing: border-box !important;
-                    margin-top: -1vw !important;
+                    margin-top: 2vw !important;
+                    width: 100% !important;
                 }
                 /* Platform section */
                 .npm-platform-section, .nsm-platform-section {
@@ -232,16 +259,17 @@ if (typeof document !== 'undefined') {
                     overflow: visible !important;
                     box-sizing: border-box !important;
                     align-self: start !important;
+                    margin-top: 5vw !important;
                 }
                 .npm-platform-section > div > div, .nsm-platform-section > div > div {
                     background: #fff !important;
                     border-radius: 12px !important;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important;
                     border: 1px solid rgba(0,0,0,0.06) !important;
-                    margin-bottom: 2vw !important;
-                    padding: 2vw !important;
+                    margin-bottom: 2.5vw !important;
+                    padding: 3vw !important;
                 }
-                /* Preview — grows/shrinks with the 38% column */
+                /* Preview */
                 .schedule-modal-layout-right {
                     grid-area: preview !important;
                     width: 100% !important;
@@ -250,21 +278,24 @@ if (typeof document !== 'undefined') {
                     align-self: start !important;
                     overflow: visible !important;
                     box-sizing: border-box !important;
-                    margin-top: 1vw !important;
+                    margin-top: 2vw !important;
+                    border-radius: 12px !important;
                 }
                 .schedule-modal-layout-right .nsm-content-preview,
                 .schedule-modal-layout-right > div,
                 #npmContentPreview, #nsmContentPreview {
                     width: 100% !important;
                     max-width: 100% !important;
-                    aspect-ratio: 16 / 9 !important;
                     height: auto !important;
                     min-height: 0 !important;
                     border-radius: 12px !important;
-                    box-shadow: 0 8px 16px rgba(0,0,0,0.08) !important;
-                    border: 1.5px solid rgba(0,0,0,0.05) !important;
+                    box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
                     background: #fdfdfd !important;
+                    position: relative !important;
+                    overflow: hidden !important;
                 }
+                /* Remove the forced wide 16/9 aspect-ratio entirely, so it respects its native portrait 9/16! */
+                
                 .schedule-modal-layout-footer {
                     padding: 3vw 4vw !important;
                     border-radius: 0 0 20px 20px !important;
@@ -276,20 +307,30 @@ if (typeof document !== 'undefined') {
                 }
                 /* Chip buttons */
                 .chip-row-container {
-                    gap: 2vw !important;
+                    gap: 1.8vw !important;
                     display: flex !important;
-                    flex-wrap: nowrap !important;
+                    flex-wrap: wrap !important;
                     width: 100% !important;
-                    overflow-x: auto !important;
+                    overflow: visible !important;
                     padding: 1vw 0 !important;
                 }
                 .chip-row-container > div {
-                    flex: 0 0 auto !important;
+                    flex: 1 1 45% !important;
+                    min-width: 45% !important;
+                }
+                /* Force Repeat chip to its own line */
+                .chip-row-container > div:last-child {
+                    flex: 1 1 100% !important;
+                    min-width: 100% !important;
                 }
                 .chip-button {
-                    padding: 2vw 3vw !important;
-                    font-size: clamp(10px, 3.5vw, 12px) !important;
+                    padding: 1.8vw 2vw !important;
+                    font-size: clamp(10px, 3vw, 13px) !important;
                     border-radius: 10px !important;
+                    min-width: 0 !important;
+                    width: 100% !important;
+                    justify-content: space-between !important;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
                 }
                 .date-picker, .time-picker, .timezone-selector, .repeat-selector {
                     left: 50% !important;
@@ -302,10 +343,12 @@ if (typeof document !== 'undefined') {
                 }
                 .chip-button span {
                     white-space: nowrap !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
                 }
                 @media (max-width: 360px) {
                     .schedule-modal-scrollable-body {
-                        grid-template-columns: 1fr 42% !important;
+                        grid-template-columns: 1fr 40% !important;
                     }
                     .npm-title-input, .nsm-title-input {
                         font-size: 16px !important;
@@ -313,8 +356,6 @@ if (typeof document !== 'undefined') {
                 }
             }
         `;
-        document.head.appendChild(style);
-    }
 }
 
 export default ScheduleModalLayout;

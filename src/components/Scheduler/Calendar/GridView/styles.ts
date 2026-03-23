@@ -1,11 +1,11 @@
 import styled from 'styled-components';
-import { theme } from '@theme/theme';
+// Removed static theme import to use dynamic props.theme
 
 export const CalendarGridWrapper = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 16px;
   padding: 16px;
-  box-shadow: ${theme.shadows.md};
+  box-shadow: ${props => props.theme.shadows.md};
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -24,7 +24,7 @@ export const CalendarHeaderRow = styled.div`
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
   margin-bottom: 1px;
-  background: ${theme.colors.surface};
+  background: ${props => props.theme.colors.muted}40;
   border-radius: 12px 12px 0 0;
   overflow: hidden;
 `;
@@ -33,8 +33,8 @@ export const DayHeaderCell = styled.div`
   padding: 10px;
   text-align: center;
   font-weight: 600;
-  color: #4b5563;
-  background: white;
+  color: ${props => props.theme.colors.muted};
+  background: ${props => props.theme.colors.surface};
   font-size: 14px;
   
   @media (max-width: 768px) {
@@ -52,7 +52,7 @@ export const CalendarBodyGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
-  background: ${theme.colors.surface};
+  background: ${props => props.theme.colors.muted}40;
   flex: 1;
   
   /* grid-template-rows is applied dynamically inline */
@@ -64,11 +64,17 @@ export const CalendarDayCell = styled.div<{
   $isToday?: boolean; 
   $isDragOver?: boolean;
 }>`
-  background: ${props => props.$isOtherMonth ? 'rgba(245, 245, 250, 0.6)' 
-    : props.$isPast ? 'rgba(249, 250, 251, 0.5)' 
-    : props.$isDragOver ? 'rgba(155, 93, 229, 0.1)' 
-    : props.$isToday ? 'rgba(155, 93, 229, 0.05)' 
-    : 'white'};
+  background: ${props => {
+    if (props.$isDragOver) return `${props.theme.colors.primary}1A`;
+    if (props.$isToday) return `${props.theme.colors.primary}0D`;
+    return props.theme.colors.surface;
+  }};
+  
+  ${props => (props.$isOtherMonth || props.$isPast) && `
+    box-shadow: inset 0 0 0 1000px ${props.theme.mode === 'dark' 
+      ? `${props.theme.colors.muted}04` 
+      : `${props.theme.colors.muted}0D`};
+  `}
     
   border: ${props => props.$isDragOver ? '2px dashed rgba(155, 93, 229, 0.6)'
     : props.$isToday ? '2px solid rgba(155, 93, 229, 0.2)'
@@ -83,10 +89,10 @@ export const CalendarDayCell = styled.div<{
   min-height: 100px;
   
   &:hover {
-    background: ${props => props.$isDragOver ? 'rgba(155, 93, 229, 0.1)' : 
-      props.$isPast || props.$isToday ? undefined : 'rgba(155, 93, 229, 0.02)'};
-    border: ${props => props.$isDragOver ? '2px dashed rgba(155, 93, 229, 0.6)' : 
-      props.$isPast || props.$isToday ? undefined : '1px dashed rgba(155, 93, 229, 0.4)'};
+    background: ${props => props.$isDragOver ? `${props.theme.colors.primary}1A` : 
+      props.$isPast || props.$isToday ? undefined : `${props.theme.colors.primary}05`};
+    border: ${props => props.$isDragOver ? `2px dashed ${props.theme.colors.primary}99` : 
+      props.$isPast || props.$isToday ? undefined : `1px dashed ${props.theme.colors.primary}66`};
   }
   
   @media (max-width: 768px) {
@@ -98,7 +104,7 @@ export const CalendarDayCell = styled.div<{
 export const DayNumber = styled.div<{ $isToday?: boolean; $isOtherMonth?: boolean }>`
   font-size: 14px;
   font-weight: 600;
-  color: ${props => props.$isOtherMonth ? '#c0c0c8' : theme.colors.text};
+  color: ${props => props.$isOtherMonth ? `${props.theme.colors.text}E6` : props.theme.colors.text};
   text-align: center;
   margin-bottom: ${props => props.$isOtherMonth ? '4px' : '6px'};
   display: flex;
@@ -113,7 +119,7 @@ export const DayCircle = styled.span`
   justify-content: center;
   width: 25px;
   height: 25px;
-  background-color: ${theme.colors.primary};
+  background-color: ${props => props.theme.colors.primary};
   color: white;
   border-radius: 50%;
   margin: 0 auto;
@@ -135,9 +141,9 @@ export const OverflowIndicator = styled.div`
   position: absolute;
   bottom: 4px;
   right: 6px;
-  background: rgba(155, 93, 229, 0.1);
-  color: ${theme.colors.primary};
-  border: 1px solid rgba(155, 93, 229, 0.3);
+  background: ${props => props.theme.colors.primary}1A;
+  color: ${props => props.theme.colors.primary};
+  border: 1px solid ${props => props.theme.colors.primary}4D;
   border-radius: 10px;
   padding: 1px 6px;
   font-size: 9px;
@@ -151,12 +157,12 @@ export const OverflowIndicator = styled.div`
 `;
 
 export const PostItemContainer = styled.div`
-  background: ${theme.colors.surface};
+  background: ${props => props.theme.colors.surface};
   border-radius: 6px;
   padding: 6px 8px;
   margin-bottom: 4px;
   font-size: 11px;
-  box-shadow: ${theme.shadows.sm};
+  box-shadow: ${props => props.theme.shadows.sm};
   cursor: pointer;
   transition: all 0.2s;
   min-width: 0;
@@ -224,7 +230,7 @@ export const BlackTooltip = styled.div`
 
 export const PostTime = styled.span`
   font-weight: 600;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   white-space: nowrap;
   
   @media (max-width: 768px) {
@@ -242,7 +248,7 @@ export const MediaIcon = styled.div`
 
 export const PostTitleWrapper = styled.div`
   font-weight: 700;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   font-size: 11px;
   line-height: 1.2;
   overflow: hidden;
@@ -279,9 +285,9 @@ export const BadgeWrapper = styled.div<{ $platform: string }>`
   letter-spacing: 0.1px;
   
   background: ${props => props.$platform === 'yt' ? '#ff0033' 
-    : props.$platform === 'ig' ? theme.gradients.vibe 
-    : props.$platform === 'tt' ? theme.colors.text 
-    : theme.colors.blue};
+    : props.$platform === 'ig' ? props.theme.gradients.vibe 
+    : props.$platform === 'tt' ? props.theme.colors.text 
+    : props.theme.colors.blue};
     
   @media (max-width: 768px) {
     width: 12px;

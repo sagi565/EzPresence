@@ -8,8 +8,7 @@ import {
   ListContainer, 
   ListScrollWrapper, 
   ScrollArrow,
-  DraggableItemWrapper,
-  MobileUploadContainer
+  DraggableItemWrapper
 } from './styles';
 import { useDraggable } from '@dnd-kit/core';
 import { useDroppable } from '@dnd-kit/core';
@@ -19,7 +18,6 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 interface ContentListProps {
   list: ContentListType;
   isNewList: boolean;
-  onDelete: () => void;
   onTitleChange: (newTitle: string) => void;
   onIconClick: (element: HTMLElement) => void;
   onItemMove: (itemId: string) => void;
@@ -91,7 +89,6 @@ const DraggableItem: React.FC<{
 const ContentList: React.FC<ContentListProps> = ({
   list,
   isNewList,
-  onDelete,
   onTitleChange,
   onIconClick,
   onItemDelete,
@@ -112,7 +109,6 @@ const ContentList: React.FC<ContentListProps> = ({
   const isMobile = useIsMobile();
 
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  const [deleteListConfirm, setDeleteListConfirm] = useState(false);
 
   const { isDragging, activeData } = useDndState();
   const isItemDragging = isDragging && activeData?.type === 'ITEM';
@@ -200,15 +196,6 @@ const ContentList: React.FC<ContentListProps> = ({
     }
   };
 
-  const handleDeleteList = () => {
-    setDeleteListConfirm(true);
-  };
-
-  const confirmDeleteList = () => {
-    setDeleteListConfirm(false);
-    onDelete();
-  };
-
   const setRefs = (el: HTMLDivElement | null) => {
     (scrollRef as any).current = el;
     setDroppableRef(el);
@@ -231,8 +218,10 @@ const ContentList: React.FC<ContentListProps> = ({
           isNewList={isNewList}
           onTitleChange={onTitleChange}
           onIconClick={onIconClick}
-          onDelete={handleDeleteList}
           onSave={onSaveChanges}
+          onUpload={onUpload}
+          onAddNavigate={onAddNavigate}
+          listType={list.listType}
           listId={list.id}
           isMobile={isMobile}
         />
@@ -242,7 +231,6 @@ const ContentList: React.FC<ContentListProps> = ({
           $isDropTarget={isDropTarget}
           $isInvalidDropTarget={isInvalidDropTarget}
         >
-          {/* Always show the upload button inline on desktop */}
           {!isMobile && (
             <UploadButton listType={list.listType} onUpload={onUpload} onNavigate={onAddNavigate} />
           )}
@@ -261,14 +249,9 @@ const ContentList: React.FC<ContentListProps> = ({
             />
           ))}
           
-          {/* Add a spacer on mobile at the start to simulate where the upload button would go, or just spacing */}
         </ListScrollWrapper>
 
-        {isMobile && (
-          <MobileUploadContainer $isEmpty={list.items.length === 0}>
-            <UploadButton listType={list.listType} onUpload={onUpload} onNavigate={onAddNavigate} />
-          </MobileUploadContainer>
-        )}
+
 
         <ScrollArrow
           $side="left"
@@ -300,16 +283,6 @@ const ContentList: React.FC<ContentListProps> = ({
         cancelText="Cancel"
         onConfirm={confirmDeleteItem}
         onCancel={() => setItemToDelete(null)}
-      />
-
-      <ConfirmDialog
-        isOpen={deleteListConfirm}
-        title="Delete List?"
-        message="Are you sure you want to delete this list and all its contents? This action cannot be undone."
-        confirmText="Delete List"
-        cancelText="Cancel"
-        onConfirm={confirmDeleteList}
-        onCancel={() => setDeleteListConfirm(false)}
       />
     </>
   );

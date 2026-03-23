@@ -1,5 +1,5 @@
 import { CSSProperties } from 'react';
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 
 export const styles: Record<string, CSSProperties> = {
     overlay: {
@@ -13,7 +13,7 @@ export const styles: Record<string, CSSProperties> = {
         justifyContent: 'center',
     },
     dialog: {
-        background: '#fff',
+        background: 'var(--color-surface)',
         borderRadius: '16px',
         padding: '28px 32px',
         maxWidth: '400px',
@@ -41,12 +41,12 @@ export const styles: Record<string, CSSProperties> = {
         margin: 0,
         fontSize: '17px',
         fontWeight: 700,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
     },
     message: {
         margin: '0 0 24px 0',
         fontSize: '14px',
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         lineHeight: 1.5,
     },
     actions: {
@@ -57,9 +57,9 @@ export const styles: Record<string, CSSProperties> = {
     cancelBtn: {
         padding: '9px 20px',
         borderRadius: '10px',
-        border: '1px solid #E5E7EB',
-        background: '#fff',
-        color: theme.colors.text,
+        border: '1px solid var(--color-bg)',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
         fontSize: '14px',
         fontWeight: 600,
         cursor: 'pointer',

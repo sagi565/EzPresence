@@ -1,61 +1,180 @@
 import { CSSProperties } from 'react';
 
-// Exact CSS from HTML demo (Scheduler_Create_Modals.html) for .nsm-content-preview
 if (typeof document !== 'undefined') {
-    const styleId = 'content-preview-global-styles';
-    if (!document.getElementById(styleId)) {
-        const style = document.createElement('style');
+    const styleId = 'content-preview-global-styles-v5';
+    // Remove any old version so the new rules always win
+    ['content-preview-global-styles', 'content-preview-global-styles-v2',
+     'content-preview-global-styles-v3', 'content-preview-global-styles-v4']
+        .forEach(id => document.getElementById(id)?.remove());
+    let style = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!style) {
+        style = document.createElement('style');
         style.id = styleId;
-        style.textContent = `
-            /* Content preview (9:16) */
+        document.head.appendChild(style);
+    }
+    style.textContent = `
+            /* ── Keyframes ──────────────────────────────────────────────────────── */
+            @keyframes nsmShimmer {
+                0%   { background-position: -400px 0; }
+                100% { background-position:  400px 0; }
+            }
+            @keyframes nsmDotBounce {
+                0%, 80%, 100% { transform: scale(0.65); opacity: 0.35; }
+                40%           { transform: scale(1);    opacity: 1;    }
+            }
+            @keyframes contentFadeIn {
+                from { op            /* ── Base preview shell ─────────────────────────────────────────────── */
             .nsm-content-preview {
                 width: 100%;
                 aspect-ratio: 9/16;
                 border-radius: 14px;
-                border: 2px dashed rgba(0, 0, 0, .1);
-                background: #f8f9fb;
-                display: flex; flex-direction: column;
-                align-items: center; justify-content: center;
+                border: 2px dashed var(--color-primary);
+                background: var(--color-bg);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
                 gap: 8px;
                 cursor: pointer;
-                transition: all .2s;
+                transition: border-color 0.2s ease, background 0.2s ease, opacity 0.2s ease;
                 overflow: hidden;
                 position: relative;
             }
-            .nsm-content-preview:hover {
-                border-color: #9b5de5;
-                background: rgba(155, 93, 229, .04);
+
+            /* Empty — subtle border hint on hover, no background change */
+            .nsm-content-preview:not(.has-content):hover {
+                border-color: var(--color-primary); 
+                border-width: 2.5px;
+                box-shadow: 0 4px 12px rgba(var(--color-primary-rgb, 155, 93, 229), 0.1);
             }
-            .nsm-content-preview.drop-hover {
-                border-color: #9b5de5;
-                border-style: solid;
-                background: rgba(155, 93, 229, .08);
+            /* ── Unified Pick & Drag Highlight ───────────────────────────────────── */
+            /* Scenario 1: Picking mode triggered by click */
+            .nsm-content-preview.is-picking,
+            /* Scenario 2: Dragging card from open drawer over an empty preview */
+            body.content-dragging .nsm-content-preview:not(.has-content) {
+                z-index: 1001 !important;
+                border: 2px dashed var(--color-primary) !important;
+                background: var(--color-surface) !important;
+                box-shadow: 0 0 70px 20px rgba(255, 230, 0, 0.45) !important;
             }
-            /* has-content: no selected ring, just keep normal dashed border */
+
+            /* Even if it has content, elevate it visually so drop remains clear */
+            body.content-dragging .nsm-content-preview.has-content {
+                z-index: 1001 !important;
+                background: var(--color-surface) !important;
+                box-shadow: 0 0 60px 15px rgba(255, 230, 0, 0.45) !important;
+            }
+
+            /* Active drop target (matches old #pickClone dragover) */
+            .nsm-content-preview.drop-hover,
+            body.content-dragging .nsm-content-preview.drop-hover {
+                border-color: var(--color-primary) !important;
+                border-style: solid !important;
+                background: var(--color-surface) !important;
+                box-shadow: 0 0 80px 25px rgba(255, 230, 0, 0.55) !important;
+            }
+
+            /* Has content — zero border, zero background, clean slate */
             .nsm-content-preview.has-content {
-                border-style: dashed;
-                border-color: rgba(0, 0, 0, .1);
+                background: transparent !important;
             }
+            /* Allow drop-hover outline even when has-content */
+            .nsm-content-preview.has-content.drop-hover {
+                outline: 2px solid rgba(251,191,36,0.8) !important;
+                outline-offset: 2px !important;
+            }
+
+            /* ── Empty placeholder ──────────────────────────────────────────────── */
             .nsm-content-placeholder {
-                display: flex; flex-direction: column;
-                align-items: center; gap: 6px;
-                color: #6b7280;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                color: var(--color-muted);
             }
             .nsm-content-placeholder .placeholder-icon {
                 font-size: 32px;
                 opacity: .7;
             }
             .nsm-content-placeholder .placeholder-text {
-                font-size: 11px; font-weight: 500;
+                font-size: 11px;
+                font-weight: 500;
                 text-align: center;
                 padding: 0 8px;
             }
-            /* Filled state */
-            .nsm-content-filled {
-                position: absolute; inset: 0;
-                border-radius: 10px;
+
+            /* ── Loading shimmer ────────────────────────────────────────────────── */
+            .nsm-content-loading {
+                position: absolute;
+                inset: 0;
+                border-radius: 12px;
                 display: flex;
-                align-items: center; justify-content: center;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, rgba(var(--color-primary-rgb, 155, 93, 229), 0.1) 0%, rgba(var(--color-primary-rgb, 155, 93, 229), 0.05) 50%, rgba(var(--color-primary-rgb, 155, 93, 229), 0.1) 100%);
+                overflow: hidden;
+            }
+            /* The travelling shimmer sweep */
+            .nsm-content-loading::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(
+                    90deg,
+                    rgba(var(--color-text-rgb, 255,255,255), 0)   0%,
+                    rgba(var(--color-text-rgb, 255,255,255), 0.1) 50%,
+                    rgba(var(--color-text-rgb, 255,255,255), 0)   100%
+                );
+                background-size: 400px 100%;
+                animation: nsmShimmer 1.4s infinite linear;
+            }
+            .nsm-shimmer-bar {
+                position: relative;
+                overflow: hidden;
+                background: rgba(var(--color-primary-rgb, 155, 93, 229), 0.14);
+                flex-shrink: 0;
+                z-index: 1;
+            }
+            .nsm-shimmer-bar::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(
+                    90deg,
+                    rgba(var(--color-text-rgb, 255,255,255), 0)   0%,
+                    rgba(var(--color-text-rgb, 255,255,255), 0.2) 50%,
+                    rgba(var(--color-text-rgb, 255,255,255), 0)   100%
+                );
+                background-size: 400px 100%;
+                animation: nsmShimmer 1.4s infinite linear;
+            }
+            .nsm-loading-dots {
+                position: absolute;
+                bottom: 16px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                z-index: 1;
+            }
+            .nsm-loading-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: rgba(var(--color-primary-rgb, 155, 93, 229), 0.55);
+                animation: nsmDotBounce 1.2s infinite ease-in-out;
+            }
+
+            /* ── Filled state ───────────────────────────────────────────────────── */
+            .nsm-content-filled {
+                position: absolute;
+                inset: 0;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justifyContent: center;
                 background-size: cover;
                 background-position: center;
                 overflow: hidden;
@@ -63,19 +182,23 @@ if (typeof document !== 'undefined') {
             .nsm-content-filled .filled-title {
                 position: absolute;
                 bottom: 0; left: 0; right: 0;
-                font-size: 13px; font-weight: 700;
+                font-size: 13px;
+                font-weight: 700;
                 color: #fff;
                 text-align: center;
-                padding: 14px 10px 8px 10px;
+                padding: 14px 10px 8px;
                 text-shadow: 0 1px 3px rgba(0,0,0,.8);
-                background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+                background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
                 z-index: 2;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+
+            /* ── Remove button ──────────────────────────────────────────────────── */
             .nsm-remove-content {
-                position: absolute; top: 6px; right: 6px;
+                position: absolute;
+                top: 6px; right: 6px;
                 width: 22px; height: 22px;
                 border-radius: 50%;
                 background: rgba(0,0,0,.5);
@@ -83,45 +206,32 @@ if (typeof document !== 'undefined') {
                 border: none;
                 font-size: 12px;
                 cursor: pointer;
-                display: flex; align-items: center; justify-content: center;
+                display: flex;
+                align-items: center;
+                justifyContent: center;
                 opacity: 0;
                 transition: opacity .15s;
                 z-index: 3;
             }
-            .nsm-content-preview:hover .nsm-remove-content { opacity: 1; }
-
-            /* Pick-elevated state */
-            .nsm-content-preview.pick-elevated,
-            .npm-content-preview.pick-elevated {
-                border-color: #9b5de5;
-                background: rgba(155, 93, 229, .04) !important;
-                box-shadow: 0 0 0 3px rgba(155, 93, 229, 0.3), 0 8px 32px rgba(155, 93, 229, 0.2);
-            }
-            .nsm-content-preview.pick-elevated.drop-hover,
-            .npm-content-preview.pick-elevated.drop-hover {
-                border-style: solid;
-                background: rgba(155, 93, 229, .08) !important;
+            .nsm-content-preview:hover .nsm-remove-content {
+                opacity: 1;
             }
 
-            /*
-             * ✅ FIX: Elevate .content-preview-drag-target above the dimmer (z-index 1200)
-             * during drag so it remains visible and interactive.
-             * Apply class "content-preview-drag-target" to the wrapper div around
-             * your <ContentPreview> component(s) in your modal/form.
-             */
+
+
+            /* ── Drag scrim ─────────────────────────────────────────────────────── */
             body.content-dragging .content-preview-drag-target {
                 position: relative;
                 z-index: 1400;
-                /* Subtle glow so user knows this is the valid drop zone */
-                filter: drop-shadow(0 0 18px rgba(155, 93, 229, 0.5));
+                filter: drop-shadow(0 0 18px rgba(var(--color-primary-rgb, 155,93,229),0.5));
             }
 
-            /* ── Dark scrim while picking ── */
+            /* ── Dark scrim while picking OR while dragging from drawer ──────────── */
             #contentPickScrim {
                 position: fixed;
                 inset: 0;
                 z-index: 1655;
-                background: rgba(0, 0, 0, 0.55);
+                background: rgba(0,0,0,0.55);
                 pointer-events: none;
                 opacity: 0;
                 transition: opacity .25s;
@@ -130,13 +240,20 @@ if (typeof document !== 'undefined') {
                 opacity: 1;
                 pointer-events: auto;
             }
-            /* Drawer stays ABOVE the scrim */
-            #contentDrawer {
-                z-index: 1700;
+            #contentDrawer { z-index: 1700; }
+
+            @media (max-width: 768px) {
+                .nsm-remove-content {
+                    opacity: 1 !important;
+                    background: rgba(0,0,0,0.65) !important;
+                    width: 26px !important;
+                    height: 26px !important;
+                    font-size: 14px !important;
+                    top: 8px !important;
+                    right: 8px !important;
+                }
             }
         `;
-        document.head.appendChild(style);
-    }
 }
 
 export const styles: Record<string, CSSProperties> = {};

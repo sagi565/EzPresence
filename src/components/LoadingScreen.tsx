@@ -1,29 +1,43 @@
 import React from 'react';
+import styled from 'styled-components';
+
+const LoadingContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  flex-direction: column;
+  gap: 20px;
+  background: ${props => props.theme.gradients.background};
+`;
+
+const Spinner = styled.div`
+  width: 48px;
+  height: 48px;
+  border: 4px solid ${props => props.theme.colors.primary}33;
+  border-top-color: ${props => props.theme.colors.primary};
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+
+const MessageText = styled.p`
+  color: ${props => props.theme.colors.muted};
+  font-size: 16px;
+  font-weight: 500;
+`;
 
 const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => {
     return (
-        <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
-            flexDirection: 'column',
-            gap: '20px',
-            background: 'linear-gradient(135deg, #f9fafb 0%, rgba(155, 93, 229, 0.03) 50%, #f9fafb 100%)',
-        }}>
-            <div style={{
-                width: '48px',
-                height: '48px',
-                border: '4px solid rgba(155, 93, 229, 0.2)',
-                borderTopColor: '#9b5de5',
-                borderRadius: '50%',
-                animation: 'spin 0.8s linear infinite',
-            }} />
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            <p style={{ color: '#6b7280', fontSize: '16px', fontWeight: 500 }}>
+        <LoadingContainer>
+            <Spinner />
+            <MessageText>
                 {message}
-            </p>
-        </div>
+            </MessageText>
+        </LoadingContainer>
     );
 };
 

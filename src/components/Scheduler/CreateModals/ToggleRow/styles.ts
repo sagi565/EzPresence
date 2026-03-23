@@ -1,5 +1,5 @@
 import { CSSProperties } from 'react';
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 
 export const styles: Record<string, CSSProperties> = {
     toggleRow: {
@@ -11,7 +11,7 @@ export const styles: Record<string, CSSProperties> = {
     toggleLabel: {
         fontSize: '13px',
         fontWeight: 500,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
@@ -20,14 +20,14 @@ export const styles: Record<string, CSSProperties> = {
         position: 'relative',
         width: '38px',
         height: '22px',
-        background: '#d1d5db',
+        background: 'var(--color-bg)',
         borderRadius: '11px',
         cursor: 'pointer',
         transition: 'background .2s',
         flexShrink: 0,
     },
     toggleSwitchOn: {
-        background: theme.colors.primary,
+        background: 'var(--color-primary)',
     },
     toggleThumb: {
         position: 'absolute',
@@ -35,7 +35,7 @@ export const styles: Record<string, CSSProperties> = {
         left: '2px',
         width: '18px',
         height: '18px',
-        background: '#fff',
+        background: '#fff', // Switch thumb stays white usually
         borderRadius: '50%',
         transition: 'transform .2s',
         boxShadow: '0 1px 3px rgba(0,0,0,.2)',
@@ -44,13 +44,13 @@ export const styles: Record<string, CSSProperties> = {
         width: '15px',
         height: '15px',
         borderRadius: '50%',
-        background: 'rgba(155, 93, 229, .1)',
+        background: 'rgba(var(--color-primary-rgb, 155, 93, 229), .1)',
         fontSize: '9px',
         fontWeight: 700,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: theme.colors.primary,
+        color: 'var(--color-primary)',
         cursor: 'help',
         flexShrink: 0,
         fontStyle: 'italic',

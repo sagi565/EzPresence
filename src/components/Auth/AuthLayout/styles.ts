@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { theme } from '@theme/theme';
 import { media } from '@/styles/breakpoints';
 import { Link } from 'react-router-dom';
 
@@ -9,6 +8,8 @@ export const Shell = styled.div`
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  background-color: ${props => props.theme.colors.bg};
+  background-image: ${props => props.theme.gradients.background};
 `;
 
 export const Header = styled.div`
@@ -21,7 +22,7 @@ export const Header = styled.div`
 export const Brand = styled(Link)`
   font-size: 40px;
   font-weight: 900;
-  background-image: ${theme.gradients.innovator};
+  background-image: ${props => props.theme.gradients.innovator};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-decoration: none;
@@ -59,9 +60,9 @@ export const CenterPane = styled.div`
 export const Card = styled.div`
   width: 100%;
   max-width: 440px;
-  background: ${theme.colors.surface};
-  border-radius: ${theme.borderRadius.lg};
-  box-shadow: ${theme.shadows.md};
+  background: ${props => props.theme.colors.surface};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  box-shadow: ${props => props.theme.shadows.md};
   padding: 28px;
 
   ${media.tablet} {
@@ -74,7 +75,7 @@ export const Card = styled.div`
 export const Title = styled.h1`
   font-size: 36px;
   font-weight: 800;
-  background-image: ${theme.gradients.innovator};
+  background-image: ${props => props.theme.gradients.innovator};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 12px;
@@ -85,7 +86,7 @@ export const Title = styled.h1`
 `;
 
 export const Subtitle = styled.p`
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   margin-bottom: 20px;
 
   ${media.tablet} {
@@ -101,7 +102,7 @@ export const FormArea = styled.div`
 
 export const FooterArea = styled.div`
   margin-top: 16px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   font-size: 14px;
 
   ${media.tablet} {

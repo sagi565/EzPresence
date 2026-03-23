@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { globalStyles } from '@theme/globalStyles';
 import SchedulerPage from './pages/Scheduler/SchedulerPage';
 import StudioPage from './pages/Studio/StudioPage';
 import ContentPage from './pages/Content/ContentPage';
@@ -17,11 +16,15 @@ import TermsOfServicePage from './pages/Legal/TermsOfServicePage';
 import PrivacyPolicyPage from './pages/Legal/PrivacyPolicyPage';
 import HomePage from './pages/Home/HomePage';
 import DashboardPage from './pages/Dashboard/DashboardPage';
+import EditBrandPage from './pages/EditBrand/EditBrandPage';
+import { AppStyles } from './theme/AppStyles';
+import CookieBanner from './components/CookieBanner/CookieBanner';
 
 function App() {
   return (
     <>
-      <style>{globalStyles}</style>
+      <AppStyles />
+      <CookieBanner />
       <BrowserRouter>
         <Routes>
           {/* public legal pages */}
@@ -59,6 +62,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <CreateNewBrandPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/edit-brand/:id"
+            element={
+              <ProtectedRoute>
+                <EditBrandPage />
               </ProtectedRoute>
             }
           />

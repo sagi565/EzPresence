@@ -1,4 +1,4 @@
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 import { CSSProperties } from 'react';
 
 export const styles: Record<string, CSSProperties> = {
@@ -6,7 +6,7 @@ export const styles: Record<string, CSSProperties> = {
         position: 'absolute',
         top: 'calc(100% + 6px)',
         left: 0,
-        background: theme.colors.surface,
+        background: 'var(--color-surface)',
         borderRadius: '14px',
         boxShadow: '0 12px 40px rgba(0, 0, 0, .14)',
         border: '1px solid rgba(0, 0, 0, .06)',
@@ -25,7 +25,7 @@ export const styles: Record<string, CSSProperties> = {
         textAlign: 'center' as const,
         fontSize: '9px',
         fontWeight: 700,
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         textTransform: 'uppercase' as const,
         letterSpacing: '.6px',
     },
@@ -80,7 +80,7 @@ export const styles: Record<string, CSSProperties> = {
         justifyContent: 'center',
         fontSize: '20px',
         fontWeight: 700,
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         zIndex: 1,
     },
 };
@@ -93,7 +93,7 @@ if (typeof document !== 'undefined') {
         style.id = styleId;
         style.textContent = `
       .ntp-wheel-item.in-view {
-        color: ${theme.colors.text} !important;
+        color: var(--color-text) !important;
         font-weight: 600 !important;
       }
       .ntp-wheel-item:hover {

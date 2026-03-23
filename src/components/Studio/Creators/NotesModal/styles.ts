@@ -1,5 +1,5 @@
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '@theme/theme';
+// theme import removed to use dynamic props.theme
 
 // Animations
 const fadeInUp = keyframes`
@@ -43,10 +43,10 @@ export const ModalContainer = styled.div`
   width: 95%;
   maxWidth: 70vw;
   maxHeight: 85vh;
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 16px;
-  border: 2px solid ${theme.colors.primary};
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), 0 0 22px 6px rgba(155, 93, 229, 0.2);
+  border: 2px solid ${props => props.theme.colors.primary};
+  box-shadow: ${props => props.theme.shadows.lg}, 0 0 22px 6px ${props => props.theme.colors.primary}33;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -61,11 +61,11 @@ export const ModalContainer = styled.div`
 // Header Components
 export const ModalHeader = styled.div`
   padding: 24px 28px;
-  border-bottom: 1px solid rgba(155, 93, 229, 0.1);
+  border-bottom: 1px solid ${props => props.theme.colors.primary}1A;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, rgba(155, 93, 229, 0.03) 0%, rgba(251, 191, 36, 0.03) 100%);
+  background: linear-gradient(135deg, ${props => props.theme.colors.primary}08 0%, ${props => props.theme.colors.secondary}08 100%);
 
   @media (max-width: 768px) {
     padding: 16px 20px;
@@ -79,7 +79,7 @@ export const TitleGroup = styled.div`
 export const Subtitle = styled.div`
   font-size: 12px;
   font-weight: 700;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   text-transform: uppercase;
   letter-spacing: 0.12em;
   margin-bottom: 6px;
@@ -88,7 +88,7 @@ export const Subtitle = styled.div`
 export const Title = styled.h2`
   font-size: 28px;
   font-weight: 800;
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -103,7 +103,7 @@ export const CloseBtn = styled.button`
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(155, 93, 229, 0.08);
+  background: ${props => props.theme.colors.primary}14;
   border: none;
   display: flex;
   align-items: center;
@@ -111,10 +111,10 @@ export const CloseBtn = styled.button`
   cursor: pointer;
   transition: all 0.2s;
   font-size: 18px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
 
   &:hover {
-    background: rgba(155, 93, 229, 0.15);
+    background: ${props => props.theme.colors.primary}26;
     transform: rotate(90deg);
   }
 `;
@@ -159,34 +159,34 @@ export const FormGroup = styled.div`
 export const Label = styled.label`
   font-size: 14px;
   font-weight: 700;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
 `;
 
 export const Textarea = styled.textarea<{ $error?: boolean }>`
   width: 100%;
   min-height: 120px;
   padding: 14px;
-  border: 2px solid ${props => props.$error ? '#ef4444' : 'rgba(155, 93, 229, 0.15)'};
+  border: 2px solid ${props => props.$error ? '#ef4444' : `${props.theme.colors.primary}26`};
   border-radius: 12px;
-  background: rgba(249, 250, 251, 0.5);
+  background: ${props => props.theme.colors.bg}80;
   font-size: 14px;
   line-height: 1.6;
   resize: vertical;
   transition: all 0.2s;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   font-family: inherit;
   outline: none;
   animation: ${props => props.$error ? css`${shake} 0.3s ease` : 'none'};
 
   &:focus {
-    border-color: ${theme.colors.primary};
-    background: white;
+    border-color: ${props => props.theme.colors.primary};
+    background: ${props => props.theme.colors.bg};
   }
 `;
 
 export const HelperText = styled.div`
   font-size: 12px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
 `;
 
 export const ThemeGrid = styled.div`
@@ -207,16 +207,16 @@ export const ThemeOption = styled.div<{ $selected?: boolean; $error?: boolean }>
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 3px solid ${props => {
     if (props.$error) return '#ef4444';
-    if (props.$selected) return theme.colors.secondary;
+    if (props.$selected) return props.theme.colors.secondary;
     return 'transparent';
   }};
-  box-shadow: ${props => props.$selected ? '0 0 0 4px rgba(251, 191, 36, 0.25)' : '0 2px 8px rgba(0, 0, 0, 0.08)'};
+  box-shadow: ${props => props.$selected ? `0 0 0 4px ${props.theme.colors.secondary}40` : '0 2px 8px rgba(0, 0, 0, 0.08)'};
   animation: ${props => props.$error ? css`${shake} 0.3s ease` : 'none'};
 
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-    border-color: ${props => props.$selected ? theme.colors.secondary : theme.colors.primary};
+    border-color: ${props => props.$selected ? props.theme.colors.secondary : props.theme.colors.primary};
   }
 `;
 
@@ -237,7 +237,7 @@ export const ThemeName = styled.div`
   fontSize: 10px;
   fontWeight: 600;
   textAlign: center;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
 `;
 
 export const LogoSelector = styled.div`
@@ -249,22 +249,22 @@ export const LogoSelector = styled.div`
 export const LogoOption = styled.div<{ $selected?: boolean }>`
   width: 72px;
   height: 72px;
-  border: 2px solid ${props => props.$selected ? theme.colors.secondary : 'rgba(155, 93, 229, 0.15)'};
+  border: 2px solid ${props => props.$selected ? props.theme.colors.secondary : `${props.theme.colors.primary}26`};
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  background: ${props => props.$selected ? 'rgba(251, 191, 36, 0.05)' : 'rgba(249, 250, 251, 0.5)'};
+  background: ${props => props.$selected ? `${props.theme.colors.secondary}0D` : `${props.theme.colors.primary}08`};
   position: relative;
   flex-direction: column;
   gap: 4px;
   padding: 8px;
-  box-shadow: ${props => props.$selected ? '0 0 0 4px rgba(251, 191, 36, 0.25)' : 'none'};
+  box-shadow: ${props => props.$selected ? `0 0 0 4px ${props.theme.colors.secondary}40` : 'none'};
 
   &:hover {
-    border-color: ${theme.colors.primary};
+    border-color: ${props => props.theme.colors.primary};
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(155, 93, 229, 0.15);
   }
@@ -278,14 +278,14 @@ export const LogoText = styled.div`
   font-size: 9px;
   font-weight: 600;
   textAlign: center;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
 `;
 
 export const LogoSaved = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: ${theme.colors.secondary};
+  background: ${props => props.theme.colors.secondary};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -295,7 +295,7 @@ export const LogoSaved = styled.div`
 `;
 
 export const LogoAdd = styled.div`
-  color: ${theme.colors.teal};
+  color: ${props => props.theme.colors.teal};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -305,7 +305,7 @@ export const LogoAdd = styled.div`
 export const LogoAddText = styled.div`
   font-size: 8px;
   font-weight: 600;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
 `;
 
 export const SoundGrid = styled.div`
@@ -320,7 +320,7 @@ export const SoundGrid = styled.div`
 `;
 
 export const SoundOption = styled.div<{ $selected?: boolean }>`
-  border: 2px solid ${props => props.$selected ? theme.colors.secondary : 'rgba(155, 93, 229, 0.15)'};
+  border: 2px solid ${props => props.$selected ? props.theme.colors.secondary : `${props.theme.colors.primary}26`};
   border-radius: 8px;
   padding: 10px 6px;
   display: flex;
@@ -329,13 +329,13 @@ export const SoundOption = styled.div<{ $selected?: boolean }>`
   gap: 4px;
   cursor: pointer;
   transition: all 0.2s;
-  background: ${props => props.$selected ? 'rgba(251, 191, 36, 0.05)' : 'rgba(249, 250, 251, 0.5)'};
+  background: ${props => props.$selected ? `${props.theme.colors.secondary}0D` : `${props.theme.colors.primary}08`};
   position: relative;
   min-height: 70px;
-  box-shadow: ${props => props.$selected ? '0 0 0 4px rgba(251, 191, 36, 0.25)' : 'none'};
+  box-shadow: ${props => props.$selected ? `0 0 0 4px ${props.theme.colors.secondary}40` : 'none'};
 
   &:hover {
-    border-color: ${theme.colors.primary};
+    border-color: ${props => props.theme.colors.primary};
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(155, 93, 229, 0.15);
   }
@@ -343,14 +343,14 @@ export const SoundOption = styled.div<{ $selected?: boolean }>`
 
 export const SoundIcon = styled.div`
   font-size: 18px;
-  color: ${theme.colors.primary};
+  color: ${props => props.theme.colors.primary};
 `;
 
 export const SoundName = styled.div`
   font-size: 9px;
   font-weight: 600;
   textAlign: center;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
 `;
 
 export const SoundFavorite = styled.div`
@@ -358,7 +358,7 @@ export const SoundFavorite = styled.div`
   top: 2px;
   right: 2px;
   font-size: 10px;
-  color: ${theme.colors.pink};
+  color: ${props => props.theme.colors.pink};
 `;
 
 export const LibraryBtn = styled.button`
@@ -369,8 +369,8 @@ export const LibraryBtn = styled.button`
   cursor: pointer;
   transition: all 0.2s;
   background: transparent;
-  color: ${theme.colors.primary};
-  border: 2px solid ${theme.colors.primary};
+  color: ${props => props.theme.colors.primary};
+  border: 2px solid ${props => props.theme.colors.primary};
   marginTop: 8px;
 
   &:hover {
@@ -395,7 +395,7 @@ export const ModalFooter = styled.div`
 
 export const GenerateBtn = styled.button`
   padding: 18px 24px;
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   border: none;
   border-radius: 14px;
   color: white;
@@ -403,14 +403,14 @@ export const GenerateBtn = styled.button`
   fontSize: 15px;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 6px 20px rgba(155, 93, 229, 0.3), 0 3px 10px rgba(251, 191, 36, 0.25);
+  box-shadow: 0 6px 20px ${props => props.theme.colors.primary}4D, 0 3px 10px ${props => props.theme.colors.secondary}40;
   position: relative;
   overflow: hidden;
   letter-spacing: 0.5px;
 
   &:hover {
     transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 12px 35px rgba(155, 93, 229, 0.5), 0 8px 20px rgba(251, 191, 36, 0.4), 0 0 30px rgba(155, 93, 229, 0.3);
+    box-shadow: 0 12px 35px ${props => props.theme.colors.primary}80, 0 8px 20px ${props => props.theme.colors.secondary}66, 0 0 30px ${props => props.theme.colors.primary}4D;
     filter: brightness(1.1);
   }
 
@@ -452,20 +452,20 @@ export const ConfirmTitle = styled.h3`
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 16px;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
 `;
 
 export const ConfirmMessage = styled.p`
   font-size: 14px;
   line-height: 1.6;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   margin-bottom: 24px;
   white-space: pre-line;
 `;
 
 export const CreditsBold = styled.span`
   fontWeight: 700;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
 `;
 
 export const ConfirmButtons = styled.div`
@@ -484,17 +484,17 @@ export const ConfirmBtn = styled.button<{ $proceed?: boolean }>`
   border: none;
 
   ${props => props.$proceed ? css`
-    background: ${theme.gradients.innovator};
+    background: ${props => props.theme.gradients.innovator};
     color: white;
-    box-shadow: 0 4px 12px rgba(155, 93, 229, 0.3);
+    box-shadow: 0 4px 12px ${props => props.theme.colors.primary}4D;
 
     &:hover {
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(155, 93, 229, 0.4);
+      box-shadow: 0 6px 20px ${props => props.theme.colors.primary}66;
     }
   ` : css`
-    background: rgba(107, 114, 128, 0.1);
-    color: ${theme.colors.muted};
+    background: ${props => props.theme.colors.muted}1A;
+    color: ${props => props.theme.colors.muted};
 
     &:hover {
       background: rgba(107, 114, 128, 0.15);
@@ -526,7 +526,7 @@ export const CelebrationIcon = styled.div`
 export const CelebrationText = styled.h2`
   fontSize: 32px;
   fontWeight: 800;
-  background: ${theme.gradients.innovator};
+  background: ${props => props.theme.gradients.innovator};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

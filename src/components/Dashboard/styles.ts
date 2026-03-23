@@ -1,5 +1,5 @@
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '@theme/theme';
+// theme import removed to use dynamic props.theme
 
 export const fadeInUp = keyframes`
   from {
@@ -18,7 +18,10 @@ export const shimmer = keyframes`
 `;
 
 export const ShimmerBase = styled.div`
-  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, 
+    ${props => props.theme.colors.bg} 25%, 
+    ${props => props.theme.colors.surface} 50%, 
+    ${props => props.theme.colors.bg} 75%);
   background-size: 800px 100%;
   animation: ${shimmer} 1.4s infinite linear;
   border-radius: 8px;
@@ -26,12 +29,12 @@ export const ShimmerBase = styled.div`
 
 // --- MetricCard Styles ---
 export const MetricCardContainer = styled.div<{ $hovered: boolean; $color: string; $gradient: string }>`
-  background: white;
-  border-radius: ${theme.borderRadius.lg};
+  background: ${props => props.theme.colors.surface};
+  border-radius: ${props => props.theme.borderRadius.lg};
   padding: 20px 24px;
   box-shadow: ${props => props.$hovered 
-    ? `0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px ${props.$color}30` 
-    : theme.shadows.md};
+    ? `0 8px 32px rgba(0,0,0,0.15), 0 0 0 1px ${props.$color}40` 
+    : props.theme.shadows.md};
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -102,7 +105,7 @@ export const MetricIconBox = styled.div<{ $color: string; $hovered: boolean }>`
 export const MetricLabel = styled.span`
   font-size: 13px;
   font-weight: 600;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   letter-spacing: 0.05em;
   text-transform: uppercase;
 
@@ -119,7 +122,7 @@ export const DeltaBadge = styled.div<{ $isPositive: boolean; $isZero: boolean }>
     ? 'rgba(107, 114, 128, 0.1)'
     : props.$isPositive ? 'rgba(20, 184, 166, 0.1)' : 'rgba(239, 68, 68, 0.1)'};
   color: ${props => props.$isZero
-    ? theme.colors.muted
+    ? props.theme.colors.muted
     : props.$isPositive ? '#14b8a6' : '#ef4444'};
   border-radius: 20px;
   padding: 3px 8px;
@@ -139,7 +142,7 @@ export const DeltaBadge = styled.div<{ $isPositive: boolean; $isZero: boolean }>
 export const MetricValue = styled.div`
   font-size: 34px;
   font-weight: 800;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   letter-spacing: -1.5px;
   line-height: 1;
 
@@ -188,9 +191,9 @@ export const PlatformTabsContainer = styled.div`
 
 export const PlatformEmptyState = styled.div`
   padding: 14px 20px;
-  background: white;
-  border-radius: ${theme.borderRadius.md};
-  color: ${theme.colors.muted};
+  background: ${props => props.theme.colors.surface};
+  border-radius: ${props => props.theme.borderRadius.md};
+  color: ${props => props.theme.colors.muted};
   font-size: 14px;
 `;
 
@@ -199,11 +202,11 @@ export const PlatformButton = styled.button<{ $active: boolean; $color: string }
   align-items: center;
   gap: 10px;
   padding: 9px 14px;
-  border-radius: ${theme.borderRadius.md};
+  border-radius: ${props => props.theme.borderRadius.md};
   border: ${props => props.$active
     ? `2px solid ${props.$color}`
-    : '2px solid #e5e7eb'};
-  background: ${props => props.$active ? `${props.$color}12` : 'white'};
+    : `2px solid ${props.theme.colors.primary}1A`};
+  background: ${props => props.$active ? `${props.$color}12` : props.theme.colors.surface};
   cursor: pointer;
   transition: all 0.18s ease;
   box-shadow: ${props => props.$active ? `0 2px 12px ${props.$color}28` : '0 1px 4px rgba(0,0,0,0.06)'};
@@ -239,8 +242,8 @@ export const CheckboxIndicator = styled.div<{ $active: boolean; $color: string }
   width: 16px;
   height: 16px;
   border-radius: 4px;
-  border: 2px solid ${props => props.$active ? props.$color : '#d1d5db'};
-  background: ${props => props.$active ? props.$color : 'white'};
+  border: 2px solid ${props => props.$active ? props.$color : `${props.theme.colors.primary}26`};
+  background: ${props => props.$active ? props.$color : props.theme.colors.surface};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -277,7 +280,7 @@ export const PlatformTextWrapper = styled.div`
 export const PlatformName = styled.div<{ $active: boolean; $color: string }>`
   font-size: 13px;
   font-weight: 700;
-  color: ${props => props.$active ? props.$color : theme.colors.text};
+  color: ${props => props.$active ? props.$color : props.theme.colors.text};
   line-height: 1.2;
 
   @media (max-width: 1024px) {
@@ -295,7 +298,7 @@ export const PlatformName = styled.div<{ $active: boolean; $color: string }>`
 
 export const PlatformUsername = styled.div`
   font-size: 11px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
 
   @media (max-width: 1024px) {
     font-size: 10px;
@@ -315,7 +318,7 @@ export const ProfilePicture = styled.img<{ $active: boolean; $color: string }>`
   height: 26px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid ${props => props.$active ? props.$color : '#e5e7eb'};
+  border: 2px solid ${props => props.$active ? props.$color : `${props.theme.colors.primary}1A`};
   margin-left: 2px;
   flex-shrink: 0;
 
@@ -337,10 +340,10 @@ export const ProfilePicture = styled.img<{ $active: boolean; $color: string }>`
 
 // --- TimelineChart Styles ---
 export const ChartContainer = styled.div`
-  background: white;
-  border-radius: ${theme.borderRadius.lg};
+  background: ${props => props.theme.colors.surface};
+  border-radius: ${props => props.theme.borderRadius.lg};
   padding: 24px;
-  box-shadow: ${theme.shadows.md};
+  box-shadow: ${props => props.theme.shadows.md};
 
   @media (max-width: 768px) {
     padding: 16px;
@@ -372,9 +375,9 @@ export const LegendButton = styled.button<{ $active: boolean; $color: string }>`
   gap: 6px;
   padding: 5px 13px;
   border-radius: 20px;
-  border: 1.5px solid ${props => props.$active ? props.$color : '#e5e7eb'};
+  border: 1.5px solid ${props => props.$active ? props.$color : `${props.theme.colors.primary}1A`};
   background: ${props => props.$active ? `${props.$color}15` : 'transparent'};
-  color: ${props => props.$active ? props.$color : theme.colors.muted};
+  color: ${props => props.$active ? props.$color : props.theme.colors.muted};
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
@@ -395,7 +398,7 @@ export const LegendDot = styled.span<{ $active: boolean; $color: string }>`
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: ${props => props.$active ? props.$color : '#d1d5db'};
+  background: ${props => props.$active ? props.$color : `${props.theme.colors.primary}26`};
   display: inline-block;
 `;
 
@@ -436,10 +439,10 @@ export const TooltipValue = styled.span`
 
 // --- PostsTable Styles ---
 export const PostsContainer = styled.div`
-  background: white;
-  border-radius: ${theme.borderRadius.lg};
+  background: ${props => props.theme.colors.surface};
+  border-radius: ${props => props.theme.borderRadius.lg};
   padding: 24px;
-  box-shadow: ${theme.shadows.md};
+  box-shadow: ${props => props.theme.shadows.md};
 
   @media (max-width: 768px) {
     padding: 16px;
@@ -461,12 +464,13 @@ export const PostsGrid = styled.div`
 `;
 
 export const PostCardContainer = styled.div<{ $hovered: boolean; $index: number }>`
-  background: white;
-  border-radius: ${theme.borderRadius.lg};
+  background: ${props => props.theme.colors.surface};
+  border-radius: ${props => props.theme.borderRadius.lg};
   overflow: hidden;
   box-shadow: ${props => props.$hovered
-    ? '0 8px 32px rgba(0,0,0,0.13)'
-    : '0 1px 6px rgba(0,0,0,0.07)'};
+    ? '0 8px 32px rgba(0,0,0,0.25)'
+    : '0 1px 6px rgba(0,0,0,0.1)'};
+  border: 1px solid ${props => props.theme.colors.primary}0D;
   transition: all 0.22s ease;
   transform: ${props => props.$hovered ? 'translateY(-3px)' : 'translateY(0)'};
   animation: ${fadeInUp} 0.3s ease ${props => props.$index * 0.07}s both;
@@ -554,19 +558,19 @@ export const StatItem = styled.div<{ $color?: string }>`
   display: flex;
   align-items: center;
   gap: 5px;
-  color: ${props => props.$color || theme.colors.muted};
+  color: ${props => props.$color || props.theme.colors.muted};
   font-size: 13px;
   font-weight: 600;
 `;
 
 export const PublishedDate = styled.span`
   font-size: 12px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
 `;
 
 export const PostCaption = styled.p`
   font-size: 13px;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   margin: 0 0 14px;
   line-height: 1.5;
   display: -webkit-box;
@@ -577,7 +581,7 @@ export const PostCaption = styled.p`
 `;
 
 export const CommentsToggleWrapper = styled.div`
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid ${props => props.theme.colors.primary}1A;
 `;
 
 export const CommentsToggleButton = styled.button<{ $active: boolean; $color: string }>`
@@ -589,7 +593,7 @@ export const CommentsToggleButton = styled.button<{ $active: boolean; $color: st
   background: none;
   border: none;
   cursor: pointer;
-  color: ${props => props.$active ? props.$color : theme.colors.muted};
+  color: ${props => props.$active ? props.$color : props.theme.colors.muted};
   font-size: 13px;
   font-weight: 600;
   transition: color 0.15s;
@@ -609,13 +613,13 @@ export const ChevronIcon = styled.svg<{ $open: boolean }>`
 export const CommentsContainer = styled.div`
   display: flex;
   flex-direction: column;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid ${props => props.theme.colors.primary}1A;
   animation: ${fadeInUp} 0.2s ease;
 `;
 
 export const EmptyComments = styled.div`
   padding: 16px 20px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   font-size: 13px;
   font-style: italic;
 `;
@@ -624,7 +628,7 @@ export const CommentItem = styled.div<{ $even: boolean }>`
   display: flex;
   gap: 10px;
   padding: 12px 16px;
-  background: ${props => props.$even ? '#fafafa' : 'white'};
+  background: ${props => props.$even ? `${props.theme.colors.primary}05` : 'transparent'};
   align-items: flex-start;
 `;
 
@@ -657,12 +661,12 @@ export const CommentHeader = styled.div`
 export const CommentUser = styled.span`
   font-weight: 700;
   font-size: 13px;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
 `;
 
 export const CommentDate = styled.span`
   font-size: 11px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
 `;
 
 export const CommentLikes = styled.span`
@@ -678,7 +682,7 @@ export const CommentLikes = styled.span`
 
 export const CommentText = styled.p`
   font-size: 13px;
-  color: #374151;
+  color: ${props => props.theme.colors.text}E6;
   margin: 0;
   line-height: 1.4;
 `;
@@ -689,14 +693,14 @@ export const StyledExportButton = styled.button<{ $hovered: boolean; $clicked: b
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  border-radius: ${theme.borderRadius.md};
-  border: 1.5px solid ${props => props.$hovered ? theme.colors.teal : 'rgba(20,184,166,0.4)'};
+  border-radius: ${props => props.theme.borderRadius.md};
+  border: 1.5px solid ${props => props.$hovered ? props.theme.colors.teal : `${props.theme.colors.teal}40`};
   background: ${props => props.$hovered
-    ? 'rgba(20, 184, 166, 0.1)'
+    ? `${props.theme.colors.teal}1A`
     : props.$clicked
-      ? 'rgba(20, 184, 166, 0.05)'
-      : 'white'};
-  color: ${theme.colors.teal};
+      ? `${props.theme.colors.teal}0D`
+      : props.theme.colors.surface};
+  color: ${props => props.theme.colors.teal};
   font-weight: 600;
   font-size: 14px;
   cursor: ${props => props.$loading ? 'not-allowed' : 'pointer'};
@@ -732,7 +736,7 @@ export const ExportIcon = styled.svg<{ $hovered: boolean }>`
 export const ModalBackdrop = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.5);
   z-index: 2000;
   animation: fadeIn 0.15s ease;
 
@@ -750,9 +754,10 @@ export const ModalContainer = styled.div`
   z-index: 2001;
   width: 480px;
   max-width: 95vw;
-  background: white;
-  border-radius: ${theme.borderRadius.lg};
-  box-shadow: 0 24px 80px rgba(0,0,0,0.18);
+  background: ${props => props.theme.colors.surface};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+  border: 1px solid ${props => props.theme.colors.primary}1A;
   animation: focusAppear 0.2s ease;
   overflow: hidden;
 
@@ -763,7 +768,7 @@ export const ModalContainer = styled.div`
 `;
 
 export const ModalHeader = styled.div`
-  background: ${theme.gradients.momentum};
+  background: ${props => props.theme.gradients.momentum};
   padding: 20px 24px;
   display: flex;
   align-items: center;
@@ -814,7 +819,7 @@ export const ModalBody = styled.div`
 
 export const SectionLabel = styled.p`
   font-size: 12px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   margin: 0 0 4px;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -826,9 +831,9 @@ export const ExportOption = styled.label<{ $selected: boolean; $disabled: boolea
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
-  border: 1.5px solid ${props => props.$selected ? theme.colors.primary : '#e5e7eb'};
-  border-radius: ${theme.borderRadius.md};
-  background: ${props => props.$selected ? `${theme.colors.primary}08` : '#fafafa'};
+  border: 1.5px solid ${props => props.$selected ? props.theme.colors.primary : `${props.theme.colors.primary}1A`};
+  border-radius: ${props => props.theme.borderRadius.md};
+  background: ${props => props.$selected ? `${props.theme.colors.primary}0D` : props.theme.colors.surface};
   cursor: ${props => props.$disabled ? 'not-allowed' : 'pointer'};
   opacity: ${props => props.$disabled ? 0.5 : 1};
   transition: all 0.15s;
@@ -836,7 +841,7 @@ export const ExportOption = styled.label<{ $selected: boolean; $disabled: boolea
 
   &:hover {
     ${props => !props.$disabled && css`
-      border-color: ${props.$selected ? theme.colors.primary : '#d1d5db'};
+      border-color: ${props.$selected ? props.theme.colors.primary : `${props.theme.colors.primary}40`};
     `}
   }
 `;
@@ -846,8 +851,8 @@ export const CustomCheckbox = styled.div<{ $selected: boolean }>`
   height: 20px;
   border-radius: 5px;
   flex-shrink: 0;
-  border: 2px solid ${props => props.$selected ? theme.colors.primary : '#d1d5db'};
-  background: ${props => props.$selected ? theme.colors.primary : 'white'};
+  border: 2px solid ${props => props.$selected ? props.theme.colors.primary : `${props.theme.colors.primary}26`};
+  background: ${props => props.$selected ? props.theme.colors.primary : props.theme.colors.bg};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -862,18 +867,18 @@ export const OptionIcon = styled.span`
 export const OptionText = styled.div`
   font-weight: 700;
   font-size: 14px;
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
 `;
 
 export const OptionDescription = styled.div`
   font-size: 12px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   margin-top: 1px;
 `;
 
 export const ModalFooter = styled.div`
   padding: 16px 24px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid ${props => props.theme.colors.primary}1A;
   display: flex;
   gap: 10px;
   justify-content: flex-end;
@@ -881,26 +886,26 @@ export const ModalFooter = styled.div`
 
 export const CancelButton = styled.button`
   padding: 9px 20px;
-  border-radius: ${theme.borderRadius.md};
-  border: 1.5px solid #e5e7eb;
-  background: white;
-  color: ${theme.colors.muted};
+  border-radius: ${props => props.theme.borderRadius.md};
+  border: 1.5px solid ${props => props.theme.colors.primary}1A;
+  background: ${props => props.theme.colors.surface};
+  color: ${props => props.theme.colors.muted};
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    border-color: #d1d5db;
-    background: #f9fafb;
+    border-color: ${props => props.theme.colors.primary}33;
+    background: ${props => props.theme.colors.bg};
   }
 `;
 
 export const ActionButton = styled.button<{ $done: boolean; $disabled: boolean }>`
   padding: 9px 24px;
-  border-radius: ${theme.borderRadius.md};
+  border-radius: ${props => props.theme.borderRadius.md};
   border: none;
-  background: ${props => props.$done ? '#14b8a6' : theme.gradients.momentum};
+  background: ${props => props.$done ? props.theme.colors.teal : props.theme.gradients.momentum};
   color: white;
   font-weight: 700;
   font-size: 14px;

@@ -1,5 +1,4 @@
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '@theme/theme';
 import { media } from '@/styles/breakpoints';
 
 export const poofImplode = keyframes`
@@ -37,7 +36,7 @@ export const ContentArea = styled.div<{ $isDraggingList?: boolean; $isReorderScr
   WebkitOverflowScrolling: touch;
   overscroll-behavior-y: none;
   scrollbar-width: thin;
-  scrollbar-color: ${theme.colors.primary}33 transparent;
+  scrollbar-color: ${props => props.theme.colors.primary}33 transparent;
   padding-right: 100px;
 
   ${media.tablet} {
@@ -51,7 +50,7 @@ export const ContentArea = styled.div<{ $isDraggingList?: boolean; $isReorderScr
     background: transparent;
   }
   &::-webkit-scrollbar-thumb {
-    background: ${theme.colors.primary}33;
+    background: ${props => props.theme.colors.primary}33;
     border-radius: 3px;
   }
 `;
@@ -75,7 +74,7 @@ export const ListSection = styled.div<{ $isDeleting?: boolean }>`
   `}
 
   ${media.phone} {
-    padding: 32px 10px 80px 10px;
+    padding: 50px 10px 80px 10px;
     align-items: flex-start;
     justify-content: flex-start;
     min-height: 100%; /* Ensure each list has full screen space on mobile */
@@ -106,10 +105,10 @@ export const AddListButtonWrapper = styled.div`
 
 export const AddListButton = styled.button`
   padding: 16px 32px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px dashed ${theme.colors.primary}4D;
+  background: ${props => props.theme.colors.surface}F2;
+  border: 2px dashed ${props => props.theme.colors.primary}4D;
   border-radius: 12px;
-  color: ${theme.colors.primary};
+  color: ${props => props.theme.colors.primary};
   font-weight: 600;
   fontSize: 18px;
   cursor: pointer;
@@ -118,12 +117,12 @@ export const AddListButton = styled.button`
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: ${props => props.theme.shadows.md};
   backdrop-filter: blur(10px);
 
   &:hover {
-    background: ${theme.colors.primary}1A;
-    border-color: ${theme.colors.primary}66;
+    background: ${props => props.theme.colors.primary}1A;
+    border-color: ${props => props.theme.colors.primary}66;
     transform: translateY(-2px);
   }
 
@@ -171,13 +170,13 @@ export const ItemPreview = styled.div`
   aspect-ratio: 9/16;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px ${theme.colors.primary}66;
+  box-shadow: 0 25px 50px -12px ${props => props.theme.colors.primary}66;
   transform: rotate(-2deg) scale(1.05);
   cursor: grabbing;
-  background: ${theme.colors.bg};
+  background: ${props => props.theme.colors.bg};
   position: relative;
   opacity: 0.9;
-  border: 2px solid ${theme.colors.primary};
+  border: 2px solid ${props => props.theme.colors.primary};
 
   img {
     width: 100%;
@@ -197,7 +196,7 @@ export const EmptyPreview = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 32px;
-  background: ${theme.colors.primary}0D;
+  background: ${props => props.theme.colors.primary}0D;
 `;
 
 export const PreviewTitle = styled.div`
@@ -221,12 +220,12 @@ export const ListPreview = styled.div<{ $isSystem?: boolean }>`
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: ${props => props.$isSystem ? `${theme.colors.secondary}1A` : `${theme.colors.primary}1A`};
+  background: ${props => props.$isSystem ? `${props.theme.colors.secondary}1A` : `${props.theme.colors.primary}1A`};
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: ${props => props.theme.shadows.md};
   font-size: 20px;
   cursor: grabbing;
-  border: 2px solid ${props => props.$isSystem ? `${theme.colors.secondary}66` : `${theme.colors.primary}66`};
+  border: 2px solid ${props => props.$isSystem ? `${props.theme.colors.secondary}66` : `${props.theme.colors.primary}66`};
 `;

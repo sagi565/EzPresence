@@ -289,11 +289,11 @@ const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
                 onClick={onDelete}
                 title="Delete"
                 style={{
-                  padding: '14px 20px',
+                  padding: '14px 16px',
                   height: 'auto',
-                  borderRadius: '12px',
-                  fontSize: '15px',
-                  width: '100%',
+                  borderRadius: '14px',
+                  fontSize: '14px',
+                  flex: 1,
                 }}
               >
                 Delete

@@ -1,5 +1,6 @@
 import React from 'react';
-import { theme } from '@theme/theme';
+import { useTheme } from 'styled-components';
+import { Theme } from '@theme/theme';
 import type { ConnectedPlatform } from '@/models/Platform';
 import { getPlatformDisplayName } from '@/models/Platform';
 import {
@@ -20,18 +21,21 @@ interface PlatformTabsProps {
   onChange: (platforms: string[]) => void;
 }
 
-const platformColor: Record<string, string> = {
-  instagram: '#E1306C',
-  facebook: '#1877F2',
-  tiktok: '#010101',
-  youtube: '#FF0000',
-};
-
 const PlatformTabs: React.FC<PlatformTabsProps> = ({
   connectedPlatforms,
   selected,
   onChange,
 }) => {
+  const theme = useTheme() as Theme;
+  const isDark = theme.colors.bg === '#0a0e17';
+  
+  const platformColor: Record<string, string> = {
+    instagram: '#E1306C',
+    facebook: '#1877F2',
+    tiktok: isDark ? '#333333' : '#010101',
+    youtube: '#FF0000',
+  };
+
   const activePlatforms = connectedPlatforms.filter(p => p.isConnected);
 
   if (!activePlatforms.length) {

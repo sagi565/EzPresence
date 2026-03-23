@@ -1,11 +1,11 @@
 import { CSSProperties } from 'react';
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 
 export const styles: Record<string, CSSProperties> = {
     overlay: {
         position: 'fixed',
         inset: 0,
-        background: 'rgba(17, 24, 39, 0.45)',
+        background: 'rgba(17, 24, 39, 0.25)',
         backdropFilter: 'blur(3px)',
         zIndex: 1500,
     },
@@ -15,9 +15,9 @@ export const styles: Record<string, CSSProperties> = {
         left: '50%',
         transform: 'translate(-50%, -50%)',
         zIndex: 1600,
-        background: theme.colors.surface,
+        background: 'var(--color-surface)',
         borderRadius: '16px',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, .15), 0 0 0 1px rgba(0, 0, 0, .04)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, .15), 0 0 0 1px var(--color-bg)',
         maxWidth: '94vw',
         maxHeight: '88vh',
         minHeight: '520px',
@@ -30,9 +30,9 @@ export const styles: Record<string, CSSProperties> = {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '18px 28px',
-        background: '#f8f9fb',
+        background: 'var(--color-bg)',
         borderRadius: '16px 16px 0 0',
-        borderBottom: '1px solid rgba(0, 0, 0, .05)',
+        borderBottom: '1px solid var(--color-bg)',
         flexShrink: 0,
     },
     typeLabel: {
@@ -42,7 +42,7 @@ export const styles: Record<string, CSSProperties> = {
     title: {
         fontSize: '22px',
         fontWeight: 700,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
     },
     closeBtn: {
         width: '32px',
@@ -52,8 +52,8 @@ export const styles: Record<string, CSSProperties> = {
         justifyContent: 'center',
         border: 'none',
         borderRadius: '50%',
-        background: 'rgba(0, 0, 0, .06)',
-        color: theme.colors.muted,
+        background: 'rgba(var(--color-text-rgb, 0, 0, 0), .06)',
+        color: 'var(--color-muted)',
         fontSize: '18px',
         cursor: 'pointer',
         transition: 'all .2s',
@@ -83,8 +83,8 @@ export const styles: Record<string, CSSProperties> = {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '16px 28px',
-        background: '#f8f9fb',
-        borderTop: '1px solid rgba(0, 0, 0, .05)',
+        background: 'var(--color-bg)',
+        borderTop: '1px solid var(--color-bg)',
         borderRadius: '0 0 16px 16px',
         flexShrink: 0,
     },

@@ -1,5 +1,5 @@
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '@theme/theme';
+// import { theme } from '@theme/theme'; // Removed to use props.theme
 
 export const fadeIn = keyframes`
   from { opacity: 0; }
@@ -19,7 +19,7 @@ export const slideUp = keyframes`
 export const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
   z-index: 5000;
   display: flex;
@@ -34,10 +34,10 @@ export const Overlay = styled.div`
 `;
 
 export const Modal = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+  box-shadow: ${props => props.theme.shadows.lg};
   width: 900px;
   height: 600px;
   position: relative;
@@ -66,9 +66,9 @@ export const CloseButton = styled.button`
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.06);
+  background: ${props => props.theme.colors.primary}0D;
   border: none;
-  color: #6b7280;
+  color: ${props => props.theme.colors.muted};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -86,10 +86,10 @@ export const CloseButton = styled.button`
     right: 16px;
     width: 36px;
     height: 36px;
-    background: rgba(255, 255, 255, 0.8);
+    background: ${props => props.theme.colors.surface}CC;
     backdrop-filter: blur(8px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: ${props => props.theme.shadows.md};
+    border: 1px solid ${props => props.theme.colors.primary}0D;
   }
 `;
 
@@ -108,7 +108,7 @@ export const ContentWrapper = styled.div`
 
 export const MediaSection = styled.div`
   flex: 1 1 60%;
-  background: #000;
+  background: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -160,8 +160,8 @@ export const MediaPlaceholder = styled.div`
   justify-content: center;
   width: 100%;
   height: 100%;
-  background: #1a1a1a;
-  color: #666;
+  background: ${props => props.theme.colors.bg};
+  color: ${props => props.theme.colors.muted};
 `;
 
 export const InfoSection = styled.div`
@@ -179,7 +179,7 @@ export const InfoSection = styled.div`
     width: 6px;
   }
   &::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.1);
+    background: ${props => props.theme.colors.primary}1A;
     border-radius: 3px;
   }
 
@@ -190,12 +190,12 @@ export const InfoSection = styled.div`
     height: auto;
     padding: 24px 20px;
     gap: 20px;
-    background: white;
+    background: ${props => props.theme.colors.surface};
     border-top-left-radius: 32px;
     border-top-right-radius: 32px;
     margin-top: -32px;
     z-index: 2;
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
+    box-shadow: ${props => props.theme.shadows.md};
   }
 `;
 
@@ -212,7 +212,7 @@ export const TitleSection = styled.div`
 export const Title = styled.h2`
   font-size: 22px;
   font-weight: 700;
-  color: #111827;
+  color: ${props => props.theme.colors.text};
   margin: 0;
   flex: 1;
   word-break: break-word;
@@ -220,7 +220,7 @@ export const Title = styled.h2`
   @media (max-width: 768px) {
     font-size: 24px;
     letter-spacing: -0.5px;
-    color: #000;
+    color: ${props => props.theme.colors.text};
   }
 `;
 
@@ -231,11 +231,11 @@ export const RenameInput = styled.input`
   max-width: 180px;
   font-size: 22px;
   font-weight: 700;
-  color: #111827;
+  color: ${props => props.theme.colors.text};
   padding: 4px 8px;
-  background: rgba(0, 0, 0, 0.03);
+  background: ${props => props.theme.colors.primary}08;
   border: 1px solid transparent;
-  border-bottom: 2px solid ${theme.colors.primary};
+  border-bottom: 2px solid ${props => props.theme.colors.primary};
   border-radius: 8px 8px 0 0;
   outline: none;
   transition: background 0.2s ease;
@@ -260,24 +260,26 @@ export const IconButton = styled.button<{ $type?: 'edit' | 'favorite' | 'save' |
   padding: 0;
 
   ${props => props.$type === 'edit' && css`
-    background: ${theme.colors.primary}1A;
+    background: ${props.theme.colors.primary}1A;
     font-size: 16px;
+    color: ${props.theme.colors.primary};
     &:hover {
-      background: ${theme.colors.primary}33;
+      background: ${props.theme.colors.primary}33;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px ${theme.colors.primary}26;
+      box-shadow: 0 4px 12px ${props.theme.colors.primary}26;
     }
   `}
 
   ${props => props.$type === 'favorite' && css`
-    background: ${props.$active ? 'rgba(239, 68, 68, 0.15)' : 'rgba(0, 0, 0, 0.05)'};
+    background: ${props.$active ? 'rgba(239, 68, 68, 0.15)' : `${props.theme.colors.primary}1A`};
     backdrop-filter: blur(10px);
-    border: 2px solid ${props.$active ? 'rgba(239, 68, 68, 0.3)' : 'rgba(0, 0, 0, 0.1)'};
+    border: 2px solid ${props.$active ? 'rgba(239, 68, 68, 0.3)' : `${props.theme.colors.primary}33`};
     font-size: 22px;
+    color: ${props.$active ? '#ef4444' : props.theme.colors.muted};
     &:hover {
       transform: scale(1.1);
-      background: ${props.$active ? 'rgba(239, 68, 68, 0.2)' : 'rgba(0, 0, 0, 0.1)'};
-      border-color: ${props.$active ? 'rgba(239, 68, 68, 0.4)' : 'rgba(0, 0, 0, 0.2)'};
+      background: ${props.$active ? 'rgba(239, 68, 68, 0.2)' : `${props.theme.colors.primary}33`};
+      border-color: ${props.$active ? 'rgba(239, 68, 68, 0.4)' : `${props.theme.colors.primary}66`};
     }
   `}
 
@@ -303,8 +305,9 @@ export const IconButton = styled.button<{ $type?: 'edit' | 'favorite' | 'save' |
       position: absolute;
       top: -100px;
       right: 20px;
-      background: white;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      background: ${props => props.theme.colors.surface};
+      box-shadow: ${props => props.theme.shadows.md};
+      border: 1px solid ${props => props.theme.colors.primary}1A;
     `}
   }
 `;
@@ -314,7 +317,7 @@ export const MetadataContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   padding: 20px;
-  background: #f9fafb;
+  background: ${props => props.theme.colors.bg};
   border-radius: 16px;
 
   @media (max-width: 768px) {
@@ -342,7 +345,7 @@ export const MetaItem = styled.div`
 export const MetaLabel = styled.span`
   font-size: 14px;
   font-weight: 500;
-  color: #6b7280;
+  color: ${props => props.theme.colors.muted};
 
   @media (max-width: 768px) {
     font-size: 13px;
@@ -355,12 +358,12 @@ export const MetaLabel = styled.span`
 export const MetaValue = styled.span`
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
+  color: ${props => props.theme.colors.text};
 
   @media (max-width: 768px) {
     font-size: 13px;
     font-weight: 600;
-    color: #111827;
+    color: ${props => props.theme.colors.text};
     text-align: right;
   }
 `;
@@ -377,9 +380,9 @@ export const ActionContainer = styled.div`
     margin-top: 4px;
     padding: 16px 0 max(20px, env(safe-area-inset-bottom));
     position: sticky;
-    background: rgba(255, 255, 255, 0.85);
+    background: ${props => props.theme.colors.surface}D9;
     backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid ${props => props.theme.colors.primary}0D;
     /* Fade edge */
     &::before {
       content: '';
@@ -388,7 +391,7 @@ export const ActionContainer = styled.div`
       left: 0;
       right: 0;
       height: 20px;
-      background: linear-gradient(to bottom, transparent, white);
+      background: linear-gradient(to bottom, transparent, ${props => props.theme.colors.surface});
       pointer-events: none;
     }
   }
@@ -408,13 +411,13 @@ export const ActionButton = styled.button<{ $variant: 'download' | 'delete'; $is
   transition: all 0.2s;
 
   ${props => props.$variant === 'download' && css`
-    background: ${theme.colors.blue};
+    background: ${props.theme.colors.blue};
     color: white;
-    box-shadow: 0 4px 12px ${theme.colors.blue}4D;
+    box-shadow: 0 4px 12px ${props.theme.colors.blue}4D;
     &:hover {
       background: #2563eb;
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px ${theme.colors.blue}66;
+      box-shadow: 0 6px 16px ${props.theme.colors.blue}66;
     }
   `}
 

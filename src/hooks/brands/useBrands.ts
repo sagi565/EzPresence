@@ -74,6 +74,35 @@ export const useBrands = () => {
     await fetchActiveBrand();
   };
 
+  const editBrand = async (brandUuid: string, data: Partial<BrandInitializeDto>): Promise<void> => {
+    // Map to the structure expected by the backend (PascalCase properties inside updatedProperties)
+    const updateBody = {
+      updatedProperties: {
+         Name: data.name,
+         LogoObject: data.logoObject,
+         Slogan: data.slogan,
+         Category: data.category,
+         Subcategory: data.subcategory
+      }
+    };
+    
+    // Correct API call as per swagger.json for updating the active brand
+    await api.put('/brands/active', updateBody);
+    await refreshBrands();
+    if (currentBrand?.id === brandUuid) {
+        await fetchActiveBrand();
+    }
+  };
+
+  const deleteBrand = async (brandUuid: string): Promise<void> => {
+    // Correct API call as per swagger.json for deleting the active brand
+    await api.delete('/brands/active');
+    await refreshBrands();
+    if (currentBrand?.id === brandUuid) {
+        await fetchActiveBrand();
+    }
+  };
+
   return {
     brands,
     currentBrand,
@@ -87,5 +116,7 @@ export const useBrands = () => {
     createUninitializedBrand,
     initializeBrand,
     setActiveBrand,
+    editBrand,
+    deleteBrand,
   };
 };

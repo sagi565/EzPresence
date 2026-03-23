@@ -17,9 +17,23 @@ export const UploadButtonContainer = styled.div<{ $isHovered?: boolean; $isMobil
   height: 480px;
 
   ${props => props.$isMobile && css`
-    width: 56px;
-    height: 56px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 16px auto;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid ${theme.colors.primary}33;
+    padding: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+    &:active {
+      transform: scale(0.95);
+    }
   `}
 
   ${props => props.$isHovered && css`
@@ -34,6 +48,6 @@ export const UploadIcon = styled.div<{ $isMobile?: boolean }>`
   color: ${theme.colors.primary};
 
   ${props => (props as any).$isMobile && css`
-    font-size: 24px;
+    font-size: 20px;
   `}
 `;

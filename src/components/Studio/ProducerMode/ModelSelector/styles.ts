@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components';
-import { theme } from '@theme/theme';
+// import { theme } from '@theme/theme'; // Removed direct import to use dynamic ThemeProvider instead
 
 export const SelectorContainer = styled.div`
   position: relative;
@@ -19,7 +19,7 @@ export const ModelButton = styled.button<{ $type: 'veo3' | 'veo2'; $isOpen: bool
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 140px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  color: ${theme.colors.text};
+  color: ${props => props.theme.colors.text};
   background: transparent;
 
   ${props => props.$type === 'veo3' ? css`
@@ -53,7 +53,7 @@ export const Dropdown = styled.div<{ $isOpen: boolean }>`
   left: 0;
   width: 360px;
   background: rgba(255, 255, 255, 0.98);
-  border: 2px solid ${theme.colors.primary};
+  border: 2px solid ${props => props.theme.colors.primary};
   border-radius: 12px;
   padding: 8px;
   box-shadow: 0 15px 35px rgba(155, 93, 229, 0.2);
@@ -78,7 +78,7 @@ export const Option = styled.div<{ $selected: boolean; $type: 'veo3' | 'veo2' }>
 
   ${props => props.$type === 'veo3' ? css`
     background: linear-gradient(135deg, rgba(155, 93, 229, 0.1) 0%, rgba(251, 191, 36, 0.1) 30%, rgba(245, 158, 11, 0.1) 70%, rgba(217, 119, 6, 0.1) 100%);
-    color: ${theme.colors.text};
+    color: ${props => props.theme.colors.text};
     border-color: rgba(251, 191, 36, 0.3);
 
     &:hover {
@@ -91,7 +91,7 @@ export const Option = styled.div<{ $selected: boolean; $type: 'veo3' | 'veo2' }>
     `}
   ` : css`
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(236, 72, 153, 0.1) 100%);
-    color: ${theme.colors.text};
+    color: ${props => props.theme.colors.text};
 
     &:hover {
       background: linear-gradient(135deg, rgba(59, 130, 246, 0.13) 0%, rgba(147, 51, 234, 0.13) 50%, rgba(236, 72, 153, 0.13) 100%);
@@ -112,6 +112,6 @@ export const OptionTitle = styled.div`
 
 export const OptionDesc = styled.div`
   font-size: 13px;
-  color: ${theme.colors.muted};
+  color: ${props => props.theme.colors.muted};
   line-height: 1.4;
 `;

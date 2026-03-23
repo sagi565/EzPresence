@@ -1,5 +1,4 @@
 import styled, { keyframes, css } from 'styled-components';
-import { theme } from '@theme/theme';
 
 export const favoriteClick = keyframes`
   0% { transform: scale(1); }
@@ -17,14 +16,14 @@ export const fadeIn = keyframes`
   to { opacity: 1; }
 `;
 
-export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: boolean; $isUploading?: boolean; $isMobile?: boolean }>`
+export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: boolean; $isUploading?: boolean; $isMobile?: boolean; $showMenu?: boolean }>`
   position: relative;
-  background-color: white;
+  background-color: ${props => props.theme.colors.surface};
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   cursor: pointer;
   transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-radius 0.3s ease, box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: ${props => props.theme.shadows.sm};
   user-select: none;
   display: flex;
   flex-direction: column;
@@ -36,14 +35,14 @@ export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: bo
   ${props => props.$isMobile && css`
     width: 100px;
     height: 178px;
-    margin: 8px;
+    margin: 4px;
     border-radius: 12px;
   `}
 
-  ${props => props.$isHovered && !props.$isUploading && !props.$isDragging && css`
+  ${props => (props.$isHovered || props.$showMenu) && !props.$isUploading && !props.$isDragging && css`
     transform: scale(1.03) translateY(-4px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    z-index: 10;
+    z-index: 50;
   `}
 
   ${props => props.$isDragging && css`
@@ -58,15 +57,20 @@ export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: bo
   `}
 `;
 
-export const MediaContainer = styled.div`
+export const MediaContainer = styled.div<{ $isMobile?: boolean }>`
   position: relative;
   width: 100%;
   height: 100%;
-  background-color: #f3f4f6;
+  background-color: ${props => props.theme.colors.bg};
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border-radius: 16px;
+
+  ${props => props.$isMobile && css`
+    border-radius: 12px;
+  `}
 `;
 
 export const MediaCover = styled.img<{ $isVisible?: boolean }>`
@@ -194,9 +198,9 @@ export const MenuDropdown = styled.div`
   position: absolute;
   top: 48px;
   right: 12px;
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: ${props => props.theme.shadows.lg};
   padding: 6px;
   z-index: 100;
   min-width: 140px;
@@ -212,7 +216,7 @@ export const MenuItem = styled.button<{ $variant?: 'default' | 'delete'; $isHove
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  color: #1f2937;
+  color: ${props => props.theme.colors.text};
   display: flex;
   align-items: center;
   gap: 10px;
@@ -226,8 +230,8 @@ export const MenuItem = styled.button<{ $variant?: 'default' | 'delete'; $isHove
     background: rgba(239, 68, 68, 0.08);
     color: #ef4444;
   ` : css`
-    background: ${theme.colors.primary}14;
-    color: ${theme.colors.primary};
+    background: ${props.theme.colors.primary}14;
+    color: ${props.theme.colors.primary};
   `)}
 `;
 
@@ -285,13 +289,13 @@ export const RenameInput = styled.input`
   width: 100%;
   padding: 8px 12px;
   border-radius: 8px;
-  border: 2px solid ${theme.colors.primary};
-  background: white;
+  border: 2px solid ${props => props.theme.colors.primary};
+  background: ${props => props.theme.colors.surface};
   font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  color: ${props => props.theme.colors.text};
   outline: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: ${props => props.theme.shadows.md};
 `;
 
 export const LoadingOverlay = styled.div`

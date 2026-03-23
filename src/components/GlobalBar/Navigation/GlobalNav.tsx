@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Nav, NavLeft, Logo, NavCenter, NavItemWrapper, NavBtn, NavRight, IconBtn, Avatar } from './styles';
-import { theme } from '@theme/theme';
-import BrandSelector from '../BrandSelector/BrandSelector';
-import { signOut } from 'firebase/auth';
 import { auth } from '@lib/firebase';
+import { Nav, NavLeft, Logo, NavCenter, NavItemWrapper, NavBtn, NavRight, IconBtn, Avatar } from './styles';
+import BrandSelector from '../BrandSelector/BrandSelector';
 import { Brand } from '@models/Brand';
-import { useUserProfile } from '@/hooks/user/useUserProfile';
+import SettingsDropdown from '../SettingsDropdown/SettingsDropdown';
 
 interface GlobalNavProps {
   brands: Brand[];
@@ -17,15 +16,9 @@ interface GlobalNavProps {
 const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChange }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile } = useUserProfile();
 
   const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
-  const [isLogoutHovered, setIsLogoutHovered] = useState(false);
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    navigate('/login');
-  };
+  const [showSettings, setShowSettings] = useState(false);
 
   const navButtons = [
     { id: 'home', icon: '🏠', label: 'Home', path: '/', active: location.pathname === '/' },
@@ -41,15 +34,14 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
   };
 
   const getAvatarConfig = () => {
-    const identifier = profile?.firstName || auth.currentUser?.email || '?';
+    const identifier = auth.currentUser?.displayName || auth.currentUser?.email || '?';
     const initial = identifier[0].toUpperCase();
-    const color = theme.colors.primary;
     const photoURL = auth.currentUser?.photoURL || null;
 
-    return { initial, color, photoURL };
+    return { initial, photoURL };
   };
 
-  const { initial: avatarInitial, color: avatarColor, photoURL } = getAvatarConfig();
+  const { initial: avatarInitial, photoURL } = getAvatarConfig();
 
   return (
     <Nav>
@@ -83,29 +75,8 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
       </NavCenter>
 
       <NavRight>
-        <IconBtn
-          onClick={handleLogout}
-          $variant="danger"
-          $hovered={isLogoutHovered}
-          onMouseEnter={() => setIsLogoutHovered(true)}
-          onMouseLeave={() => setIsLogoutHovered(false)}
-          title="Sign Out"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-        </IconBtn>
+        {/* Removing the standalone logout button since it's now inside SettingsDropdown */}
+
 
         <IconBtn
           $hovered={hoveredIcon === 'notifications'}
@@ -116,19 +87,25 @@ const GlobalNav: React.FC<GlobalNavProps> = ({ brands, currentBrand, onBrandChan
           🔔
         </IconBtn>
 
-        <Avatar
-          $bgColor={photoURL ? 'transparent' : avatarColor}
-          $hovered={hoveredIcon === 'profile'}
-          onMouseEnter={() => setHoveredIcon('profile')}
-          onMouseLeave={() => setHoveredIcon(null)}
-          title="Settings"
-        >
-          {photoURL ? (
-            <img src={photoURL} alt="User profile" />
-          ) : (
-            avatarInitial
+        <div style={{ position: 'relative' }}>
+          <Avatar
+            $hovered={hoveredIcon === 'profile' || showSettings}
+            onMouseEnter={() => setHoveredIcon('profile')}
+            onMouseLeave={() => setHoveredIcon(null)}
+            title="Settings"
+            onClick={() => setShowSettings(!showSettings)}
+            style={{ cursor: 'pointer' }}
+          >
+            {photoURL ? (
+              <img src={photoURL} alt="User profile" />
+            ) : (
+              avatarInitial
+            )}
+          </Avatar>
+          {showSettings && (
+            createPortal(<SettingsDropdown onClose={() => setShowSettings(false)} />, document.body)
           )}
-        </Avatar>
+        </div>
       </NavRight>
     </Nav>
   );

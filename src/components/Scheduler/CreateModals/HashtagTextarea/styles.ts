@@ -1,4 +1,4 @@
-import { theme } from '@/theme/theme';
+// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 import { CSSProperties } from 'react';
 
 export const styles: Record<string, CSSProperties> = {
@@ -22,25 +22,25 @@ export const styles: Record<string, CSSProperties> = {
         fontSize: '13px',
         fontFamily: 'inherit',
         lineHeight: 1.5,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         whiteSpace: 'pre-wrap' as const,
         wordWrap: 'break-word' as const,
         overflow: 'hidden',
         pointerEvents: 'none' as const,
         border: '1.5px solid transparent',
         borderRadius: '8px',
-        background: '#fff',
+        background: 'var(--color-surface)',
     },
 
     textarea: {
         width: '100%',
         padding: '8px 12px',
-        border: '1.5px solid rgba(0, 0, 0, .1)',
+        border: '1.5px solid var(--color-bg)',
         borderRadius: '8px',
         fontSize: '13px',
         fontFamily: 'inherit',
         color: 'transparent',
-        caretColor: theme.colors.text,
+        caretColor: 'var(--color-text)',
         background: 'transparent',
         transition: 'border-color .18s, box-shadow .18s',
         outline: 'none',
@@ -68,15 +68,15 @@ if (typeof document !== 'undefined') {
         style.textContent = `
       .npm-hashtag-backdrop .hashtag {
         font-weight: 700;
-        color: ${theme.colors.primary};
+        color: var(--color-primary);
       }
       .npm-field-textarea::selection {
-        background: rgba(155, 93, 229, .2);
+        background: rgba(var(--color-primary-rgb, 155, 93, 229), .2);
         color: transparent;
       }
       .npm-field-textarea:focus {
-        border-color: ${theme.colors.primary} !important;
-        box-shadow: 0 0 0 3px rgba(155, 93, 229, .08) !important;
+        border-color: var(--color-primary) !important;
+        box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 155, 93, 229), .08) !important;
       }
     `;
         document.head.appendChild(style);
