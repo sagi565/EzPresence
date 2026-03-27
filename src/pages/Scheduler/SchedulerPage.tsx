@@ -47,6 +47,7 @@ const SchedulerPage: React.FC = () => {
   }, [isPicking]);
   const [lastPickedContent, setLastPickedContent] = useState<ContentItem | null>(null);
 
+
   const { brands, currentBrand, switchBrand, loading: brandsLoading, error: brandsError } = useBrands();
 
   // Use useSchedules instead of usePosts
@@ -147,6 +148,84 @@ const SchedulerPage: React.FC = () => {
     return () => {
       window.removeEventListener('dragend', handleDragEnd);
       window.removeEventListener('drop', handleDragEnd);
+    };
+  }, []);
+
+  // --- AUTO-SCROLL DURING DRAG ---
+  useEffect(() => {
+    let scrollInterval: any = null;
+    let scrollDir: number | null = null;
+
+    const performScroll = (direction: number) => {
+      const speed = 15; // Reduced speed
+      
+      // Target EVERYTHING that might be scrollable
+      window.scrollBy(0, direction * speed);
+      
+      if (document.scrollingElement) {
+        document.scrollingElement.scrollTop += direction * speed;
+      }
+      
+      document.body.scrollTop += direction * speed;
+      document.documentElement.scrollTop += direction * speed;
+      
+      const root = document.getElementById('root');
+      if (root) root.scrollTop += direction * speed;
+
+      const schedArea = document.querySelector('.scheduler-main-container');
+      if (schedArea) schedArea.scrollTop += direction * speed;
+    };
+
+    const handleGlobalDragOver = (e: DragEvent) => {
+      const threshold = 80; // Reduced threshold
+      const pointerY = e.clientY;
+      const viewportHeight = window.innerHeight;
+
+      const isNearTop = pointerY < threshold;
+      const isNearBottom = pointerY > viewportHeight - threshold;
+
+      if (isNearTop || isNearBottom) {
+        // e.preventDefault(); // Sometimes helpful to keep the drag active
+        const direction = isNearTop ? -1 : 1;
+        
+        if (scrollDir !== direction) {
+          if (scrollInterval) clearInterval(scrollInterval);
+          
+          scrollInterval = setInterval(() => {
+            performScroll(direction);
+          }, 16);
+          scrollDir = direction;
+          console.log(`🚀 [UltimateScroll] Scrolling ${direction > 0 ? 'DOWN' : 'UP'} at Y: ${pointerY}`);
+        }
+      } else {
+        if (scrollInterval) {
+          clearInterval(scrollInterval);
+          scrollInterval = null;
+          scrollDir = null;
+          console.log('🛑 [UltimateScroll] Stopped');
+        }
+      }
+    };
+
+    const stopScroll = () => {
+      if (scrollInterval) {
+        clearInterval(scrollInterval);
+        scrollInterval = null;
+        scrollDir = null;
+        console.log('🛑 [AutoScroll] Stopped (drag end)');
+      }
+    };
+
+    // Use capture phase (true) to ensure we catch events even if children stop propagation
+    document.addEventListener('dragover', handleGlobalDragOver, true);
+    document.addEventListener('dragend', stopScroll, true);
+    document.addEventListener('drop', stopScroll, true);
+
+    return () => {
+      document.removeEventListener('dragover', handleGlobalDragOver, true);
+      document.removeEventListener('dragend', stopScroll, true);
+      document.removeEventListener('drop', stopScroll, true);
+      if (scrollInterval) clearInterval(scrollInterval);
     };
   }, []);
 
@@ -387,7 +466,7 @@ const SchedulerPage: React.FC = () => {
   return (
     <Container>
       <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
-      <SchedulerContainer>
+      <SchedulerContainer className="scheduler-main-container">
         <SchedulerBar
           currentMonth={currentMonth}
           currentYear={currentYear}

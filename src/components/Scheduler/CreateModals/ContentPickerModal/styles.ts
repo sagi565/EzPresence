@@ -8,7 +8,7 @@ export const styles: Record<string, CSSProperties> = {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
         backdropFilter: 'blur(4px)',
         zIndex: 2100, // Higher than NewPostModal (1600)
         display: 'flex',
@@ -22,12 +22,12 @@ export const styles: Record<string, CSSProperties> = {
         height: '85vh',
         backgroundColor: 'var(--color-surface)',
         borderRadius: '16px',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, .3), 0 0 0 1px var(--color-bg)',
         display: 'flex',
         flexDirection: 'column' as const,
         overflow: 'hidden',
         animation: 'slideUp 0.3s ease-out',
-        border: '1px solid rgba(0, 0, 0, 0.05)',
+        border: '1px solid var(--color-bg)',
     },
 
     header: {
@@ -35,7 +35,7 @@ export const styles: Record<string, CSSProperties> = {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '20px 24px',
-        borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        borderBottom: '1px solid var(--color-bg)',
         backgroundColor: 'var(--color-surface)',
     },
 
@@ -80,7 +80,7 @@ export const styles: Record<string, CSSProperties> = {
 
     sidebar: {
         width: '240px',
-        borderRight: '1px solid rgba(0, 0, 0, 0.06)',
+        borderRight: '1px solid var(--color-bg)',
         backgroundColor: 'var(--color-surface)',
         display: 'flex',
         flexDirection: 'column' as const,
@@ -126,13 +126,13 @@ export const styles: Record<string, CSSProperties> = {
         justifyContent: 'space-between',
         padding: '16px 24px',
         backgroundColor: 'var(--color-surface)',
-        borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
+        borderBottom: '1px solid var(--color-bg)',
     },
 
     searchBox: {
         display: 'flex',
         alignItems: 'center',
-        background: '#f3f4f6',
+        background: 'var(--color-bg)',
         borderRadius: '8px',
         padding: '8px 12px',
         width: '300px',
@@ -167,7 +167,7 @@ export const styles: Record<string, CSSProperties> = {
     card: {
         backgroundColor: 'var(--color-surface)',
         borderRadius: '12px',
-        border: '1px solid rgba(0, 0, 0, 0.06)',
+        border: '1px solid var(--color-bg)',
         overflow: 'hidden',
         cursor: 'pointer',
         transition: 'all 0.2s',
@@ -186,7 +186,7 @@ export const styles: Record<string, CSSProperties> = {
     thumbnailContainer: {
         flex: 1,
         position: 'relative' as const,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: 'var(--color-bg)',
         overflow: 'hidden',
     },
 
@@ -226,7 +226,7 @@ export const styles: Record<string, CSSProperties> = {
 
     cardInfo: {
         padding: '12px',
-        borderTop: '1px solid rgba(0, 0, 0, 0.04)',
+        borderTop: '1px solid var(--color-bg)',
     },
 
     cardTitle: {

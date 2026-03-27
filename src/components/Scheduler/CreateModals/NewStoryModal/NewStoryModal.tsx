@@ -10,13 +10,14 @@ import { StoryFormData } from '@/models/StorySchedule';
 import DatePicker from '../DatePicker/DatePicker';
 import TimePicker from '../TimePicker/TimePicker';
 import RepeatSelector from '../RepeatSelector/RepeatSelector';
-import TimezoneSelector, { TIMEZONES, TimezoneOption, getTimezoneLabel } from '../TimezoneSelector/TimezoneSelector';
+import TimezoneSelector, { TIMEZONES, TimezoneOption } from '../TimezoneSelector/TimezoneSelector';
 import { ContentItem } from '@/models/ContentList';
 import { useConnectedPlatforms } from '@/hooks/platforms/useConnectedPlatforms';
 import { useUserProfile } from '@/hooks/user/useUserProfile';
 import { useBrands } from '@/hooks/brands/useBrands';
 import { useSchedules } from '@/hooks/useSchedules';
 import { theme } from '@/theme/theme';
+import { useAppTheme } from '@/theme/ThemeContext';
 import { useContentPicking } from '../useContentPicking';
 
 import ScheduleModalLayout from '../ScheduleModalLayout/ScheduleModalLayout';
@@ -69,6 +70,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     status,
 }) => {
     const { currentBrand } = useBrands();
+    const { isDarkMode } = useAppTheme();
     const { createSchedule, updateSchedule, deleteSchedule } = useSchedules(currentBrand?.id || '');
     const [formData, setFormData] = useState<StoryFormData>(getDefaultStoryFormData() as StoryFormData);
 
@@ -324,6 +326,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                 if (dateOrTimeChanged) {
                     updates.date = formData.date;
                     updates.time = formData.time;
+                    updates.timezone = formData.timezone;
                 }
 
                 const origPlatforms = (initialData as any)?.platforms || [];
@@ -448,31 +451,52 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         const platformColor = getPlatformColor(platform);
         const isSelected = formData.platforms[platform]?.enabled || false;
 
-        const platformSectionStyle: React.CSSProperties = { borderRadius: '12px', border: '1.5px solid rgba(0,0,0,.06)', borderLeftWidth: '3px', borderLeftColor: isSelected ? platformColor : 'rgba(0,0,0,0.1)', overflow: 'visible', transition: 'all .25s cubic-bezier(.4,0,.2,1)', marginBottom: '12px', background: '#fff', cursor: 'pointer' };
-        const platformHeaderStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', cursor: 'pointer', userSelect: 'none', borderTopRightRadius: '10px', borderBottomRightRadius: '10px', transition: 'background .15s', ...(isSelected ? { background: `${platformColor}08` } : {}) };
+        const platformSectionStyle: React.CSSProperties = { 
+            borderRadius: '12px', 
+            border: theme.mode === 'dark' ? '1.5px solid rgba(255,255,255,.1)' : '1.5px solid rgba(0,0,0,.06)', 
+            borderLeftWidth: '3px', 
+            borderLeftColor: isSelected ? platformColor : (theme.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'), 
+            overflow: 'visible', 
+            transition: 'all .25s cubic-bezier(.4,0,.2,1)', 
+            marginBottom: '12px', 
+            background: 'var(--color-surface)', 
+            cursor: 'pointer' 
+        };
+        const platformHeaderStyle: React.CSSProperties = { 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            padding: '10px 14px', 
+            cursor: 'pointer', 
+            userSelect: 'none', 
+            borderTopRightRadius: '10px', 
+            borderBottomRightRadius: '10px', 
+            transition: 'background .15s', 
+            ...(isSelected ? { background: `${platformColor}0D` } : {}) 
+        };
 
         return (
             <div key={platform} style={platformSectionStyle} onClick={(e) => handlePlatformToggle(e, platform)}>
                 <div style={platformHeaderStyle}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '18px', height: '18px', borderRadius: '5px', border: '1.5px solid', borderColor: isSelected ? platformColor : 'rgba(0,0,0,0.15)', background: isSelected ? platformColor : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .18s', flexShrink: 0, marginRight: '10px' }}>
+                        <div style={{ width: '18px', height: '18px', borderRadius: '5px', border: '1.5px solid', borderColor: isSelected ? platformColor : (theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'), background: isSelected ? platformColor : 'var(--color-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .18s', flexShrink: 0, marginRight: '10px' }}>
                             {isSelected && <span style={{ color: '#fff', fontSize: '11px', fontWeight: 700, lineHeight: 1 }}>✓</span>}
                         </div>
                         <div style={{ position: 'relative', width: '34px', height: '34px' }}>
                             {account && account.profilePicture ? (
-                                <img src={account.profilePicture} alt={account.username} style={{ width: '34px', height: '34px', borderRadius: '9px', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,.4)' }} />
+                                <img src={account.profilePicture} alt={account.username} style={{ width: '34px', height: '34px', borderRadius: '9px', objectFit: 'cover', border: `1.5px solid ${theme.mode === 'dark' ? 'rgba(255,255,255,.1)' : 'rgba(255,255,255,.4)'}` }} />
                             ) : (
-                                <div style={{ width: '34px', height: '34px', borderRadius: '9px', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: '17px' }}>
+                                <div style={{ width: '34px', height: '34px', borderRadius: '9px', background: 'var(--color-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', fontSize: '17px' }}>
                                     {platform.charAt(0).toUpperCase()}
                                 </div>
                             )}
-                            <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '18px', height: '18px', borderRadius: '50%', background: '#fff', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '18px', height: '18px', borderRadius: '50%', background: theme.mode === 'dark' ? 'var(--color-surface)' : '#fff', border: `1.5px solid ${theme.mode === 'dark' ? 'var(--color-surface)' : '#fff'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                                 <img src={getPlatformIconPath(platform)} alt="" style={{ width: '14px', height: '14px' }} />
                             </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '10px', gap: '1px' }}>
-                            <span style={{ fontSize: '13.5px', fontWeight: 400, color: theme.colors.text }}>{platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
-                            {account && <span style={{ fontSize: '11px', fontWeight: 600, color: theme.colors.muted }}>{account.username.startsWith('@') ? account.username : `@${account.username}`}</span>}
+                            <span style={{ fontSize: '13.5px', fontWeight: 600, color: isDarkMode ? '#ffffff' : '#111827' }}>{platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
+                            {account && <span style={{ fontSize: '11px', fontWeight: 600, color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#6b7280' }}>{account.username.startsWith('@') ? account.username : `@${account.username}`}</span>}
                         </div>
                     </div>
                 </div>
@@ -506,9 +530,9 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     };
 
 
-    const draftBtnStyle: React.CSSProperties = { padding: '10px 22px', border: 'none', borderRadius: '10px', background: '#fff', fontSize: '14px', fontWeight: 600, color: theme.colors.muted, cursor: 'pointer', transition: 'all .18s', boxShadow: '0 1px 4px rgba(0, 0, 0, .08)' };
+    const draftBtnStyle: React.CSSProperties = { padding: '10px 22px', border: 'none', borderRadius: '10px', background: 'var(--color-surface)', fontSize: '14px', fontWeight: 600, color: 'var(--color-muted)', cursor: 'pointer', transition: 'all .18s', boxShadow: '0 1px 4px rgba(0, 0, 0, .08)' };
     const scheduleBtnStyle: React.CSSProperties = { padding: '10px 28px', border: 'none', borderRadius: '10px', background: theme.gradients.innovator, color: '#fff', fontSize: '14px', fontWeight: 700, cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: 'all .2s', boxShadow: '0 3px 12px rgba(155, 93, 229, .25)', opacity: isSubmitting ? 0.7 : 1 };
-    const titleInputStyle: React.CSSProperties = { width: 'calc(70% - 28px)', border: 'none', borderBottom: '1px solid rgba(0, 0, 0, .1)', outline: 'none', fontSize: '22px', fontWeight: 700, color: theme.colors.text, padding: '16px 0 6px', marginLeft: '28px', background: 'transparent', fontFamily: 'inherit', transition: 'border-color .2s ease' };
+    const titleInputStyle: React.CSSProperties = { width: 'calc(70% - 28px)', border: 'none', borderBottom: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, .2)' : 'rgba(0, 0, 0, .1)'}`, outline: 'none', fontSize: '22px', fontWeight: 700, color: isDarkMode ? '#fff' : '#111827', padding: '16px 0 6px', marginLeft: '28px', background: 'transparent', fontFamily: 'inherit', transition: 'border-color .2s ease' };
 
     return (
         <div className={`new-story-modal-wrapper ${isShattering ? 'shatter-animation' : ''}`}>
@@ -562,12 +586,22 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                 }
                 footer={
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                        <button onClick={handleSaveDraft} disabled={isSubmitting || isReadOnly || !formData.contentId} onMouseEnter={() => setIsDraftHovered(true)} onMouseLeave={() => setIsDraftHovered(false)}
-                            style={{ ...draftBtnStyle, opacity: (isSubmitting || isReadOnly || !formData.contentId) ? 0.5 : 1, cursor: (isSubmitting || isReadOnly || !formData.contentId) ? 'not-allowed' : 'pointer', ...((isDraftHovered && !isSubmitting && !isReadOnly && formData.contentId) ? { background: 'rgba(155, 93, 229, 0.1)', color: '#9b5de5', boxShadow: '0 2px 8px rgba(155, 93, 229, 0.2)' } : {}) }}>
+                        <button 
+                            className="nsm-draft-btn"
+                            onClick={handleSaveDraft} 
+                            disabled={isSubmitting || isReadOnly || !formData.contentId} 
+                            onMouseEnter={() => setIsDraftHovered(true)} 
+                            onMouseLeave={() => setIsDraftHovered(false)}
+                            style={{ ...draftBtnStyle, opacity: (isSubmitting || isReadOnly || !formData.contentId) ? 0.5 : 1, cursor: (isSubmitting || isReadOnly || !formData.contentId) ? 'not-allowed' : 'pointer', ...((isDraftHovered && !isSubmitting && !isReadOnly && formData.contentId) ? { background: 'rgba(155, 93, 229, 0.1)', color: '#9b5de5', boxShadow: '0 2px 8px rgba(155, 93, 229, 0.2)' } : {}) }}
+                        >
                             Save as Draft
                         </button>
-                        <button onClick={handleSchedule} disabled={isSubmitting || isReadOnly || !isFormValid}
-                            style={{ ...scheduleBtnStyle, opacity: (isSubmitting || isReadOnly || !isFormValid) ? 0.7 : 1, cursor: (isSubmitting || isReadOnly || !isFormValid) ? 'not-allowed' : 'pointer' }}>
+                        <button 
+                            className="nsm-schedule-btn"
+                            onClick={handleSchedule} 
+                            disabled={isSubmitting || isReadOnly || !isFormValid}
+                            style={{ ...scheduleBtnStyle, opacity: (isSubmitting || isReadOnly || !isFormValid) ? 0.7 : 1, cursor: (isSubmitting || isReadOnly || !isFormValid) ? 'not-allowed' : 'pointer' }}
+                        >
                             {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update' : 'Schedule'))}
                         </button>
                     </div>
@@ -589,7 +623,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                         </div>
                         <div style={{ position: 'relative', flexShrink: 0 }}>
                             <ChipButton className="chip-button" minWidth="120px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
-                                <span style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>{formData.timezone ? getTimezoneLabel(formData.timezone) : 'Timezone'}</span><ChipArrow />
+                                <span style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>Timezone</span><ChipArrow />
                             </ChipButton>
                             <TimezoneSelector selectedTimezone={formData.timezone || 'America/New_York'} onChange={(tz) => { setFormData(prev => ({ ...prev, timezone: tz })); setShowTimezoneSelector(false); }} show={showTimezoneSelector} onClose={() => setShowTimezoneSelector(false)} />
                         </div>

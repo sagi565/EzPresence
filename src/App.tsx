@@ -24,8 +24,8 @@ function App() {
   return (
     <>
       <AppStyles />
-      <CookieBanner />
       <BrowserRouter>
+        <CookieBanner />
         <Routes>
           {/* public legal pages */}
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />

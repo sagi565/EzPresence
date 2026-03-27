@@ -106,7 +106,7 @@ const ContentPickerModal: React.FC<ContentPickerModalProps> = ({
                             Images
                         </div>
 
-                        <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)', margin: '8px 0' }} />
+                        <div style={{ height: '1px', background: 'var(--color-bg)', margin: '8px 0' }} />
 
                         {lists.map(list => (
                             <div
@@ -135,7 +135,7 @@ const ContentPickerModal: React.FC<ContentPickerModalProps> = ({
                                     autoFocus
                                 />
                             </div>
-                            <div style={{ fontSize: '13px', color: '#666' }}>
+                            <div style={{ fontSize: '13px', color: 'var(--color-muted)' }}>
                                 {filteredContent.length} items found
                             </div>
                         </div>
@@ -162,7 +162,7 @@ const ContentPickerModal: React.FC<ContentPickerModalProps> = ({
                                         onMouseLeave={e => {
                                             e.currentTarget.style.transform = 'none';
                                             e.currentTarget.style.boxShadow = 'none';
-                                            e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.06)';
+                                            e.currentTarget.style.borderColor = 'var(--color-bg)';
                                         }}
                                     >
                                         <div style={styles.thumbnailContainer}>

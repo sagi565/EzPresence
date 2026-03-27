@@ -9,7 +9,7 @@ export const Container = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 720px;
+  height: 1200px;
   overflow: hidden;
   margin-bottom: 60px;
   
@@ -104,7 +104,7 @@ export const TimeRow = styled.div`
   grid-template-columns: 80px repeat(4, 1fr);
   gap: 1px;
   background: ${props => props.theme.colors.muted}40;
-  min-height: 60px;
+  min-height: 100px;
   
   @media (max-width: 768px) {
     grid-template-columns: 50px repeat(4, 1fr);
@@ -143,8 +143,8 @@ export const DayCell = styled.div<{ $isToday?: boolean; $isPast?: boolean; $isHo
     
   padding: 4px;
   position: relative;
-  min-height: 60px;
-  max-height: 60px;
+  min-height: 100px;
+  max-height: 100px;
   transition: all 0.2s;
   cursor: ${props => props.$isPast ? 'default' : 'pointer'};
   overflow: visible;
@@ -270,8 +270,14 @@ export const StatusIndicator = styled.div<{ $status: string }>`
   flex-shrink: 0;
   cursor: pointer;
   
-  background: ${props => props.$status === 'SUCCESS' ? '#22c55e' : props.$status === 'FAILED' ? '#ef4444' : 'white'};
-  border: ${props => props.$status === 'SCHEDULED' ? '1.7px solid black' : props.$status === 'DRAFT' ? '2.2px dotted #4b5563' : 'none'};
+  background: ${props => {
+    const s = props.$status?.toLowerCase();
+    return s === 'success' ? '#22c55e' : s === 'failed' ? '#ef4444' : 'white';
+  }};
+  border: ${props => {
+    const s = props.$status?.toLowerCase();
+    return s === 'scheduled' ? '1.7px solid #4b5563' : s === 'draft' ? '2px dashed #4b5563' : 'none';
+  }};
   box-sizing: border-box;
   
   @media (max-width: 768px) {

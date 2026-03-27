@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Video, Loader2 } from 'lucide-react';
 import { ContentItem } from '@/models/ContentList';
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
 import './styles';
@@ -161,8 +162,10 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                 className="nsm-content-placeholder"
                 style={{ display: hasValidContent ? 'none' : 'flex', pointerEvents: 'none' }}
             >
-                <span className="placeholder-icon">🎞️</span>
-                <span className="placeholder-text">{isDragOver ? 'Drop here' : placeholderText}</span>
+                <span className="placeholder-icon">
+                    <Video size={32} strokeWidth={2.5} />
+                </span>
+                <span className="placeholder-text">{isDragOver ? 'Release to drop' : placeholderText}</span>
             </div>
 
             {/* ── Loading shimmer — shown until media fires onLoad / canplay ─── */}
@@ -177,9 +180,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                         style={{ width: '38%', height: '9px', borderRadius: '6px' }}
                     />
                     <div className="nsm-loading-dots">
-                        <div className="nsm-loading-dot" style={{ animationDelay: '0ms' }} />
-                        <div className="nsm-loading-dot" style={{ animationDelay: '150ms' }} />
-                        <div className="nsm-loading-dot" style={{ animationDelay: '300ms' }} />
+                        <Loader2 size={32} strokeWidth={2.5} className="nsm-spin-icon" style={{ color: 'rgba(var(--color-primary-rgb, 155, 93, 229), 0.7)' }} />
                     </div>
                 </div>
             )}
@@ -243,6 +244,8 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                 <div className="filled-title" style={{ pointerEvents: 'none' }}>
                     {content?.title}
                 </div>
+
+
             </div>
 
             {/* ── Remove button ──────────────────────────────────────────────── */}

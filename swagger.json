@@ -737,6 +737,19 @@
         }
       }
     },
+    "/isalive": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Simple health check endpoint to verify the API is online.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/platforms": {
       "get": {
         "tags": [
@@ -911,6 +924,14 @@
               "type": "boolean",
               "default": false
             }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -925,10 +946,10 @@
         "tags": [
           "Schedules"
         ],
-        "summary": "Retrieves all calendar items for the active brand, optionally filtered by a date range.",
+        "summary": "Retrieves all calendar items for the active brand, optionally filtered by a date range in local time.",
         "parameters": [
           {
-            "name": "start_time",
+            "name": "windowStartLocal",
             "in": "query",
             "schema": {
               "type": "string",
@@ -936,7 +957,7 @@
             }
           },
           {
-            "name": "end_time",
+            "name": "windowEndLocal",
             "in": "query",
             "schema": {
               "type": "string",
@@ -985,7 +1006,7 @@
           "Schedules"
         ],
         "summary": "Partially updates an existing schedule using a set of updated properties.",
-        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>ScheduleName</b> (string) – Logical name of the schedule</li>\r\n  <li>\r\n    <b>ScheduleTitle</b> (string) – Display title of the schedule</li>\r\n  <li>\r\n    <b>ScheduleDescription</b> (string) – Description of the schedule</li>\r\n  <li>\r\n    <b>PostType</b> (string) – Post type (e.g. \"Post\", \"Story\")</li>\r\n  <li>\r\n    <b>RruleText</b> (string, optional) – RRULE for recurring schedules</li>\r\n  <li>\r\n    <b>StartDate</b> (date, optional) – Start date for recurring schedules</li>\r\n  <li>\r\n    <b>EndDate</b> (date, optional) – End date for recurring schedules</li>\r\n  <li>\r\n    <b>PlannedAtUtc</b> (datetime, optional) – UTC time for one-time schedules</li>\r\n  <li>\r\n    <b>Targets</b> (string[]) – Target platforms (e.g. INSTAGRAM, FACEBOOK)</li>\r\n  <li>\r\n    <b>ContentUuids</b> (uuid[]) – Media content public IDs for this schedule</li>\r\n  <li>\r\n    <b>Status</b> (string) – Status of the schedule posts</li>\r\n</ul>",
+        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>ScheduleName</b> (string) – Logical name of the schedule</li>\r\n  <li>\r\n    <b>UploadType</b> (string) – Upload type (e.g. \"Post\", \"Story\")</li>\r\n  <li>\r\n    <b>Policy</b> (SchedulePolicyDto) – Nested policy details (Rrule, EndTime)</li>\r\n  <li>\r\n    <b>PlannedAt</b> (datetime, optional) – Planned date/time for the schedule (Local time)</li>\r\n  <li>\r\n    <b>Targets</b> (string[]) – Target platforms (e.g. INSTAGRAM, YOUTUBE, TIKTOK)</li>\r\n  <li>\r\n    <b>Contents</b> (uuid[]) – Media content public IDs for this schedule</li>\r\n  <li>\r\n    <b>IsDraft</b> (boolean) – If true, sets schedule status to \"Draft\", else \"Pending\"</li>\r\n</ul>",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1161,27 +1182,76 @@
         }
       }
     },
-    "/api/studio/showtime-lineup": {
+    "/api/studio/vision/plans/{id}": {
+      "get": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Retrieves a vision plan by its public ID.\r\nSupports fetching a specific version index (1-based).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisionPlanDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisionPlanDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisionPlanDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/vision/plans": {
       "post": {
         "tags": [
           "Studio"
         ],
-        "summary": "Generates a lineup of media scenes based on the provided text.",
+        "summary": "Saves a vision plan into the SQL database.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ShowtimeLineupRequestDto"
+                "$ref": "#/components/schemas/VisionPlanCreateDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/ShowtimeLineupRequestDto"
+                "$ref": "#/components/schemas/VisionPlanCreateDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/ShowtimeLineupRequestDto"
+                "$ref": "#/components/schemas/VisionPlanCreateDto"
               }
             }
           }
@@ -1192,54 +1262,152 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TextMediaLineupDto"
-                  }
+                  "type": "string",
+                  "format": "uuid"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TextMediaLineupDto"
-                  }
+                  "type": "string",
+                  "format": "uuid"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TextMediaLineupDto"
-                  }
+                  "type": "string",
+                  "format": "uuid"
                 }
               }
             }
           }
         }
-      }
-    },
-    "/api/studio/run-creator": {
-      "post": {
+      },
+      "put": {
         "tags": [
           "Studio"
         ],
-        "summary": "Starts a creator process (e.g., Showtime).",
+        "summary": "Dynamically updates a vision plan.",
+        "description": "\r\n\r\n<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>PlanType</b> (string) – NARRATED or SPEECHLESS</li>\r\n  <li>\r\n    <b>ClipTitle</b> (string) – Video title</li>\r\n  <li>\r\n    <b>ClipVisualStyle</b> (string) – Visual style</li>\r\n  <li>\r\n    <b>ClipMusicInstructions</b> (string) – Music style</li>\r\n  <li>\r\n    <b>ClipVoiceInstructions</b> (string) – Voice direction</li>\r\n  <li>\r\n    <b>ClipVoiceGender</b> (string) – Voice gender</li>\r\n  <li>\r\n    <b>Category</b> (string) – Video category</li>\r\n  <li>\r\n    <b>IncludeAudioInVideoGeneration</b> (bool) – Whether to include audio during generation</li>\r\n  <li>\r\n    <b>PlanningDuration</b> (number) - AI planning duration in seconds</li>\r\n  <li>\r\n    <b>Scenes</b> (object) – Video scene collection</li>\r\n</ul>\r\n\r\n\r\n<small>Note: <b>ClipScript</b>, <b>ClipDuration</b>, and <b>MediaContentUuid</b> cannot be updated manually. They are modified automatically.</small>",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreatorRequestDto"
+                "$ref": "#/components/schemas/VisionPlanUpdateDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreatorRequestDto"
+                "$ref": "#/components/schemas/VisionPlanUpdateDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/CreatorRequestDto"
+                "$ref": "#/components/schemas/VisionPlanUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/studio/vision/plans/{planUuid}/media/{contentUuid}": {
+      "put": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Links a media content item to a vision plan record.\r\nThis is a direct update on the specified record (to be used post-execution).",
+        "parameters": [
+          {
+            "name": "planUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "contentUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/studio/vision/creator/plan": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Generates a structured vision plan via AI Creator.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionPlanRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionPlanRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionPlanRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/studio/vision/creator/execute": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Executes a video plan and uploads the result.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionExecuteRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionExecuteRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionExecuteRequestDto"
               }
             }
           }
@@ -1320,6 +1488,17 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Deletes the currently authenticated user profile.",
         "responses": {
           "200": {
             "description": "OK"
@@ -1457,7 +1636,8 @@
         "properties": {
           "thumbnailObject": {
             "minLength": 1,
-            "type": "string"
+            "type": "string",
+            "description": "Thumbnail bytes (Swagger sends this as base64).\r\nHard-limited to 1MB by design."
           }
         },
         "additionalProperties": false
@@ -1470,7 +1650,8 @@
           "Aborted",
           "Error"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Storage lifecycle state.\r\nNumeric values are persisted in DB and MUST NOT change."
       },
       "CreateUploadPlanRequestDto": {
         "type": "object",
@@ -1490,36 +1671,6 @@
           "isEzGenerated": {
             "type": "boolean",
             "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreatorParamsDto": {
-        "type": "object",
-        "properties": {
-          "props": {
-            "type": "object",
-            "additionalProperties": { },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CreatorRequestDto": {
-        "type": "object",
-        "properties": {
-          "creatorName": {
-            "type": "string",
-            "nullable": true
-          },
-          "videoMetadata": {
-            "$ref": "#/components/schemas/VideoMetadataDto"
-          },
-          "creatorParams": {
-            "$ref": "#/components/schemas/CreatorParamsDto"
-          },
-          "wizardParams": {
-            "$ref": "#/components/schemas/WizardParamsDto"
           }
         },
         "additionalProperties": false
@@ -1676,33 +1827,15 @@
             "type": "string",
             "nullable": true
           },
-          "scheduleTitle": {
+          "uploadType": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "example": "Post"
           },
-          "scheduleDescription": {
-            "type": "string",
-            "nullable": true
+          "policy": {
+            "$ref": "#/components/schemas/SchedulePolicyDto"
           },
-          "postType": {
-            "type": "string",
-            "nullable": true
-          },
-          "rruleText": {
-            "type": "string",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "plannedAtUtc": {
+          "plannedAt": {
             "type": "string",
             "format": "date-time",
             "nullable": true
@@ -1712,9 +1845,14 @@
             "items": {
               "type": "string"
             },
-            "nullable": true
+            "nullable": true,
+            "example": [
+              "INSTAGRAM",
+              "TIKTOK",
+              "YOUTUBE"
+            ]
           },
-          "contentUuids": {
+          "contents": {
             "type": "array",
             "items": {
               "type": "string",
@@ -1722,8 +1860,26 @@
             },
             "nullable": true
           },
-          "status": {
+          "isDraft": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "SchedulePolicyDto": {
+        "type": "object",
+        "properties": {
+          "rrule": {
             "type": "string",
+            "description": "Recurrence rule of the policy (e.g. RRULE:FREQ=DAILY).",
+            "nullable": true,
+            "example": "FREQ=DAILY"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "Optional end date/time of the policy (Local time of the brand).",
+            "format": "date-time",
             "nullable": true
           }
         },
@@ -1743,37 +1899,6 @@
           },
           "updateOccurrenceOnly": {
             "type": "boolean",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ShowtimeLineupRequestDto": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "nullable": true
-          },
-          "subject": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "TextMediaLineupDto": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "nullable": true
-          },
-          "srcs": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
             "nullable": true
           }
         },
@@ -1821,38 +1946,174 @@
         },
         "additionalProperties": false
       },
-      "VideoMetadataDto": {
+      "VisionExecuteRequestDto": {
         "type": "object",
         "properties": {
-          "title": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "useMockAssets": {
+            "type": "boolean"
+          },
+          "captions": {
             "type": "string",
             "nullable": true
           },
-          "description": {
+          "version": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "VisionPlanCreateDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "planType": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipVisualStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipMusicInstructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipVoiceInstructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipVoiceGender": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "includeAudioInVideoGeneration": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "scenes": {
+            "nullable": true
+          },
+          "planningDuration": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "VisionPlanDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "planType": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipVisualStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipMusicInstructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipVoiceInstructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipVoiceGender": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "includeAudioInVideoGeneration": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "scenes": {
+            "nullable": true
+          },
+          "mediaContentUuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalVersions": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VisionPlanRequestDto": {
+        "type": "object",
+        "properties": {
+          "userPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "durationLevel": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagesList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "numScenes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "llmModel": {
             "type": "string",
             "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "WizardParamsDto": {
+      "VisionPlanUpdateDto": {
         "type": "object",
         "properties": {
-          "captionsTheme": {
+          "planUuid": {
             "type": "string",
-            "nullable": true
+            "format": "uuid"
           },
-          "avatarConfig": {
-            "type": "object",
-            "additionalProperties": { },
-            "nullable": true
-          },
-          "signatureConfig": {
-            "type": "object",
-            "additionalProperties": { },
-            "nullable": true
-          },
-          "voiceConfig": {
+          "updatedProperties": {
             "type": "object",
             "additionalProperties": { },
             "nullable": true

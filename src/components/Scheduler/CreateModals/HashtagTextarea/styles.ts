@@ -18,8 +18,8 @@ export const styles: Record<string, CSSProperties> = {
         left: 0,
         right: 0,
         bottom: 0,
-        padding: '8px 12px',
-        fontSize: '13px',
+        padding: '10px 14px',
+        fontSize: '13.5px',
         fontFamily: 'inherit',
         lineHeight: 1.5,
         color: 'var(--color-text)',
@@ -28,16 +28,16 @@ export const styles: Record<string, CSSProperties> = {
         overflow: 'hidden',
         pointerEvents: 'none' as const,
         border: '1.5px solid transparent',
-        borderRadius: '8px',
-        background: 'var(--color-surface)',
+        borderRadius: '10px',
+        background: 'rgba(var(--color-text-rgb, 255,255,255), 0.02)',
     },
 
     textarea: {
         width: '100%',
-        padding: '8px 12px',
-        border: '1.5px solid var(--color-bg)',
-        borderRadius: '8px',
-        fontSize: '13px',
+        padding: '10px 14px',
+        border: '1.5px solid rgba(var(--color-text-rgb, 255,255,255), 0.1)',
+        borderRadius: '10px',
+        fontSize: '13.5px',
         fontFamily: 'inherit',
         color: 'transparent',
         caretColor: 'var(--color-text)',
@@ -76,7 +76,21 @@ if (typeof document !== 'undefined') {
       }
       .npm-field-textarea:focus {
         border-color: var(--color-primary) !important;
-        box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 155, 93, 229), .08) !important;
+        box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb, 155, 93, 229), .1) !important;
+      }
+      .npm-field-textarea::placeholder {
+        color: rgba(var(--color-text-rgb, 255, 255, 255), 0.35) !important;
+      }
+      body.dark-mode .npm-hashtag-backdrop {
+        background: rgba(255, 255, 255, 0.04) !important;
+      }
+      body.dark-mode .npm-field-textarea {
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        background: transparent !important;
+      }
+      body.dark-mode .npm-field-textarea:focus {
+        border-color: var(--color-primary) !important;
+        background: rgba(255, 255, 255, 0.02) !important;
       }
     `;
         document.head.appendChild(style);

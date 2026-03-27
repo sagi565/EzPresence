@@ -155,13 +155,53 @@ export const convertPostToApiSchedule = (post: {
   endDate?: Date | null;
   type?: 'Post' | 'Story';
   status?: string;
+  timezone?: string;
 }): ApiScheduleDto => {
   const { hours, minutes } = parseTimeString(post.time);
 
   const scheduledDate = new Date(post.date);
   scheduledDate.setHours(hours, minutes, 0, 0);
 
-  let endDateStr = null;
+  // Default to system UTC conversion
+  let plannedAtUtc = scheduledDate.toISOString();
+
+  // If timezone is provided, adjust to the UTC time of that local time in the target zone
+  if (post.timezone) {
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: post.timezone,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false,
+      });
+
+      const parts = formatter.formatToParts(scheduledDate);
+      const getVal = (pType: string) => parts.find(p => p.type === pType)?.value || '0';
+
+      // construct the date components as they appear in the target timezone
+      const year = parseInt(getVal('year'));
+      const month = parseInt(getVal('month')) - 1;
+      const day = parseInt(getVal('day'));
+      const hour = parseInt(getVal('hour'));
+      const minute = parseInt(getVal('minute'));
+      const second = parseInt(getVal('second'));
+
+      // The time difference between system local and target timezone
+      const targetAsLocal = new Date(year, month, day, hour, minute, second);
+      const diff = targetAsLocal.getTime() - scheduledDate.getTime();
+      
+      // UTC = SystemLocal - (TargetOffset - SystemOffset)
+      plannedAtUtc = new Date(scheduledDate.getTime() - diff).toISOString();
+    } catch (e) {
+      console.warn(`[Post.ts] Timezone conversion failed for ${post.timezone}:`, e);
+    }
+  }
+
+  let endDateStr: string | null = null;
   if (post.endDate) {
     endDateStr = `${post.endDate.getFullYear()}-${String(post.endDate.getMonth() + 1).padStart(2, '0')}-${String(post.endDate.getDate()).padStart(2, '0')}`;
   }
@@ -181,7 +221,7 @@ export const convertPostToApiSchedule = (post: {
     postType,
     rruleText: post.rruleText || null,
     endDate: endDateStr,
-    plannedAtUtc: scheduledDate.toISOString(),
+    plannedAtUtc,
     targets: convertPlatformsToTargets(post.platforms),
     contentUuids: post.contentUuids || null,
     status: post.status || 'Pending',

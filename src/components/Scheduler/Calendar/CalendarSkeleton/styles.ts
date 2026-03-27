@@ -7,8 +7,8 @@ export const shimmer = keyframes`
 `;
 
 export const ShimmerBase = styled.div`
-  background: ${props => props.theme.colors.bg === '#0a0e17' 
-    ? `linear-gradient(90deg, #1a1e26 25%, #2a2e36 50%, #1a1e26 75%)`
+  background: ${props => props.theme.mode === 'dark' 
+    ? `linear-gradient(90deg, #242424 25%, #2a2a2a 50%, #242424 75%)`
     : `linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%)`};
   background-size: 800px 100%;
   animation: ${shimmer} 1.4s infinite linear;

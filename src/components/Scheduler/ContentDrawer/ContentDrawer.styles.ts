@@ -19,7 +19,9 @@ export const DrawerContainer = styled.div<{ $isOpen: boolean; $isPicking?: boole
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   border-radius: 24px 24px 0 0;
-  box-shadow: 0 -4px 30px ${props => props.theme.colors.primary}26;
+  box-shadow: ${props => props.theme.mode === 'dark' 
+    ? `0 -2px 10px rgba(0, 0, 0, 0.4)` 
+    : `0 -4px 30px ${props.theme.colors.primary}26`};
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 2000;
   display: flex;

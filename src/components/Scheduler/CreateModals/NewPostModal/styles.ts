@@ -6,7 +6,7 @@ export const styles: Record<string, CSSProperties> = {
     titleInput: {
         width: 'calc(70% - 28px)',
         border: 'none',
-        borderBottom: '1px solid var(--color-bg)',
+        borderBottom: '1px solid rgba(155, 155, 155, 0.2)',
         outline: 'none',
         fontSize: '22px',
         fontWeight: 700,
@@ -86,7 +86,7 @@ export const styles: Record<string, CSSProperties> = {
     // Platform Accordion Styles
     platformSection: {
         borderRadius: '12px',
-        border: '1.5px solid var(--color-bg)',
+        border: '1.5px solid rgba(var(--color-text-rgb, 255,255,255), 0.08)',
         borderLeftWidth: '3px',
         overflow: 'visible',
         transition: 'all .25s cubic-bezier(.4,0,.2,1)',
@@ -165,8 +165,8 @@ export const styles: Record<string, CSSProperties> = {
         display: 'flex',
         flexDirection: 'column' as const,
         gap: '14px',
-        borderTop: '1px solid var(--color-bg)',
-        background: 'var(--color-bg)',
+        borderTop: '1px solid rgba(var(--color-text-rgb, 255,255,255), 0.05)',
+        background: 'rgba(var(--color-text-rgb, 255,255,255), 0.02)',
     },
 
     // Form Fields
@@ -183,19 +183,21 @@ export const styles: Record<string, CSSProperties> = {
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
+        opacity: 0.9,
     },
 
     fieldInput: {
         width: '100%',
-        padding: '8px 12px',
-        border: '1.5px solid var(--color-bg)',
-        borderRadius: '8px',
-        fontSize: '13px',
+        padding: '10px 14px',
+        border: '1.5px solid rgba(var(--color-text-rgb, 255,255,255), 0.1)',
+        borderRadius: '10px',
+        fontSize: '13.5px',
         fontFamily: 'inherit',
         color: 'var(--color-text)',
-        background: 'var(--color-surface)',
+        background: 'rgba(var(--color-text-rgb, 255,255,255), 0.02)',
         outline: 'none',
-        transition: 'all .18s',
+        transition: 'all .2s ease',
+        boxSizing: 'border-box' as const,
     },
 
     // Radio Group
@@ -207,7 +209,7 @@ export const styles: Record<string, CSSProperties> = {
 
     radioPill: {
         padding: '6px 14px',
-        border: '1.5px solid var(--color-bg)',
+        border: '1.5px solid rgba(var(--color-text-rgb, 255,255,255), 0.1)',
         borderRadius: '20px',
         background: 'var(--color-surface)',
         fontSize: '12px',
@@ -312,6 +314,25 @@ if (typeof document !== 'undefined') {
       .npm-title-input:focus {
         border-bottom: 2.5px solid var(--color-primary) !important;
       }
+      .npm-field-input:focus {
+        border-color: var(--color-primary) !important;
+        background: rgba(var(--color-primary-rgb, 155, 93, 229), 0.05) !important;
+        box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb, 155, 93, 229), 0.1) !important;
+      }
+      .npm-field-input::placeholder {
+        color: rgba(var(--color-text-rgb, 255, 255, 255), 0.35) !important;
+      }
+      body.dark-mode .npm-field-label {
+        color: rgba(255, 255, 255, 0.9) !important;
+      }
+      body.dark-mode .npm-field-input {
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+      }
+      body.dark-mode .npm-field-input:focus {
+        border-color: var(--color-primary) !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+      }
       .new-post-modal-wrapper {
         transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease, filter 0.5s ease;
       }
@@ -346,6 +367,11 @@ if (typeof document !== 'undefined') {
              left: 50% !important;
              transform: translate(-50%, -50%) !important;
              z-index: 2000 !important;
+         }
+         .npm-draft-btn, .npm-schedule-btn {
+             padding: 8px 16px !important;
+             font-size: 13px !important;
+             border-radius: 8px !important;
          }
       }
     `;

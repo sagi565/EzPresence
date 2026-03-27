@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '@lib/firebase';
 import { Sun, Moon } from 'lucide-react';
@@ -157,10 +157,10 @@ const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ onClose }) => {
         <ToggleRow onClick={toggleTheme}>
           <div className="toggle-label">
             <ThemeIconContainer>
-              <AnimatedIcon $active={!isDarkMode} $direction={isDarkMode ? 'down' : 'up'}>
+              <AnimatedIcon $active={!isDarkMode} $direction={isDarkMode ? 'down' : 'up'} $color={currentTheme.colors.secondary}>
                 <Sun size={18} />
               </AnimatedIcon>
-              <AnimatedIcon $active={isDarkMode} $direction={!isDarkMode ? 'down' : 'up'}>
+              <AnimatedIcon $active={isDarkMode} $direction={!isDarkMode ? 'down' : 'up'} $color={currentTheme.colors.primary}>
                 <Moon size={18} />
               </AnimatedIcon>
             </ThemeIconContainer>

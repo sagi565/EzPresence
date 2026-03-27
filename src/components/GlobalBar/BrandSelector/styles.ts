@@ -251,7 +251,7 @@ export const AddBrandBtn = styled.button<{ $isHovered?: boolean }>`
   font-size: 12px;
   font-weight: 500;
   color: ${props => props.$isHovered ? props.theme.colors.teal : props.theme.colors.muted};
-  border-top: 1px solid ${props => props.theme.mode === 'dark' ? `${props.theme.colors.secondary}66` : `${props.theme.colors.secondary}33`};
+  border-top: 1px solid ${props => props.theme.mode === 'dark' ? `${props.theme.colors.primary}66` : `${props.theme.colors.primary}33`};
   margin-top: 4px;
   border-left: none;
   border-right: none;

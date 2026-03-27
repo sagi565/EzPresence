@@ -180,6 +180,7 @@ export const useSchedules = (brandId: string) => {
       rruleText?: string | null;
       endDate?: string | null;
       type?: 'Post' | 'Story';
+      timezone?: string;
     }>,
     updateOccurrenceOnly: boolean = false
   ) => {
@@ -191,29 +192,65 @@ export const useSchedules = (brandId: string) => {
         const { hours, minutes } = parseTimeString(updates.time);
         const scheduledDate = new Date(updates.date);
         scheduledDate.setHours(hours, minutes, 0, 0);
-        updatedProperties.plannedAtUtc = scheduledDate.toISOString();
+        
+        // Default to system UTC conversion
+        let plannedAtUtc = scheduledDate.toISOString();
+
+        // If timezone is provided, adjust to the UTC time of that local time in the target zone
+        if (updates.timezone) {
+          try {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+              timeZone: updates.timezone,
+              year: 'numeric',
+              month: 'numeric',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              second: 'numeric',
+              hour12: false,
+            });
+
+            const parts = formatter.formatToParts(scheduledDate);
+            const getVal = (pType: string) => parts.find(p => p.type === pType)?.value || '0';
+
+            const year = parseInt(getVal('year'));
+            const month = parseInt(getVal('month')) - 1;
+            const day = parseInt(getVal('day'));
+            const hour = parseInt(getVal('hour'));
+            const minute = parseInt(getVal('minute'));
+            const second = parseInt(getVal('second'));
+
+            const targetAsLocal = new Date(year, month, day, hour, minute, second);
+            const diff = targetAsLocal.getTime() - scheduledDate.getTime();
+            
+            plannedAtUtc = new Date(scheduledDate.getTime() - diff).toISOString();
+          } catch (e) {
+            console.warn(`[useSchedules] Timezone conversion failed for ${updates.timezone}:`, e);
+          }
+        }
+        updatedProperties.PlannedAtUtc = plannedAtUtc;
       }
 
-      if (updates.platforms) updatedProperties.targets = convertPlatformsToTargets(updates.platforms);
+      if (updates.platforms) updatedProperties.Targets = convertPlatformsToTargets(updates.platforms);
       if (updates.media || updates.type) {
         if (updates.type === 'Story') {
-          updatedProperties.postType = 'Story';
+          updatedProperties.PostType = 'Story';
         } else {
-          updatedProperties.postType = updates.media === 'video' ? 'Video' : 'Post';
+          updatedProperties.PostType = updates.media === 'video' ? 'Video' : 'Post';
         }
       }
       if (updates.title) {
-        updatedProperties.scheduleName = updates.title;
-        updatedProperties.scheduleTitle = updates.title;
+        updatedProperties.ScheduleName = updates.title;
+        updatedProperties.ScheduleTitle = updates.title;
       }
       if (updates.description !== undefined) {
-        updatedProperties.scheduleDescription = updates.description;
+        updatedProperties.ScheduleDescription = updates.description;
       }
-      if (updates.status) updatedProperties.status = updates.status;
+      if (updates.status) updatedProperties.Status = updates.status;
       if (updates.rruleText !== undefined) {
-        updatedProperties.rruleText = updates.rruleText;
+        updatedProperties.RruleText = updates.rruleText;
       }
-      if (updates.endDate !== undefined) updatedProperties.endDate = updates.endDate;
+      if (updates.endDate !== undefined) updatedProperties.EndDate = updates.endDate;
 
       if (Object.keys(updatedProperties).length === 0) {
         console.log('No properties changed, skipping update API call.');

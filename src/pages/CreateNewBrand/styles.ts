@@ -18,6 +18,18 @@ export const Container = styled.div`
   padding: 60px 40px;
   position: relative;
   overflow: hidden;
+  background: ${props => props.theme.mode === 'dark' ? '#1a1a1a' : '#fcfcfc'};
+  transition: background 0.3s ease;
+
+  // Add subtle grain texture for premium look
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.015;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
 
   ${media.tablet} {
     padding: 24px 20px;
@@ -27,11 +39,15 @@ export const Container = styled.div`
 export const Content = styled.div`
   width: 100%;
   max-width: 800px;
-  background: ${props => props.theme.colors.surface}F2;
+  background: ${props => props.theme.mode === 'dark' ? 'rgba(40, 40, 40, 0.85)' : 'rgba(255, 255, 255, 0.98)'};
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: 24px;
   padding: 56px 72px;
-  box-shadow: 0 20px 60px rgba(155, 93, 229, 0.15);
-  border: 2px solid ${props => props.theme.colors.primary}1A;
+  box-shadow: ${props => props.theme.mode === 'dark' 
+    ? '0 20px 60px rgba(0, 0, 0, 0.4)' 
+    : '0 20px 60px rgba(155, 93, 229, 0.1)'};
+  border: 1px solid ${props => props.theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(155, 93, 229, 0.1)'};
   position: relative;
   z-index: 1;
 
@@ -179,7 +195,7 @@ export const RemoveLogoBtn = styled.button`
   height: 36px;
   border-radius: 50%;
   background: #ef4444;
-  border: 3px solid white;
+  border: 3px solid ${props => props.theme.mode === 'dark' ? '#2c2c2c' : 'white'};
   color: white;
   font-size: 18px;
   font-weight: bold;
@@ -203,7 +219,7 @@ export const LogoUploadPlaceholder = styled.div<{ $isHovered?: boolean }>`
   gap: 8px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 0.5);
-  background: rgba(155, 93, 229, 0.03);
+  background: ${props => props.theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(155, 93, 229, 0.03)'};
 
   ${props => props.$isHovered ? `
     border-color: ${props.theme.colors.primary}80;
@@ -297,9 +313,9 @@ export const CategorySelect = styled.select`
     padding: 14px 20px;
     font-size: 15px;
     font-weight: 500;
-    background: ${props => props.theme.colors.surface};
-    color: #333;
-    border-bottom: 1px solid rgba(155, 93, 229, 0.1);
+    background: ${props => props.theme.mode === 'dark' ? '#2c2c2c' : '#ffffff'};
+    color: ${props => props.theme.colors.text};
+    border-bottom: 1px solid ${props => props.theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(155, 93, 229, 0.1)'};
   }
   & option:hover {
     background: ${props => props.theme.colors.primary}14;
@@ -382,6 +398,16 @@ export const BackButton = styled.button`
   top: 24px;
   right: 24px;
   border-radius: 50%;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${props => props.theme.colors.text};
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 50;
 
   &:hover {
     background: ${props => props.theme.colors.primary}1A;
@@ -419,8 +445,37 @@ export const Ripple = styled.span`
 export const Spinner = styled.div`
   width: 20px;
   height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border: 3px solid rgba(155, 93, 229, 0.2);
+  border-top-color: ${props => props.theme.colors.primary};
   border-radius: 50%;
   animation: ${spin} 0.8s linear infinite;
+`;
+
+export const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 20px;
+  color: ${props => props.theme.colors.primary};
+  font-weight: 500;
+`;
+
+export const SuccessMessage = styled.div`
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 14px 18px;
+  background: ${props => props.theme.mode === 'dark' ? 'rgba(20, 184, 166, 0.1)' : 'rgba(20, 184, 166, 0.05)'};
+  border: 2px solid #14b8a6;
+  border-radius: 12px; 
+  color: #14b8a6; 
+  font-size: 14px; 
+  font-weight: 500;
+  animation: contentFadeIn 0.3s ease-out;
+
+  span:first-child {
+    font-size: 20px;
+  }
 `;

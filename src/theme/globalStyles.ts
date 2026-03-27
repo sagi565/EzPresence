@@ -39,10 +39,10 @@ export const GlobalStyles = createGlobalStyle`
     --color-surface: ${props => props.theme.colors.surface};
     --color-text: ${props => props.theme.colors.text};
     --color-muted: ${props => props.theme.colors.muted};
-    --color-text-rgb: ${props => props.theme.colors.text === '#ffffff' ? '255, 255, 255' : '17, 24, 39'};
-    --color-surface-rgb: ${props => props.theme.colors.surface === '#121926' ? '18, 25, 38' : '255, 255, 255'};
+    --color-text-rgb: ${props => props.theme.mode === 'dark' ? '255, 255, 255' : '17, 24, 39'};
+    --color-surface-rgb: ${props => props.theme.mode === 'dark' ? '30, 30, 30' : '255, 255, 255'};
     --color-primary-rgb: 155, 93, 229;
-    --color-muted-rgb: ${props => props.theme.colors.muted === '#d1d5db' ? '209, 213, 219' : '107, 114, 128'};
+    --color-muted-rgb: ${props => props.theme.mode === 'dark' ? '161, 161, 170' : '107, 114, 128'};
   }
 
   @keyframes spin {

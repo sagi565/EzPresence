@@ -18,7 +18,7 @@ export const styles: Record<string, CSSProperties> = {
         padding: '32px',
         width: '420px',
         maxWidth: '90vw',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
         display: 'flex',
         flexDirection: 'column',
         gap: '24px',

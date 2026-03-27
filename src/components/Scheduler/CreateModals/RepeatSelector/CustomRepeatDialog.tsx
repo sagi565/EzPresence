@@ -103,7 +103,7 @@ const CustomRepeatDialog: React.FC<CustomRepeatDialogProps> = ({
                         min-height: 18px;
                         box-sizing: border-box;
                         border-radius: 50%;
-                        border: 2px solid rgba(0,0,0,0.2);
+                        border: 2px solid rgba(var(--color-text-rgb), 0.2);
                         display: inline-flex;
                         align-items: center;
                         justify-content: center;
@@ -133,22 +133,22 @@ const CustomRepeatDialog: React.FC<CustomRepeatDialogProps> = ({
                         top: calc(100% + 4px);
                         left: 0;
                         right: 0;
-                        background: #fff;
+                        background: var(--color-surface);
                         border-radius: 8px;
-                        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-                        border: 1px solid rgba(0,0,0,0.08);
+                        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+                        border: 1px solid rgba(var(--color-text-rgb), 0.1);
                         z-index: 100;
                         overflow: hidden;
                     }
                     .nsm-freq-option {
                         padding: 10px 14px;
                         font-size: 14px;
-                        color: #333;
+                        color: var(--color-text);
                         cursor: pointer;
                         transition: background 0.15s;
                     }
                     .nsm-freq-option:hover {
-                        background: rgba(0,0,0,0.04);
+                        background: rgba(var(--color-text-rgb), 0.05);
                     }
                     .nsm-freq-option.active {
                         background: rgba(155, 93, 229, 0.08);
@@ -216,8 +216,8 @@ const CustomRepeatDialog: React.FC<CustomRepeatDialogProps> = ({
                                         key={idx}
                                         style={{
                                             ...styles.dayBubble,
-                                            background: isSelected ? theme.colors.primary : '#f1f3f4',
-                                            color: isSelected ? '#fff' : '#3c4043'
+                                            background: isSelected ? theme.colors.primary : 'rgba(var(--color-text-rgb), 0.05)',
+                                            color: isSelected ? '#fff' : 'var(--color-text)'
                                         }}
                                         onClick={() => toggleDay(idx)}
                                     >
@@ -294,7 +294,7 @@ const CustomRepeatDialog: React.FC<CustomRepeatDialogProps> = ({
                                     onChange={e => setEndOccurrences(Math.max(1, parseInt(e.target.value) || 1))}
                                     style={styles.inputNumber}
                                 />
-                                <span style={{ fontSize: '14px', color: '#5f6368' }}>occurrences</span>
+                                <span style={{ fontSize: '14px', color: 'var(--color-muted)' }}>occurrences</span>
                             </div>
                         )}
                     </div>

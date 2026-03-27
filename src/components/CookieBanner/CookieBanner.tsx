@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { useLocation } from 'react-router-dom';
 
 const COOKIE_CONSENT_KEY = 'cookie-consent';
 
@@ -18,7 +19,7 @@ const BannerWrapper = styled.div<{ $hiding: boolean }>`
   bottom: 32px;
   left: 50%;
   transform: translate(-50%, 0);
-  z-index: 9999;
+  z-index: 1000000;
   width: calc(100% - 48px);
   max-width: 680px;
   animation: ${({ $hiding }) => ($hiding ? slideDown : slideUp)} 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -131,6 +132,9 @@ const DeclineButton = styled.button`
 const CookieBanner: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const [hiding, setHiding] = useState(false);
+  const location = useLocation();
+
+  const isLegalPage = ['/privacy-policy', '/terms-of-service'].includes(location.pathname);
 
   useEffect(() => {
     const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
@@ -146,7 +150,7 @@ const CookieBanner: React.FC = () => {
     setTimeout(() => setVisible(false), 500);
   };
 
-  if (!visible) return null;
+  if (!visible || isLegalPage) return null;
 
   return (
     <BannerWrapper $hiding={hiding}>

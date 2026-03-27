@@ -323,7 +323,7 @@ export const ThemeIconContainer = styled.div`
   overflow: hidden;
 `;
 
-export const AnimatedIcon = styled.div<{ $active: boolean; $direction: 'up' | 'down' }>`
+export const AnimatedIcon = styled.div<{ $active: boolean; $direction: 'up' | 'down'; $color?: string }>`
   position: absolute;
   display: flex;
   align-items: center;
@@ -337,7 +337,7 @@ export const AnimatedIcon = styled.div<{ $active: boolean; $direction: 'up' | 'd
     : props.$direction === 'up' 
       ? 'translateY(-20px) scale(0.5)' 
       : 'translateY(20px) scale(0.5)'};
-  color: ${props => props.theme.colors.primary};
+  color: ${props => props.$color || props.theme.colors.primary};
 `;
 
 export const SwitchToggle = styled.div<{ $isOn: boolean }>`

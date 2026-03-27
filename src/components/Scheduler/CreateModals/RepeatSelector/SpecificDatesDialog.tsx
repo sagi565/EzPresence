@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { styles as modalStyles } from './CustomRepeatStyles';
-import { theme } from '@/theme/theme';
 
 interface SpecificDatesDialogProps {
     isOpen: boolean;
@@ -18,19 +17,19 @@ const styles: Record<string, React.CSSProperties> = {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '0 10px 16px',
-        borderBottom: '1px solid rgba(0,0,0,0.05)',
+        borderBottom: '1px solid rgba(var(--color-text-rgb), 0.08)',
         marginBottom: '16px',
     },
     titleText: {
         fontSize: '15px',
         fontWeight: 600,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
     },
     arrow: {
         background: 'transparent',
         border: 'none',
         fontSize: '20px',
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         cursor: 'pointer',
         padding: '0 8px',
         lineHeight: 1,
@@ -44,7 +43,7 @@ const styles: Record<string, React.CSSProperties> = {
     dayHeader: {
         fontSize: '11px',
         fontWeight: 600,
-        color: theme.colors.muted,
+        color: 'var(--color-muted)',
         padding: '4px 0',
     },
     day: {
@@ -56,7 +55,7 @@ const styles: Record<string, React.CSSProperties> = {
         justifyContent: 'center',
         fontSize: '13px',
         fontWeight: 500,
-        color: theme.colors.text,
+        color: 'var(--color-text)',
         background: 'transparent',
         border: 'none',
         borderRadius: '8px',
@@ -65,23 +64,25 @@ const styles: Record<string, React.CSSProperties> = {
         padding: 0,
     },
     daySelected: {
-        background: theme.colors.primary,
+        background: 'var(--color-primary)',
         color: '#fff',
         fontWeight: 700,
         boxShadow: '0 2px 8px rgba(155, 93, 229, .25)',
     },
     dayOtherMonth: {
-        color: 'rgba(0,0,0,0.2)',
+        color: 'var(--color-muted)',
+        opacity: 0.4,
         cursor: 'default',
     },
     dayDisabled: {
-        color: 'rgba(0,0,0,0.2)',
+        color: 'var(--color-muted)',
+        opacity: 0.25,
         cursor: 'not-allowed',
         background: 'transparent',
     },
     selectionCount: {
         fontSize: '13px',
-        color: theme.colors.primary,
+        color: 'var(--color-primary)',
         fontWeight: 600,
         marginBottom: '16px',
         textAlign: 'center',
@@ -246,8 +247,8 @@ const SpecificDatesDialog: React.FC<SpecificDatesDialogProps> = ({
                         background-color: var(--color-primary, #9b5de5) !important;
                         color: #fff !important;
                     }
-                    .nsm-btn-cancel:hover { background: rgba(0,0,0,0.05) !important; color: #111 !important; }
-                    .nsm-btn-done:hover { filter: contrast(1.15) brightness(1.05); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(155, 93, 229, 0.35) !important; }
+                    .nsm-btn-cancel:hover { background: rgba(155, 93, 229, 0.08) !important; color: var(--color-text) !important; }
+                    .nsm-btn-done:hover { filter: contrast(1.15) brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(155, 93, 229, 0.4) !important; }
                 `}
             </style>
             <div style={styles.dialog} onClick={e => e.stopPropagation()}>

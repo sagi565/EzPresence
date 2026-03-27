@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBrands } from '@hooks/brands/useBrands';
 import { useConnectedPlatforms } from '@hooks/platforms/useConnectedPlatforms';
-import { Container, Content, Header, Title, TitleHighlight, Subtitle, Form, MainContent, Row, NameAndSloganColumn, FormGroupStacked, FormGroupRight, Label, Required, LogoCenterLabel, LogoUploadArea, LogoPreviewContainer, LogoPreview, RemoveLogoBtn, LogoUploadPlaceholder, UploadIcon, UploadText, FormGroup, Input, InputWrapper, CharCountInside, CategorySelect, ErrorText, ErrorMessageWrapper, ErrorIcon, Actions, SubmitBtn, Ripple, Spinner, BackButton } from './styles';
+import { Container, Content, Header, Title, TitleHighlight, Subtitle, Form, MainContent, Row, NameAndSloganColumn, FormGroupStacked, FormGroupRight, Label, Required, LogoCenterLabel, LogoUploadArea, LogoPreviewContainer, LogoPreview, RemoveLogoBtn, LogoUploadPlaceholder, UploadIcon, UploadText, FormGroup, Input, InputWrapper, CharCountInside, CategorySelect, ErrorText, ErrorMessageWrapper, ErrorIcon, Actions, SubmitBtn, Ripple, Spinner, BackButton, LoadingContainer, SuccessMessage } from './styles';
 import { ConnectedPlatformsGrid } from '@components/SocialPlatform/ConnectedPlatformsGrid';
 import { BrandInitializeDto } from '@models/Brand';
 
@@ -167,17 +167,10 @@ const CreateNewBrandPage: React.FC = () => {
   if ((brandsLoading || !uninitializedBrandId) && !errorError) {
     return (
       <Container>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-          gap: '20px',
-        }}>
+        <LoadingContainer>
           <Spinner />
-          <p style={{ color: '#9B5DE5', fontWeight: 500 }}>Initializing your brand session...</p>
-        </div>
+          <p>Initializing your brand session...</p>
+        </LoadingContainer>
       </Container>
     );
   }
@@ -332,14 +325,10 @@ const CreateNewBrandPage: React.FC = () => {
           )}
 
           {submitSuccess && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 18px',
-              background: 'rgba(20, 184, 166, 0.1)', border: '2px solid #14b8a6',
-              borderRadius: '12px', color: '#14b8a6', fontSize: '14px', fontWeight: 500,
-            }}>
-              <span style={{ fontSize: '20px' }}>✅</span>
+            <SuccessMessage>
+              <span>✅</span>
               <span>Brand created successfully! Redirecting...</span>
-            </div>
+            </SuccessMessage>
           )}
 
           {/* Submit Button */}

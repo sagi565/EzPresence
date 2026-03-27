@@ -19,7 +19,7 @@ export const styles: Record<string, CSSProperties> = {
         zIndex: 1600,
         background: 'var(--color-surface)',
         borderRadius: '16px',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, .15), 0 0 0 1px rgba(0, 0, 0, .04)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, .25), 0 0 0 1px var(--color-bg)',
         width: '820px',
         maxWidth: '94vw',
         maxHeight: '88vh',
@@ -130,9 +130,9 @@ export const styles: Record<string, CSSProperties> = {
 
     chip: {
         padding: '7px 14px',
-        border: '1.5px solid rgba(0, 0, 0, .1)',
+        border: '1.5px solid var(--color-bg)',
         borderRadius: '8px',
-        background: '#fff',
+        background: 'var(--color-surface)',
         fontSize: '14px',
         fontWeight: 500,
         color: 'var(--color-text)',
@@ -171,9 +171,9 @@ export const styles: Record<string, CSSProperties> = {
         alignItems: 'center',
         gap: '10px',
         padding: '10px 18px',
-        border: '1.5px solid rgba(0, 0, 0, .08)',
+        border: '1.5px solid var(--color-bg)',
         borderRadius: '12px',
-        background: '#fff',
+        background: 'var(--color-surface)',
         fontSize: '13px',
         fontWeight: 500,
         color: 'var(--color-muted)',
@@ -206,8 +206,8 @@ export const styles: Record<string, CSSProperties> = {
         width: '180px',
         aspectRatio: '9/16',
         borderRadius: '14px',
-        border: '2px dashed rgba(0, 0, 0, .1)',
-        background: '#f8f9fb',
+        border: '2px dashed var(--color-bg)',
+        background: 'var(--color-bg)',
         display: 'flex',
         flexDirection: 'column' as const,
         alignItems: 'center',
@@ -273,7 +273,7 @@ export const styles: Record<string, CSSProperties> = {
         padding: '10px 22px',
         border: 'none',
         borderRadius: '10px',
-        background: '#fff',
+        background: 'var(--color-surface)',
         fontSize: '14px',
         fontWeight: 600,
         color: 'var(--color-muted)',
@@ -396,6 +396,11 @@ if (typeof document !== 'undefined') {
              left: 50% !important;
              transform: translate(-50%, -50%) !important;
              z-index: 2000 !important;
+         }
+         .nsm-draft-btn, .nsm-schedule-btn {
+             padding: 8px 16px !important;
+             font-size: 13px !important;
+             border-radius: 8px !important;
          }
       }
     `;

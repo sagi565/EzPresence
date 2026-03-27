@@ -22,8 +22,20 @@ if (typeof document !== 'undefined') {
                 0%, 80%, 100% { transform: scale(0.65); opacity: 0.35; }
                 40%           { transform: scale(1);    opacity: 1;    }
             }
+            @keyframes nsmSpin {
+                from { transform: rotate(0deg); }
+                to   { transform: rotate(360deg); }
+            }
+            .nsm-spin-icon {
+                display: block;
+                animation: nsmSpin 1s linear infinite;
+            }
             @keyframes contentFadeIn {
-                from { op            /* ── Base preview shell ─────────────────────────────────────────────── */
+                from { opacity: 0; transform: scale(0.98); }
+                to   { opacity: 1; transform: scale(1);    }
+            }
+
+            /* ── Base preview shell ─────────────────────────────────────────────── */
             .nsm-content-preview {
                 width: 100%;
                 aspect-ratio: 9/16;
@@ -36,7 +48,7 @@ if (typeof document !== 'undefined') {
                 justify-content: center;
                 gap: 8px;
                 cursor: pointer;
-                transition: border-color 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+                transition: border-color 0.3s ease, background 0.3s ease, opacity 0.3s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
                 overflow: hidden;
                 position: relative;
             }
@@ -52,36 +64,53 @@ if (typeof document !== 'undefined') {
             .nsm-content-preview.is-picking,
             /* Scenario 2: Dragging card from open drawer over an empty preview */
             body.content-dragging .nsm-content-preview:not(.has-content) {
-                z-index: 1001 !important;
+                z-index: 2100 !important;
                 border: 2px dashed var(--color-primary) !important;
                 background: var(--color-surface) !important;
-                box-shadow: 0 0 70px 20px rgba(255, 230, 0, 0.45) !important;
+                box-shadow: 0 0 15px 5px rgba(255, 230, 0, 0.25) !important;
             }
 
             /* Even if it has content, elevate it visually so drop remains clear */
             body.content-dragging .nsm-content-preview.has-content {
-                z-index: 1001 !important;
+                z-index: 2100 !important;
                 background: var(--color-surface) !important;
-                box-shadow: 0 0 60px 15px rgba(255, 230, 0, 0.45) !important;
+                box-shadow: 0 0 12px 4px rgba(255, 230, 0, 0.2) !important;
             }
 
             /* Active drop target (matches old #pickClone dragover) */
             .nsm-content-preview.drop-hover,
             body.content-dragging .nsm-content-preview.drop-hover {
                 border-color: var(--color-primary) !important;
-                border-style: solid !important;
+                border-style: dashed !important;
                 background: var(--color-surface) !important;
-                box-shadow: 0 0 80px 25px rgba(255, 230, 0, 0.55) !important;
+                box-shadow: 0 0 20px 8px rgba(255, 230, 0, 0.35) !important;
+                z-index: 2200 !important;
             }
 
             /* Has content — zero border, zero background, clean slate */
             .nsm-content-preview.has-content {
                 background: transparent !important;
+                border: none !important;
+            }
+            
+            .nsm-content-preview.has-content:hover {
+                transform: scale(1.02) translateY(-4px);
+                box-shadow: 
+                    0 20px 40px rgba(0, 0, 0, 0.3), 
+                    0 0 20px rgba(var(--color-primary-rgb, 155, 93, 229), 0.2);
+                border: 2px solid rgba(var(--color-primary-rgb, 155, 93, 229), 0.4) !important;
+            }
+
+
+
+            .nsm-content-preview.has-content:hover .nsm-content-filled {
+                transform: scale(1.04);
             }
             /* Allow drop-hover outline even when has-content */
             .nsm-content-preview.has-content.drop-hover {
                 outline: 2px solid rgba(251,191,36,0.8) !important;
                 outline-offset: 2px !important;
+                z-index: 2200 !important;
             }
 
             /* ── Empty placeholder ──────────────────────────────────────────────── */
@@ -90,7 +119,12 @@ if (typeof document !== 'undefined') {
                 flex-direction: column;
                 align-items: center;
                 gap: 6px;
-                color: var(--color-muted);
+                color: var(--color-text);
+                opacity: 0.8;
+            }
+            body.dark-mode .nsm-content-placeholder {
+                color: #fff;
+                opacity: 0.9;
             }
             .nsm-content-placeholder .placeholder-icon {
                 font-size: 32px;
@@ -174,10 +208,11 @@ if (typeof document !== 'undefined') {
                 border-radius: 12px;
                 display: flex;
                 align-items: center;
-                justifyContent: center;
+                justify-content: center;
                 background-size: cover;
                 background-position: center;
                 overflow: hidden;
+                transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .nsm-content-filled .filled-title {
                 position: absolute;
@@ -188,11 +223,16 @@ if (typeof document !== 'undefined') {
                 text-align: center;
                 padding: 14px 10px 8px;
                 text-shadow: 0 1px 3px rgba(0,0,0,.8);
-                background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
+                background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
                 z-index: 2;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                transition: transform 0.3s ease, padding 0.3s ease;
+            }
+            .nsm-content-preview.has-content:hover .filled-title {
+                padding-bottom: 12px;
+                transform: translateY(-2px);
             }
 
             /* ── Remove button ──────────────────────────────────────────────────── */
@@ -208,10 +248,12 @@ if (typeof document !== 'undefined') {
                 cursor: pointer;
                 display: flex;
                 align-items: center;
-                justifyContent: center;
+                justify-content: center;
                 opacity: 0;
                 transition: opacity .15s;
                 z-index: 3;
+                line-height: 1;
+                padding: 0;
             }
             .nsm-content-preview:hover .nsm-remove-content {
                 opacity: 1;

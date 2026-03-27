@@ -10,7 +10,7 @@ export const CalendarGridWrapper = styled.div`
   display: flex;
   flex-direction: column;
   margin-bottom: 60px;
-  height: 720px;
+  height: 1200px;
   
   @media (max-width: 768px) {
     padding: 8px;
@@ -86,7 +86,7 @@ export const CalendarDayCell = styled.div<{
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 100px;
+  min-height: 180px;
   
   &:hover {
     background: ${props => props.$isDragOver ? `${props.theme.colors.primary}1A` : 
@@ -202,8 +202,14 @@ export const StatusIndicator = styled.div<{ $status: string }>`
   flex-shrink: 0;
   cursor: pointer;
   
-  background: ${props => props.$status === 'SUCCESS' ? '#22c55e' : props.$status === 'FAILED' ? '#ef4444' : 'white'};
-  border: ${props => props.$status === 'SCHEDULED' ? '1.7px solid black' : props.$status === 'DRAFT' ? '2.2px dotted #4b5563' : 'none'};
+  background: ${props => {
+    const s = props.$status?.toLowerCase();
+    return s === 'success' ? '#22c55e' : s === 'failed' ? '#ef4444' : 'white';
+  }};
+  border: ${props => {
+    const s = props.$status?.toLowerCase();
+    return s === 'scheduled' ? '1.7px solid #4b5563' : s === 'draft' ? '2px dashed #4b5563' : 'none';
+  }};
   box-sizing: border-box;
   
   @media (max-width: 768px) {

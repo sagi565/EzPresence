@@ -14,8 +14,8 @@ const tooltipStyle: React.CSSProperties = {
     bottom: 'calc(100% + 8px)',
     left: '50%',
     transform: 'translateX(-50%)',
-    background: '#1a1a2e',
-    color: '#fff',
+    background: 'var(--color-surface)',
+    color: 'var(--color-text)',
     padding: '7px 12px',
     borderRadius: '8px',
     fontSize: '12px',
@@ -26,7 +26,8 @@ const tooltipStyle: React.CSSProperties = {
     whiteSpace: 'pre-wrap' as any,
     textAlign: 'center',
     pointerEvents: 'none',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+    border: '1px solid var(--color-bg)',
 };
 
 const InfoIcon: React.FC<{ tooltip: string }> = ({ tooltip }) => {
@@ -105,8 +106,8 @@ const RecurringActionDialog: React.FC<RecurringActionDialogProps> = ({
                                 style={{
                                     ...styles.optionItem,
                                     ...(isSelected && !isDisabled ? {
-                                        background: 'rgba(155, 93, 229, 0.05)',
-                                        borderColor: 'rgba(155, 93, 229, 0.35)',
+                                        background: 'rgba(var(--color-primary-rgb, 155, 93, 229), 0.1)',
+                                        borderColor: 'var(--color-primary)',
                                     } : {}),
                                     ...(isDisabled ? { opacity: 0.45, cursor: 'not-allowed' } : {}),
                                 }}

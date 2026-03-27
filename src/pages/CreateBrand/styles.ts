@@ -29,7 +29,7 @@ export const Container = styled.div`
 export const Content = styled.div`
   width: 100%;
   max-width: 800px;
-  background: rgba(255, 255, 255, 0.95);
+  background: ${({ theme }) => theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
   border-radius: 24px;
   padding: 56px 72px;
   box-shadow: 0 20px 60px rgba(155, 93, 229, 0.15);
@@ -270,14 +270,14 @@ export const CategorySelect = styled.select`
   width: 100%;
   height: 52px;
   padding: 0 52px 0 20px;
-  border: 2px solid rgba(155, 93, 229, 0.25);
+  border: 2px solid ${({ theme }) => theme.colors.primary}40;
   border-radius: 14px;
   font-size: 15px;
   font-weight: 500;
   outline: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: white;
-  color: ${theme.colors.text};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
   font-family: inherit;
   cursor: pointer;
   appearance: none;
@@ -289,24 +289,24 @@ export const CategorySelect = styled.select`
     padding: 14px 20px;
     font-size: 15px;
     font-weight: 500;
-    background: white;
-    color: #333;
+    background: ${({ theme }) => theme.colors.surface};
+    color: ${({ theme }) => theme.colors.text};
     border-bottom: 1px solid rgba(155, 93, 229, 0.1);
   }
   & option:hover {
-    background: rgba(155, 93, 229, 0.08);
-    color: ${theme.colors.primary};
+    background: ${({ theme }) => theme.colors.primary}14;
+    color: ${({ theme }) => theme.colors.primary};
   }
   & option:checked {
-    background: linear-gradient(135deg, rgba(155, 93, 229, 0.15), rgba(155, 93, 229, 0.08));
-    color: ${theme.colors.primary};
+    background: linear-gradient(135deg, ${({ theme }) => theme.colors.primary}26, ${({ theme }) => theme.colors.primary}14);
+    color: ${({ theme }) => theme.colors.primary};
     font-weight: 600;
   }
   &:hover {
     border-color: rgba(155, 93, 229, 0.5);
   }
   &:focus {
-    border-color: ${theme.colors.primary};
+    border-color: ${({ theme }) => theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(155, 93, 229, 0.1);
   }
 `;
@@ -394,14 +394,14 @@ export const BackButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #9b5de5;
+  color: ${({ theme }) => theme.colors.text};
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 50;
   border-radius: 50%;
 
   &:hover {
-    background: rgba(155, 93, 229, 0.1);
+    background: ${({ theme }) => theme.colors.primary}1A;
     transform: scale(1.1);
   }
 

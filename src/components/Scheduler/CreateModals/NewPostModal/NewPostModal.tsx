@@ -14,7 +14,7 @@ import {
 } from '@/models/ScheduleFormData';
 import DatePicker from '../DatePicker/DatePicker';
 import TimePicker from '../TimePicker/TimePicker';
-import TimezoneSelector, { TIMEZONES, TimezoneOption, getTimezoneLabel } from '../TimezoneSelector/TimezoneSelector';
+import TimezoneSelector, { TIMEZONES, TimezoneOption } from '../TimezoneSelector/TimezoneSelector';
 import RepeatSelector from '../RepeatSelector/RepeatSelector';
 import { ContentItem } from '@/models/ContentList';
 import HashtagTextarea from '../HashtagTextarea/HashtagTextarea';
@@ -25,8 +25,9 @@ import { useUserProfile } from '@/hooks/user/useUserProfile';
 import { getPlatformIconPath, SocialPlatform } from '@/models/Platform';
 import { useBrands } from '@/hooks/brands/useBrands';
 import { useSchedules } from '@/hooks/useSchedules';
-import { styles } from './styles';
 import { theme } from '@/theme/theme';
+import { useAppTheme } from '@/theme/ThemeContext';
+import { styles } from './styles';
 import ScheduleModalLayout from '../ScheduleModalLayout/ScheduleModalLayout';
 import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import ContentPreview from '../ContentPreview';
@@ -66,6 +67,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     status,
 }) => {
     const { currentBrand } = useBrands();
+    const { isDarkMode } = useAppTheme();
     const { createSchedule, updateSchedule, deleteSchedule } = useSchedules(currentBrand?.id || '');
 
     const [formData, setFormData] = useState<PostFormData>(initialData ? { ...getDefaultPostFormData(), ...initialData } : getDefaultPostFormData());
@@ -373,17 +375,18 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
         const ttConfig = formData.platforms.tiktok || DEFAULT_TIKTOK_CONFIG;
 
         // Small tooltip icon for field labels
+        // Small tooltip icon for field labels
         const FieldTooltip: React.FC<{ text: string }> = ({ text }) => {
             const [show, setShow] = React.useState(false);
             return (
                 <span
-                    style={{ width: 15, height: 15, borderRadius: '50%', background: 'rgba(155,93,229,.1)', fontSize: '9px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#7c3aed', cursor: 'help', fontStyle: 'italic', flexShrink: 0, position: 'relative', marginLeft: '4px' }}
+                    style={{ width: 15, height: 15, borderRadius: '50%', background: theme.mode === 'dark' ? 'rgba(255,255,255,.1)' : 'rgba(155,93,229,.1)', fontSize: '9px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: theme.mode === 'dark' ? '#fff' : '#7c3aed', cursor: 'help', fontStyle: 'italic', flexShrink: 0, position: 'relative', marginLeft: '4px' }}
                     onMouseEnter={() => setShow(true)}
                     onMouseLeave={() => setShow(false)}
                 >
                     i
                     {show && (
-                        <span style={{ display: 'block', position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', fontSize: '11px', fontWeight: 400, lineHeight: 1.4, padding: '8px 12px', borderRadius: '8px', whiteSpace: 'pre-line', width: '220px', zIndex: 1800, boxShadow: '0 4px 16px rgba(0,0,0,.25)', pointerEvents: 'none' }}>
+                        <span style={{ display: 'block', position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: theme.mode === 'dark' ? '#333' : '#111827', color: '#fff', fontSize: '11px', fontWeight: 400, lineHeight: 1.4, padding: '8px 12px', borderRadius: '8px', whiteSpace: 'pre-line', width: '220px', zIndex: 1800, boxShadow: '0 4px 16px rgba(0,0,0,.25)', pointerEvents: 'none' }}>
                             {text}
                         </span>
                     )}
@@ -404,8 +407,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 style={{
                     ...styles.platformSection,
                     borderLeftColor: platformColor,
-                    ...(isSelected ? {} : { borderLeftColor: 'rgba(0,0,0,0.1)' }),
-                    ...(isExpanded ? { boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } : {})
+                    ...(isSelected ? {} : { borderLeftColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }),
+                    ...(isExpanded ? { boxShadow: theme.mode === 'dark' ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.05)' } : {})
                 }}
             >
                 <div
@@ -437,7 +440,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                         <div
                             style={{
                                 width: '18px', height: '18px', borderRadius: '5px',
-                                border: '1.5px solid', borderColor: isSelected ? platformColor : 'rgba(0,0,0,0.15)',
+                                border: '1.5px solid', borderColor: isSelected ? platformColor : (theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'),
                                 background: isSelected ? platformColor : 'transparent',
                                 cursor: isSelected ? 'pointer' : 'default',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -456,16 +459,16 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                                     {platform.charAt(0).toUpperCase()}
                                 </div>
                             )}
-                            <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '18px', height: '18px', borderRadius: '5px', background: '#fff', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '18px', height: '18px', borderRadius: '5px', background: theme.mode === 'dark' ? 'var(--color-surface)' : '#fff', border: `1.5px solid ${theme.mode === 'dark' ? 'var(--color-surface)' : '#fff'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                                 <img src={getPlatformIconPath(platform)} alt="" style={{ width: '14px', height: '14px' }} />
                             </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '10px', gap: '1px' }}>
-                            <span style={{ fontSize: '13.5px', fontWeight: 400, color: theme.colors.text, letterSpacing: '0.02em' }}>
+                            <span style={{ fontSize: '13.5px', fontWeight: 600, color: isDarkMode ? '#ffffff' : '#111827', letterSpacing: '0.02em' }}>
                                 {platform.charAt(0).toUpperCase() + platform.slice(1)}
                             </span>
                             {account && (
-                                <span style={{ fontSize: '11px', fontWeight: 600, color: theme.colors.muted }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#6b7280' }}>
                                     {account.username.startsWith('@') ? account.username : `@${account.username}`}
                                 </span>
                             )}
@@ -496,12 +499,12 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                         {platform === 'facebook' && (
                             <>
                                 <div style={styles.field}>
-                                    <div style={{ ...styles.fieldLabel, display: 'flex', alignItems: 'center', gap: 4 }}>Post Text<FieldTooltip text="This is the text that appears with your Facebook post." /></div>
+                                    <div className="npm-field-label" style={{ ...styles.fieldLabel, display: 'flex', alignItems: 'center', gap: 4 }}>Post Text<FieldTooltip text="This is the text that appears with your Facebook post." /></div>
                                     <HashtagTextarea value={fbConfig.postText || ''} onChange={val => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, facebook: { ...fbConfig, postText: val } } }))} placeholder="What's on your mind?" rows={3} />
                                 </div>
                                 <div style={styles.field}>
-                                    <div style={{ ...styles.fieldLabel, display: 'flex', alignItems: 'center', gap: 4 }}>Link <span style={{ fontWeight: 400, fontSize: '10px', color: '#999' }}>(Optional)</span><FieldTooltip text={"Attach a link to share a webpage with a preview.\nFacebook will automatically generate a title, image, and description."} /></div>
-                                    <input style={styles.fieldInput} value={fbConfig.link || ''} onChange={e => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, facebook: { ...fbConfig, link: e.target.value } } }))} placeholder="https://" />
+                                    <div className="npm-field-label" style={{ ...styles.fieldLabel, display: 'flex', alignItems: 'center', gap: 4 }}>Link <span style={{ fontWeight: 400, fontSize: '10px', color: isDarkMode ? 'rgba(255,255,255,0.5)' : '#999' }}>(Optional)</span><FieldTooltip text={"Attach a link to share a webpage with a preview.\nFacebook will automatically generate a title, image, and description."} /></div>
+                                    <input className="npm-field-input" style={styles.fieldInput} value={fbConfig.link || ''} onChange={e => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, facebook: { ...fbConfig, link: e.target.value } } }))} placeholder="https://" />
                                 </div>
                             </>
                         )}
@@ -591,6 +594,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 if (dateOrTimeChanged) {
                     updates.date = formData.date;
                     updates.time = formData.time;
+                    updates.timezone = formData.timezone;
                 }
 
                 const activePlatforms = getEnabledPlatforms(formData);
@@ -720,6 +724,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 if (dateOrTimeChanged) {
                     updates.date = formData.date;
                     updates.time = formData.time;
+                    updates.timezone = formData.timezone;
                 }
 
                 const origPlatforms = (initialData as any)?.platforms || [];
@@ -819,42 +824,62 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 }
                 footer={
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                        <button onClick={handleSaveDraft} disabled={isSubmitting || isReadOnly || !formData.contentId} onMouseEnter={() => setIsDraftHovered(true)} onMouseLeave={() => setIsDraftHovered(false)}
-                            style={{ ...styles.draftBtn, opacity: (isSubmitting || isReadOnly || !formData.contentId) ? 0.5 : 1, cursor: (isSubmitting || isReadOnly || !formData.contentId) ? 'not-allowed' : 'pointer', ...((isDraftHovered && !isSubmitting && !isReadOnly && formData.contentId) ? { background: 'rgba(155, 93, 229, 0.1)', color: '#9b5de5', boxShadow: '0 2px 8px rgba(155, 93, 229, 0.2)' } : {}) }}>
+                        <button 
+                            className="npm-draft-btn"
+                            onClick={handleSaveDraft} 
+                            disabled={isSubmitting || isReadOnly || !formData.contentId} 
+                            onMouseEnter={() => setIsDraftHovered(true)} 
+                            onMouseLeave={() => setIsDraftHovered(false)}
+                            style={{ ...styles.draftBtn, opacity: (isSubmitting || isReadOnly || !formData.contentId) ? 0.5 : 1, cursor: (isSubmitting || isReadOnly || !formData.contentId) ? 'not-allowed' : 'pointer', ...((isDraftHovered && !isSubmitting && !isReadOnly && formData.contentId) ? { background: 'rgba(155, 93, 229, 0.1)', color: '#9b5de5', boxShadow: '0 2px 8px rgba(155, 93, 229, 0.2)' } : {}) }}
+                        >
                             Save as Draft
                         </button>
-                        <button onClick={handleSchedule} disabled={isSubmitting || isReadOnly || !isFormValid}
-                            style={{ ...styles.scheduleBtn, opacity: (isSubmitting || isReadOnly || !isFormValid) ? 0.7 : 1, cursor: (isSubmitting || isReadOnly || !isFormValid) ? 'not-allowed' : 'pointer' }}>
+                        <button 
+                            className="npm-schedule-btn"
+                            onClick={handleSchedule} 
+                            disabled={isSubmitting || isReadOnly || !isFormValid}
+                            style={{ ...styles.scheduleBtn, opacity: (isSubmitting || isReadOnly || !isFormValid) ? 0.7 : 1, cursor: (isSubmitting || isReadOnly || !isFormValid) ? 'not-allowed' : 'pointer' }}
+                        >
                             {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update' : 'Schedule'))}
                         </button>
                     </div>
                 }
             >
                 <SectionContainer icon="🕐" className="npm-date-section">
-                    <div className="chip-row-container" style={{ display: 'flex', flexWrap: 'nowrap', gap: '8px', alignItems: 'center' }}>
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <ChipButton className="chip-button" minWidth="148px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
-                                <span>{formData.date ? formData.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Date'}</span><ChipArrow />
-                            </ChipButton>
-                            <DatePicker selectedDate={formData.date} onChange={handleDateChange} minDate={new Date()} show={showDatePicker} onClose={() => setShowDatePicker(false)} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div className="chip-row-container" style={{ display: 'flex', flexWrap: 'nowrap', gap: '8px', alignItems: 'center' }}>
+                            <div className="npm-date-wrapper" style={{ position: 'relative', flexShrink: 0 }}>
+                                <ChipButton className="chip-button" minWidth="148px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
+                                    <span>{formData.date ? formData.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Date'}</span><ChipArrow />
+                                </ChipButton>
+                                <DatePicker selectedDate={formData.date} onChange={handleDateChange} minDate={new Date()} show={showDatePicker} onClose={() => setShowDatePicker(false)} />
+                            </div>
+                            <div className="npm-time-tz-container" style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                                <div className="npm-time-wrapper" style={{ position: 'relative', flexShrink: 0 }}>
+                                    <ChipButton className="chip-button" minWidth="88px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
+                                        <span>{formData.time}</span><ChipArrow />
+                                    </ChipButton>
+                                    <TimePicker selectedTime={formData.time} onChange={handleTimeChange} show={showTimePicker} onClose={() => setShowTimePicker(false)} />
+                                </div>
+                                <div className="npm-timezone-wrapper" style={{ position: 'relative', flex: 1 }}>
+                                    <ChipButton className="chip-button npm-timezone-chip" minWidth="120px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2 }}>
+                                            <span className="timezone-label" style={{ fontSize: '10px', color: 'var(--color-muted)', fontWeight: 600, display: 'none' }}>timezone</span>
+                                            <span className="timezone-value" style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>Timezone</span>
+                                        </div>
+                                        <ChipArrow className="timezone-arrow" />
+                                    </ChipButton>
+                                    <TimezoneSelector selectedTimezone={formData.timezone || 'America/New_York'} onChange={(tz) => { setFormData(prev => ({ ...prev, timezone: tz })); setShowTimezoneSelector(false); }} show={showTimezoneSelector} onClose={() => setShowTimezoneSelector(false)} />
+                                </div>
+                            </div>
                         </div>
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <ChipButton className="chip-button" minWidth="88px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
-                                <span>{formData.time}</span><ChipArrow />
-                            </ChipButton>
-                            <TimePicker selectedTime={formData.time} onChange={handleTimeChange} show={showTimePicker} onClose={() => setShowTimePicker(false)} />
-                        </div>
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <ChipButton className="chip-button" minWidth="120px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
-                                <span style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>{formData.timezone ? getTimezoneLabel(formData.timezone) : 'Timezone'}</span><ChipArrow />
-                            </ChipButton>
-                            <TimezoneSelector selectedTimezone={formData.timezone || 'America/New_York'} onChange={(tz) => { setFormData(prev => ({ ...prev, timezone: tz })); setShowTimezoneSelector(false); }} show={showTimezoneSelector} onClose={() => setShowTimezoneSelector(false)} />
-                        </div>
-                        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                            <ChipButton className="chip-button" minWidth="100%" style={{ width: '100%', boxSizing: 'border-box' }} onClick={() => { closeAllPickers(); setShowRepeatSelector(true); }}>
-                                <span>{formData.repeat.label}</span><ChipArrow />
-                            </ChipButton>
-                            <RepeatSelector selectedRepeat={formData.repeat} onChange={(repeat) => { setFormData({ ...formData, repeat }); setShowRepeatSelector(false); }} baseDate={formData.date} show={showRepeatSelector} onClose={() => setShowRepeatSelector(false)} />
+                        <div className="chip-row-container npm-repeat-container" style={{ display: 'flex', flexWrap: 'nowrap', gap: '8px', alignItems: 'center' }}>
+                            <div className="npm-repeat-wrapper" style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                                <ChipButton className="chip-button" minWidth="100%" style={{ width: '100%', boxSizing: 'border-box' }} onClick={() => { closeAllPickers(); setShowRepeatSelector(true); }}>
+                                    <span>{formData.repeat.label}</span><ChipArrow />
+                                </ChipButton>
+                                <RepeatSelector selectedRepeat={formData.repeat} onChange={(repeat) => { setFormData({ ...formData, repeat }); setShowRepeatSelector(false); }} baseDate={formData.date} show={showRepeatSelector} onClose={() => setShowRepeatSelector(false)} />
+                            </div>
                         </div>
                     </div>
                 </SectionContainer>

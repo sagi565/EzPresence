@@ -22,8 +22,8 @@ export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: bo
   border-radius: 16px;
   overflow: visible;
   cursor: pointer;
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-radius 0.3s ease, box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease;
-  box-shadow: ${props => props.theme.shadows.sm};
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), border-radius 0.3s ease, box-shadow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   user-select: none;
   display: flex;
   flex-direction: column;
@@ -40,9 +40,13 @@ export const ItemContainer = styled.div<{ $isDragging?: boolean; $isHovered?: bo
   `}
 
   ${props => (props.$isHovered || props.$showMenu) && !props.$isUploading && !props.$isDragging && css`
-    transform: scale(1.03) translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transform: scale(1.05) translateY(-8px) rotate(-0.5deg);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(var(--color-primary-rgb, 155, 93, 229), 0.1);
     z-index: 50;
+
+    & img, & video {
+      transform: scale(1.1);
+    }
   `}
 
   ${props => props.$isDragging && css`
@@ -79,7 +83,7 @@ export const MediaCover = styled.img<{ $isVisible?: boolean }>`
   object-fit: cover;
   position: absolute;
   inset: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   opacity: ${props => props.$isVisible !== false ? 1 : 0};
 `;
 
@@ -89,7 +93,7 @@ export const VideoCover = styled.video<{ $isVisible?: boolean }>`
   object-fit: cover;
   position: absolute;
   inset: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   opacity: ${props => props.$isVisible ? 1 : 0};
 `;
 

@@ -59,24 +59,24 @@ export const darkTheme: Theme = {
   mode: 'dark' as const,
   colors: {
     ...theme.colors,
-    bg: '#0a0e17',
-    surface: '#121926',
+    bg: '#202020',
+    surface: '#2c2c2c',
     text: '#ffffff',
-    muted: '#d1d5db',
-    primaryLight: 'rgba(155, 93, 229, 0.15)',
+    muted: '#a1a1aa',
+    primaryLight: 'rgba(255, 255, 255, 0.05)',
   },
   gradients: {
     ...theme.gradients,
-    background: `radial-gradient(circle at 20% 20%, rgba(155, 93, 229, 0.1) 0%, transparent 50%), 
-                 radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
-                 #0a0e17`,
+    background: `radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%), 
+                 radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+                 #202020`,
   },
   shadows: {
     ...theme.shadows,
     sm: '0 1px 3px rgba(0, 0, 0, 0.5)',
     md: '0 4px 20px rgba(0, 0, 0, 0.4)',
     lg: '0 10px 40px rgba(0, 0, 0, 0.5)',
-    primary: '0 8px 30px rgba(155, 93, 229, 0.45)',
-    secondary: '0 8px 25px rgba(251, 191, 36, 0.1)',
+    primary: '0 8px 30px rgba(0, 0, 0, 0.4)',
+    secondary: '0 8px 25px rgba(0, 0, 0, 0.2)',
   }
 };
