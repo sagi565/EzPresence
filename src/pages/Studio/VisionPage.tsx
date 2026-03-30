@@ -293,7 +293,7 @@ const LinkPopover = styled.div<{ $open:boolean }>`
 `;
 const LinkRow = styled.div`display:flex; align-items:center;`;
 const LinkInput = styled.input<{ $error:boolean; $ok:boolean }>`
-  flex:1; padding:9px 13px; border-radius:10px;
+  flex:1; padding:9px 70px 9px 13px; border-radius:10px;
   border:1.5px solid ${p=>p.$error?'rgba(239,68,68,.3)':p.$ok?'rgba(139,92,246,.3)':'rgba(139,92,246,.1)'};
   background:${p=>p.theme.colors.bg};
   color:${p=>p.theme.colors.text};
@@ -329,32 +329,17 @@ const HelpBubble = styled.div`
 `;
 
 
-// ─── Video Panel ──────────────────────────────────────────────────────────────
+// ─── Video Component ──────────────────────────────────────────────────────────
 const VideoPanel = styled.div`
-  width:100%;
-  background:${p=>p.theme.colors.surface};
-  border:1.5px solid rgba(139,92,246,.1);
-  border-radius:20px; overflow:hidden;
+  width:100%; display:flex; flex-direction:column; gap:8px;
   animation:${scaleIn} .35s cubic-bezier(.4,0,.2,1) both;
-`;
-const VideoHeader = styled.div`
-  display:flex; align-items:center; justify-content:space-between;
-  padding:14px 16px 0;
-`;
-const VideoTitle = styled.p`
-  font-size:11px; font-weight:700; text-transform:uppercase;
-  letter-spacing:.08em; color:${p=>p.theme.colors.muted}; margin:0;
-  display:flex; align-items:center; gap:6px;
-`;
-const VideoClose = styled.button`
-  background:none; border:none; cursor:pointer;
-  color:${p=>p.theme.colors.muted}; font-size:18px; line-height:1;
-  opacity:.5; padding:0; &:hover { opacity:1; }
+  padding-top:10px;
 `;
 const VideoFrame = styled.div`
-  position:relative; margin:12px 16px 0;
+  position:relative; width:100%;
   aspect-ratio:16/9; border-radius:12px; overflow:hidden;
   background:#000; box-shadow:0 8px 30px rgba(0,0,0,.2);
+  border:1px solid rgba(139,92,246,.15);
 `;
 const StyledIframe = styled.iframe`
   width:100%; height:100%; border:none;
@@ -389,33 +374,26 @@ const TimeTag = styled.div<{ $left:number }>`
 
 // ─── Timeline Sliders ─────────────────────────────────────────────────────────
 const TimelineWrap = styled.div`
-  padding:14px 16px 16px;
-  display:flex; flex-direction:column; gap:14px;
-  border-top:1px solid ${p=>p.theme.colors.primaryLight};
-  margin-top:12px;
+  display:flex; flex-direction:column; gap:8px;
+  margin-top:4px;
 `;
-const SliderRow = styled.div`display:flex; flex-direction:column; gap:6px;`;
-const SliderHead = styled.div`
-  display:flex; justify-content:space-between; align-items:center;
-`;
-const SliderLabel = styled.span`
-  font-size:11.5px; font-weight:600; color:${p=>p.theme.colors.muted};
-`;
+const SliderRow = styled.div`display:flex; align-items:center; gap:12px;`;
 const SliderVal = styled.span`
   font-size:11.5px; font-weight:700; color:#8b5cf6;
   font-variant-numeric:tabular-nums;
-  background:rgba(139,92,246,.09); padding:2px 9px; border-radius:6px;
+  background:rgba(139,92,246,.09); padding:4px 9px; border-radius:6px;
+  min-width:48px; text-align:center;
 `;
 const SliderTrack = styled.div`
-  position:relative; height:22px; display:flex; align-items:center;
+  position:relative; height:22px; flex:1; display:flex; align-items:center;
 `;
 const SliderBg = styled.div`
-  position:absolute; left:0; right:0;
-  height:5px; background:rgba(139,92,246,.1); border-radius:999px;
+  position:absolute; left:0; right:0; height:4px;
+  background:rgba(139,92,246,.15); border-radius:999px;
   top:50%; transform:translateY(-50%); pointer-events:none;
 `;
 const SliderFill = styled.div<{ $left:number; $width:number }>`
-  position:absolute; height:5px;
+  position:absolute; height:4px;
   left:${p=>p.$left}%; width:${p=>p.$width}%;
   background:linear-gradient(90deg,#a78bfa,#7c3aed);
   border-radius:999px; pointer-events:none;
@@ -425,25 +403,27 @@ const SliderFill = styled.div<{ $left:number; $width:number }>`
 const SliderInput = styled.input`
   position:absolute; left:0; right:0; width:100%;
   -webkit-appearance:none; appearance:none;
-  background:transparent; cursor:pointer; margin:0; height:22px; z-index:2;
+  background:transparent; margin:0; height:22px; z-index:5;
+  pointer-events:none; /* so events pass through where no thumb */
   &::-webkit-slider-thumb {
+    pointer-events:auto;
     -webkit-appearance:none;
-    width:17px; height:17px; border-radius:50%;
-    background:white; border:2.5px solid #7c3aed;
-    box-shadow:0 2px 8px rgba(124,58,237,.38);
-    cursor:pointer; transition:transform .12s, box-shadow .12s;
+    width:16px; height:16px; border-radius:50%;
+    background:white; border:2px solid #7c3aed;
+    box-shadow:0 2px 6px rgba(124,58,237,.3);
+    cursor:pointer; transition:transform .1s, box-shadow .1s;
     margin-top:-6px;
   }
   &::-webkit-slider-thumb:hover, &:focus::-webkit-slider-thumb {
-    transform:scale(1.18); box-shadow:0 3px 12px rgba(124,58,237,.55);
+    transform:scale(1.2); box-shadow:0 3px 12px rgba(124,58,237,.5);
   }
-  &::-webkit-slider-runnable-track { height:5px; background:transparent; border-radius:999px; }
+  &::-webkit-slider-runnable-track { height:4px; background:transparent; border-radius:999px; }
   &::-moz-range-thumb {
-    width:17px; height:17px; border-radius:50%;
-    background:white; border:2.5px solid #7c3aed;
-    box-shadow:0 2px 8px rgba(124,58,237,.38); cursor:pointer;
+    pointer-events:auto;
+    width:16px; height:16px; border-radius:50%;
+    background:white; border:2px solid #7c3aed; cursor:pointer;
   }
-  &::-moz-range-track { height:5px; background:transparent; border-radius:999px; }
+  &::-moz-range-track { height:4px; background:transparent; border-radius:999px; }
   &:focus { outline:none; }
 `;
 const SliderInfo = styled.p`
@@ -823,8 +803,8 @@ const VisionPage:React.FC = () => {
                       <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                     <HelpBubble>
-                      Vision uses its audio as a reference for your video.<br/>
-                      <span style={{color:'#a78bfa', opacity:.8}}>Supported: YouTube, Instagram, TikTok, Facebook.</span>
+                      Audio Reference (YouTube, Instagram, TikTok, Facebook)<br/>
+                      <span style={{color:'#a78bfa', opacity:.8}}>Vision will exactly match this segment's audio.</span>
                     </HelpBubble>
                   </HelpWrap>
                 </LinkRow>
@@ -870,15 +850,6 @@ const VisionPage:React.FC = () => {
         {/* ── Video Panel (only when verified) ── */}
         {verified && (
           <VideoPanel>
-            <VideoHeader>
-              <VideoTitle>
-                {p && <PlatformBadge src={PLATFORMS.find(x=>x.id===p)?.icon} alt={p??''} $active style={{width:14,height:14}}/>}
-                Reference Audio
-                {p && <span style={{color:'#8b5cf6',textTransform:'capitalize'}}>{p}</span>}
-              </VideoTitle>
-              <VideoClose onClick={clearVideo}>×</VideoClose>
-            </VideoHeader>
-
             <VideoFrame>
               {canEmbed ? (
                 <StyledIframe
@@ -913,17 +884,18 @@ const VisionPage:React.FC = () => {
               </TimeRangeBar>
             </VideoFrame>
 
-            {/* Sliders: Start & End */}
+            {/* Elegant Dual-Thumb Timeline Slider */}
             <TimelineWrap>
-              {/* Start slider */}
               <SliderRow>
-                <SliderHead>
-                  <SliderLabel>Start</SliderLabel>
-                  <SliderVal>{fmt(startSec)}</SliderVal>
-                </SliderHead>
+                <SliderVal style={{cursor:'pointer'}} onClick={()=>setStartSec(Math.max(0,startSec-1))} title="Decrease Start">
+                  {fmt(startSec)}
+                </SliderVal>
+                
                 <SliderTrack>
                   <SliderBg/>
-                  <SliderFill $left={0} $width={leftPct}/>
+                  <SliderFill $left={leftPct} $width={widthPct}/>
+                  
+                  {/* Start Thumb */}
                   <SliderInput
                     id="vision-start-slider"
                     type="range" min={0} max={vidDur-5} step={1}
@@ -932,18 +904,7 @@ const VisionPage:React.FC = () => {
                     onMouseUp={handleStartRelease}
                     onTouchEnd={handleStartRelease}
                   />
-                </SliderTrack>
-              </SliderRow>
-
-              {/* End slider */}
-              <SliderRow>
-                <SliderHead>
-                  <SliderLabel>End</SliderLabel>
-                  <SliderVal>{fmt(endSec)}</SliderVal>
-                </SliderHead>
-                <SliderTrack>
-                  <SliderBg/>
-                  <SliderFill $left={0} $width={(endSec/vidDur)*100}/>
+                  {/* End Thumb */}
                   <SliderInput
                     id="vision-end-slider"
                     type="range" min={5} max={vidDur} step={1}
@@ -951,12 +912,14 @@ const VisionPage:React.FC = () => {
                     onChange={handleEndChange}
                   />
                 </SliderTrack>
-              </SliderRow>
 
-              {/* Summary line */}
-              <SliderInfo>
-                Extracting <strong style={{color:'#8b5cf6'}}>{endSec-startSec}s</strong> of audio
-                from <strong style={{color:'#8b5cf6'}}>{fmt(startSec)}</strong> to <strong style={{color:'#8b5cf6'}}>{fmt(endSec)}</strong>
+                <SliderVal style={{cursor:'pointer'}} onClick={()=>setEndSec(Math.min(vidDur,endSec+1))} title="Increase End">
+                  {fmt(endSec)}
+                </SliderVal>
+              </SliderRow>
+              
+              <SliderInfo style={{textAlign:'center', marginTop:2}}>
+                Reference <strong style={{color:'#a78bfa'}}>{endSec-startSec}s</strong> segment
               </SliderInfo>
             </TimelineWrap>
           </VideoPanel>
