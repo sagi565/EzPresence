@@ -12,7 +12,6 @@ export interface Post {
   type: 'Post' | 'Story';
   title: string;
 
-  description?: string;
   scheduleUuid?: string;
   calendarItemId?: string;
   contentUuids?: string[];
@@ -32,33 +31,26 @@ export const PLATFORM_BADGES: Record<Platform, PlatformBadge> = {
   facebook: { cls: 'fb', label: 'FB' },
 };
 
-export interface ApiScheduleDto {
-  calendarItemId?: string;
-  calendarItemName?: string;
-  scheduleId?: string;
-  scheduleType?: string;
-  postType?: string;        // 'Post' | 'Video' | 'Story'
-  targets?: string[];       // ['INSTAGRAM', 'FACEBOOK', etc.]
-  plannedAtLocalTime?: string; // ISO 8601
-  failReason?: Record<string, any>;
-  status?: string;
-  postStatus?: string; // New field for draft/pending
-
-  // Fields for create/update payload
-  scheduleName?: string | null;
-  scheduleTitle?: string | null;
-  scheduleDescription?: string | null;
-  rruleText?: string | null;
-  endDate?: string | null;
-  plannedAtUtc?: string | null;
-  contentUuids?: string[] | null;
-
-  // Legacy/Optional fields
-  startDate?: string | null;
-  Status?: string;
-  contents?: string[] | null;
+// Matches the backend SchedulePolicyDto schema (lowercase camelCase)
+export interface SchedulePolicyDto {
+  rrule?: string | null;
+  endTime?: string | null;
 }
 
+// Shape of a schedule returned by GET /api/schedules
+export interface ApiScheduleDto {
+  calendarItemId?: string;
+  scheduleId?: string;
+  scheduleName?: string | null;
+  uploadType?: string | null;
+  policy?: SchedulePolicyDto | null;
+  plannedAt?: string | null;
+  targets?: string[] | null;
+  contents?: string[] | null;
+  isDraft?: boolean;
+}
+
+// Shape of the PUT /api/schedules request body
 export interface ApiScheduleUpdateDto {
   calendarItemId?: string | null;
   updatedProperties?: Record<string, any> | null;
@@ -68,27 +60,26 @@ export interface ApiScheduleUpdateDto {
 export const convertTargetsToPlatforms = (targets?: string[] | null): Platform[] => {
   if (!targets || targets.length === 0) return [];
 
-  const platformMap: Record<string, Platform> = {
-    'youtube': 'youtube',
-    'instagram': 'instagram',
-    'tiktok': 'tiktok',
-    'facebook': 'facebook',
+  const map: Record<string, Platform> = {
+    youtube: 'youtube',
+    instagram: 'instagram',
+    tiktok: 'tiktok',
+    facebook: 'facebook',
   };
 
   return targets
-    .map(t => platformMap[t.toLowerCase()])
+    .map(t => map[t.toLowerCase()])
     .filter((p): p is Platform => p !== undefined);
 };
 
-export const convertPostTypeToMediaType = (postType?: string | null): MediaType => {
-  const type = postType?.toLowerCase();
+export const convertPostTypeToMediaType = (uploadType?: string | null): MediaType => {
+  const type = uploadType?.toLowerCase();
   if (type === 'video' || type === 'reel') return 'video';
-  return 'image'; // 'post', 'story', 'image', or unknown → image
+  return 'image';
 };
 
-export const convertPlatformsToTargets = (platforms: Platform[]): string[] => {
-  return platforms.map(p => p.toUpperCase());
-};
+export const convertPlatformsToTargets = (platforms: Platform[]): string[] =>
+  platforms.map(p => p.toUpperCase());
 
 export const parseTimeString = (time: string): { hours: number; minutes: number } => {
   const [timePart, period] = time.split(' ');
@@ -114,34 +105,36 @@ export const formatTimeString = (date: Date): string => {
 };
 
 export const convertApiScheduleToPost = (apiSchedule: ApiScheduleDto, index: number): Post => {
-  // Use plannedAtLocalTime first, fallback to plannedAtUtc or legacy startDate
-  const scheduledDateStr = apiSchedule.plannedAtLocalTime || apiSchedule.plannedAtUtc || apiSchedule.startDate;
-  const date = scheduledDateStr ? new Date(scheduledDateStr) : new Date();
+  const date = apiSchedule.plannedAt ? new Date(apiSchedule.plannedAt) : new Date();
 
-  const isStory = apiSchedule.postType?.toUpperCase() === 'STORY';
-  // postType is now either 'Post', 'Video', or 'Story'
+  const uploadType = (apiSchedule.uploadType || 'Post').toUpperCase();
+  const isStory = uploadType === 'STORY';
 
-  // Extract contentUuids from multiple potential fields returned by the API
-  const contentUuids = apiSchedule.contentUuids || apiSchedule.contents || undefined;
-  const status = (apiSchedule.status || apiSchedule.Status || apiSchedule.postStatus || 'scheduled').toLowerCase();
+  const status: PostStatus = apiSchedule.isDraft ? 'draft' : 'scheduled';
+
+  const rruleText = apiSchedule.policy?.rrule ?? null;
 
   return {
     id: apiSchedule.scheduleId || apiSchedule.calendarItemId || `schedule-${index}-${Date.now()}`,
-    date: date,
+    date,
     time: formatTimeString(date),
     platforms: convertTargetsToPlatforms(apiSchedule.targets),
-    status: (status === 'pending' ? 'scheduled' : status as PostStatus) || 'scheduled',
-    media: convertPostTypeToMediaType(apiSchedule.postType),
+    status,
+    media: convertPostTypeToMediaType(uploadType),
     type: isStory ? 'Story' : 'Post',
-    title: apiSchedule.scheduleTitle || apiSchedule.calendarItemName || apiSchedule.scheduleName || 'Untitled Post',
-    description: apiSchedule.scheduleDescription || undefined,
-    contentUuids: contentUuids,
-    isRecurring: !!apiSchedule.rruleText || apiSchedule.scheduleType === 'Policy',
-    rruleText: apiSchedule.rruleText,
+    title: apiSchedule.scheduleName || 'Untitled Post',
+    contentUuids: apiSchedule.contents ?? undefined,
+    isRecurring: !!rruleText,
+    rruleText,
     scheduleUuid: apiSchedule.scheduleId,
-    calendarItemId: apiSchedule.calendarItemId
+    calendarItemId: apiSchedule.calendarItemId,
   };
 };
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+const formatLocalDateTime = (date: Date): string =>
+  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
 
 export const convertPostToApiSchedule = (post: {
   date: Date;
@@ -149,81 +142,37 @@ export const convertPostToApiSchedule = (post: {
   platforms: Platform[];
   media: MediaType;
   title: string;
-  description?: string;
   contentUuids?: string[];
   rruleText?: string | null;
   endDate?: Date | null;
   type?: 'Post' | 'Story';
   status?: string;
-  timezone?: string;
 }): ApiScheduleDto => {
   const { hours, minutes } = parseTimeString(post.time);
-
   const scheduledDate = new Date(post.date);
   scheduledDate.setHours(hours, minutes, 0, 0);
 
-  // Default to system UTC conversion
-  let plannedAtUtc = scheduledDate.toISOString();
-
-  // If timezone is provided, adjust to the UTC time of that local time in the target zone
-  if (post.timezone) {
-    try {
-      const formatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: post.timezone,
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-        hour12: false,
-      });
-
-      const parts = formatter.formatToParts(scheduledDate);
-      const getVal = (pType: string) => parts.find(p => p.type === pType)?.value || '0';
-
-      // construct the date components as they appear in the target timezone
-      const year = parseInt(getVal('year'));
-      const month = parseInt(getVal('month')) - 1;
-      const day = parseInt(getVal('day'));
-      const hour = parseInt(getVal('hour'));
-      const minute = parseInt(getVal('minute'));
-      const second = parseInt(getVal('second'));
-
-      // The time difference between system local and target timezone
-      const targetAsLocal = new Date(year, month, day, hour, minute, second);
-      const diff = targetAsLocal.getTime() - scheduledDate.getTime();
-      
-      // UTC = SystemLocal - (TargetOffset - SystemOffset)
-      plannedAtUtc = new Date(scheduledDate.getTime() - diff).toISOString();
-    } catch (e) {
-      console.warn(`[Post.ts] Timezone conversion failed for ${post.timezone}:`, e);
-    }
-  }
-
-  let endDateStr: string | null = null;
-  if (post.endDate) {
-    endDateStr = `${post.endDate.getFullYear()}-${String(post.endDate.getMonth() + 1).padStart(2, '0')}-${String(post.endDate.getDate()).padStart(2, '0')}`;
-  }
-
-  // Determine postType value
-  let postType = 'Post';
+  let uploadType = 'Post';
   if (post.type === 'Story') {
-    postType = 'Story';
+    uploadType = 'Story';
   } else if (post.media === 'video') {
-    postType = 'Video';
+    uploadType = 'Video';
   }
+
+  const policy: SchedulePolicyDto | null = post.rruleText
+    ? {
+        rrule: post.rruleText,
+        endTime: post.endDate ? `${post.endDate.getFullYear()}-${pad(post.endDate.getMonth() + 1)}-${pad(post.endDate.getDate())}T23:59:59` : null,
+      }
+    : null;
 
   return {
     scheduleName: post.title,
-    scheduleTitle: post.title,
-    scheduleDescription: post.description || null,
-    postType,
-    rruleText: post.rruleText || null,
-    endDate: endDateStr,
-    plannedAtUtc,
+    uploadType,
+    policy,
+    plannedAt: formatLocalDateTime(scheduledDate),
     targets: convertPlatformsToTargets(post.platforms),
-    contentUuids: post.contentUuids || null,
-    status: post.status || 'Pending',
+    contents: post.contentUuids ?? null,
+    isDraft: post.status?.toLowerCase() === 'draft',
   };
 };

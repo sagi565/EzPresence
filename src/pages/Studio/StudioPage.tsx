@@ -5,6 +5,7 @@ import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
 import ProducerPage from './ProducerPage';
 import CreatorsPage from './CreatorsPage';
 import WizardPage from './WizardPage';
+import VisionPage from './VisionPage';
 import { PageContainer } from './styles';
 
 const StudioPage: React.FC = () => {
@@ -17,6 +18,8 @@ const StudioPage: React.FC = () => {
         return <WizardPage />;
       case 'producer':
         return <ProducerPage />;
+      case 'vision':
+        return <VisionPage />;
       default:
         // Default to creators page when no section or 'creators' section
         return <CreatorsPage />;
@@ -25,7 +28,7 @@ const StudioPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />
+      {section !== 'vision' && <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />}
       {renderContent()}
     </PageContainer>
   );

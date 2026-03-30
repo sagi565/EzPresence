@@ -580,10 +580,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             setIsSubmitting(true);
             const selectedContent = getSelectedContent();
             const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
-            const description = formData.platforms.instagram?.enabled ? formData.platforms.instagram.caption :
-                formData.platforms.facebook?.enabled ? formData.platforms.facebook.postText :
-                    formData.platforms.tiktok?.enabled ? formData.platforms.tiktok.caption :
-                        formData.platforms.youtube?.enabled ? formData.platforms.youtube.description : undefined;
             const isRecurring = !!formData.repeat.rruleText;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
             if (formData.calendarItemId) {
@@ -607,7 +603,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
                 const newTitle = formData.title || formData.contentTitle || 'Untitled Draft';
                 if (newTitle !== initialData?.title) updates.title = newTitle;
-                if ((description || '') !== ((initialData as any)?.description || '')) updates.description = description || '';
 
                 const newRruleText = formData.repeat.rruleText || null;
                 const origRruleText = initialData?.repeat?.rruleText || null;
@@ -619,7 +614,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
                 await updateSchedule(formData.calendarItemId, updates);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: getEnabledPlatforms(formData), media: mediaType, title: formData.title || formData.contentTitle || 'Untitled Draft', description, contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft' });
+                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: getEnabledPlatforms(formData), media: mediaType, title: formData.title || formData.contentTitle || 'Untitled Draft', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft' });
             }
             if (onSaveDraft) onSaveDraft(formData);
             onClose();
@@ -710,10 +705,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             const activePlatforms = getEnabledPlatforms(formData);
             const selectedContent = getSelectedContent();
             const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
-            const description = formData.platforms.instagram?.enabled ? formData.platforms.instagram.caption :
-                formData.platforms.facebook?.enabled ? formData.platforms.facebook.postText :
-                    formData.platforms.tiktok?.enabled ? formData.platforms.tiktok.caption :
-                        formData.platforms.youtube?.enabled ? formData.platforms.youtube.description : undefined;
             const isRecurring = !!formData.repeat.rruleText;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
             if (formData.calendarItemId) {
@@ -736,7 +727,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
                 const newTitle = formData.title || formData.contentTitle || 'Untitled Post';
                 if (newTitle !== initialData?.title) updates.title = newTitle;
-                if ((description || '') !== ((initialData as any)?.description || '')) updates.description = description || '';
 
                 const newRruleText = formData.repeat.rruleText || null;
                 const origRruleText = initialData?.repeat?.rruleText || null;
@@ -748,7 +738,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
                 await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: activePlatforms, media: mediaType, title: formData.title || formData.contentTitle || 'Untitled Post', description, contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending' });
+                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: activePlatforms, media: mediaType, title: formData.title || formData.contentTitle || 'Untitled Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending' });
             }
             if (onScheduleProp) onScheduleProp(formData);
             if (!isReadOnly) onClose();

@@ -2,7 +2,7 @@ import { auth } from '@lib/firebase';
 import { getIdToken } from 'firebase/auth';
 
 // Get API base URL from environment variable
-const API_BASE_URL = 'https://192.168.1.12:7291/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://192.168.1.12:7291/api';
 
 // Export function to get the base URL (for use in other places like OAuth)
 export const getApiBaseUrl = (): string => {

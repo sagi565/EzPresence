@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { SocialAccount, SocialPlatform } from '@models/SocialAccount';
+import { PLATFORM_NAMES, SocialAccount, SocialPlatform } from '@models/SocialAccount';
 import { api, getApiBaseUrl } from '@utils/apiClient';
 import { auth } from '@lib/firebase';
 import { getIdToken } from 'firebase/auth';
@@ -12,6 +12,9 @@ interface UseConnectPlatformReturn {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
 }
+
+// Map platform keys to correctly cased enum names Expected by the backend
+const toPlatformParam = (p: SocialPlatform): string => PLATFORM_NAMES[p] || p;
 
 export const useConnectPlatform = (
   platform: SocialPlatform,
@@ -36,7 +39,7 @@ export const useConnectPlatform = (
 
       // Call API
       const apiBaseUrl = getApiBaseUrl();
-      let url = `${apiBaseUrl}/platforms/connect?platform=${platform}`;
+      let url = `${apiBaseUrl}/platforms/connect?platform=${toPlatformParam(platform)}`;
 
       // If brandId is provided and marked as uninitialized, append the query param
       if (brandId && isUninitialized) {
@@ -156,14 +159,14 @@ export const useConnectPlatform = (
     } finally {
       setLoading(false);
     }
-  }, [platform]);
+  }, [platform, brandId, isUninitialized]);
 
   const disconnect = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      let url = `/platforms/disconnect?platform=${platform}`;
+      let url = `/platforms/disconnect?platform=${toPlatformParam(platform)}`;
       if (brandId && isUninitialized) {
         url += `&uninitializedBrandUuid=${brandId}`;
       }

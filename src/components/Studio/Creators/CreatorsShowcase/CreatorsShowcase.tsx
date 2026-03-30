@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CreatorSlide from './CreatorSlide';
 import ScrollNavigation from '../ScrollNavigation/ScrollNavigation';
 import NotesModal from '../NotesModal/NotesModal';
@@ -17,22 +18,31 @@ interface Creator {
 
 const CREATORS: Creator[] = [
   {
+    id: 'vision',
+    name: 'Vision',
+    subtitle: 'Idea → Cinematic Video',
+    description: "Give Vision an idea—a feeling, a story, a single sentence—and watch it unfold into a fully rendered cinematic video. Vision doesn't just generate; it interprets. It understands mood, pacing, and narrative arc. Powered by generative AI, Vision crafts original footage, soundscapes, and visual poetry from your words alone. Type your thought. Vision does the rest.",
+    mediaType: 'Video',
+    previewClass: 'vision',
+    icon: '✨',
+  },
+  {
+    id: 'frames',
+    name: 'Frames',
+    subtitle: 'Idea → Short Video',
+    description: "Bring your idea to life as a cinematic short video. Frames isn't generative AI—it's a decision-making AI agent that curates, selects, and assembles resources from online stock libraries on your behalf. It analyzes your concept, allocates the right visuals, audio, and pacing, and transforms your idea into a polished short video that feels both intentional and alive.",
+    mediaType: 'Video',
+    previewClass: 'frames',
+    icon: '🎥',
+  },
+  {
     id: 'show-time',
     name: 'Show Time',
     subtitle: 'Idea → Short Video',
-    description: "Bring your idea to life as a cinematic short video. Matrix isn't generative AI—it's a decision-making AI agent that curates, selects, and assembles resources from online stock libraries on your behalf. It analyzes your concept, allocates the right visuals, audio, and pacing, and transforms your idea into a polished short video that feels both intentional and alive.",
+    description: "Bring your idea to life as a cinematic short video. Show Time isn't generative AI—it's a decision-making AI agent that curates, selects, and assembles resources from online stock libraries on your behalf. It analyzes your concept, allocates the right visuals, audio, and pacing, and transforms your idea into a polished short video that feels both intentional and alive.",
     mediaType: 'Video',
     previewClass: 'show-time',
     icon: '⏰',
-  },
-  {
-    id: 'matrix',
-    name: 'Matrix',
-    subtitle: 'Idea → Short Video',
-    description: "Bring your idea to life as a cinematic short video. Matrix isn't generative AI—it's a decision-making AI agent that curates, selects, and assembles resources from online stock libraries on your behalf. It analyzes your concept, allocates the right visuals, audio, and pacing, and transforms your idea into a polished short video that feels both intentional and alive.",
-    mediaType: 'Video',
-    previewClass: 'matrix',
-    icon: '🎥',
   },
   {
     id: 'notes',
@@ -55,6 +65,7 @@ const CREATORS: Creator[] = [
 ];
 
 const CreatorsShowcase: React.FC = () => {
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
@@ -218,6 +229,8 @@ const CreatorsShowcase: React.FC = () => {
   const handleTryCreator = (creatorId: string) => {
     if (creatorId === 'notes') {
       setShowNotesModal(true);
+    } else if (creatorId === 'vision') {
+      navigate('/studio/vision');
     } else {
       alert(
         `Opening ${creatorId.charAt(0).toUpperCase() + creatorId.slice(1)} wizard...`

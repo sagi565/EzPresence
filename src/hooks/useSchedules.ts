@@ -7,24 +7,28 @@ import {
   convertApiScheduleToPost,
   convertPostToApiSchedule,
   convertPlatformsToTargets,
-  parseTimeString
+  parseTimeString,
 } from '@models/Post';
 import { api } from '@utils/apiClient';
 
-// Module-level shared map: all useSchedules instances share this
-// so contentUuids stored by the modal's instance are visible to SchedulerPage's instance
+// Shared across all hook instances so contentUuids set by the modal
+// are visible to the SchedulerPage after refetch.
 const contentUuidsMap: Record<string, string[]> = {};
 
-// Module-level last requested range to ensure refetches (e.g. after create/update)
-// use the same window as the initial fetch from the SchedulerPage
+// Persists the last fetch window so refetches (after create/update/delete)
+// use the same date range as the initial load.
 let lastRequestedRange: { start: Date; end: Date } | null = null;
+
+const formatLocalDateTime = (date: Date): string => {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}T${p(date.getHours())}:${p(date.getMinutes())}:${p(date.getSeconds())}`;
+};
 
 export const useSchedules = (brandId: string) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch schedules from API
   const fetchSchedules = useCallback(async (startTime?: Date, endTime?: Date) => {
     if (!brandId) {
       setLoading(false);
@@ -35,11 +39,6 @@ export const useSchedules = (brandId: string) => {
       setLoading(true);
       setError(null);
 
-      // Build query params for date range filtering
-      const params = new URLSearchParams();
-
-      // Determine date range: Use passed dates, or fall back to last used range, 
-      // or finally a tight default (current month +/- 1 month) instead of the broad 4-year window.
       let start: Date;
       let end: Date;
 
@@ -51,7 +50,6 @@ export const useSchedules = (brandId: string) => {
         start = lastRequestedRange.start;
         end = lastRequestedRange.end;
       } else {
-        // Fallback: Current month start to end of next month (approx 3 months window)
         start = new Date();
         start.setMonth(start.getMonth() - 1);
         start.setDate(1);
@@ -59,59 +57,43 @@ export const useSchedules = (brandId: string) => {
 
         end = new Date();
         end.setMonth(end.getMonth() + 2);
-        end.setDate(0); // Last day of previous (which is next month)
+        end.setDate(0);
         end.setHours(23, 59, 59, 999);
       }
 
-      params.append('start_time', start.toISOString());
-      params.append('end_time', end.toISOString());
+      const params = new URLSearchParams();
+      params.append('windowStartLocal', formatLocalDateTime(start));
+      params.append('windowEndLocal', formatLocalDateTime(end));
 
-      const queryParams = `?${params.toString()}`;
-
-      // GET /api/schedules - Retrieves all schedules for the active brand
-      const response = await api.get<ApiScheduleDto[]>(`/schedules${queryParams}`);
+      const response = await api.get<ApiScheduleDto[]>(`/schedules?${params.toString()}`);
 
       if (!response || !Array.isArray(response)) {
         setPosts([]);
         return;
       }
 
-      // Debug: log ALL fields from the first raw schedule to find contentUuids
-      if (response.length > 0) {
-        console.log('📋 [useSchedules] Raw API schedule[0] ALL KEYS:', Object.keys(response[0]));
-        console.log('📋 [useSchedules] Raw API schedule[0] FULL:', JSON.stringify(response[0], null, 2));
-      }
-
-      // Convert API schedules to internal format
       const convertedPosts = response.map((schedule, index) => {
         const post = convertApiScheduleToPost(schedule, index);
-
-        // Merge locally-stored contentUuids (API doesn't return them)
         const key = post.calendarItemId || post.scheduleUuid || post.id;
-        if (contentUuidsMap[key]) {
+
+        // Prefer contents returned by the API, then fall back to locally stored map
+        if (schedule.contents && schedule.contents.length > 0) {
+          post.contentUuids = schedule.contents;
+          contentUuidsMap[key] = schedule.contents;
+        } else if (contentUuidsMap[key]) {
           post.contentUuids = contentUuidsMap[key];
-        }
-        // Try title+date fallback key
-        if (!post.contentUuids) {
+        } else {
           const fallbackKey = `${post.title}_${post.date.toISOString()}`;
           if (contentUuidsMap[fallbackKey]) {
             post.contentUuids = contentUuidsMap[fallbackKey];
-            // Move to primary key for future lookups
             contentUuidsMap[key] = contentUuidsMap[fallbackKey];
           }
-        }
-        // Also check if API happened to return them
-        if (schedule.contentUuids && schedule.contentUuids.length > 0) {
-          post.contentUuids = schedule.contentUuids;
-          contentUuidsMap[key] = schedule.contentUuids;
         }
 
         return post;
       });
 
-      // Sort by date
       convertedPosts.sort((a, b) => a.date.getTime() - b.date.getTime());
-
       setPosts(convertedPosts);
     } catch (err: any) {
       console.error('Failed to fetch schedules:', err);
@@ -122,17 +104,12 @@ export const useSchedules = (brandId: string) => {
     }
   }, [brandId]);
 
-  // Fetch schedules is now controlled by the component (e.g. SchedulerPage)
-  // which passes explicit start/end dates so we do not fetch here on mount.
-
-  // Create a new schedule
   const createSchedule = useCallback(async (scheduleData: {
     date: Date;
     time: string;
     platforms: Platform[];
     media: MediaType;
     title: string;
-    description?: string;
     contentUuids?: string[];
     rruleText?: string;
     endDate?: Date;
@@ -142,23 +119,22 @@ export const useSchedules = (brandId: string) => {
   }) => {
     try {
       const apiData = convertPostToApiSchedule(scheduleData);
-
-      // POST /api/schedules - Creates a new schedule
       const result = await api.post<any>('/schedules', apiData);
 
-      // Store contentUuids locally — API doesn't return them in GET response
       if (scheduleData.contentUuids && scheduleData.contentUuids.length > 0) {
-        // Try to get the ID from the response
-        const newId = typeof result === 'string' ? result : result?.calendarItemId || result?.scheduleId || result?.id;
+        const newId =
+          typeof result === 'string'
+            ? result
+            : result?.calendarItemId || result?.scheduleId || result?.id;
+
         if (newId) {
           contentUuidsMap[newId] = scheduleData.contentUuids;
         }
-        // Also store by title+date as a fallback key for matching after refetch
+
         const fallbackKey = `${scheduleData.title}_${scheduleData.date.toISOString()}`;
         contentUuidsMap[fallbackKey] = scheduleData.contentUuids;
       }
 
-      // Refetch to get the created schedule
       await fetchSchedules();
     } catch (err: any) {
       console.error('Failed to create schedule:', err);
@@ -166,7 +142,6 @@ export const useSchedules = (brandId: string) => {
     }
   }, [fetchSchedules]);
 
-  // Update a schedule
   const updateSchedule = useCallback(async (
     calendarItemId: string,
     updates: Partial<{
@@ -175,96 +150,69 @@ export const useSchedules = (brandId: string) => {
       platforms: Platform[];
       media: MediaType;
       title: string;
-      description?: string;
-      status?: string;
-      rruleText?: string | null;
-      endDate?: string | null;
-      type?: 'Post' | 'Story';
-      timezone?: string;
+      contentUuids: string[];
+      status: string;
+      rruleText: string | null;
+      endDate: string | null;
+      type: 'Post' | 'Story';
     }>,
     updateOccurrenceOnly: boolean = false
   ) => {
     try {
-      // Build the updated properties object
       const updatedProperties: Record<string, any> = {};
 
       if (updates.date && updates.time) {
         const { hours, minutes } = parseTimeString(updates.time);
-        const scheduledDate = new Date(updates.date);
-        scheduledDate.setHours(hours, minutes, 0, 0);
-        
-        // Default to system UTC conversion
-        let plannedAtUtc = scheduledDate.toISOString();
-
-        // If timezone is provided, adjust to the UTC time of that local time in the target zone
-        if (updates.timezone) {
-          try {
-            const formatter = new Intl.DateTimeFormat('en-US', {
-              timeZone: updates.timezone,
-              year: 'numeric',
-              month: 'numeric',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: 'numeric',
-              second: 'numeric',
-              hour12: false,
-            });
-
-            const parts = formatter.formatToParts(scheduledDate);
-            const getVal = (pType: string) => parts.find(p => p.type === pType)?.value || '0';
-
-            const year = parseInt(getVal('year'));
-            const month = parseInt(getVal('month')) - 1;
-            const day = parseInt(getVal('day'));
-            const hour = parseInt(getVal('hour'));
-            const minute = parseInt(getVal('minute'));
-            const second = parseInt(getVal('second'));
-
-            const targetAsLocal = new Date(year, month, day, hour, minute, second);
-            const diff = targetAsLocal.getTime() - scheduledDate.getTime();
-            
-            plannedAtUtc = new Date(scheduledDate.getTime() - diff).toISOString();
-          } catch (e) {
-            console.warn(`[useSchedules] Timezone conversion failed for ${updates.timezone}:`, e);
-          }
-        }
-        updatedProperties.PlannedAtUtc = plannedAtUtc;
+        const d = new Date(updates.date);
+        d.setHours(hours, minutes, 0, 0);
+        updatedProperties.PlannedAt = formatLocalDateTime(d);
       }
 
-      if (updates.platforms) updatedProperties.Targets = convertPlatformsToTargets(updates.platforms);
+      if (updates.platforms) {
+        updatedProperties.Targets = convertPlatformsToTargets(updates.platforms);
+      }
+
       if (updates.media || updates.type) {
         if (updates.type === 'Story') {
-          updatedProperties.PostType = 'Story';
+          updatedProperties.UploadType = 'Story';
         } else {
-          updatedProperties.PostType = updates.media === 'video' ? 'Video' : 'Post';
+          updatedProperties.UploadType = updates.media === 'video' ? 'Video' : 'Post';
         }
       }
+
       if (updates.title) {
         updatedProperties.ScheduleName = updates.title;
-        updatedProperties.ScheduleTitle = updates.title;
       }
-      if (updates.description !== undefined) {
-        updatedProperties.ScheduleDescription = updates.description;
+
+      if (updates.status !== undefined) {
+        updatedProperties.IsDraft = updates.status.toLowerCase() === 'draft';
       }
-      if (updates.status) updatedProperties.Status = updates.status;
-      if (updates.rruleText !== undefined) {
-        updatedProperties.RruleText = updates.rruleText;
+
+      if (updates.contentUuids !== undefined) {
+        updatedProperties.Contents = updates.contentUuids;
       }
-      if (updates.endDate !== undefined) updatedProperties.EndDate = updates.endDate;
+
+      if (updates.rruleText !== undefined || updates.endDate !== undefined) {
+        const policy: Record<string, any> = {};
+        if (updates.rruleText !== undefined) {
+          policy.Rrule = updates.rruleText;
+        }
+        if (updates.endDate !== undefined) {
+          policy.EndTime = updates.endDate;
+        }
+        updatedProperties.Policy = policy;
+      }
 
       if (Object.keys(updatedProperties).length === 0) {
-        console.log('No properties changed, skipping update API call.');
         return;
       }
 
-      // PUT /api/schedules - Partially updates an existing schedule
       await api.put('/schedules', {
         calendarItemId,
         updatedProperties,
         updateOccurrenceOnly,
       });
 
-      // Refetch to get the updated schedule
       await fetchSchedules();
     } catch (err: any) {
       console.error('Failed to update schedule:', err);
@@ -272,77 +220,75 @@ export const useSchedules = (brandId: string) => {
     }
   }, [fetchSchedules]);
 
-  // Delete a schedule
-  const deleteSchedule = useCallback(async (scheduleUuidOrCalendarItemId: string, plannedDate: Date, deleteOccurrenceOnly: boolean = false) => {
+  const deleteSchedule = useCallback(async (
+    scheduleUuidOrCalendarItemId: string,
+    plannedDate: Date,
+    deleteOccurrenceOnly: boolean = false,
+    force: boolean = false
+  ) => {
     try {
-      let calendarItemId = '';
+      let calendarItemId: string;
 
-      // If it looks like a calendarItemId (base64 encoded usually has no | and is a single string)
-      // Actually, it's safer to check if it contains a pipe.
       if (scheduleUuidOrCalendarItemId.includes('|')) {
+        // Raw composite key → encode it
         calendarItemId = btoa(scheduleUuidOrCalendarItemId);
-      } else if (scheduleUuidOrCalendarItemId.length > 20 && !scheduleUuidOrCalendarItemId.includes('-')) {
-        // Looks like an already encoded calendarItemId
+      } else if (
+        scheduleUuidOrCalendarItemId.length > 20 &&
+        !scheduleUuidOrCalendarItemId.includes('-')
+      ) {
+        // Already base64-encoded
         calendarItemId = scheduleUuidOrCalendarItemId;
       } else {
-        // Treat as scheduleUuid and construct calendarItemId
+        // scheduleUuid only → build composite key and encode
         const d = new Date(plannedDate);
         d.setMilliseconds(0);
-        const isoString = d.toISOString(); // YYYY-MM-DDTHH:mm:ss.000Z
-        const formattedDate = isoString.replace('.000Z', '.0000000Z');
-        const rawId = `${scheduleUuidOrCalendarItemId}|${formattedDate}`;
-        calendarItemId = btoa(rawId);
+        const formattedDate = d.toISOString().replace('.000Z', '.0000000Z');
+        calendarItemId = btoa(`${scheduleUuidOrCalendarItemId}|${formattedDate}`);
       }
 
-      const params = new URLSearchParams();
-      params.append('calendarItemId', calendarItemId);
-      params.append('deleteOccurrenceOnly', deleteOccurrenceOnly.toString());
+      const params = new URLSearchParams({
+        calendarItemId,
+        deleteOccurrenceOnly: deleteOccurrenceOnly.toString(),
+        force: force.toString(),
+      });
 
       await api.delete(`/schedules/calendarItemId?${params.toString()}`);
-
-      // Refetch to sync state
       await fetchSchedules();
     } catch (err: any) {
       console.error('Failed to delete schedule:', err);
 
-      // If endpoint doesn't exist yet (404), still remove from local state
       if (err?.response?.status === 404 || err?.status === 404) {
-        console.warn('Delete endpoint not found, removing from local state only');
-        setPosts(prev => prev.filter(p => (p.scheduleUuid || p.id) !== scheduleUuidOrCalendarItemId));
+        console.warn('Delete endpoint returned 404, removing from local state only');
+        setPosts(prev =>
+          prev.filter(p => (p.scheduleUuid || p.id) !== scheduleUuidOrCalendarItemId)
+        );
       } else {
         throw err;
       }
     }
   }, [fetchSchedules]);
 
-  // Get a specific calendar item
   const getCalendarItem = useCallback(async (calendarItemId: string) => {
     try {
-      // GET /api/schedules/calendarItemId?calendarItemId={base64}
-      const response = await api.get(`/schedules/calendarItemId?calendarItemId=${encodeURIComponent(calendarItemId)}`);
-      return response;
+      return await api.get(`/schedules/calendarItemId?calendarItemId=${encodeURIComponent(calendarItemId)}`);
     } catch (err: any) {
       console.error('Failed to get calendar item:', err);
       throw err;
     }
   }, []);
 
-  // Get all calendar items for a schedule
   const getScheduleCalendarItems = useCallback(async (scheduleUuid: string) => {
     try {
-      // GET /api/schedules/scheduleId?scheduleUuid={uuid}
-      const response = await api.get(`/schedules/scheduleId?scheduleUuid=${scheduleUuid}`);
-      return response;
+      return await api.get(`/schedules/scheduleId?scheduleUuid=${scheduleUuid}`);
     } catch (err: any) {
       console.error('Failed to get schedule calendar items:', err);
       throw err;
     }
   }, []);
 
-  // Store contentUuids locally for a schedule (API doesn't return them)
-  const storeContentUuids = useCallback((scheduleId: string, contentUuids: string[]) => {
-    if (scheduleId && contentUuids.length > 0) {
-      contentUuidsMap[scheduleId] = contentUuids;
+  const storeContentUuids = useCallback((scheduleId: string, uuids: string[]) => {
+    if (scheduleId && uuids.length > 0) {
+      contentUuidsMap[scheduleId] = uuids;
     }
   }, []);
 

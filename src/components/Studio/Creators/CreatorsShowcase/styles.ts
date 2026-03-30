@@ -72,8 +72,8 @@ export const PreviewContainer = styled.div`
 `;
 
 export const PreviewDisplay = styled.div<{ $isActive: boolean; $type: string; $isMobile?: boolean }>`
-  width: 280px;
-  height: calc(280px * 16 / 9);
+  width: 330px;
+  height: calc(330px * 16 / 9);
   border-radius: 28px;
   position: relative;
   overflow: hidden;
@@ -82,9 +82,10 @@ export const PreviewDisplay = styled.div<{ $isActive: boolean; $type: string; $i
   transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 
   ${props => props.$type === 'show-time' && css`background: linear-gradient(135deg, #dea86bff 0%, #b5762eff 100%);`}
-  ${props => props.$type === 'matrix' && css`background: linear-gradient(135deg, #25c99f 0%, #0b8b6e 100%);`}
+  ${props => props.$type === 'frames' && css`background: linear-gradient(135deg, #25c99f 0%, #0b8b6e 100%);`}
   ${props => props.$type === 'notes' && css`background: linear-gradient(135deg, #ff8ec6 0%, #df4790 100%);`}
   ${props => props.$type === 'picasso' && css`background: linear-gradient(135deg, #6f9cff 0%, #3356f7 100%);`}
+  ${props => props.$type === 'vision' && css`background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 40%, #1e1b4b 100%);`}
 
   ${props => props.$isActive && css`
     transform: translateY(-10px) scale(1.02);
