@@ -1419,6 +1419,196 @@
         }
       }
     },
+    "/api/studio/weave/plans/{id}": {
+      "get": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Retrieves a weave plan by its public UUID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeavePlanDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeavePlanDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeavePlanDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/weave/plans": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Saves a weave plan into the SQL database.\r\n(Called by the Studio Core worker after finding media scenes).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeavePlanCreateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeavePlanCreateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeavePlanCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/weave/creator/plan": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Generates a structured weave plan via AI Creator.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeavePlanRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeavePlanRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeavePlanRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/studio/weave/creator/execute": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Executes a weave video generation and uploads the result.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeaveExecuteRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeaveExecuteRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeaveExecuteRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/studio/weave/plans/{planUuid}/media/{contentUuid}": {
+      "put": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Links a media content item to a weave plan record.\r\nThis is a direct update on the specified record (to be used post-execution).",
+        "parameters": [
+          {
+            "name": "planUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "contentUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/users/me": {
       "get": {
         "tags": [
@@ -1837,8 +2027,10 @@
           },
           "plannedAt": {
             "type": "string",
+            "description": "The planned start date/time (Local time of the brand).\r\nNote: Do not append 'Z' to the end of the string unless you are explicitly passing UTC time. \r\nAn unspecified time will be correctly interpreted as the Brand's local time.",
             "format": "date-time",
-            "nullable": true
+            "nullable": true,
+            "example": "2026-03-29T14:27:00"
           },
           "targets": {
             "type": "array",
@@ -1900,6 +2092,24 @@
           "updateOccurrenceOnly": {
             "type": "boolean",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SocialMediaLinkDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "offset": {
+            "type": "number",
+            "format": "double"
+          },
+          "duration": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -2014,6 +2224,9 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "socialMediaLink": {
+            "$ref": "#/components/schemas/SocialMediaLinkDto"
           }
         },
         "additionalProperties": false
@@ -2060,6 +2273,9 @@
           "scenes": {
             "nullable": true
           },
+          "socialMediaLink": {
+            "$ref": "#/components/schemas/SocialMediaLinkDto"
+          },
           "mediaContentUuid": {
             "type": "string",
             "format": "uuid",
@@ -2102,6 +2318,9 @@
           "llmModel": {
             "type": "string",
             "nullable": true
+          },
+          "socialMediaLink": {
+            "$ref": "#/components/schemas/SocialMediaLinkDto"
           }
         },
         "additionalProperties": false
@@ -2116,6 +2335,106 @@
           "updatedProperties": {
             "type": "object",
             "additionalProperties": { },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WeaveExecuteRequestDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mediaList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "voice": {
+            "type": "string",
+            "nullable": true
+          },
+          "speed": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "backgroundAudio": {
+            "type": "string",
+            "nullable": true
+          },
+          "fps": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WeavePlanCreateDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "subject": {
+            "type": "string",
+            "nullable": true
+          },
+          "results": {
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WeavePlanDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "subject": {
+            "type": "string",
+            "nullable": true
+          },
+          "results": {
+            "nullable": true
+          },
+          "mediaContentUuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WeavePlanRequestDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "subject": {
+            "type": "string",
             "nullable": true
           }
         },
