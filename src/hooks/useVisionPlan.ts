@@ -2,6 +2,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { api } from '@utils/apiClient';
 
 const SESSION_KEY = 'vision_plan_uuid';
+const LS_PLAN_KEY = 'vision_plan';
+const LS_META_KEY = 'vision_plan_meta';
 
 export interface VisionPlanRequestDto {
   userPrompt: string;
@@ -46,6 +48,54 @@ export interface VisionPlan {
 const POLL_INTERVAL = 2500;
 const MAX_POLL_ATTEMPTS = 72; // 3 minutes
 
+export interface GeneratePlanOptions {
+  durationLevel?: string;
+  imagesList?: string[];
+  numScenes?: number;
+  llmModel?: string;
+  socialVideo?: SocialVideoContext;
+  withCaptions?: boolean;
+}
+
+const readLocalPlan = (): VisionPlan | null => {
+  try {
+    const saved = localStorage.getItem(LS_PLAN_KEY);
+    return saved ? (JSON.parse(saved) as VisionPlan) : null;
+  } catch { return null; }
+};
+
+const writeLocalPlan = (plan: VisionPlan) => {
+  try { localStorage.setItem(LS_PLAN_KEY, JSON.stringify(plan)); } catch {}
+};
+
+const mergeLocalPlan = (updatedProperties: Record<string, any>) => {
+  try {
+    const saved = localStorage.getItem(LS_PLAN_KEY);
+    if (saved) {
+      const merged = { ...JSON.parse(saved), ...updatedProperties };
+      localStorage.setItem(LS_PLAN_KEY, JSON.stringify(merged));
+    }
+  } catch {}
+};
+
+const clearLocalStorage = () => {
+  try {
+    localStorage.removeItem(LS_PLAN_KEY);
+    localStorage.removeItem(LS_META_KEY);
+  } catch {}
+};
+
+export const saveVisionMeta = (meta: { prompt: string; withCaptions: boolean; duration: string }) => {
+  try { localStorage.setItem(LS_META_KEY, JSON.stringify(meta)); } catch {}
+};
+
+export const readVisionMeta = (): { prompt: string; withCaptions: boolean; duration: string } | null => {
+  try {
+    const saved = localStorage.getItem(LS_META_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch { return null; }
+};
+
 export const useVisionPlan = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPolling, setIsPolling] = useState(() => !!sessionStorage.getItem(SESSION_KEY));
@@ -53,7 +103,7 @@ export const useVisionPlan = () => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [planUuid, setPlanUuid] = useState<string | null>(() => sessionStorage.getItem(SESSION_KEY));
-  const [plan, setPlan] = useState<VisionPlan | null>(null);
+  const [plan, setPlan] = useState<VisionPlan | null>(() => readLocalPlan());
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const attemptsRef = useRef(0);
 
@@ -75,6 +125,7 @@ export const useVisionPlan = () => {
         Array.isArray(result.scenes) ? result.scenes.length > 0 : Object.keys(result.scenes).length > 0
       )) {
         sessionStorage.removeItem(SESSION_KEY);
+        writeLocalPlan(result);
         setPlan(result);
         stopPolling();
         return;
@@ -93,18 +144,13 @@ export const useVisionPlan = () => {
 
   const generatePlan = useCallback(async (
     prompt: string,
-    options?: {
-      durationLevel?: string;
-      imagesList?: string[];
-      numScenes?: number;
-      llmModel?: string;
-      socialVideo?: SocialVideoContext;
-    }
+    options?: GeneratePlanOptions
   ): Promise<string | null> => {
     setIsLoading(true);
     setError(null);
     setPlan(null);
     setPlanUuid(null);
+    clearLocalStorage();
     stopPolling();
     try {
       const payload: any = {
@@ -114,6 +160,7 @@ export const useVisionPlan = () => {
         numScenes: options?.numScenes,
         llmModel: options?.llmModel,
       };
+      if (options?.withCaptions !== undefined) payload.withCaptions = options.withCaptions;
       if (options?.socialVideo) {
         const { platform, url, offsetSeconds, durationSeconds } = options.socialVideo;
         payload.userPrompt = `${prompt}\n\n[Reference audio from ${platform}: ${url} | offset: ${offsetSeconds}s, duration: ${durationSeconds}s]`;
@@ -143,6 +190,7 @@ export const useVisionPlan = () => {
     setError(null);
     try {
       await api.put('/studio/vision/plans', { planUuid: uuid, updatedProperties });
+      mergeLocalPlan(updatedProperties);
       return true;
     } catch (err: any) {
       setError(err?.message || 'Failed to update plan.');
@@ -181,6 +229,7 @@ export const useVisionPlan = () => {
 
   const reset = useCallback(() => {
     sessionStorage.removeItem(SESSION_KEY);
+    clearLocalStorage();
     stopPolling();
     setIsLoading(false);
     setError(null);

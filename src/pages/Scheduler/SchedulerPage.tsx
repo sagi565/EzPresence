@@ -105,7 +105,6 @@ const SchedulerPage: React.FC = () => {
     thumbnail: c.thumbnail,
     type: c.mediaType || 'video',
     favorite: c.favorite,
-    filePath: c.filePath,
     sizeBytes: c.sizeBytes,
     durationSec: c.durationSec,
     createdAt: c.createdAt,
@@ -351,24 +350,8 @@ const SchedulerPage: React.FC = () => {
   const handlePostClick = (post: any) => {
     console.log('🔍 [handlePostClick] Full post:', post);
 
-    // Resolve contentId: first from contentUuids, then by decoding calendarItemId
-    let resolvedContentId = post.contentUuids?.[0];
-
-    if (!resolvedContentId && post.calendarItemId) {
-      try {
-        // calendarItemId is base64-encoded as "contentId | date"
-        const decoded = atob(post.calendarItemId);
-        console.log('🔍 [handlePostClick] Decoded calendarItemId:', decoded);
-        const parts = decoded.split('|').map((p: string) => p.trim());
-        if (parts.length >= 1 && parts[0]) {
-          resolvedContentId = parts[0];
-        }
-      } catch (err) {
-        console.warn('Could not decode calendarItemId:', err);
-      }
-    }
-
-    console.log('🔍 [handlePostClick] resolvedContentId:', resolvedContentId);
+    // Resolve contentId from contentUuids (the first attached content)
+    const resolvedContentId = post.contentUuids?.[0];
 
     const initialData = {
       date: post.date,

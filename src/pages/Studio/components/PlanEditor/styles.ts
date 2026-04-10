@@ -43,7 +43,7 @@ export const ChangedDot = styled.div`
 `;
 export const TitleInput = styled.input`
   width:100%;background:transparent;border:none;outline:none;
-  font-size:clamp(1.4rem,3vw,2rem);font-weight:800;letter-spacing:-1px;
+  font-size:clamp(1.1rem,2.2vw,1.45rem);font-weight:700;letter-spacing:-.4px;
   color:${p=>p.theme.colors.text};font-family:inherit;padding:0;
   caret-color:#8b5cf6;
   &::placeholder{color:${p=>p.theme.colors.muted};opacity:.35;}
@@ -175,42 +175,31 @@ export const DurationUnit = styled.span`font-size:12px;color:${p=>p.theme.colors
 // ─── Actions ───────────────────────────────────────────────────────────────────
 export const ActionsRow = styled.div`
   display:flex;align-items:center;gap:10px;
-  padding:16px 18px;border-top:1px solid rgba(139,92,246,.08);
+  padding:14px 18px;border-top:1px solid rgba(139,92,246,.08);
   background:rgba(139,92,246,.02);
 `;
-export const PromptEditBtn = styled.button`
-  display:inline-flex;align-items:center;gap:7px;
-  padding:10px 16px;border-radius:11px;cursor:not-allowed;
-  border:1.5px solid rgba(139,92,246,.12);background:transparent;
-  font-size:13px;font-weight:600;color:${p=>p.theme.colors.muted};
-  font-family:inherit;opacity:.5;
-  position:relative;
-`;
-export const ComingSoonTag = styled.span`
-  position:absolute;top:-8px;right:-4px;
-  background:linear-gradient(135deg,#f59e0b,#d97706);
-  color:white;font-size:9px;font-weight:800;letter-spacing:.05em;
-  padding:2px 6px;border-radius:4px;text-transform:uppercase;white-space:nowrap;
-`;
+
 export const Spacer = styled.div`flex:1;`;
 export const StatusText = styled.div`font-size:12px;color:rgba(139,92,246,.55);font-weight:600;`;
 export const GenerateBtn = styled.button<{$loading:boolean;$hasChanges:boolean}>`
   display:inline-flex;align-items:center;gap:8px;
-  padding:11px 22px;border-radius:12px;border:none;cursor:pointer;
-  font-size:13.5px;font-weight:700;font-family:inherit;
+  padding:11px 24px;border-radius:14px;border:none;cursor:pointer;
+  font-size:13px;font-weight:700;font-family:inherit;letter-spacing:.02em;
   background:${p=>p.$hasChanges
-    ?'linear-gradient(135deg,#f59e0b,#d97706)'
-    :'linear-gradient(135deg,#a78bfa,#7c3aed)'};
+    ?'linear-gradient(135deg,#f59e0b,#e07b00)'
+    :'linear-gradient(135deg,#9b5de5,#7c3aed)'};
   color:white;transition:all .22s cubic-bezier(.4,0,.2,1);
   box-shadow:${p=>p.$hasChanges
-    ?'0 4px 18px rgba(245,158,11,.35)'
-    :'0 4px 18px rgba(124,58,237,.35)'};
-  opacity:${p=>p.$loading?.7:1};
-  &:hover:not(:disabled){transform:translateY(-2px);
+    ?'0 3px 14px rgba(245,158,11,.3),inset 0 1px 0 rgba(255,255,255,.15)'
+    :'0 3px 14px rgba(124,58,237,.3),inset 0 1px 0 rgba(255,255,255,.12)'};
+  opacity:${p=>p.$loading?.65:1};
+  &:hover:not(:disabled){
+    transform:translateY(-1px);
     box-shadow:${p=>p.$hasChanges
-      ?'0 7px 24px rgba(245,158,11,.48)'
-      :'0 7px 24px rgba(124,58,237,.48)'};}
+      ?'0 6px 20px rgba(245,158,11,.42),inset 0 1px 0 rgba(255,255,255,.15)'
+      :'0 6px 20px rgba(124,58,237,.42),inset 0 1px 0 rgba(255,255,255,.12)'};}
   &:active{transform:translateY(0);}
+  &:disabled{cursor:default;}
 `;
 export const BtnSpinner = styled.div`
   width:13px;height:13px;border:2px solid rgba(255,255,255,.3);

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { VisionPlan } from '@hooks/useVisionPlan';
+import TrashButton from '@components/Scheduler/CreateModals/TrashButton/TrashButton';
 import {
   Wrap, HeaderCard, TopRow, Badges, ReadyBadge, ReadyDot, VersionBadge,
   ChangedDot, TitleInput, MetaRow, EditPill, PillLabel,
@@ -7,7 +8,7 @@ import {
   EditArea, EditInput, VoiceRow, GenderToggle, GenderBtn,
   ScenesHeader, SceneCount, SceneItem, SceneToggle, SceneNum, SceneToggleTitle, Chevron, SceneBody, SceneFields,
   FieldLabel, DurationRow, DurationInput, DurationUnit,
-  ActionsRow, PromptEditBtn, ComingSoonTag, Spacer, StatusText, GenerateBtn, BtnSpinner
+  ActionsRow, Spacer, StatusText, GenerateBtn, BtnSpinner
 } from './styles';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -44,9 +45,10 @@ interface Props {
   onExecute: (uuid: string, version?: number) => Promise<boolean>;
   isUpdating: boolean;
   isExecuting: boolean;
+  onRequestDelete: () => void;
 }
 
-const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpdating, isExecuting }) => {
+const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpdating, isExecuting, onRequestDelete }) => {
   const [edited, setEdited] = useState<VisionPlan>(() => JSON.parse(JSON.stringify(originalPlan)));
   const [expandedScenes, setExpandedScenes] = useState<Set<number>>(new Set([0]));
   const [status, setStatus] = useState<string>('');
@@ -110,7 +112,6 @@ const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpda
   };
 
   const scenes = scenesToArray(edited.scenes);
-  const planTypes = ['NARRATED', 'SPEECHLESS'];
   const genders = ['MALE', 'FEMALE', 'NEUTRAL'];
 
   return (
@@ -119,12 +120,12 @@ const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpda
       <HeaderCard>
         <TopRow>
           <Badges>
-            <ReadyBadge><ReadyDot />Plan Ready</ReadyBadge>
             <VersionBadge>v{originalPlan.version || 1}</VersionBadge>
             {hasChanges && <ReadyBadge style={{background:'rgba(245,158,11,.07)',border:'1px solid rgba(245,158,11,.2)',color:'#b45309'}}>
               <ChangedDot />Edited
             </ReadyBadge>}
           </Badges>
+          <TrashButton onClick={onRequestDelete} title="Delete plan" />
         </TopRow>
         <TitleInput
           value={edited.clipTitle || ''}
@@ -132,11 +133,6 @@ const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpda
           placeholder="Untitled Vision"
         />
         <MetaRow>
-          {planTypes.map(t => (
-            <EditPill key={t} $active={edited.planType === t} onClick={() => setField('planType', t)}>
-              <PillLabel>Type</PillLabel>{t}
-            </EditPill>
-          ))}
           <EditPill $active={!!edited.category}>
             <PillLabel>Category</PillLabel>
             <input
@@ -287,12 +283,8 @@ const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpda
 
         {/* ── Actions row ── */}
         <ActionsRow>
-          <PromptEditBtn disabled title="Coming soon">
-            <ComingSoonTag>Soon</ComingSoonTag>
-            ✨ Edit with Prompt
-          </PromptEditBtn>
-          <Spacer />
           {status && <StatusText>{status}</StatusText>}
+          <Spacer />
           <GenerateBtn
             $loading={isBusy}
             $hasChanges={hasChanges}

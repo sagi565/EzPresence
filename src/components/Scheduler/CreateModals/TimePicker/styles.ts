@@ -1,5 +1,6 @@
-// import { theme } from '@/theme/theme'; // Removed direct theme import to use CSS variables instead
 import { CSSProperties } from 'react';
+
+const edgeFade = 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.45) 18%, black 34%, black 66%, rgba(0,0,0,0.45) 82%, transparent 100%)';
 
 export const styles: Record<string, CSSProperties> = {
     container: {
@@ -44,6 +45,8 @@ export const styles: Record<string, CSSProperties> = {
         scrollbarWidth: 'none' as const,
         position: 'relative' as const,
         zIndex: 1,
+        maskImage: edgeFade,
+        WebkitMaskImage: edgeFade,
     },
 
     spacer: {
@@ -59,17 +62,18 @@ export const styles: Record<string, CSSProperties> = {
         justifyContent: 'center',
         fontSize: '17px',
         fontWeight: 500,
-        color: 'rgba(0, 0, 0, .35)',
+        color: 'rgba(0, 0, 0, .3)',
         cursor: 'pointer',
         scrollSnapAlign: 'center' as const,
         flexShrink: 0,
-        transition: 'color .15s, font-weight .15s',
         userSelect: 'none' as const,
         border: 'none',
         background: 'transparent',
         width: '100%',
         fontFamily: 'inherit',
         padding: 0,
+        transformOrigin: 'center center',
+        transition: 'color .12s',
     },
 
     separator: {
@@ -85,7 +89,6 @@ export const styles: Record<string, CSSProperties> = {
     },
 };
 
-// Add global styles for in-view class (needs to be injected into document)
 if (typeof document !== 'undefined') {
     const styleId = 'time-picker-global-styles';
     if (!document.getElementById(styleId)) {
@@ -95,9 +98,6 @@ if (typeof document !== 'undefined') {
       .ntp-wheel-item.in-view {
         color: var(--color-text) !important;
         font-weight: 600 !important;
-      }
-      .ntp-wheel-item:hover {
-        color: rgba(0, 0, 0, .55) !important;
       }
       .ntp-wheel-col::-webkit-scrollbar {
         display: none;

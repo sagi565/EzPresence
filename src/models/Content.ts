@@ -7,7 +7,6 @@ export interface Content {
   favorite: boolean;
   origin: ContentOrigin;
   mediaType?: 'video' | 'image';
-  filePath?: string;
   sizeBytes?: number;
   durationSec?: number;
   listId?: string; // Changed to string to match UUID
@@ -17,28 +16,26 @@ export interface Content {
 export interface ApiMediaContentDto {
   uuid: string;
   listUuid?: string | null;
-  mediaType?: string | null;       
+  mediaType?: string | null;
   contentName?: string | null;
+  contentExtension?: string | null;
   // API uses 'thumbnailObject', not 'thumbnail'
-  thumbnailObject?: string | null; 
-  filePath?: string | null;
+  thumbnailObject?: string | null;
   sizeBytes?: number | null;
-  isEzGenerated?: boolean | null; 
+  sizeBytesCompressed?: number | null;
+  durationMs?: number | null;
+  isEzGenerated?: boolean | null;
   isFavorite?: boolean | null;
-  durationSec?: number | null;
+  status?: string | null;
+  softDeleteUntil?: string | null;
   createdAt: string;
 }
 
 export interface ApiMediaContentCreateDto {
   listUuid?: string | null;
   contentName?: string | null;
-  mediaType?: string | null;
-  filePath?: string | null;
-  isFavorite?: boolean | null;
-  isEzGenerated?: boolean | null;
-  sizeBytes?: number | null;
-  durationSec?: number | null;
   checksumSha256?: string | null;
+  isEzGenerated?: boolean | null;
 }
 
 const determineOrigin = (apiContent: ApiMediaContentDto): ContentOrigin => {
@@ -69,14 +66,12 @@ export const convertApiMediaContentToContent = (apiContent: ApiMediaContentDto):
   favorite: apiContent.isFavorite || false,
   origin: determineOrigin(apiContent),
   mediaType: (apiContent.mediaType?.toLowerCase() as 'video' | 'image') || 'image',
-  filePath: apiContent.filePath || undefined,
   sizeBytes: apiContent.sizeBytes || undefined,
-  durationSec: apiContent.durationSec || undefined,
+  durationSec: apiContent.durationMs ? Math.round(apiContent.durationMs / 1000) : undefined,
   listId: apiContent.listUuid || undefined,
   createdAt: apiContent.createdAt,
 });
 
 export const convertContentToApiCreate = (content: Partial<Content>): ApiMediaContentCreateDto => ({
   contentName: content.title,
-  isFavorite: content.favorite,
 });

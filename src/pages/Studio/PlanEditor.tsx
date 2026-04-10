@@ -177,43 +177,37 @@ const DurationUnit = styled.span`font-size:12px;color:${p=>p.theme.colors.muted}
 
 // ─── Actions ───────────────────────────────────────────────────────────────────
 const ActionsRow = styled.div`
-  display:flex;align-items:center;gap:10px;
-  padding:16px 18px;border-top:1px solid rgba(139,92,246,.08);
+  display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  padding:14px 18px;border-top:1px solid rgba(139,92,246,.08);
   background:rgba(139,92,246,.02);
 `;
-const PromptEditBtn = styled.button`
-  display:inline-flex;align-items:center;gap:7px;
-  padding:10px 16px;border-radius:11px;cursor:not-allowed;
-  border:1.5px solid rgba(139,92,246,.12);background:transparent;
-  font-size:13px;font-weight:600;color:${p=>p.theme.colors.muted};
-  font-family:inherit;opacity:.5;
-  position:relative;
-`;
-const ComingSoonTag = styled.span`
-  position:absolute;top:-8px;right:-4px;
-  background:linear-gradient(135deg,#f59e0b,#d97706);
-  color:white;font-size:9px;font-weight:800;letter-spacing:.05em;
-  padding:2px 6px;border-radius:4px;text-transform:uppercase;white-space:nowrap;
-`;
-const Spacer = styled.div`flex:1;`;
 const StatusText = styled.div`font-size:12px;color:rgba(139,92,246,.55);font-weight:600;`;
 const GenerateBtn = styled.button<{$loading:boolean;$hasChanges:boolean}>`
-  display:inline-flex;align-items:center;gap:8px;
-  padding:11px 22px;border-radius:12px;border:none;cursor:pointer;
-  font-size:13.5px;font-weight:700;font-family:inherit;
+  display:inline-flex;align-items:center;gap:9px;
+  padding:12px 26px;border-radius:14px;border:none;cursor:pointer;
+  font-size:14px;font-weight:800;font-family:inherit;letter-spacing:.01em;
+  position:relative;overflow:hidden;
   background:${p=>p.$hasChanges
-    ?'linear-gradient(135deg,#f59e0b,#d97706)'
-    :'linear-gradient(135deg,#a78bfa,#7c3aed)'};
-  color:white;transition:all .22s cubic-bezier(.4,0,.2,1);
+    ?'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)'
+    :'linear-gradient(135deg,#a78bfa 0%,#7c3aed 100%)'};
+  color:white;
   box-shadow:${p=>p.$hasChanges
-    ?'0 4px 18px rgba(245,158,11,.35)'
-    :'0 4px 18px rgba(124,58,237,.35)'};
-  opacity:${p=>p.$loading?.7:1};
-  &:hover:not(:disabled){transform:translateY(-2px);
+    ?'0 4px 20px rgba(245,158,11,.4),0 1px 0 rgba(255,255,255,.15) inset'
+    :'0 4px 20px rgba(124,58,237,.4),0 1px 0 rgba(255,255,255,.15) inset'};
+  transition:all .22s cubic-bezier(.4,0,.2,1);
+  opacity:${p=>p.$loading?.75:1};
+  &::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(to bottom,rgba(255,255,255,.12) 0%,transparent 60%);
+    pointer-events:none;
+  }
+  &:hover:not(:disabled){
+    transform:translateY(-2px);
     box-shadow:${p=>p.$hasChanges
-      ?'0 7px 24px rgba(245,158,11,.48)'
-      :'0 7px 24px rgba(124,58,237,.48)'};}
-  &:active{transform:translateY(0);}
+      ?'0 8px 28px rgba(245,158,11,.52),0 1px 0 rgba(255,255,255,.15) inset'
+      :'0 8px 28px rgba(124,58,237,.52),0 1px 0 rgba(255,255,255,.15) inset'};
+  }
+  &:active:not(:disabled){transform:translateY(0);}
 `;
 const BtnSpinner = styled.div`
   width:13px;height:13px;border:2px solid rgba(255,255,255,.3);
@@ -247,6 +241,15 @@ function buildDiff(original: VisionPlan, edited: VisionPlan): Record<string, any
   return Object.keys(diff).length > 0 ? diff : null;
 }
 
+// ─── Trash ─────────────────────────────────────────────────────────────────────
+const TrashBtn = styled.button`
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  border:1.5px solid rgba(239,68,68,.18);background:transparent;
+  color:rgba(239,68,68,.45);cursor:pointer;transition:all .18s;
+  &:hover{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.4);color:#ef4444;}
+`;
+
 // ─── Component ─────────────────────────────────────────────────────────────────
 interface Props {
   originalPlan: VisionPlan;
@@ -254,9 +257,10 @@ interface Props {
   onExecute: (uuid: string, version?: number) => Promise<boolean>;
   isUpdating: boolean;
   isExecuting: boolean;
+  onRequestDelete?: () => void;
 }
 
-const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpdating, isExecuting }) => {
+const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpdating, isExecuting, onRequestDelete }) => {
   const [edited, setEdited] = useState<VisionPlan>(() => JSON.parse(JSON.stringify(originalPlan)));
   const [expandedScenes, setExpandedScenes] = useState<Set<number>>(new Set([0]));
   const [status, setStatus] = useState<string>('');
@@ -330,17 +334,24 @@ const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpda
         <TopRow>
           <Badges>
             <ReadyBadge><ReadyDot />Plan Ready</ReadyBadge>
-            <VersionBadge>v{originalPlan.version || 1}</VersionBadge>
             {hasChanges && <ReadyBadge style={{background:'rgba(245,158,11,.07)',border:'1px solid rgba(245,158,11,.2)',color:'#b45309'}}>
               <ChangedDot />Edited
             </ReadyBadge>}
           </Badges>
+          {onRequestDelete && (
+            <TrashBtn onClick={onRequestDelete} title="Delete plan" aria-label="Delete plan">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+              </svg>
+            </TrashBtn>
+          )}
         </TopRow>
         <TitleInput
           value={edited.clipTitle || ''}
           onChange={e => setField('clipTitle', e.target.value)}
           placeholder="Untitled Vision"
         />
+        <VersionBadge style={{alignSelf:'flex-start'}}>v{originalPlan.version || 1}</VersionBadge>
         <MetaRow>
           {planTypes.map(t => (
             <EditPill key={t} $active={edited.planType === t} onClick={() => setField('planType', t)}>
@@ -354,14 +365,8 @@ const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpda
               onChange={e => setField('category', e.target.value)}
               placeholder="Hypnotic…"
               style={{background:'transparent',border:'none',outline:'none',
-                color:'inherit',font:'inherit',width:90,fontSize:12}}
+                color:'inherit',font:'inherit',width:'auto',minWidth:60,maxWidth:160,fontSize:12}}
             />
-          </EditPill>
-          <EditPill
-            $active={!!edited.includeAudioInVideoGeneration}
-            onClick={() => setField('includeAudioInVideoGeneration', !edited.includeAudioInVideoGeneration)}
-          >
-            {edited.includeAudioInVideoGeneration ? '🔊' : '🔇'} Audio
           </EditPill>
         </MetaRow>
       </HeaderCard>
@@ -497,11 +502,6 @@ const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpda
 
         {/* ── Actions row ── */}
         <ActionsRow>
-          <PromptEditBtn disabled title="Coming soon">
-            <ComingSoonTag>Soon</ComingSoonTag>
-            ✨ Edit with Prompt
-          </PromptEditBtn>
-          <Spacer />
           {status && <StatusText>{status}</StatusText>}
           <GenerateBtn
             $loading={isBusy}
@@ -509,7 +509,12 @@ const PlanEditor: React.FC<Props> = ({ originalPlan, onUpdate, onExecute, isUpda
             onClick={handleGenerate}
             disabled={isBusy}
           >
-            {isBusy ? <BtnSpinner /> : hasChanges ? '💾' : '▶'}
+            {isBusy
+              ? <BtnSpinner />
+              : hasChanges
+                ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                : <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            }
             {isUpdating ? 'Saving…' : isExecuting ? 'Generating…' : hasChanges ? 'Save & Generate' : 'Generate Video'}
           </GenerateBtn>
         </ActionsRow>

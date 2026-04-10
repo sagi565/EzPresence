@@ -27,6 +27,7 @@ import { useBrands } from '@/hooks/brands/useBrands';
 import { useSchedules } from '@/hooks/useSchedules';
 import { theme } from '@/theme/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
+import { useToast } from '@context/ToastContext';
 import { styles } from './styles';
 import ScheduleModalLayout from '../ScheduleModalLayout/ScheduleModalLayout';
 import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
@@ -67,6 +68,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     status,
 }) => {
     const { currentBrand } = useBrands();
+    const { showToast } = useToast();
     const { isDarkMode } = useAppTheme();
     const { createSchedule, updateSchedule, deleteSchedule } = useSchedules(currentBrand?.id || '');
 
@@ -86,6 +88,9 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
     const isPublished = status === 'success';
     const isReadOnly = (isPast || isPublished) && !!formData.calendarItemId;
+    // A schedule is "part of a policy" if it's an existing item (calendarItemId) that belongs
+    // to a recurring series — identified by an explicit rrule OR by having a scheduleUuid.
+    const isPartOfPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.scheduleUuid);
 
     useEffect(() => {
         if (lastPickedContent) {
@@ -105,6 +110,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showRecurringDialog, setShowRecurringDialog] = useState(false);
     const [recurringDialogMode, setRecurringDialogMode] = useState<'edit' | 'delete'>('edit');
+    const [recurringTrigger, setRecurringTrigger] = useState<'edit' | 'delete' | 'draft'>('edit');
     const [isShattering, setIsShattering] = useState(false);
     const [isDraftHovered, setIsDraftHovered] = useState(false);
     const [selectedDetailContent, setSelectedDetailContent] = useState<ContentItem | null>(null);
@@ -161,7 +167,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
         if (!formData.title?.trim()) return false;
         const activePlatforms = getEnabledPlatforms(formData);
         if (activePlatforms.length === 0) return false;
-        if (!formData.contentId) return false;
+        const isPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.scheduleUuid);
+        if (!formData.contentId && !isPolicy) return false;
         try {
             const now = new Date();
             const { hours, minutes } = parseTimeString(formData.time);
@@ -173,6 +180,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
         }
         return true;
     }, [formData]);
+
+    const isDraftEnabled = !isSubmitting && !isReadOnly && (!!formData.contentId || isPartOfPolicy);
 
     const { profile } = useUserProfile();
 
@@ -570,12 +579,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
         );
     };
 
-    const handleSaveDraft = async () => {
-        if (!formData.contentId) {
-            setValidationErrors({ content: 'Please add content to your post' });
-            return;
-        }
-        setValidationErrors({});
+    const executeSaveDraftAction = async (occurrenceOnly: boolean) => {
         try {
             setIsSubmitting(true);
             const selectedContent = getSelectedContent();
@@ -592,42 +596,53 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                     updates.time = formData.time;
                     updates.timezone = formData.timezone;
                 }
-
                 const activePlatforms = getEnabledPlatforms(formData);
                 const origPlatforms = (initialData as any)?.platforms || [];
                 if (activePlatforms.length !== origPlatforms.length || !activePlatforms.every(p => origPlatforms.includes(p as any))) {
                     updates.platforms = activePlatforms;
                 }
-
                 if (mediaType !== (initialData as any)?.media) updates.media = mediaType;
-
                 const newTitle = formData.title || formData.contentTitle || 'Untitled Draft';
                 if (newTitle !== initialData?.title) updates.title = newTitle;
-
                 const newRruleText = formData.repeat.rruleText || null;
                 const origRruleText = initialData?.repeat?.rruleText || null;
                 if (newRruleText !== origRruleText && !(newRruleText === null && origRruleText === 'POLICY')) {
                     updates.rruleText = newRruleText;
                 }
-
                 if (endDateStr) updates.endDate = endDateStr;
-
-                await updateSchedule(formData.calendarItemId, updates);
+                await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
                 await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: getEnabledPlatforms(formData), media: mediaType, title: formData.title || formData.contentTitle || 'Untitled Draft', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft' });
             }
             if (onSaveDraft) onSaveDraft(formData);
             onClose();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save draft:', error);
+            showToast('Couldn\'t save draft. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const handleSaveDraft = async () => {
+        if (!formData.contentId && !isPartOfPolicy) {
+            setValidationErrors({ content: 'Please add content to your post' });
+            return;
+        }
+        setValidationErrors({});
+        if (isPartOfPolicy) {
+            setRecurringTrigger('draft');
+            setRecurringDialogMode('edit');
+            setShowRecurringDialog(true);
+            return;
+        }
+        await executeSaveDraftAction(false);
+    };
+
     const handleDelete = async () => {
         if (!formData.scheduleUuid && !formData.calendarItemId) return;
-        if (formData.repeat.frequency !== 'none') {
+        if (isPartOfPolicy) {
+            setRecurringTrigger('delete');
             setRecurringDialogMode('delete');
             setShowRecurringDialog(true);
         } else {
@@ -638,8 +653,10 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     const handleRecurringConfirm = async (option: 'this' | 'following' | 'all') => {
         setShowRecurringDialog(false);
         const occurrenceOnly = option === 'this';
-        if (recurringDialogMode === 'delete') {
+        if (recurringTrigger === 'delete') {
             await executeDelete(occurrenceOnly);
+        } else if (recurringTrigger === 'draft') {
+            await executeSaveDraftAction(occurrenceOnly);
         } else {
             await executeSchedule(occurrenceOnly);
         }
@@ -664,9 +681,10 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             setIsShattering(false);
             onClose();
             if (onScheduleProp) onScheduleProp(formData);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to delete schedule:', error);
             setIsShattering(false);
+            showToast('Couldn\'t delete this post. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -687,10 +705,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
         const scheduledDate = new Date(formData.date);
         scheduledDate.setHours(hours, minutes, 0, 0);
         if (scheduledDate < now) errors.date = 'Cannot schedule a post in the past';
-        if (!formData.contentId) errors.content = 'Please add content to your post';
+        if (!formData.contentId && !isPartOfPolicy) errors.content = 'Please add content to your post';
         if (Object.keys(errors).length > 0) { setValidationErrors(errors); return; }
         setValidationErrors({});
-        if (formData.calendarItemId && formData.repeat.frequency !== 'none' && !isReadOnly) {
+        if (isPartOfPolicy && !isReadOnly) {
+            setRecurringTrigger('edit');
             setRecurringDialogMode('edit');
             setShowRecurringDialog(true);
         } else {
@@ -742,9 +761,9 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             }
             if (onScheduleProp) onScheduleProp(formData);
             if (!isReadOnly) onClose();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to schedule/update post:', error);
-            alert('Failed to process request. Please try again.');
+            showToast(formData.calendarItemId ? 'Couldn\'t save your changes. Please try again.' : 'Couldn\'t schedule this post. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -813,14 +832,15 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                     </div>
                 }
                 footer={
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                        <button 
+                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <button
                             className="npm-draft-btn"
                             onClick={handleSaveDraft} 
-                            disabled={isSubmitting || isReadOnly || !formData.contentId} 
-                            onMouseEnter={() => setIsDraftHovered(true)} 
+                            disabled={!isDraftEnabled}
+                            onMouseEnter={() => setIsDraftHovered(true)}
                             onMouseLeave={() => setIsDraftHovered(false)}
-                            style={{ ...styles.draftBtn, opacity: (isSubmitting || isReadOnly || !formData.contentId) ? 0.5 : 1, cursor: (isSubmitting || isReadOnly || !formData.contentId) ? 'not-allowed' : 'pointer', ...((isDraftHovered && !isSubmitting && !isReadOnly && formData.contentId) ? { background: 'rgba(155, 93, 229, 0.1)', color: '#9b5de5', boxShadow: '0 2px 8px rgba(155, 93, 229, 0.2)' } : {}) }}
+                            style={{ ...styles.draftBtn, opacity: !isDraftEnabled ? 0.5 : 1, cursor: !isDraftEnabled ? 'not-allowed' : 'pointer', ...(isDraftHovered && isDraftEnabled ? { background: 'rgba(155, 93, 229, 0.1)', color: '#9b5de5', boxShadow: '0 2px 8px rgba(155, 93, 229, 0.2)' } : {}) }}
                         >
                             Save as Draft
                         </button>
@@ -832,6 +852,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                         >
                             {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update' : 'Schedule'))}
                         </button>
+                        </div>
                     </div>
                 }
             >

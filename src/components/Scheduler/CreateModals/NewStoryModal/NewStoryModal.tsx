@@ -18,6 +18,7 @@ import { useBrands } from '@/hooks/brands/useBrands';
 import { useSchedules } from '@/hooks/useSchedules';
 import { theme } from '@/theme/theme';
 import { useAppTheme } from '@/theme/ThemeContext';
+import { useToast } from '@context/ToastContext';
 import { useContentPicking } from '../useContentPicking';
 
 import ScheduleModalLayout from '../ScheduleModalLayout/ScheduleModalLayout';
@@ -70,6 +71,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     status,
 }) => {
     const { currentBrand } = useBrands();
+    const { showToast } = useToast();
     const { isDarkMode } = useAppTheme();
     const { createSchedule, updateSchedule, deleteSchedule } = useSchedules(currentBrand?.id || '');
     const [formData, setFormData] = useState<StoryFormData>(getDefaultStoryFormData() as StoryFormData);
@@ -86,6 +88,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
 
     const isPublished = status === 'success';
     const isReadOnly = (isPast || isPublished) && !!formData.calendarItemId;
+    const isPartOfPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.scheduleUuid);
 
     useEffect(() => {
         if (lastPickedContent) handleContentSelect(lastPickedContent);
@@ -101,6 +104,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showRecurringDialog, setShowRecurringDialog] = useState(false);
     const [recurringDialogMode, setRecurringDialogMode] = useState<'edit' | 'delete'>('edit');
+    const [recurringTrigger, setRecurringTrigger] = useState<'edit' | 'delete' | 'draft'>('edit');
     const [isShattering, setIsShattering] = useState(false);
     const [isDraftHovered, setIsDraftHovered] = useState(false);
     const [selectedDetailContent, setSelectedDetailContent] = useState<ContentItem | null>(null);
@@ -233,7 +237,8 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         if (!formData.title?.trim()) return false;
         const selectedPlatforms = (Object.keys(formData.platforms) as Array<'instagram' | 'facebook'>).filter(k => formData.platforms[k]?.enabled);
         if (selectedPlatforms.length === 0) return false;
-        if (!formData.contentId) return false;
+        const isPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.scheduleUuid);
+        if (!formData.contentId && !isPolicy) return false;
         try {
             const now = new Date();
             const { hours, minutes } = parseTimeString(formData.time);
@@ -243,6 +248,8 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         } catch (e) { return false; }
         return true;
     }, [formData]);
+
+    const isDraftEnabled = !isSubmitting && !isReadOnly && (!!formData.contentId || isPartOfPolicy);
 
     if (!isOpen) return null;
 
@@ -298,10 +305,11 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
             const scheduledDate = new Date(formData.date);
             scheduledDate.setHours(hours, minutes, 0, 0);
             if (scheduledDate < now) errors.date = 'Cannot schedule a story in the past';
-            if (!formData.contentId) errors.content = 'Please add content to your story';
+            if (!formData.contentId && !isPartOfPolicy) errors.content = 'Please add content to your story';
             if (Object.keys(errors).length > 0) { setValidationErrors(errors); return; }
             setValidationErrors({});
-            if (formData.calendarItemId && formData.repeat.frequency !== 'none' && !isReadOnly) {
+            if (isPartOfPolicy && !isReadOnly) {
+                setRecurringTrigger('edit');
                 setRecurringDialogMode('edit');
                 setShowRecurringDialog(true);
             } else {
@@ -353,18 +361,13 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
             }
             if (onScheduleProp) onScheduleProp(formData);
             if (!isReadOnly) onClose();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to schedule story:', error);
-            alert('Failed to schedule story. Please try again.');
+            showToast(formData.calendarItemId ? 'Couldn\'t save your changes. Please try again.' : 'Couldn\'t schedule this story. Please try again.');
         } finally { setIsSubmitting(false); }
     };
 
-    const handleSaveDraft = async () => {
-        if (!formData.contentId) {
-            setValidationErrors({ content: 'Please add content to your story' });
-            return;
-        }
-        setValidationErrors({});
+    const executeSaveDraftAction = async (occurrenceOnly: boolean) => {
         try {
             setIsSubmitting(true);
             const selectedPlatforms = (Object.keys(formData.platforms) as Array<'instagram' | 'facebook'>).filter(k => formData.platforms[k]?.enabled);
@@ -381,45 +384,67 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     updates.date = formData.date;
                     updates.time = formData.time;
                 }
-
                 const origPlatforms = (initialData as any)?.platforms || [];
                 if (selectedPlatforms.length !== origPlatforms.length || !selectedPlatforms.every(p => origPlatforms.includes(p as any))) {
                     updates.platforms = selectedPlatforms;
                 }
-
                 if (mediaType !== (initialData as any)?.media) updates.media = mediaType;
-
                 const newTitle = formData.contentTitle || 'Story Draft';
                 if (newTitle !== initialData?.title) updates.title = newTitle;
-
                 const newRruleText = formData.repeat.rruleText || null;
                 const origRruleText = initialData?.repeat?.rruleText || null;
                 if (newRruleText !== origRruleText && !(newRruleText === null && origRruleText === 'POLICY')) {
                     updates.rruleText = newRruleText;
                 }
-
                 if (endDateStr) updates.endDate = endDateStr;
-
-                await updateSchedule(formData.calendarItemId, updates);
+                await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
                 await createSchedule({ date: formData.date, time: formData.time, platforms: selectedPlatforms, media: mediaType, title: formData.contentTitle || 'Story Draft', contentUuids: formData.contentId ? [formData.contentId] : undefined, type: 'Story', rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft' });
             }
             if (onSaveDraft) onSaveDraft(formData);
             onClose();
-        } catch (error) { console.error('Failed to save story draft:', error); } finally { setIsSubmitting(false); }
+        } catch (error: any) {
+            console.error('Failed to save story draft:', error);
+            showToast('Couldn\'t save draft. Please try again.');
+        } finally { setIsSubmitting(false); }
+    };
+
+    const handleSaveDraft = async () => {
+        if (!formData.contentId && !isPartOfPolicy) {
+            setValidationErrors({ content: 'Please add content to your story' });
+            return;
+        }
+        setValidationErrors({});
+        if (isPartOfPolicy) {
+            setRecurringTrigger('draft');
+            setRecurringDialogMode('edit');
+            setShowRecurringDialog(true);
+            return;
+        }
+        await executeSaveDraftAction(false);
     };
 
     const handleDelete = async () => {
         if (!formData.scheduleUuid && !formData.calendarItemId) return;
-        if (formData.repeat.frequency !== 'none') { setRecurringDialogMode('delete'); setShowRecurringDialog(true); }
-        else setShowDeleteConfirm(true);
+        if (isPartOfPolicy) {
+            setRecurringTrigger('delete');
+            setRecurringDialogMode('delete');
+            setShowRecurringDialog(true);
+        } else {
+            setShowDeleteConfirm(true);
+        }
     };
 
     const handleRecurringConfirm = async (option: 'this' | 'following' | 'all') => {
         setShowRecurringDialog(false);
         const occurrenceOnly = option === 'this';
-        if (recurringDialogMode === 'delete') await executeDelete(occurrenceOnly);
-        else await executeSchedule(occurrenceOnly);
+        if (recurringTrigger === 'delete') {
+            await executeDelete(occurrenceOnly);
+        } else if (recurringTrigger === 'draft') {
+            await executeSaveDraftAction(occurrenceOnly);
+        } else {
+            await executeSchedule(occurrenceOnly);
+        }
     };
 
     const confirmDelete = async () => { setShowDeleteConfirm(false); await executeDelete(false); };
@@ -435,8 +460,11 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
             setIsShattering(false);
             onClose();
             if (onScheduleProp) onScheduleProp(formData);
-        } catch (error) { console.error('Failed to delete schedule:', error); setIsShattering(false); }
-        finally { setIsSubmitting(false); }
+        } catch (error: any) {
+            console.error('Failed to delete schedule:', error);
+            setIsShattering(false);
+            showToast('Couldn\'t delete this story. Please try again.');
+        } finally { setIsSubmitting(false); }
     };
 
     const handleOverlayClick = () => {
@@ -585,14 +613,15 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     </div>
                 }
                 footer={
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                        <button 
+                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <button
                             className="nsm-draft-btn"
                             onClick={handleSaveDraft} 
-                            disabled={isSubmitting || isReadOnly || !formData.contentId} 
-                            onMouseEnter={() => setIsDraftHovered(true)} 
+                            disabled={!isDraftEnabled}
+                            onMouseEnter={() => setIsDraftHovered(true)}
                             onMouseLeave={() => setIsDraftHovered(false)}
-                            style={{ ...draftBtnStyle, opacity: (isSubmitting || isReadOnly || !formData.contentId) ? 0.5 : 1, cursor: (isSubmitting || isReadOnly || !formData.contentId) ? 'not-allowed' : 'pointer', ...((isDraftHovered && !isSubmitting && !isReadOnly && formData.contentId) ? { background: 'rgba(155, 93, 229, 0.1)', color: '#9b5de5', boxShadow: '0 2px 8px rgba(155, 93, 229, 0.2)' } : {}) }}
+                            style={{ ...draftBtnStyle, opacity: !isDraftEnabled ? 0.5 : 1, cursor: !isDraftEnabled ? 'not-allowed' : 'pointer', ...(isDraftHovered && isDraftEnabled ? { background: 'rgba(155, 93, 229, 0.1)', color: '#9b5de5', boxShadow: '0 2px 8px rgba(155, 93, 229, 0.2)' } : {}) }}
                         >
                             Save as Draft
                         </button>
@@ -604,6 +633,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                         >
                             {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update' : 'Schedule'))}
                         </button>
+                        </div>
                     </div>
                 }
             >

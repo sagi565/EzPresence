@@ -1,160 +1,244 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { styles } from './styles';
 
+const ITEM_HEIGHT = 36;
+const SPACER_HEIGHT = 72;
+
+const HOURS_BASE = Array.from({ length: 12 }, (_, i) => i + 1);
+const MINS_BASE = Array.from({ length: 60 }, (_, i) => i);
+const PERIODS: ('AM' | 'PM')[] = ['AM', 'PM'];
+
+// Triple-repeated for seamless circular scrolling (always start in middle rep)
+const HOURS = [...HOURS_BASE, ...HOURS_BASE, ...HOURS_BASE];
+const MINUTES = [...MINS_BASE, ...MINS_BASE, ...MINS_BASE];
+const HOURS_REP = 12;
+const MINS_REP = 60;
+
 interface TimePickerProps {
     selectedTime: string; // Format: "HH:MM AM/PM"
     onChange: (time: string) => void;
     show: boolean;
-    onClose: () => void; // Kept for interface consistency
+    onClose: () => void;
 }
 
-const TimePicker: React.FC<TimePickerProps> = ({
-    selectedTime,
-    onChange,
-    show,
-}) => {
+const TimePicker: React.FC<TimePickerProps> = ({ selectedTime, onChange, show }) => {
     const hourWheelRef = useRef<HTMLDivElement>(null);
     const minWheelRef = useRef<HTMLDivElement>(null);
     const periodWheelRef = useRef<HTMLDivElement>(null);
 
-    // Track selection internally via refs
     const selectedHourRef = useRef(4);
     const selectedMinRef = useRef(0);
     const selectedPeriodRef = useRef<'AM' | 'PM'>('PM');
 
+    // Indices into the 3-rep arrays; always kept in the middle rep after idle
+    const targetHourIdx = useRef(HOURS_REP + 3);
+    const targetMinIdx = useRef(MINS_REP + 0);
+    const targetPeriodIdx = useRef(1);
+
     const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
+    // Guards against re-processing the synthetic scroll event that wrapToMiddle creates
+    const isWrapping = useRef(false);
 
-    // 1. Initial Scroll when opening
-    useEffect(() => {
-        if (show) {
-            // Slight delay to ensure layout is painted
-            setTimeout(() => {
-                scrollToValue(hourWheelRef, selectedHourRef.current - 1);
-                scrollToValue(minWheelRef, selectedMinRef.current);
-                scrollToValue(periodWheelRef, selectedPeriodRef.current === 'AM' ? 0 : 1);
+    const hourToMidIdx = (h: number) => HOURS_REP + (h - 1);
+    const minToMidIdx = (m: number) => MINS_REP + m;
 
-                updateHighlights(hourWheelRef, selectedHourRef.current);
-                updateHighlights(minWheelRef, selectedMinRef.current);
-                updateHighlights(periodWheelRef, selectedPeriodRef.current);
-            }, 50);
-        }
-    }, [show]);
-
-    // 2. Sync refs with props when selectedTime changes externally
-    useEffect(() => {
-        if (selectedTime) {
-            const [timePart, period] = selectedTime.split(' ');
-            const [hourStr, minStr] = timePart.split(':');
-            const newHour = parseInt(hourStr);
-            const newMin = parseInt(minStr);
-            const newPeriod = period as 'AM' | 'PM';
-
-            // Check if values actually changed (to avoid fighting with user scroll)
-            // If the prop update matches our current refs, it's likely our own update coming back.
-            // If it differs, it's an external change (or we drifted), so we sync.
-            // Note: We update refs regardless to be safe, but we only SCROLL if it looks like an external jump.
-
-            const isExternalChange =
-                newHour !== selectedHourRef.current ||
-                newMin !== selectedMinRef.current ||
-                newPeriod !== selectedPeriodRef.current;
-
-            selectedHourRef.current = newHour;
-            selectedMinRef.current = newMin;
-            selectedPeriodRef.current = newPeriod;
-
-            // Only programmatic scroll if it's an external change AND the picker is visible.
-            // If the user just scrolled, isExternalChange should be false (because we updated refs in handleScroll).
-            if (show && isExternalChange) {
-                scrollToValue(hourWheelRef, newHour - 1);
-                scrollToValue(minWheelRef, newMin);
-                scrollToValue(periodWheelRef, newPeriod === 'AM' ? 0 : 1);
-
-                updateHighlights(hourWheelRef, newHour);
-                updateHighlights(minWheelRef, newMin);
-                updateHighlights(periodWheelRef, newPeriod);
-            }
-        }
-    }, [selectedTime, show]);
-
-    const scrollToValue = (ref: React.RefObject<HTMLDivElement>, index: number) => {
+    // ── 3D cylinder effect (driven live during scroll) ──────────────────────
+    const applyTransforms = useCallback((ref: React.RefObject<HTMLDivElement>) => {
         if (!ref.current) return;
-        const itemHeight = 36;
-        // Correct math: scrollTop should be index * itemHeight to center the item
-        // because the spacer (72px) equals the centering offset (90px - 18px).
-        ref.current.scrollTo({
-            top: index * itemHeight,
-            behavior: 'smooth'
+        const scrollTop = ref.current.scrollTop;
+        const centerY = scrollTop + ref.current.clientHeight / 2;
+        ref.current.querySelectorAll<HTMLElement>('.ntp-wheel-item').forEach((item, i) => {
+            const itemCenter = SPACER_HEIGHT + i * ITEM_HEIGHT + ITEM_HEIGHT / 2;
+            const dist = (itemCenter - centerY) / ITEM_HEIGHT;
+            const rotation = Math.max(-55, Math.min(55, dist * 23));
+            const scale = Math.max(0.6, 1 - Math.abs(dist) * 0.09);
+            item.style.transform = `perspective(380px) rotateX(${rotation}deg) scale(${scale})`;
         });
-    };
+    }, []);
 
-    const updateHighlights = (ref: React.RefObject<HTMLDivElement>, selectedVal: any) => {
+    const updateHighlights = useCallback((ref: React.RefObject<HTMLDivElement>, selectedVal: number | string) => {
         if (!ref.current) return;
-        const items = ref.current.querySelectorAll('.ntp-wheel-item');
-        items.forEach((item) => {
-            const itemVal = item.textContent;
-            let isSelected = false;
-
-            if (typeof selectedVal === 'number') {
-                isSelected = parseInt(itemVal || '0') === selectedVal;
-            } else {
-                isSelected = itemVal === selectedVal;
-            }
-
-            if (isSelected) {
-                item.classList.add('in-view');
-            } else {
-                item.classList.remove('in-view');
-            }
+        ref.current.querySelectorAll('.ntp-wheel-item').forEach((item) => {
+            const match = typeof selectedVal === 'number'
+                ? parseInt(item.textContent || '0') === selectedVal
+                : item.textContent === selectedVal;
+            item.classList.toggle('in-view', match);
         });
-    };
+    }, []);
 
-    const handleScroll = useCallback((
+    // ── Circular wrap ────────────────────────────────────────────────────────
+    // After scroll stops, silently jump back to the middle repetition.
+    // The value is identical so the user never notices.
+    const wrapToMiddle = useCallback((
         ref: React.RefObject<HTMLDivElement>,
-        values: any[],
-        type: 'hour' | 'min' | 'period'
+        repSize: number,
+        targetRef: React.MutableRefObject<number>
     ) => {
         if (!ref.current) return;
+        const repHeight = repSize * ITEM_HEIGHT;
+        const st = ref.current.scrollTop;
+        if (st < repHeight || st >= repHeight * 2) {
+            isWrapping.current = true;
+            const newSt = (st % repHeight) + repHeight;
+            ref.current.scrollTop = newSt;
+            targetRef.current = Math.round(newSt / ITEM_HEIGHT);
+            applyTransforms(ref);
+        }
+    }, [applyTransforms]);
+
+    // ── Open / show ──────────────────────────────────────────────────────────
+    useEffect(() => {
+        if (!show) return;
+        setTimeout(() => {
+            const hIdx = hourToMidIdx(selectedHourRef.current);
+            const mIdx = minToMidIdx(selectedMinRef.current);
+            const pIdx = selectedPeriodRef.current === 'AM' ? 0 : 1;
+
+            targetHourIdx.current = hIdx;
+            targetMinIdx.current = mIdx;
+            targetPeriodIdx.current = pIdx;
+
+            // Direct assignment = instant (no animation on open)
+            if (hourWheelRef.current) hourWheelRef.current.scrollTop = hIdx * ITEM_HEIGHT;
+            if (minWheelRef.current) minWheelRef.current.scrollTop = mIdx * ITEM_HEIGHT;
+            if (periodWheelRef.current) periodWheelRef.current.scrollTop = pIdx * ITEM_HEIGHT;
+
+            updateHighlights(hourWheelRef, selectedHourRef.current);
+            updateHighlights(minWheelRef, selectedMinRef.current);
+            updateHighlights(periodWheelRef, selectedPeriodRef.current);
+
+            applyTransforms(hourWheelRef);
+            applyTransforms(minWheelRef);
+            applyTransforms(periodWheelRef);
+        }, 50);
+    }, [show]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // ── External selectedTime changes ────────────────────────────────────────
+    useEffect(() => {
+        if (!selectedTime) return;
+        const [timePart, period] = selectedTime.split(' ');
+        const [hourStr, minStr] = timePart.split(':');
+        const newHour = parseInt(hourStr);
+        const newMin = parseInt(minStr);
+        const newPeriod = period as 'AM' | 'PM';
+
+        const isExternal =
+            newHour !== selectedHourRef.current ||
+            newMin !== selectedMinRef.current ||
+            newPeriod !== selectedPeriodRef.current;
+
+        selectedHourRef.current = newHour;
+        selectedMinRef.current = newMin;
+        selectedPeriodRef.current = newPeriod;
+
+        if (show && isExternal) {
+            const hIdx = hourToMidIdx(newHour);
+            const mIdx = minToMidIdx(newMin);
+            const pIdx = newPeriod === 'AM' ? 0 : 1;
+            targetHourIdx.current = hIdx;
+            targetMinIdx.current = mIdx;
+            targetPeriodIdx.current = pIdx;
+            hourWheelRef.current?.scrollTo({ top: hIdx * ITEM_HEIGHT, behavior: 'smooth' });
+            minWheelRef.current?.scrollTo({ top: mIdx * ITEM_HEIGHT, behavior: 'smooth' });
+            periodWheelRef.current?.scrollTo({ top: pIdx * ITEM_HEIGHT, behavior: 'smooth' });
+            updateHighlights(hourWheelRef, newHour);
+            updateHighlights(minWheelRef, newMin);
+            updateHighlights(periodWheelRef, newPeriod);
+        }
+    }, [selectedTime, show]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // ── PC mouse-wheel: one step per tick, wraps before hitting the edge ─────
+    useEffect(() => {
+        if (!show) return;
+
+        const makeHandler = (
+            ref: React.RefObject<HTMLDivElement>,
+            len: number,
+            targetRef: React.MutableRefObject<number>,
+            repSize?: number
+        ) => (e: WheelEvent) => {
+            e.preventDefault();
+            if (!ref.current) return;
+            const delta = e.deltaY > 0 ? 1 : -1;
+
+            // For circular columns: if the next step would hit the boundary of
+            // the 3-rep array, silently warp to the other end first so the user
+            // never experiences a dead end.
+            if (repSize) {
+                const next = targetRef.current + delta;
+                if (next < 0 || next >= len) {
+                    // Warp: flip to equivalent position in the opposite rep
+                    const repHeight = repSize * ITEM_HEIGHT;
+                    isWrapping.current = true;
+                    const warpedSt = delta < 0
+                        ? (ref.current.scrollTop % repHeight) + repHeight * 2 - ITEM_HEIGHT
+                        : (ref.current.scrollTop % repHeight) + repHeight;
+                    ref.current.scrollTop = warpedSt;
+                    targetRef.current = Math.round(warpedSt / ITEM_HEIGHT);
+                    return; // let the next wheel event proceed normally from the new position
+                }
+            }
+
+            const next = Math.max(0, Math.min(targetRef.current + delta, len - 1));
+            if (next === targetRef.current) return;
+            targetRef.current = next;
+            ref.current.scrollTo({ top: next * ITEM_HEIGHT, behavior: 'smooth' });
+        };
+
+        const opts: AddEventListenerOptions = { passive: false };
+        const hH = makeHandler(hourWheelRef, HOURS.length, targetHourIdx, HOURS_REP);
+        const mH = makeHandler(minWheelRef, MINUTES.length, targetMinIdx, MINS_REP);
+        const pH = makeHandler(periodWheelRef, PERIODS.length, targetPeriodIdx);
+
+        hourWheelRef.current?.addEventListener('wheel', hH, opts);
+        minWheelRef.current?.addEventListener('wheel', mH, opts);
+        periodWheelRef.current?.addEventListener('wheel', pH, opts);
+
+        return () => {
+            hourWheelRef.current?.removeEventListener('wheel', hH);
+            minWheelRef.current?.removeEventListener('wheel', mH);
+            periodWheelRef.current?.removeEventListener('wheel', pH);
+        };
+    }, [show]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // ── Scroll handler (touch + snap) ────────────────────────────────────────
+    const handleScroll = useCallback((
+        ref: React.RefObject<HTMLDivElement>,
+        values: (number | string)[],
+        type: 'hour' | 'min' | 'period',
+        repSize?: number,
+        targetRef?: React.MutableRefObject<number>
+    ) => {
+        // Ignore the synthetic scroll event that wrapToMiddle fires
+        if (isWrapping.current) {
+            isWrapping.current = false;
+            return;
+        }
+        if (!ref.current) return;
+
+        applyTransforms(ref);
 
         if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
 
-        const itemHeight = 36;
-        const scrollTop = ref.current.scrollTop;
+        const idx = Math.round(ref.current.scrollTop / ITEM_HEIGHT);
+        const clamped = Math.max(0, Math.min(idx, values.length - 1));
+        const val = values[clamped];
 
-        // Correct math: index = scrollTop / itemHeight
-        const index = Math.round(scrollTop / itemHeight);
-        const clampedIndex = Math.max(0, Math.min(index, values.length - 1));
-        const newValue = values[clampedIndex];
+        if (type === 'hour') { selectedHourRef.current = val as number; if (targetRef) targetRef.current = clamped; }
+        if (type === 'min') { selectedMinRef.current = val as number; if (targetRef) targetRef.current = clamped; }
+        if (type === 'period') { selectedPeriodRef.current = val as 'AM' | 'PM'; }
 
-        if (type === 'hour') selectedHourRef.current = newValue;
-        if (type === 'min') selectedMinRef.current = newValue;
-        if (type === 'period') selectedPeriodRef.current = newValue;
+        updateHighlights(ref, val as number | string);
 
-        updateHighlights(ref, newValue);
-
-        // Debounce update
         scrollTimerRef.current = setTimeout(() => {
-            emitChange();
-        }, 100); // 100ms debounce
-    }, []);
-
-    const emitChange = () => {
-        const timeStr = `${selectedHourRef.current}:${selectedMinRef.current.toString().padStart(2, '0')} ${selectedPeriodRef.current}`;
-        onChange(timeStr);
-    };
-
-    const handleItemClick = (
-        ref: React.RefObject<HTMLDivElement>,
-        index: number
-    ) => {
-        scrollToValue(ref, index);
-    };
+            // Warp back to middle rep after the scroll animation settles
+            if (repSize && targetRef) wrapToMiddle(ref, repSize, targetRef);
+            const timeStr = `${selectedHourRef.current}:${selectedMinRef.current.toString().padStart(2, '0')} ${selectedPeriodRef.current}`;
+            onChange(timeStr);
+        }, 200);
+    }, [applyTransforms, updateHighlights, wrapToMiddle, onChange]);
 
     if (!show) return null;
-
-    const hours = Array.from({ length: 12 }, (_, i) => i + 1);
-    const minutes = Array.from({ length: 60 }, (_, i) => i);
-    const periods: ('AM' | 'PM')[] = ['AM', 'PM'];
 
     return (
         <div style={styles.container} className="time-picker" onClick={(e) => e.stopPropagation()}>
@@ -169,62 +253,68 @@ const TimePicker: React.FC<TimePickerProps> = ({
                 {/* Hour column */}
                 <div
                     ref={hourWheelRef}
+                    className="ntp-wheel-col"
                     style={styles.wheelCol}
-                    onScroll={() => handleScroll(hourWheelRef, hours, 'hour')}
+                    onScroll={() => handleScroll(hourWheelRef, HOURS, 'hour', HOURS_REP, targetHourIdx)}
                 >
-                    <div style={styles.spacer}></div>
-                    {hours.map((hour, i) => (
+                    <div style={styles.spacer} />
+                    {HOURS.map((hour, i) => (
                         <button
-                            key={hour}
+                            key={`h-${i}`}
                             className="ntp-wheel-item"
                             style={styles.wheelItem}
                             type="button"
                             onMouseDown={(e) => {
                                 e.preventDefault();
-                                handleItemClick(hourWheelRef, i);
+                                const midIdx = hourToMidIdx(hour);
+                                targetHourIdx.current = midIdx;
+                                hourWheelRef.current?.scrollTo({ top: midIdx * ITEM_HEIGHT, behavior: 'smooth' });
                             }}
                         >
                             {hour}
                         </button>
                     ))}
-                    <div style={styles.spacer}></div>
+                    <div style={styles.spacer} />
                 </div>
 
-                {/* Separator */}
                 <div style={styles.separator}>:</div>
 
                 {/* Minute column */}
                 <div
                     ref={minWheelRef}
+                    className="ntp-wheel-col"
                     style={styles.wheelCol}
-                    onScroll={() => handleScroll(minWheelRef, minutes, 'min')}
+                    onScroll={() => handleScroll(minWheelRef, MINUTES, 'min', MINS_REP, targetMinIdx)}
                 >
-                    <div style={styles.spacer}></div>
-                    {minutes.map((min, i) => (
+                    <div style={styles.spacer} />
+                    {MINUTES.map((min, i) => (
                         <button
-                            key={min}
+                            key={`m-${i}`}
                             className="ntp-wheel-item"
                             style={styles.wheelItem}
                             type="button"
                             onMouseDown={(e) => {
                                 e.preventDefault();
-                                handleItemClick(minWheelRef, i);
+                                const midIdx = minToMidIdx(min);
+                                targetMinIdx.current = midIdx;
+                                minWheelRef.current?.scrollTo({ top: midIdx * ITEM_HEIGHT, behavior: 'smooth' });
                             }}
                         >
                             {min.toString().padStart(2, '0')}
                         </button>
                     ))}
-                    <div style={styles.spacer}></div>
+                    <div style={styles.spacer} />
                 </div>
 
                 {/* Period column */}
                 <div
                     ref={periodWheelRef}
+                    className="ntp-wheel-col"
                     style={{ ...styles.wheelCol, flex: '0.8' }}
-                    onScroll={() => handleScroll(periodWheelRef, periods, 'period')}
+                    onScroll={() => handleScroll(periodWheelRef, PERIODS, 'period')}
                 >
-                    <div style={styles.spacer}></div>
-                    {periods.map((period, i) => (
+                    <div style={styles.spacer} />
+                    {PERIODS.map((period, i) => (
                         <button
                             key={period}
                             className="ntp-wheel-item"
@@ -232,13 +322,14 @@ const TimePicker: React.FC<TimePickerProps> = ({
                             type="button"
                             onMouseDown={(e) => {
                                 e.preventDefault();
-                                handleItemClick(periodWheelRef, i);
+                                targetPeriodIdx.current = i;
+                                periodWheelRef.current?.scrollTo({ top: i * ITEM_HEIGHT, behavior: 'smooth' });
                             }}
                         >
                             {period}
                         </button>
                     ))}
-                    <div style={styles.spacer}></div>
+                    <div style={styles.spacer} />
                 </div>
             </div>
         </div>

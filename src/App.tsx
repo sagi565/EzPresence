@@ -19,10 +19,11 @@ import DashboardPage from './pages/Dashboard/DashboardPage';
 import EditBrandPage from './pages/EditBrand/EditBrandPage';
 import { AppStyles } from './theme/AppStyles';
 import CookieBanner from './components/CookieBanner/CookieBanner';
+import { ToastProvider } from './context/ToastContext';
 
 function App() {
   return (
-    <>
+    <ToastProvider>
       <AppStyles />
       <BrowserRouter>
         <CookieBanner />
@@ -120,7 +121,7 @@ function App() {
           <Route path="*" element={<Navigate to="/scheduler" replace />} />
         </Routes>
       </BrowserRouter>
-    </>
+    </ToastProvider>
   );
 }
 

@@ -182,7 +182,7 @@ export const NavBtn = styled.a<{ $active?: boolean }>`
 
   /* ── PC view only styles ── */
   @media (min-width: 1051px) {
-    padding: 6px 20px;
+    padding: 13px 20px;
     gap: 12px;
     background: ${props => props.$active ? props.theme.gradients.momentum : 'transparent'};
     color: ${props => props.$active ? '#fff' : props.theme.colors.muted};

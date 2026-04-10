@@ -109,7 +109,6 @@
           "Brands"
         ],
         "summary": "Updates the existing active brand.",
-        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>Name</b> (string)</li>\r\n  <li>\r\n    <b>LogoObject</b> (byte[] – base64)</li>\r\n  <li>\r\n    <b>Slogan</b> (string)</li>\r\n  <li>\r\n    <b>Category</b> (string)</li>\r\n  <li>\r\n    <b>Subcategory</b> (string)</li>\r\n</ul>",
         "requestBody": {
           "content": {
             "application/json": {
@@ -200,17 +199,20 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "string"
+                  "type": "string",
+                  "format": "uuid"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "string"
+                  "type": "string",
+                  "format": "uuid"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "string"
+                  "type": "string",
+                  "format": "uuid"
                 }
               }
             }
@@ -393,7 +395,6 @@
           "ContentLists"
         ],
         "summary": "Updates an existing media content list’s metadata by public ID.",
-        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>ListName</b> (string)</li>\r\n  <li>\r\n    <b>ListIcon</b> (string)</li>\r\n</ul>",
         "parameters": [
           {
             "name": "id",
@@ -625,7 +626,33 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaContentDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaContentDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaContentDto"
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -775,7 +802,45 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/PlatformAccountDto"
+                    }
+                  },
+                  "description": "A list of dictionaries where the key is the string representation of Platform (e.g., \"TIKTOK\")."
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/PlatformAccountDto"
+                    }
+                  },
+                  "description": "A list of dictionaries where the key is the string representation of Platform (e.g., \"TIKTOK\")."
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/PlatformAccountDto"
+                    }
+                  },
+                  "description": "A list of dictionaries where the key is the string representation of Platform (e.g., \"TIKTOK\")."
+                }
+              }
+            }
           }
         }
       }
@@ -805,7 +870,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -1006,7 +1088,6 @@
           "Schedules"
         ],
         "summary": "Partially updates an existing schedule using a set of updated properties.",
-        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>ScheduleName</b> (string) – Logical name of the schedule</li>\r\n  <li>\r\n    <b>UploadType</b> (string) – Upload type (e.g. \"Post\", \"Story\")</li>\r\n  <li>\r\n    <b>Policy</b> (SchedulePolicyDto) – Nested policy details (Rrule, EndTime)</li>\r\n  <li>\r\n    <b>PlannedAt</b> (datetime, optional) – Planned date/time for the schedule (Local time)</li>\r\n  <li>\r\n    <b>Targets</b> (string[]) – Target platforms (e.g. INSTAGRAM, YOUTUBE, TIKTOK)</li>\r\n  <li>\r\n    <b>Contents</b> (uuid[]) – Media content public IDs for this schedule</li>\r\n  <li>\r\n    <b>IsDraft</b> (boolean) – If true, sets schedule status to \"Draft\", else \"Pending\"</li>\r\n</ul>",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1232,11 +1313,41 @@
       }
     },
     "/api/studio/vision/plans": {
+      "put": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Dynamically updates a vision plan.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionPlanUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionPlanUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionPlanUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "post": {
         "tags": [
           "Studio"
         ],
-        "summary": "Saves a vision plan into the SQL database.",
+        "summary": "Saves a vision plan into the SQL database.\r\n(Called by the Studio Core worker).",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1281,28 +1392,93 @@
             }
           }
         }
-      },
-      "put": {
+      }
+    },
+    "/api/studio/vision/creator/plan": {
+      "post": {
         "tags": [
           "Studio"
         ],
-        "summary": "Dynamically updates a vision plan.",
-        "description": "\r\n\r\n<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>PlanType</b> (string) – NARRATED or SPEECHLESS</li>\r\n  <li>\r\n    <b>ClipTitle</b> (string) – Video title</li>\r\n  <li>\r\n    <b>ClipVisualStyle</b> (string) – Visual style</li>\r\n  <li>\r\n    <b>ClipMusicInstructions</b> (string) – Music style</li>\r\n  <li>\r\n    <b>ClipVoiceInstructions</b> (string) – Voice direction</li>\r\n  <li>\r\n    <b>ClipVoiceGender</b> (string) – Voice gender</li>\r\n  <li>\r\n    <b>Category</b> (string) – Video category</li>\r\n  <li>\r\n    <b>IncludeAudioInVideoGeneration</b> (bool) – Whether to include audio during generation</li>\r\n  <li>\r\n    <b>PlanningDuration</b> (number) - AI planning duration in seconds</li>\r\n  <li>\r\n    <b>Scenes</b> (object) – Video scene collection</li>\r\n</ul>\r\n\r\n\r\n<small>Note: <b>ClipScript</b>, <b>ClipDuration</b>, and <b>MediaContentUuid</b> cannot be updated manually. They are modified automatically.</small>",
+        "summary": "CREATOR ENDPOINT - Generates a structured vision plan via Vision Creator.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/VisionPlanUpdateDto"
+                "$ref": "#/components/schemas/VisionPlanRequestDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/VisionPlanUpdateDto"
+                "$ref": "#/components/schemas/VisionPlanRequestDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/VisionPlanUpdateDto"
+                "$ref": "#/components/schemas/VisionPlanRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/studio/vision/creator/update-plan": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "CREATOR ENDPOINT - Updates an existing Vision plan using an LLM based on a prompt.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionPlanPromptUpdateRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionPlanPromptUpdateRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionPlanPromptUpdateRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/studio/vision/creator/execute": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "CREATOR ENDPOINT - Executes a vision plan to generate a video and uploads the result.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionExecuteRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionExecuteRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionExecuteRequestDto"
               }
             }
           }
@@ -1319,7 +1495,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "Links a media content item to a vision plan record.\r\nThis is a direct update on the specified record (to be used post-execution).",
+        "summary": "Links a media content item to a vision plan record.\r\n(Called by the Studio Core worker).",
         "parameters": [
           {
             "name": "planUuid",
@@ -1348,70 +1524,6 @@
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/studio/vision/creator/plan": {
-      "post": {
-        "tags": [
-          "Studio"
-        ],
-        "summary": "Generates a structured vision plan via AI Creator.",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VisionPlanRequestDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VisionPlanRequestDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/VisionPlanRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/studio/vision/creator/execute": {
-      "post": {
-        "tags": [
-          "Studio"
-        ],
-        "summary": "Executes a video plan and uploads the result.",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VisionExecuteRequestDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VisionExecuteRequestDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/VisionExecuteRequestDto"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1461,11 +1573,41 @@
       }
     },
     "/api/studio/weave/plans": {
+      "put": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Dynamically updates a weave plan.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeavePlanUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeavePlanUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeavePlanUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "post": {
         "tags": [
           "Studio"
         ],
-        "summary": "Saves a weave plan into the SQL database.\r\n(Called by the Studio Core worker after finding media scenes).",
+        "summary": "Saves a weave plan into the SQL database.\r\n(Called by the Studio Core worker).",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1517,7 +1659,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "Generates a structured weave plan via AI Creator.",
+        "summary": "CREATOR ENDPOINT - Generates a structured weave plan via Weave Creator.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1544,12 +1686,44 @@
         }
       }
     },
+    "/api/studio/weave/creator/update-scene": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "CREATOR ENDPOINT - Updates resources for a specific scene index in a weave plan.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeaveSceneUpdateRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeaveSceneUpdateRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeaveSceneUpdateRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/studio/weave/creator/execute": {
       "post": {
         "tags": [
           "Studio"
         ],
-        "summary": "Executes a weave video generation and uploads the result.",
+        "summary": "CREATOR ENDPOINT - Executes a Weave video generation and uploads the result.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1581,7 +1755,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "Links a media content item to a weave plan record.\r\nThis is a direct update on the specified record (to be used post-execution).",
+        "summary": "Links a media content item to a weave plan record.\r\n(Called by the Studio Core worker).",
         "parameters": [
           {
             "name": "planUuid",
@@ -1617,7 +1791,24 @@
         "summary": "Retrieves the currently authenticated user profile.",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1649,7 +1840,24 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       },
@@ -1658,7 +1866,6 @@
           "Users"
         ],
         "summary": "Updates the profile information of the currently authenticated user.",
-        "description": "<b>Allowed properties:</b>\r\n<ul>\r\n  <li>\r\n    <b>Email</b> (string)</li>\r\n  <li>\r\n    <b>FirstName</b> (string)</li>\r\n  <li>\r\n    <b>LastName</b> (string)</li>\r\n  <li>\r\n    <b>Gender</b> (string)</li>\r\n  <li>\r\n    <b>Phone</b> (string)</li>\r\n  <li>\r\n    <b>Country</b> (string)</li>\r\n  <li>\r\n    <b>PreferredLanguage</b> (string)</li>\r\n  <li>\r\n    <b>Birthdate</b> (date)</li>\r\n</ul>",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1811,8 +2018,33 @@
         "type": "object",
         "properties": {
           "updatedProperties": {
-            "type": "object",
-            "additionalProperties": { },
+            "$ref": "#/components/schemas/BrandUpdatePropsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BrandUpdatePropsDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "logoObject": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "slogan": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "subcategory": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -1841,7 +2073,7 @@
           "Error"
         ],
         "type": "string",
-        "description": "Storage lifecycle state.\r\nNumeric values are persisted in DB and MUST NOT change."
+        "description": "Storage lifecycle state."
       },
       "CreateUploadPlanRequestDto": {
         "type": "object",
@@ -1979,8 +2211,20 @@
         "type": "object",
         "properties": {
           "updatedProperties": {
-            "type": "object",
-            "additionalProperties": { },
+            "$ref": "#/components/schemas/MediaContentListUpdatePropsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaContentListUpdatePropsDto": {
+        "type": "object",
+        "properties": {
+          "listName": {
+            "type": "string",
+            "nullable": true
+          },
+          "listIcon": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -1990,6 +2234,28 @@
         "type": "object",
         "properties": {
           "contentName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlatformAccountDto": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "username": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbnailUrl": {
             "type": "string",
             "nullable": true
           }
@@ -2080,16 +2346,47 @@
       "ScheduleUpdateDto": {
         "type": "object",
         "properties": {
-          "calendarItemId": {
+          "updatedProperties": {
+            "$ref": "#/components/schemas/ScheduleUpdatePropsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScheduleUpdatePropsDto": {
+        "type": "object",
+        "properties": {
+          "scheduleName": {
             "type": "string",
             "nullable": true
           },
-          "updatedProperties": {
-            "type": "object",
-            "additionalProperties": { },
+          "uploadType": {
+            "type": "string",
             "nullable": true
           },
-          "updateOccurrenceOnly": {
+          "policy": {
+            "$ref": "#/components/schemas/SchedulePolicyDto"
+          },
+          "plannedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "contents": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          },
+          "isDraft": {
             "type": "boolean",
             "nullable": true
           }
@@ -2145,12 +2442,105 @@
         },
         "additionalProperties": false
       },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "firebaseUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthdate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "country": {
+            "type": "string",
+            "nullable": true
+          },
+          "preferredLanguage": {
+            "type": "string",
+            "nullable": true
+          },
+          "isDev": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "lockedUntil": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "UserUpdateDto": {
         "type": "object",
         "properties": {
           "updatedProperties": {
-            "type": "object",
-            "additionalProperties": { },
+            "$ref": "#/components/schemas/UserUpdatePropsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UserUpdatePropsDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthdate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "country": {
+            "type": "string",
+            "nullable": true
+          },
+          "preferredLanguage": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -2292,6 +2682,20 @@
         },
         "additionalProperties": false
       },
+      "VisionPlanPromptUpdateRequestDto": {
+        "type": "object",
+        "properties": {
+          "plan_uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "prompt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "VisionPlanRequestDto": {
         "type": "object",
         "properties": {
@@ -2328,13 +2732,53 @@
       "VisionPlanUpdateDto": {
         "type": "object",
         "properties": {
-          "planUuid": {
-            "type": "string",
-            "format": "uuid"
-          },
           "updatedProperties": {
-            "type": "object",
-            "additionalProperties": { },
+            "$ref": "#/components/schemas/VisionPlanUpdatePropsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VisionPlanUpdatePropsDto": {
+        "type": "object",
+        "properties": {
+          "planType": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipVisualStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipMusicInstructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipVoiceInstructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipVoiceGender": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "includeAudioInVideoGeneration": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "planningDuration": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "scenes": {
             "nullable": true
           }
         },
@@ -2347,7 +2791,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "mediaList": {
+          "mediaIds": {
             "type": "array",
             "items": {
               "type": "string"
@@ -2367,9 +2811,22 @@
             "type": "string",
             "nullable": true
           },
-          "fps": {
-            "type": "integer",
-            "format": "int32",
+          "captions": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WeaveMediaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -2382,15 +2839,19 @@
             "type": "string",
             "format": "uuid"
           },
-          "text": {
+          "clipScript": {
             "type": "string",
             "nullable": true
           },
-          "subject": {
+          "clipSubject": {
             "type": "string",
             "nullable": true
           },
-          "results": {
+          "scenes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeaveSceneDto"
+            },
             "nullable": true
           }
         },
@@ -2403,15 +2864,19 @@
             "type": "string",
             "format": "uuid"
           },
-          "text": {
+          "clipScript": {
             "type": "string",
             "nullable": true
           },
-          "subject": {
+          "clipSubject": {
             "type": "string",
             "nullable": true
           },
-          "results": {
+          "scenes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeaveSceneDto"
+            },
             "nullable": true
           },
           "mediaContentUuid": {
@@ -2429,11 +2894,85 @@
       "WeavePlanRequestDto": {
         "type": "object",
         "properties": {
-          "text": {
+          "clipScript": {
             "type": "string",
             "nullable": true
           },
-          "subject": {
+          "clipSubject": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WeavePlanUpdateDto": {
+        "type": "object",
+        "properties": {
+          "updatedProperties": {
+            "$ref": "#/components/schemas/WeavePlanUpdatePropsDto"
+          }
+        },
+        "additionalProperties": { }
+      },
+      "WeavePlanUpdatePropsDto": {
+        "type": "object",
+        "properties": {
+          "clipSubject": {
+            "type": "string",
+            "nullable": true
+          },
+          "scenes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeaveSceneDto"
+            },
+            "nullable": true
+          },
+          "media": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "format": "uuid",
+              "nullable": true
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WeaveSceneDto": {
+        "type": "object",
+        "properties": {
+          "scene_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scene_script_segment": {
+            "type": "string",
+            "nullable": true
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeaveMediaDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WeaveSceneUpdateRequestDto": {
+        "type": "object",
+        "properties": {
+          "plan_uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scene_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "prompt": {
             "type": "string",
             "nullable": true
           }

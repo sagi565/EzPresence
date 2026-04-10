@@ -42,6 +42,7 @@ export interface ApiScheduleDto {
   calendarItemId?: string;
   scheduleId?: string;
   scheduleName?: string | null;
+  calendarItemName?: string | null;
   uploadType?: string | null;
   policy?: SchedulePolicyDto | null;
   plannedAt?: string | null;
@@ -122,7 +123,7 @@ export const convertApiScheduleToPost = (apiSchedule: ApiScheduleDto, index: num
     status,
     media: convertPostTypeToMediaType(uploadType),
     type: isStory ? 'Story' : 'Post',
-    title: apiSchedule.scheduleName || 'Untitled Post',
+    title: apiSchedule.calendarItemName || apiSchedule.scheduleName || 'Untitled Post',
     contentUuids: apiSchedule.contents ?? undefined,
     isRecurring: !!rruleText,
     rruleText,
@@ -155,8 +156,6 @@ export const convertPostToApiSchedule = (post: {
   let uploadType = 'Post';
   if (post.type === 'Story') {
     uploadType = 'Story';
-  } else if (post.media === 'video') {
-    uploadType = 'Video';
   }
 
   const policy: SchedulePolicyDto | null = post.rruleText

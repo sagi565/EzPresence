@@ -173,11 +173,7 @@ export const useSchedules = (brandId: string) => {
       }
 
       if (updates.media || updates.type) {
-        if (updates.type === 'Story') {
-          updatedProperties.UploadType = 'Story';
-        } else {
-          updatedProperties.UploadType = updates.media === 'video' ? 'Video' : 'Post';
-        }
+        updatedProperties.UploadType = updates.type === 'Story' ? 'Story' : 'Post';
       }
 
       if (updates.title) {

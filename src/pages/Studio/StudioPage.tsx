@@ -5,7 +5,7 @@ import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
 import ProducerPage from './ProducerPage';
 import CreatorsPage from './CreatorsPage';
 import WizardPage from './WizardPage';
-import VisionPage from './VisionPage';
+import VisionPage from './VisionPage/VisionPage';
 import { PageContainer } from './styles';
 
 const StudioPage: React.FC = () => {
