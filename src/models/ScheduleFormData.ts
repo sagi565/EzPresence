@@ -50,7 +50,7 @@ export interface YouTubeConfig extends PlatformConfig {
     title: string;
     description: string;
     privacyStatus: 'public' | 'private' | 'unlisted';
-    category: string;
+    categoryId: string;
     tags: string[];
     madeForKids: boolean;
     syntheticMedia: boolean;
@@ -121,7 +121,7 @@ export const DEFAULT_YOUTUBE_CONFIG: YouTubeConfig = {
     title: '',
     description: '',
     privacyStatus: 'public',
-    category: '',
+    categoryId: '',
     tags: [],
     madeForKids: false,
     syntheticMedia: false,
@@ -189,13 +189,22 @@ export const getDefaultStoryFormData = (): ScheduleFormData => {
 
 /**
  * Format Date to time string "HH:MM AM/PM"
+ * Uses Intl.DateTimeFormat with the browser's IANA timezone so Chrome's
+ * bundled ICU database applies the correct DST offset, even when the OS
+ * timezone rules are outdated or DST auto-adjust is disabled.
  */
 export const formatTimeString = (date: Date): string => {
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-    const period = hours >= 12 ? 'PM' : 'AM';
-    return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const parts = new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone,
+    }).formatToParts(date);
+    const hour = parts.find(p => p.type === 'hour')?.value ?? '12';
+    const minute = parts.find(p => p.type === 'minute')?.value ?? '00';
+    const period = (parts.find(p => p.type === 'dayPeriod')?.value ?? 'AM').toUpperCase();
+    return `${hour}:${minute} ${period}`;
 };
 
 /**

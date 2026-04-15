@@ -11,7 +11,7 @@ export const StyledPromptBox = styled.div<{$drag:boolean;$focus:boolean}>`
   box-shadow:${p=>p.$drag?'0 0 0 4px rgba(139,92,246,.12),0 8px 32px rgba(139,92,246,.14)':p.$focus?'0 0 0 3px rgba(139,92,246,.08),0 6px 24px rgba(139,92,246,.10)':'0 0 0 0px rgba(139,92,246,0)'};
   &:hover{box-shadow:0 0 0 3px rgba(139,92,246,.06),0 4px 16px rgba(139,92,246,.08);}
 `;
-export const DragOverlay = styled.div<{$v:boolean}>`position:absolute;inset:0;z-index:10;border-radius:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(139,92,246,.05);backdrop-filter:blur(8px);border:1px solid rgba(139,92,246,.2);opacity:${p=>p.$v?1:0};pointer-events:none;transition:opacity .2s;`;
+export const DragOverlay = styled.div<{$v:boolean}>`position:absolute;inset:0;z-index:10;border-radius:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(139,92,246,.05);backdrop-filter:blur(1px);border:1px solid rgba(139,92,246,.2);opacity:${p=>p.$v?1:0};pointer-events:none;transition:opacity .2s;`;
 export const TextareaWrap = styled.div<{$minimalist?:boolean}>`padding:${p=>p.$minimalist?'10px 16px 0':'18px 18px 0'};position:relative;`;
 export const Placeholder = styled.div<{$v:boolean}>`position:absolute;top:18px;left:18px;right:18px;pointer-events:none;font-size:15px;line-height:1.6;color:${p=>p.theme.colors.muted};opacity:${p=>p.$v?1:0};transition:opacity .15s;`;
 export const TwText = styled.span`color:${p=>p.theme.colors.muted};`;
@@ -32,6 +32,16 @@ export const RippleEl  = styled.span`position:absolute;width:10px;height:10px;bo
 
 /* ── Duration dropdown ── */
 export const DurationWrap = styled.div`position:relative;display:inline-flex;`;
+export const DurationBadge = styled.span`
+  position:absolute;
+  bottom:3px;left:50%;transform:translateX(-50%);
+  font-size:8px;font-weight:800;line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:.02em;
+  color:currentColor;
+  pointer-events:none;
+  opacity:.9;
+  min-width:14px;text-align:center;
+`;
 export const DurationDropdown = styled.div<{$open:boolean}>`
   display:${p=>p.$open?'flex':'none'};
   flex-direction:column;gap:2px;
@@ -58,18 +68,35 @@ export const DurOptRange = styled.span`
   font-variant-numeric:tabular-nums;
 `;
 
+export const ToolbarDivider = styled.div`
+  width:1px;height:18px;
+  background:rgba(139,92,246,.12);
+  flex-shrink:0;align-self:center;
+`;
+
+export const AutoIconBtn = styled.button<{$active:boolean}>`
+  display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  border:1.5px solid ${p=>p.$active?'rgba(251,191,36,.5)':'rgba(139,92,246,.1)'};
+  background:${p=>p.$active?'rgba(251,191,36,.1)':'transparent'};
+  color:${p=>p.$active?'#fbbf24':p.theme.colors.muted};
+  cursor:pointer;transition:all .18s;
+  &:hover{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.4);color:#fbbf24;}
+  @media(max-width:480px){width:29px;height:29px;border-radius:8px;}
+`;
+
 /* ── Auto toggle button ── */
 export const AutoBtn = styled.button<{$active:boolean;$loading:boolean}>`
-  display:inline-flex;align-items:center;gap:5px;
-  height:34px;padding:0 11px 0 9px;border-radius:9px;flex-shrink:0;
+  display:inline-flex;align-items:center;gap:4px;
+  height:26px;padding:0 8px 0 7px;border-radius:7px;flex-shrink:0;
   border:1.5px solid ${p=>p.$active?'rgba(251,191,36,.5)':'rgba(251,191,36,.18)'};
   background:${p=>p.$active?'rgba(251,191,36,.1)':'transparent'};
   color:${p=>p.$active?'#fbbf24':p.theme.colors.muted};
   cursor:${p=>p.$loading?'default':'pointer'};
-  font-family:inherit;font-size:12.5px;font-weight:600;
+  font-family:inherit;font-size:11px;font-weight:600;
   transition:all .18s;
   &:hover{background:rgba(251,191,36,.05);border-color:rgba(251,191,36,.28);color:${p=>p.theme.colors.text};}
-  @media(max-width:480px){height:29px;padding:0 8px 0 7px;border-radius:8px;}
+  @media(max-width:480px){height:24px;padding:0 6px 0 5px;border-radius:6px;}
 `;
 
 export const TooltipWrap = styled.div`

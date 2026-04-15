@@ -37,6 +37,7 @@ import ChipArrow from '../ChipArrow/ChipArrow';
 import SectionContainer from '../SectionContainer/SectionContainer';
 import RecurringActionDialog from '../RecurringActionDialog/RecurringActionDialog';
 import ContentDetailModal from '@/components/Content/ContentDetailModal/ContentDetailModal';
+import { YOUTUBE_CATEGORIES } from '@/constants/youtubeCategories';
 
 interface NewPostModalProps {
     isOpen: boolean;
@@ -89,8 +90,8 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     const isPublished = status === 'success';
     const isReadOnly = (isPast || isPublished) && !!formData.calendarItemId;
     // A schedule is "part of a policy" if it's an existing item (calendarItemId) that belongs
-    // to a recurring series — identified by an explicit rrule OR by having a scheduleUuid.
-    const isPartOfPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.scheduleUuid);
+    // to a recurring series — identified by a non-none repeat frequency or an explicit rrule.
+    const isPartOfPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.repeat.rruleText);
 
     useEffect(() => {
         if (lastPickedContent) {
@@ -103,6 +104,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [showRepeatSelector, setShowRepeatSelector] = useState(false);
     const [showTimezoneSelector, setShowTimezoneSelector] = useState(false);
+    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
     const [expandedPlatform, setExpandedPlatform] = useState<SocialPlatform | null>(null);
     const [isDragOver, setIsDragOver] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -114,6 +116,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     const [isShattering, setIsShattering] = useState(false);
     const [isDraftHovered, setIsDraftHovered] = useState(false);
     const [selectedDetailContent, setSelectedDetailContent] = useState<ContentItem | null>(null);
+    const [ytTagInput, setYtTagInput] = useState('');
 
     // ✅ THE FIX: counter in the PARENT so dragLeave from child crossings is absorbed here
     const dragCounter = useRef(0);
@@ -164,9 +167,13 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     }, []);
 
     const isFormValid = useMemo(() => {
-        if (!formData.title?.trim()) return false;
         const activePlatforms = getEnabledPlatforms(formData);
         if (activePlatforms.length === 0) return false;
+        
+        if (activePlatforms.includes('youtube') && !formData.platforms.youtube?.title?.trim()) return false;
+        if (activePlatforms.includes('instagram') && !formData.platforms.instagram?.caption?.trim()) return false;
+        if (activePlatforms.includes('tiktok') && !formData.platforms.tiktok?.caption?.trim()) return false;
+
         const isPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.scheduleUuid);
         if (!formData.contentId && !isPolicy) return false;
         try {
@@ -271,11 +278,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            const isInsidePicker = target.closest('.date-picker, .time-picker, .timezone-selector, .repeat-selector');
+            const isInsidePicker = target.closest('.date-picker, .time-picker, .timezone-selector, .repeat-selector, .npm-category-dropdown');
             const isInsideChip = target.closest('.chip-button') || target.closest('[role="button"]') || target.closest('button');
             if (!isInsidePicker && !isInsideChip) closeAllPickers();
         };
-        if (isOpen && (showDatePicker || showTimePicker || showTimezoneSelector || showRepeatSelector)) {
+        if (isOpen && (showDatePicker || showTimePicker || showTimezoneSelector || showRepeatSelector || showCategoryDropdown)) {
             const timeoutId = setTimeout(() => {
                 document.addEventListener('mousedown', handleClickOutside);
             }, 100);
@@ -284,13 +291,14 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 document.removeEventListener('mousedown', handleClickOutside);
             };
         }
-    }, [isOpen, showDatePicker, showTimePicker, showTimezoneSelector, showRepeatSelector]);
+    }, [isOpen, showDatePicker, showTimePicker, showTimezoneSelector, showRepeatSelector, showCategoryDropdown]);
 
     const closeAllPickers = () => {
         setShowDatePicker(false);
         setShowTimePicker(false);
         setShowTimezoneSelector(false);
         setShowRepeatSelector(false);
+        setShowCategoryDropdown(false);
     };
 
     const handleDateChange = (date: Date) => {
@@ -317,10 +325,10 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             contentThumbnail: selectedContent.thumbnail || '',
             platforms: {
                 ...prev.platforms,
-                instagram: { ...(prev.platforms.instagram || DEFAULT_INSTAGRAM_CONFIG), caption: prev.platforms.instagram?.caption || selectedContent.title || '' },
-                facebook: { ...(prev.platforms.facebook || DEFAULT_FACEBOOK_CONFIG), postText: prev.platforms.facebook?.postText || selectedContent.title || '' },
-                youtube: { ...(prev.platforms.youtube || DEFAULT_YOUTUBE_CONFIG), title: prev.platforms.youtube?.title || selectedContent.title || '' },
-                tiktok: { ...(prev.platforms.tiktok || DEFAULT_TIKTOK_CONFIG), caption: prev.platforms.tiktok?.caption || selectedContent.title || '' }
+                instagram: { ...(prev.platforms.instagram || DEFAULT_INSTAGRAM_CONFIG), caption: prev.platforms.instagram?.caption || '' },
+                facebook: { ...(prev.platforms.facebook || DEFAULT_FACEBOOK_CONFIG), postText: prev.platforms.facebook?.postText || '' },
+                youtube: { ...(prev.platforms.youtube || DEFAULT_YOUTUBE_CONFIG), title: prev.platforms.youtube?.title || '' },
+                tiktok: { ...(prev.platforms.tiktok || DEFAULT_TIKTOK_CONFIG), caption: prev.platforms.tiktok?.caption || '' }
             }
         }));
         if (validationErrors.content) setValidationErrors(prev => ({ ...prev, content: undefined }));
@@ -389,7 +397,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             const [show, setShow] = React.useState(false);
             return (
                 <span
-                    style={{ width: 15, height: 15, borderRadius: '50%', background: theme.mode === 'dark' ? 'rgba(255,255,255,.1)' : 'rgba(155,93,229,.1)', fontSize: '9px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: theme.mode === 'dark' ? '#fff' : '#7c3aed', cursor: 'help', fontStyle: 'italic', flexShrink: 0, position: 'relative', marginLeft: '4px' }}
+                    style={{ width: 15, height: 15, borderRadius: '50%', background: theme.mode === 'dark' ? 'rgba(255,255,255,.1)' : 'rgba(155,93,229,.1)', fontSize: '9px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: theme.mode === 'dark' ? '#fff' : '#7c3aed', cursor: 'help', fontStyle: 'italic', flexShrink: 0, position: 'relative', marginLeft: '4px', zIndex: 2000 }}
                     onMouseEnter={() => setShow(true)}
                     onMouseLeave={() => setShow(false)}
                 >
@@ -520,7 +528,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                         {platform === 'youtube' && (
                             <>
                                 <div style={styles.field}>
-                                    <div style={styles.fieldLabel}>Title</div>
+                                    <div style={styles.fieldLabel}>Title <span style={{ color: '#EF4444' }}>*</span></div>
                                     <input style={styles.fieldInput} value={ytConfig.title || ''} onChange={e => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, title: e.target.value } } }))} placeholder="Video Title" />
                                 </div>
                                 <div style={styles.field}>
@@ -539,23 +547,87 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                                         onChange={val => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, privacyStatus: val as any } } }))}
                                     />
                                 </div>
-                                <div style={styles.field}>
+                                <div className="npm-category-dropdown" style={styles.field}>
                                     <div style={{ ...styles.fieldLabel, display: 'flex', alignItems: 'center', gap: 4 }}>Category <span style={{ fontWeight: 400, fontSize: '10px', color: '#999' }}>(optional)</span><FieldTooltip text={"Category influences where your video appears on YouTube.\nIt helps YouTube recommend your video to viewers interested in this type of content."} /></div>
-                                    <select style={styles.fieldInput} value={ytConfig.category || ''} onChange={e => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, category: e.target.value } } }))}>
-                                        <option value="" disabled>Select Category</option>
-                                        <option value="22">People &amp; Blogs</option>
-                                        <option value="23">Comedy</option>
-                                        <option value="24">Entertainment</option>
-                                        <option value="28">Science &amp; Technology</option>
-                                        <option value="27">Education</option>
-                                    </select>
+                                    <div 
+                                        className="npm-category-input"
+                                        style={{ ...styles.fieldInput, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', position: 'relative' }}
+                                        onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                                    >
+                                        <span style={{ color: ytConfig.categoryId ? 'var(--color-text)' : 'rgba(var(--color-text-rgb, 255, 255, 255), 0.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {YOUTUBE_CATEGORIES.find(c => c.id === ytConfig.categoryId)?.title || 'Select Category'}
+                                        </span>
+                                        <span style={{ fontSize: '10px', color: 'var(--color-muted)', transform: showCategoryDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+                                        {showCategoryDropdown && (
+                                            <div style={{
+                                                position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0,
+                                                background: 'var(--color-surface)', borderRadius: '10px',
+                                                boxShadow: '0 12px 40px rgba(0, 0, 0, .14)', border: '1px solid rgba(var(--color-text-rgb, 255, 255, 255), .1)',
+                                                zIndex: 1000, maxHeight: '220px', overflowY: 'auto', padding: '6px'
+                                            }} onClick={e => e.stopPropagation()}>
+                                                {YOUTUBE_CATEGORIES.map(category => (
+                                                    <div
+                                                        key={category.id}
+                                                        className="npm-category-item"
+                                                        style={{
+                                                            padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13.5px',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                            background: ytConfig.categoryId === category.id ? 'rgba(var(--color-primary-rgb, 155, 93, 229), .1)' : 'transparent',
+                                                            color: 'var(--color-text)', transition: 'all 0.15s ease'
+                                                        }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, categoryId: category.id } } }));
+                                                            setShowCategoryDropdown(false);
+                                                        }}
+                                                    >
+                                                        {category.title}
+                                                        {ytConfig.categoryId === category.id && <span style={{ color: 'var(--color-primary)' }}>✓</span>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div style={styles.field}>
                                     <div style={styles.fieldLabel}>Tags <span style={{ fontWeight: 400, fontSize: '10px', color: '#999' }}>(optional)</span></div>
-                                    <input style={styles.fieldInput} value={ytConfig.tags.join(', ')} onChange={e => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) } } }))} placeholder="Add tags (comma separated)" />
+                                    <div style={{ ...styles.fieldInput, display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', minHeight: '42px', height: 'auto', cursor: 'text', padding: '6px 10px' }}
+                                        onClick={e => (e.currentTarget.querySelector('input') as HTMLInputElement)?.focus()}>
+                                        {ytConfig.tags.map((tag, i) => (
+                                            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(var(--color-text-rgb,255,255,255),0.08)', border: '1px solid rgba(var(--color-text-rgb,255,255,255),0.15)', borderRadius: '6px', padding: '2px 8px', fontSize: '12px', color: 'var(--color-text)', whiteSpace: 'nowrap' }}>
+                                                {tag}
+                                                <button onClick={() => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, tags: ytConfig.tags.filter((_, j) => j !== i) } } }))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', padding: '0', lineHeight: 1, fontSize: '13px', display: 'flex', alignItems: 'center' }}>×</button>
+                                            </span>
+                                        ))}
+                                        <input
+                                            value={ytTagInput}
+                                            onChange={e => setYtTagInput(e.target.value)}
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter' || e.key === ',') {
+                                                    e.preventDefault();
+                                                    const val = ytTagInput.trim().replace(/,$/, '');
+                                                    if (val) {
+                                                        setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, tags: [...ytConfig.tags, val] } } }));
+                                                        setYtTagInput('');
+                                                    }
+                                                } else if (e.key === 'Backspace' && !ytTagInput && ytConfig.tags.length > 0) {
+                                                    setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, tags: ytConfig.tags.slice(0, -1) } } }));
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                const val = ytTagInput.trim();
+                                                if (val) {
+                                                    setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, tags: [...ytConfig.tags, val] } } }));
+                                                    setYtTagInput('');
+                                                }
+                                            }}
+                                            placeholder={ytConfig.tags.length === 0 ? 'Add tags...' : ''}
+                                            style={{ border: 'none', outline: 'none', background: 'transparent', color: 'var(--color-text)', fontSize: '13.5px', fontFamily: 'inherit', flex: 1, minWidth: '80px', padding: '2px 0' }}
+                                        />
+                                    </div>
                                 </div>
-                                <ToggleRow label="Made for Kids" tooltip={"Is this video meant for kids?\nChoose \"Yes\" only if children under 13 are the main audience.\nMarking a video as \"Made for kids\" disables comments, personalized ads, and some features."} checked={ytConfig.madeForKids} onChange={val => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, madeForKids: val } } }))} />
-                                <ToggleRow label="Contains Synthetic Media" tooltip={"This tells YouTube whether your video includes realistic AI-generated or digitally altered scenes.\nExamples include deepfakes or altered real events."} checked={ytConfig.syntheticMedia} onChange={val => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, syntheticMedia: val } } }))} />
+                                    <ToggleRow label="Made for Kids" tooltip={"Is this video meant for kids?\nChoose \"Yes\" only if children under 13 are the main audience.\nMarking a video as \"Made for kids\" disables comments, personalized ads, and some features."} checked={ytConfig.madeForKids} onChange={val => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, madeForKids: val } } }))} />
+                                    <ToggleRow label="Contains Synthetic Media" tooltip={"This tells YouTube whether your video includes realistic AI-generated or digitally altered scenes.\nExamples include deepfakes or altered real events."} checked={ytConfig.syntheticMedia} onChange={val => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, youtube: { ...ytConfig, syntheticMedia: val } } }))} />
                             </>
                         )}
                         {platform === 'tiktok' && (
@@ -602,7 +674,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                     updates.platforms = activePlatforms;
                 }
                 if (mediaType !== (initialData as any)?.media) updates.media = mediaType;
-                const newTitle = formData.title || formData.contentTitle || 'Untitled Draft';
+                const newTitle = formData.title || 'New Post';
                 if (newTitle !== initialData?.title) updates.title = newTitle;
                 const newRruleText = formData.repeat.rruleText || null;
                 const origRruleText = initialData?.repeat?.rruleText || null;
@@ -612,7 +684,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 if (endDateStr) updates.endDate = endDateStr;
                 await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: getEnabledPlatforms(formData), media: mediaType, title: formData.title || formData.contentTitle || 'Untitled Draft', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft' });
+                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: getEnabledPlatforms(formData), media: mediaType, title: formData.title || 'New Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft' });
             }
             if (onSaveDraft) onSaveDraft(formData);
             onClose();
@@ -664,10 +736,10 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
     const confirmDelete = async () => {
         setShowDeleteConfirm(false);
-        await executeDelete(false);
+        await executeDelete();
     };
 
-    const executeDelete = async (occurrenceOnly: boolean) => {
+    const executeDelete = async (occurrenceOnly?: boolean) => {
         try {
             setIsSubmitting(true);
             const { hours, minutes } = parseTimeString(formData.time);
@@ -677,7 +749,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 setIsShattering(true);
                 await new Promise(resolve => setTimeout(resolve, 600));
             }
-            await deleteSchedule(formData.calendarItemId || formData.scheduleUuid || '', plannedDate, occurrenceOnly);
+            await deleteSchedule(formData.calendarItemId || formData.scheduleUuid || '', plannedDate, occurrenceOnly, isPast);
             setIsShattering(false);
             onClose();
             if (onScheduleProp) onScheduleProp(formData);
@@ -697,9 +769,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
     const handleSchedule = async () => {
         const errors: { title?: string; platform?: string; date?: string; content?: string } = {};
-        if (!formData.title.trim()) errors.title = 'Title is required';
         const activePlatforms = getEnabledPlatforms(formData);
         if (activePlatforms.length === 0) errors.platform = 'Please select at least one platform';
+        else if (activePlatforms.includes('youtube') && !formData.platforms.youtube?.title?.trim()) errors.platform = 'YouTube Title is required';
+        else if (activePlatforms.includes('instagram') && !formData.platforms.instagram?.caption?.trim()) errors.platform = 'Instagram Caption is required';
+        else if (activePlatforms.includes('tiktok') && !formData.platforms.tiktok?.caption?.trim()) errors.platform = 'TikTok Caption is required';
         const now = new Date();
         const { hours, minutes } = parseTimeString(formData.time);
         const scheduledDate = new Date(formData.date);
@@ -744,7 +818,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
                 if (mediaType !== (initialData as any)?.media) updates.media = mediaType;
 
-                const newTitle = formData.title || formData.contentTitle || 'Untitled Post';
+                const newTitle = formData.title || 'New Post';
                 if (newTitle !== initialData?.title) updates.title = newTitle;
 
                 const newRruleText = formData.repeat.rruleText || null;
@@ -757,7 +831,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
                 await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: activePlatforms, media: mediaType, title: formData.title || formData.contentTitle || 'Untitled Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending' });
+                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: activePlatforms, media: mediaType, title: formData.title || 'New Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending' });
             }
             if (onScheduleProp) onScheduleProp(formData);
             if (!isReadOnly) onClose();

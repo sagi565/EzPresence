@@ -79,7 +79,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onContextMenu={(e) => {
+      onContextMenu={(e) => e.preventDefault()}
+      onClick={(e) => {
         if (!isPast) {
           onContextMenu?.(e, date);
         }

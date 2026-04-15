@@ -74,7 +74,7 @@ const ToggleRow: React.FC<ToggleRowProps> = ({ label, checked, onChange, style, 
                 <div
                     style={{
                         ...styles.toggleThumb,
-                        transform: checked ? 'translateX(16px)' : 'translateX(2px)'
+                        transform: checked ? 'translateX(21px)' : 'translateX(0px)'
                     }}
                 />
             </div>

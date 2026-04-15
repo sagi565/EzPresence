@@ -12,14 +12,6 @@ const POLICY_PALETTE = [
     'rgba(162, 210, 255, 0.30)', // sky blue
     'rgba(167, 243, 208, 0.35)', // mint green
     'rgba(253, 224, 128, 0.30)', // warm yellow
-    'rgba(216, 180, 254, 0.30)', // lavender
-    'rgba(252, 196, 171, 0.30)', // peach
-    'rgba(147, 230, 233, 0.30)', // teal
-    'rgba(255, 171, 196, 0.30)', // pink
-    'rgba(185, 219, 255, 0.30)', // powder blue
-    'rgba(196, 251, 188, 0.30)', // light lime
-    'rgba(253, 210, 163, 0.30)', // apricot
-    'rgba(221, 182, 255, 0.30)', // soft purple
 ];
 
 /** Matching slightly-darker border-left accent colors (same hue, a bit more saturated) */
@@ -28,14 +20,6 @@ const POLICY_ACCENT_PALETTE = [
     'rgba(59, 130, 246, 0.60)',  // blue
     'rgba(52, 211, 153, 0.60)',  // green
     'rgba(251, 191, 36, 0.60)',  // yellow
-    'rgba(167, 139, 250, 0.60)', // violet
-    'rgba(249, 115, 22, 0.60)',  // orange
-    'rgba(20, 184, 166, 0.60)',  // teal
-    'rgba(236, 72, 153, 0.60)',  // pink
-    'rgba(99, 102, 241, 0.60)',  // indigo
-    'rgba(101, 163, 13, 0.60)',  // lime
-    'rgba(234, 119, 41, 0.60)',  // amber
-    'rgba(139, 92, 246, 0.60)',  // purple
 ];
 
 /**

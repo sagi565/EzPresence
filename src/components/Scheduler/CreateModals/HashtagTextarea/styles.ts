@@ -48,7 +48,6 @@ export const styles: Record<string, CSSProperties> = {
         minHeight: '60px',
         lineHeight: 1.5,
         position: 'relative' as const,
-        zIndex: 1,
     },
 
     charCount: {

@@ -52,7 +52,7 @@ const LoginPage: React.FC = () => {
   }, [location, nav]);
 
   if (user) {
-    return <Navigate to="/scheduler" replace />;
+    return <Navigate to="/" replace />;
   }
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -61,7 +61,7 @@ const LoginPage: React.FC = () => {
     setErr(null);
     try {
       await signInEmail(email, password);
-      nav('/scheduler');
+      nav('/');
     } catch (e: any) {
       setErr(mapLoginError(e));
     } finally {

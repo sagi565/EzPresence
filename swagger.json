@@ -1490,6 +1490,55 @@
         }
       }
     },
+    "/api/studio/audio-url": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Retrieves a public audio URL for a social media link.\r\n(Awaits Studio API processing).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalResourceDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalResourceDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalResourceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalResourceDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalResourceDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalResourceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/studio/vision/plans/{planUuid}/media/{contentUuid}": {
       "put": {
         "tags": [
@@ -1531,12 +1580,12 @@
         }
       }
     },
-    "/api/studio/weave/plans/{id}": {
+    "/api/studio/atlas/plans/{id}": {
       "get": {
         "tags": [
           "Studio"
         ],
-        "summary": "Retrieves a weave plan by its public UUID.",
+        "summary": "Retrieves a atlas plan by its public UUID.",
         "parameters": [
           {
             "name": "id",
@@ -1554,17 +1603,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/WeavePlanDto"
+                  "$ref": "#/components/schemas/AtlasPlanDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WeavePlanDto"
+                  "$ref": "#/components/schemas/AtlasPlanDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WeavePlanDto"
+                  "$ref": "#/components/schemas/AtlasPlanDto"
                 }
               }
             }
@@ -1572,27 +1621,27 @@
         }
       }
     },
-    "/api/studio/weave/plans": {
+    "/api/studio/atlas/plans": {
       "put": {
         "tags": [
           "Studio"
         ],
-        "summary": "Dynamically updates a weave plan.",
+        "summary": "Dynamically updates a atlas plan.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WeavePlanUpdateDto"
+                "$ref": "#/components/schemas/AtlasPlanUpdateDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/WeavePlanUpdateDto"
+                "$ref": "#/components/schemas/AtlasPlanUpdateDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/WeavePlanUpdateDto"
+                "$ref": "#/components/schemas/AtlasPlanUpdateDto"
               }
             }
           }
@@ -1607,22 +1656,22 @@
         "tags": [
           "Studio"
         ],
-        "summary": "Saves a weave plan into the SQL database.\r\n(Called by the Studio Core worker).",
+        "summary": "Saves a atlas plan into the SQL database.\r\n(Called by the Studio Core worker).",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WeavePlanCreateDto"
+                "$ref": "#/components/schemas/AtlasPlanCreateDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/WeavePlanCreateDto"
+                "$ref": "#/components/schemas/AtlasPlanCreateDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/WeavePlanCreateDto"
+                "$ref": "#/components/schemas/AtlasPlanCreateDto"
               }
             }
           }
@@ -1654,27 +1703,27 @@
         }
       }
     },
-    "/api/studio/weave/creator/plan": {
+    "/api/studio/atlas/creator/plan": {
       "post": {
         "tags": [
           "Studio"
         ],
-        "summary": "CREATOR ENDPOINT - Generates a structured weave plan via Weave Creator.",
+        "summary": "CREATOR ENDPOINT - Generates a structured atlas plan via Atlas Creator.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WeavePlanRequestDto"
+                "$ref": "#/components/schemas/AtlasPlanRequestDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/WeavePlanRequestDto"
+                "$ref": "#/components/schemas/AtlasPlanRequestDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/WeavePlanRequestDto"
+                "$ref": "#/components/schemas/AtlasPlanRequestDto"
               }
             }
           }
@@ -1686,27 +1735,27 @@
         }
       }
     },
-    "/api/studio/weave/creator/update-scene": {
+    "/api/studio/atlas/creator/update-scene": {
       "post": {
         "tags": [
           "Studio"
         ],
-        "summary": "CREATOR ENDPOINT - Updates resources for a specific scene index in a weave plan.",
+        "summary": "CREATOR ENDPOINT - Updates resources for a specific scene index in a atlas plan.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WeaveSceneUpdateRequestDto"
+                "$ref": "#/components/schemas/AtlasSceneUpdateRequestDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/WeaveSceneUpdateRequestDto"
+                "$ref": "#/components/schemas/AtlasSceneUpdateRequestDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/WeaveSceneUpdateRequestDto"
+                "$ref": "#/components/schemas/AtlasSceneUpdateRequestDto"
               }
             }
           }
@@ -1718,27 +1767,27 @@
         }
       }
     },
-    "/api/studio/weave/creator/execute": {
+    "/api/studio/atlas/creator/execute": {
       "post": {
         "tags": [
           "Studio"
         ],
-        "summary": "CREATOR ENDPOINT - Executes a Weave video generation and uploads the result.",
+        "summary": "CREATOR ENDPOINT - Executes a Atlas video generation and uploads the result.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WeaveExecuteRequestDto"
+                "$ref": "#/components/schemas/AtlasExecuteRequestDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/WeaveExecuteRequestDto"
+                "$ref": "#/components/schemas/AtlasExecuteRequestDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/WeaveExecuteRequestDto"
+                "$ref": "#/components/schemas/AtlasExecuteRequestDto"
               }
             }
           }
@@ -1750,12 +1799,12 @@
         }
       }
     },
-    "/api/studio/weave/plans/{planUuid}/media/{contentUuid}": {
+    "/api/studio/atlas/plans/{planUuid}/media/{contentUuid}": {
       "put": {
         "tags": [
           "Studio"
         ],
-        "summary": "Links a media content item to a weave plan record.\r\n(Called by the Studio Core worker).",
+        "summary": "Links a media content item to a atlas plan record.\r\n(Called by the Studio Core worker).",
         "parameters": [
           {
             "name": "planUuid",
@@ -1929,6 +1978,196 @@
   },
   "components": {
     "schemas": {
+      "AtlasExecuteRequestDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mediaIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "voice": {
+            "type": "string",
+            "nullable": true
+          },
+          "speed": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "backgroundAudio": {
+            "type": "string",
+            "nullable": true
+          },
+          "captions": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AtlasMediaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AtlasPlanCreateDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clipScript": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipSubject": {
+            "type": "string",
+            "nullable": true
+          },
+          "scenes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtlasSceneDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AtlasPlanDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clipScript": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipSubject": {
+            "type": "string",
+            "nullable": true
+          },
+          "scenes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtlasSceneDto"
+            },
+            "nullable": true
+          },
+          "mediaContentUuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AtlasPlanRequestDto": {
+        "type": "object",
+        "properties": {
+          "clipScript": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipSubject": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AtlasPlanUpdateDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "updatedProperties": {
+            "$ref": "#/components/schemas/AtlasPlanUpdatePropsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AtlasPlanUpdatePropsDto": {
+        "type": "object",
+        "properties": {
+          "clipSubject": {
+            "type": "string",
+            "nullable": true
+          },
+          "scenes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtlasSceneDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AtlasSceneDto": {
+        "type": "object",
+        "properties": {
+          "scene_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scene_script_segment": {
+            "type": "string",
+            "nullable": true
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtlasMediaDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AtlasSceneUpdateRequestDto": {
+        "type": "object",
+        "properties": {
+          "plan_uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scene_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "prompt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "BrandDto": {
         "type": "object",
         "properties": {
@@ -2092,6 +2331,16 @@
           },
           "isEzGenerated": {
             "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ExternalResourceDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -2346,6 +2595,14 @@
       "ScheduleUpdateDto": {
         "type": "object",
         "properties": {
+          "calendarItemId": {
+            "type": "string",
+            "nullable": true
+          },
+          "updateOccurrenceOnly": {
+            "type": "boolean",
+            "nullable": true
+          },
           "updatedProperties": {
             "$ref": "#/components/schemas/ScheduleUpdatePropsDto"
           }
@@ -2361,22 +2618,30 @@
           },
           "uploadType": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "example": "Post"
           },
           "policy": {
             "$ref": "#/components/schemas/SchedulePolicyDto"
           },
           "plannedAt": {
             "type": "string",
+            "description": "The planned start date/time (Local time of the brand).\r\nNote: Do not append 'Z' to the end of the string unless you are explicitly passing UTC time. \r\nAn unspecified time will be correctly interpreted as the Brand's local time.",
             "format": "date-time",
-            "nullable": true
+            "nullable": true,
+            "example": "2026-03-29T14:27:00"
           },
           "targets": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "nullable": true
+            "nullable": true,
+            "example": [
+              "INSTAGRAM",
+              "TIKTOK",
+              "YOUTUBE"
+            ]
           },
           "contents": {
             "type": "array",
@@ -2388,7 +2653,8 @@
           },
           "isDraft": {
             "type": "boolean",
-            "nullable": true
+            "nullable": true,
+            "example": false
           }
         },
         "additionalProperties": false
@@ -2732,6 +2998,10 @@
       "VisionPlanUpdateDto": {
         "type": "object",
         "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
           "updatedProperties": {
             "$ref": "#/components/schemas/VisionPlanUpdatePropsDto"
           }
@@ -2779,201 +3049,6 @@
             "nullable": true
           },
           "scenes": {
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "WeaveExecuteRequestDto": {
-        "type": "object",
-        "properties": {
-          "planUuid": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "mediaIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "voice": {
-            "type": "string",
-            "nullable": true
-          },
-          "speed": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "backgroundAudio": {
-            "type": "string",
-            "nullable": true
-          },
-          "captions": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "WeaveMediaDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "nullable": true
-          },
-          "url": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "WeavePlanCreateDto": {
-        "type": "object",
-        "properties": {
-          "planUuid": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "clipScript": {
-            "type": "string",
-            "nullable": true
-          },
-          "clipSubject": {
-            "type": "string",
-            "nullable": true
-          },
-          "scenes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WeaveSceneDto"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "WeavePlanDto": {
-        "type": "object",
-        "properties": {
-          "planUuid": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "clipScript": {
-            "type": "string",
-            "nullable": true
-          },
-          "clipSubject": {
-            "type": "string",
-            "nullable": true
-          },
-          "scenes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WeaveSceneDto"
-            },
-            "nullable": true
-          },
-          "mediaContentUuid": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "additionalProperties": false
-      },
-      "WeavePlanRequestDto": {
-        "type": "object",
-        "properties": {
-          "clipScript": {
-            "type": "string",
-            "nullable": true
-          },
-          "clipSubject": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "WeavePlanUpdateDto": {
-        "type": "object",
-        "properties": {
-          "updatedProperties": {
-            "$ref": "#/components/schemas/WeavePlanUpdatePropsDto"
-          }
-        },
-        "additionalProperties": { }
-      },
-      "WeavePlanUpdatePropsDto": {
-        "type": "object",
-        "properties": {
-          "clipSubject": {
-            "type": "string",
-            "nullable": true
-          },
-          "scenes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WeaveSceneDto"
-            },
-            "nullable": true
-          },
-          "media": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string",
-              "format": "uuid",
-              "nullable": true
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "WeaveSceneDto": {
-        "type": "object",
-        "properties": {
-          "scene_number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "scene_script_segment": {
-            "type": "string",
-            "nullable": true
-          },
-          "media": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WeaveMediaDto"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "WeaveSceneUpdateRequestDto": {
-        "type": "object",
-        "properties": {
-          "plan_uuid": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "scene_number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "prompt": {
-            "type": "string",
             "nullable": true
           }
         },

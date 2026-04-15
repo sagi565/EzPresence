@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Post } from '@models/Post';
+import { Repeat } from 'lucide-react';
 import {
   PostItemContainer,
   PostFirstLine,
@@ -93,10 +94,11 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
               onMouseEnter={() => setIsRepeatHovered(true)}
               onMouseLeave={() => setIsRepeatHovered(false)}
             >
-              <img
-                src="/icons/repeat.png"
-                alt="Recurring"
-                style={{ width: '12px', height: '12px', objectFit: 'contain', opacity: 0.7 }}
+              <Repeat
+                size={14}
+                color="#000"
+                strokeWidth={2.5}
+                style={{ opacity: 0.7 }}
               />
               {isRepeatHovered && (
                 <BlackTooltip>Repeat {post.type}</BlackTooltip>

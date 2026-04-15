@@ -38,7 +38,7 @@ export const LogoMark = styled.a`
   font-size:32px;font-weight:800;letter-spacing:-0.5px;
   background:linear-gradient(135deg,#9b5de5 0%,#fbbf24 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;text-decoration:none;cursor:pointer;
+  background-clip:text;text-decoration:none;cursor:default;pointer-events:none;
   white-space:nowrap;line-height:1;
 `;
 

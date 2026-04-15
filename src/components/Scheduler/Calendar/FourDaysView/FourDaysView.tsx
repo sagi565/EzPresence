@@ -194,7 +194,8 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
                     onDrop={(e) => handleDrop(e, day, hour)}
                     onMouseEnter={() => handleMouseEnter(day, hour)}
                     onMouseLeave={handleMouseLeave}
-                    onContextMenu={(e) => {
+                    onContextMenu={(e) => e.preventDefault()}
+                    onClick={(e) => {
                       if (!isPast) {
                         onContextMenu?.(e, day, formatHour(hour));
                       }

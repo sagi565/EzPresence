@@ -4,17 +4,17 @@ import {
   Textarea, AttachList, AttachChip, AttachName, RemoveBtn, Toolbar, IconBtn,
   Spacer, SendBtn, Spinner, RippleEl, TooltipWrap,
   DurationWrap, DurationDropdown, DurationOption, DurOptLabel, DurOptRange,
-  AutoBtn,
+  DurationBadge, AutoIconBtn,
 } from './styles';
 import { Zap } from 'lucide-react';
 import AudioPickerPanel from '@components/Studio/VisionCreator/AudioPickerPanel/AudioPickerPanel';
 import { SocialVideoContext } from '@hooks/useVisionPlan';
 
 const DURATIONS = [
-  { key: 'snappy',        label: 'Teaser',  range: '5–15s' },
-  { key: 'standard',      label: 'Clip',    range: '15–25s' },
-  { key: 'extended',      label: 'Short',   range: '25–40s' },
-  { key: 'comprehensive', label: 'Feature', range: '40–60s' },
+  { key: 'snappy',        label: 'Teaser',  range: '5–15s',  avg: '~10s' },
+  { key: 'standard',      label: 'Clip',    range: '15–25s', avg: '~20s' },
+  { key: 'extended',      label: 'Short',   range: '25–40s', avg: '~30s' },
+  { key: 'comprehensive', label: 'Feature', range: '40–60s', avg: '~50s' },
 ] as const;
 type DurationKey = typeof DURATIONS[number]['key'];
 
@@ -61,8 +61,8 @@ interface PromptBoxProps {
     setWithCaptions: (v: boolean) => void;
     socialVideo: SocialVideoContext | null;
     setSocialVideo: (v: SocialVideoContext | null) => void;
-    duration: DurationKey;
-    setDuration: (v: DurationKey) => void;
+    duration: DurationKey | null;
+    setDuration: (v: DurationKey | null) => void;
     autoMode: boolean;
     setAutoMode: (v: boolean) => void;
     minimalist?: boolean;
@@ -116,7 +116,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({
         return clearTw;
     },[tick,prompt]);
 
-    const currentDuration = DURATIONS.find(d => d.key === duration)!;
+    const currentDuration = DURATIONS.find(d => d.key === (duration ?? 'standard'))!;
 
     return (
     <>
@@ -179,21 +179,26 @@ const PromptBox: React.FC<PromptBoxProps> = ({
             <DurationWrap ref={durationRef}>
               <TooltipWrap data-tip={`Duration: ${currentDuration.label} (${currentDuration.range})`}>
                 <IconBtn
-                  $active={durationOpen || duration !== 'standard'}
+                  $active={durationOpen || duration !== null}
                   onClick={() => setDurationOpen(v => !v)}
                   aria-label="Set video duration"
+                  style={{ position: 'relative' }}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={duration !== null ? { transform: 'translateY(-2px)' } : undefined}>
                     <circle cx="12" cy="13" r="8"/>
                     <polyline points="12 9 12 13 14.5 15.5"/>
                     <path d="M9 2h6M12 2v3"/>
                   </svg>
+                  {duration !== null && <DurationBadge>{currentDuration.avg}</DurationBadge>}
                 </IconBtn>
               </TooltipWrap>
               <DurationDropdown $open={durationOpen}>
                 {DURATIONS.map(d => (
                   <DurationOption key={d.key} $active={duration === d.key}
-                    onClick={() => { setDuration(d.key); setDurationOpen(false); }}>
+                    onClick={() => {
+                      setDuration(duration === d.key ? null : d.key);
+                      setDurationOpen(false);
+                    }}>
                     <DurOptLabel $active={duration === d.key}>{d.label}</DurOptLabel>
                     <DurOptRange>{d.range}</DurOptRange>
                   </DurationOption>
@@ -205,14 +210,13 @@ const PromptBox: React.FC<PromptBoxProps> = ({
         <Spacer/>
         {!minimalist && (
           <TooltipWrap data-tip={autoMode ? 'Auto on — skip plan review' : 'Auto — generate without reviewing the plan'}>
-            <AutoBtn
-              $active={autoMode} $loading={isBusy}
+            <AutoIconBtn
+              $active={autoMode}
               onClick={() => setAutoMode(!autoMode)}
               aria-label="Toggle auto mode" aria-pressed={autoMode}
             >
-              <Zap size={13} strokeWidth={2.4} fill={autoMode ? '#fbbf24' : 'none'}/>
-              Auto
-            </AutoBtn>
+              <Zap size={15} strokeWidth={2.2} fill={autoMode ? '#fbbf24' : 'none'}/>
+            </AutoIconBtn>
           </TooltipWrap>
         )}
         <TooltipWrap data-tip={minimalist ? 'Update the plan with this prompt' : autoMode ? 'Generate instantly — no review' : 'Review and edit the plan before generating'}>

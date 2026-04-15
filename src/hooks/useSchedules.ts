@@ -219,7 +219,7 @@ export const useSchedules = (brandId: string) => {
   const deleteSchedule = useCallback(async (
     scheduleUuidOrCalendarItemId: string,
     plannedDate: Date,
-    deleteOccurrenceOnly: boolean = false,
+    deleteOccurrenceOnly?: boolean,
     force: boolean = false
   ) => {
     try {
@@ -242,11 +242,10 @@ export const useSchedules = (brandId: string) => {
         calendarItemId = btoa(`${scheduleUuidOrCalendarItemId}|${formattedDate}`);
       }
 
-      const params = new URLSearchParams({
-        calendarItemId,
-        deleteOccurrenceOnly: deleteOccurrenceOnly.toString(),
-        force: force.toString(),
-      });
+      const params = new URLSearchParams({ calendarItemId, force: force.toString() });
+      if (deleteOccurrenceOnly !== undefined) {
+        params.set('deleteOccurrenceOnly', deleteOccurrenceOnly.toString());
+      }
 
       await api.delete(`/schedules/calendarItemId?${params.toString()}`);
       await fetchSchedules();

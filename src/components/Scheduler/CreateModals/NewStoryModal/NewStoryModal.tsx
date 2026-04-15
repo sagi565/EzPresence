@@ -234,7 +234,6 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     }, [isOpen, showDatePicker, showTimePicker, showTimezoneSelector, showRepeatSelector]);
 
     const isFormValid = useMemo(() => {
-        if (!formData.title?.trim()) return false;
         const selectedPlatforms = (Object.keys(formData.platforms) as Array<'instagram' | 'facebook'>).filter(k => formData.platforms[k]?.enabled);
         if (selectedPlatforms.length === 0) return false;
         const isPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.scheduleUuid);
@@ -297,7 +296,6 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         if (isReadOnly) return;
         try {
             const errors: { title?: string; platform?: string; date?: string; content?: string } = {};
-            if (!formData.title.trim()) errors.title = 'Title is required';
             const selectedPlatforms = (Object.keys(formData.platforms) as Array<'instagram' | 'facebook'>).filter(k => formData.platforms[k]?.enabled);
             if (selectedPlatforms.length === 0) errors.platform = 'Please select at least one platform';
             const now = new Date();
@@ -344,7 +342,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
 
                 if (mediaType !== (initialData as any)?.media) updates.media = mediaType;
 
-                const newTitle = formData.contentTitle || 'Story';
+                const newTitle = formData.title || formData.contentTitle || 'New Story';
                 if (newTitle !== initialData?.title) updates.title = newTitle;
 
                 const newRruleText = formData.repeat.rruleText || null;
@@ -357,7 +355,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
 
                 await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, platforms: selectedPlatforms, media: mediaType, title: formData.contentTitle || 'Story', contentUuids: formData.contentId ? [formData.contentId] : undefined, type: 'Story', rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending' });
+                await createSchedule({ date: formData.date, time: formData.time, platforms: selectedPlatforms, media: mediaType, title: formData.title || formData.contentTitle || 'New Story', contentUuids: formData.contentId ? [formData.contentId] : undefined, type: 'Story', rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending' });
             }
             if (onScheduleProp) onScheduleProp(formData);
             if (!isReadOnly) onClose();
@@ -389,7 +387,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     updates.platforms = selectedPlatforms;
                 }
                 if (mediaType !== (initialData as any)?.media) updates.media = mediaType;
-                const newTitle = formData.contentTitle || 'Story Draft';
+                const newTitle = formData.title || formData.contentTitle || 'New Story';
                 if (newTitle !== initialData?.title) updates.title = newTitle;
                 const newRruleText = formData.repeat.rruleText || null;
                 const origRruleText = initialData?.repeat?.rruleText || null;
@@ -399,7 +397,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                 if (endDateStr) updates.endDate = endDateStr;
                 await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, platforms: selectedPlatforms, media: mediaType, title: formData.contentTitle || 'Story Draft', contentUuids: formData.contentId ? [formData.contentId] : undefined, type: 'Story', rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft' });
+                await createSchedule({ date: formData.date, time: formData.time, platforms: selectedPlatforms, media: mediaType, title: formData.title || formData.contentTitle || 'New Story', contentUuids: formData.contentId ? [formData.contentId] : undefined, type: 'Story', rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft' });
             }
             if (onSaveDraft) onSaveDraft(formData);
             onClose();

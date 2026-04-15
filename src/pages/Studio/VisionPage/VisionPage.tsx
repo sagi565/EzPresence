@@ -29,7 +29,7 @@ const VisionPage: React.FC = () => {
   const [withCaptions, setWithCaptions] = useState(_savedMeta?.withCaptions ?? false);
   const [socialVideo,  setSocialVideo]  = useState<SocialVideoContext | null>(null);
   const [quickMode,    setQuickMode]    = useState(false);
-  const [duration,     setDuration]     = useState<'snappy'|'standard'|'extended'|'comprehensive'>(_savedMeta?.duration as any ?? 'standard');
+  const [duration,     setDuration]     = useState<'snappy'|'standard'|'extended'|'comprehensive'|null>(_savedMeta?.duration as any ?? null);
   const [autoMode,     setAutoMode]     = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [planView, setPlanView] = useState<'v1'|'v2'>(() =>
@@ -75,10 +75,10 @@ const VisionPage: React.FC = () => {
     const rect = e.currentTarget.getBoundingClientRect();
     setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     setTimeout(() => setRipple(null), 600);
-    saveVisionMeta({ prompt, withCaptions, duration });
+    saveVisionMeta({ prompt, withCaptions, duration: duration ?? 'standard' });
     await generatePlan(prompt, {
       withCaptions,
-      durationLevel: duration,
+      durationLevel: duration ?? 'standard',
       socialVideo: socialVideo ?? undefined,
     });
   };
@@ -88,11 +88,11 @@ const VisionPage: React.FC = () => {
     const rect = e.currentTarget.getBoundingClientRect();
     setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     setTimeout(() => setRipple(null), 600);
-    saveVisionMeta({ prompt, withCaptions, duration });
+    saveVisionMeta({ prompt, withCaptions, duration: duration ?? 'standard' });
     setQuickMode(true);
     await generatePlan(prompt, {
       withCaptions,
-      durationLevel: duration,
+      durationLevel: duration ?? 'standard',
       socialVideo: socialVideo ?? undefined,
     });
   };

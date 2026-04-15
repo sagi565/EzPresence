@@ -183,6 +183,7 @@ export const styles: Record<string, CSSProperties> = {
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
+        zIndex: 1,
         opacity: 0.9,
     },
 
@@ -332,6 +333,15 @@ if (typeof document !== 'undefined') {
       body.dark-mode .npm-field-input:focus {
         border-color: var(--color-primary) !important;
         background: rgba(255, 255, 255, 0.06) !important;
+      }
+      .npm-category-input {
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .npm-category-input:hover {
+        border-color: rgba(var(--color-primary-rgb, 155, 93, 229), 0.3) !important;
+      }
+      .npm-category-item:hover {
+        background: rgba(var(--color-text-rgb, 255, 255, 255), 0.05) !important;
       }
       .new-post-modal-wrapper {
         transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease, filter 0.5s ease;

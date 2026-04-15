@@ -98,11 +98,17 @@ export const parseTimeString = (time: string): { hours: number; minutes: number 
 };
 
 export const formatTimeString = (date: Date): string => {
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-  const period = hours >= 12 ? 'PM' : 'AM';
-  return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const parts = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone,
+  }).formatToParts(date);
+  const hour = parts.find(p => p.type === 'hour')?.value ?? '12';
+  const minute = parts.find(p => p.type === 'minute')?.value ?? '00';
+  const period = (parts.find(p => p.type === 'dayPeriod')?.value ?? 'AM').toUpperCase();
+  return `${hour}:${minute} ${period}`;
 };
 
 export const convertApiScheduleToPost = (apiSchedule: ApiScheduleDto, index: number): Post => {
