@@ -48,6 +48,7 @@ export interface ApiScheduleDto {
   plannedAt?: string | null;
   targets?: string[] | null;
   contents?: string[] | null;
+  scheduleType?: string | null;
   isDraft?: boolean;
 }
 
@@ -131,7 +132,7 @@ export const convertApiScheduleToPost = (apiSchedule: ApiScheduleDto, index: num
     type: isStory ? 'Story' : 'Post',
     title: apiSchedule.calendarItemName || apiSchedule.scheduleName || 'Untitled Post',
     contentUuids: apiSchedule.contents ?? undefined,
-    isRecurring: !!rruleText,
+    isRecurring: apiSchedule.scheduleType === 'Policy' || !!rruleText,
     rruleText,
     scheduleUuid: apiSchedule.scheduleId,
     calendarItemId: apiSchedule.calendarItemId,

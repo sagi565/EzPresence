@@ -8,18 +8,18 @@
 
 /** Curated palette of 12 distinct, light pastel colors */
 const POLICY_PALETTE = [
-    'rgba(255, 182, 162, 0.30)', // soft coral
-    'rgba(162, 210, 255, 0.30)', // sky blue
-    'rgba(167, 243, 208, 0.35)', // mint green
-    'rgba(253, 224, 128, 0.30)', // warm yellow
+    'rgba(155, 93, 229, 0.15)', // soft purple
+    'rgba(0, 187, 249, 0.15)',  // soft blue
+    'rgba(0, 245, 212, 0.15)',  // soft teal
+    'rgba(254, 228, 64, 0.15)',  // soft yellow
 ];
 
 /** Matching slightly-darker border-left accent colors (same hue, a bit more saturated) */
 const POLICY_ACCENT_PALETTE = [
-    'rgba(239, 100, 70, 0.60)',  // coral
-    'rgba(59, 130, 246, 0.60)',  // blue
-    'rgba(52, 211, 153, 0.60)',  // green
-    'rgba(251, 191, 36, 0.60)',  // yellow
+    'rgba(155, 93, 229, 0.60)',  // purple
+    'rgba(0, 187, 249, 0.60)',   // blue
+    'rgba(0, 245, 212, 0.60)',   // teal
+    'rgba(251, 191, 36, 0.70)',  // yellow
 ];
 
 /**

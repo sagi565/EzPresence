@@ -29,6 +29,7 @@ interface FourDaysViewProps {
   onDrop: (date: Date, time: string, contentId: string, position: { x: number; y: number }) => void;
   onPostClick?: (post: Post) => void;
   onContextMenu?: (e: React.MouseEvent, date: Date, time: string) => void;
+  onPostContextMenu?: (post: Post, x: number, y: number) => void;
 }
 
 const FourDaysView: React.FC<FourDaysViewProps> = ({
@@ -39,6 +40,7 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
   onDrop,
   onPostClick,
   onContextMenu,
+  onPostContextMenu,
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
@@ -208,6 +210,7 @@ const FourDaysView: React.FC<FourDaysViewProps> = ({
                           post={post}
                           isHalf={visiblePosts.length === 2}
                           onClick={onPostClick}
+                          onPostContextMenu={onPostContextMenu}
                         />
                       ))}
                     </PostContainer>

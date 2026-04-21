@@ -88,7 +88,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
 
     const isPublished = status === 'success';
     const isReadOnly = (isPast || isPublished) && !!formData.calendarItemId;
-    const isPartOfPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.scheduleUuid);
+    const isPartOfPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.repeat.rruleText);
 
     useEffect(() => {
         if (lastPickedContent) handleContentSelect(lastPickedContent);
@@ -236,7 +236,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     const isFormValid = useMemo(() => {
         const selectedPlatforms = (Object.keys(formData.platforms) as Array<'instagram' | 'facebook'>).filter(k => formData.platforms[k]?.enabled);
         if (selectedPlatforms.length === 0) return false;
-        const isPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.scheduleUuid);
+        const isPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.repeat.rruleText);
         if (!formData.contentId && !isPolicy) return false;
         try {
             const now = new Date();
@@ -445,16 +445,16 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         }
     };
 
-    const confirmDelete = async () => { setShowDeleteConfirm(false); await executeDelete(false); };
+    const confirmDelete = async () => { setShowDeleteConfirm(false); await executeDelete(); };
 
-    const executeDelete = async (occurrenceOnly: boolean) => {
+    const executeDelete = async (occurrenceOnly?: boolean) => {
         try {
             setIsSubmitting(true);
             const { hours, minutes } = parseTimeString(formData.time);
             const plannedDate = new Date(formData.date);
             plannedDate.setHours(hours, minutes, 0, 0);
             if (!occurrenceOnly) { setIsShattering(true); await new Promise(resolve => setTimeout(resolve, 600)); }
-            await deleteSchedule(formData.calendarItemId || formData.scheduleUuid || '', plannedDate, occurrenceOnly);
+            await deleteSchedule(formData.calendarItemId || formData.scheduleUuid || '', plannedDate, occurrenceOnly, isPast);
             setIsShattering(false);
             onClose();
             if (onScheduleProp) onScheduleProp(formData);
@@ -638,25 +638,25 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                 <SectionContainer icon="🕐" className="nsm-date-section">
                     <div className="chip-row-container" style={{ display: 'flex', flexWrap: 'nowrap', gap: '8px', alignItems: 'center' }}>
                         <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <ChipButton className="chip-button" minWidth="148px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
+                            <ChipButton className="chip-button" minWidth="148px" onClick={() => { if (showDatePicker) { closeAllPickers(); } else { closeAllPickers(); setShowDatePicker(true); } }}>
                                 <span>{formatDateLabel(formData.date)}</span><ChipArrow />
                             </ChipButton>
                             <DatePicker selectedDate={formData.date} onChange={handleDateChange} minDate={new Date()} show={showDatePicker} onClose={() => setShowDatePicker(false)} />
                         </div>
                         <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <ChipButton className="chip-button" minWidth="88px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
+                            <ChipButton className="chip-button" minWidth="88px" onClick={() => { if (showTimePicker) { closeAllPickers(); } else { closeAllPickers(); setShowTimePicker(true); } }}>
                                 <span>{formData.time}</span><ChipArrow />
                             </ChipButton>
                             <TimePicker selectedTime={formData.time} onChange={handleTimeChange} show={showTimePicker} onClose={() => setShowTimePicker(false)} />
                         </div>
                         <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <ChipButton className="chip-button" minWidth="120px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
+                            <ChipButton className="chip-button" minWidth="120px" onClick={() => { if (showTimezoneSelector) { closeAllPickers(); } else { closeAllPickers(); setShowTimezoneSelector(true); } }}>
                                 <span style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>Timezone</span><ChipArrow />
                             </ChipButton>
                             <TimezoneSelector selectedTimezone={formData.timezone || 'America/New_York'} onChange={(tz) => { setFormData(prev => ({ ...prev, timezone: tz })); setShowTimezoneSelector(false); }} show={showTimezoneSelector} onClose={() => setShowTimezoneSelector(false)} />
                         </div>
                         <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                            <ChipButton className="chip-button" minWidth="100%" style={{ width: '100%', boxSizing: 'border-box' }} onClick={() => { closeAllPickers(); setShowRepeatSelector(true); }}>
+                            <ChipButton className="chip-button" minWidth="100%" style={{ width: '100%', boxSizing: 'border-box' }} onClick={() => { if (showRepeatSelector) { closeAllPickers(); } else { closeAllPickers(); setShowRepeatSelector(true); } }}>
                                 <span>{formData.repeat.label}</span><ChipArrow />
                             </ChipButton>
                             <RepeatSelector selectedRepeat={formData.repeat} onChange={(repeat) => { setFormData({ ...formData, repeat }); setShowRepeatSelector(false); }} baseDate={formData.date} show={showRepeatSelector} onClose={() => setShowRepeatSelector(false)} />

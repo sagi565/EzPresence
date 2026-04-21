@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useBrands } from '@/hooks/brands/useBrands';
 import { useContentLists } from '@hooks/contents/useContentLists';
 import GlobalNav from '@components/GlobalBar/Navigation/GlobalNav';
@@ -169,6 +170,7 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
   newlyCreatedListId,
   onReorder,
 }) => {
+  const navigate = useNavigate();
   const { isDragging, activeData } = useDndState();
   const wasDragging = useRef(false);
   const activeDragTypeRef = useRef<string | null>(null);
@@ -405,6 +407,7 @@ const ContentPageInner: React.FC<ContentPageInnerProps> = ({
                   onUpload={(file) => uploadContent(list.id, file)}
                   onItemClick={(itemId) => handleItemClick(itemId, list.id)}
                   onSaveChanges={() => clearNewListFlag()}
+                  onAddNavigate={list.title === 'Made by Studio' ? () => navigate('/studio') : undefined}
                 />
               </ListWrapper>
             </ListSection>

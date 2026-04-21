@@ -1,13 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { 
-  Overlay, 
-  Dialog, 
-  Title, 
-  Message, 
-  ButtonGroup, 
-  Button 
-} from './styles';
+import { Trash2, AlertTriangle } from 'lucide-react';
+import { Overlay, Dialog, IconWrap, Title, Message, ButtonGroup, Button } from './styles';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -15,6 +9,7 @@ interface ConfirmDialogProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
+  danger?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -25,36 +20,27 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   message,
   confirmText = 'Delete',
   cancelText = 'Cancel',
+  danger = true,
   onConfirm,
   onCancel,
 }) => {
   if (!isOpen) return null;
 
   return ReactDOM.createPortal(
-    <Overlay onClick={onCancel}>
-      <Dialog onClick={(e) => e.stopPropagation()}>
+    <>
+      <Overlay onClick={onCancel} />
+      <Dialog>
+        <IconWrap $danger={danger}>
+          {danger ? <Trash2 size={22} /> : <AlertTriangle size={22} />}
+        </IconWrap>
         <Title>{title}</Title>
         <Message>{message}</Message>
         <ButtonGroup>
-          <button
-            style={{ border: 'none', background: 'transparent', padding: 0 }}
-            onClick={onCancel}
-          >
-            <Button $variant="cancel">
-              {cancelText}
-            </Button>
-          </button>
-          <button
-            style={{ border: 'none', background: 'transparent', padding: 0 }}
-            onClick={onConfirm}
-          >
-            <Button $variant="confirm">
-              {confirmText}
-            </Button>
-          </button>
+          <Button onClick={onCancel}>{cancelText}</Button>
+          <Button $danger={danger} $primary={!danger} onClick={onConfirm}>{confirmText}</Button>
         </ButtonGroup>
       </Dialog>
-    </Overlay>,
+    </>,
     document.body
   );
 };

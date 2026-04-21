@@ -1500,17 +1500,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ExternalResourceDto"
+                "$ref": "#/components/schemas/MediaLinkRequestDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/ExternalResourceDto"
+                "$ref": "#/components/schemas/MediaLinkRequestDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/ExternalResourceDto"
+                "$ref": "#/components/schemas/MediaLinkRequestDto"
               }
             }
           }
@@ -1832,6 +1832,38 @@
         }
       }
     },
+    "/api/studio/log-asset-generation": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Saves asset generation logs to the database.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetGenerationLogCreateRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetGenerationLogCreateRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetGenerationLogCreateRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/users/me": {
       "get": {
         "tags": [
@@ -1978,6 +2010,68 @@
   },
   "components": {
     "schemas": {
+      "AssetGenerationLogCreateRequestDto": {
+        "type": "object",
+        "properties": {
+          "logs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetGenerationLogDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetGenerationLogDto": {
+        "type": "object",
+        "properties": {
+          "firebaseUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "mediaContentUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "nullable": true
+          },
+          "assetType": {
+            "type": "string",
+            "nullable": true
+          },
+          "assetUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "tokensConsumed": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "usdConsumed": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "tokensToUsdFactor": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "model": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "AtlasExecuteRequestDto": {
         "type": "object",
         "properties": {
@@ -2339,7 +2433,16 @@
       "ExternalResourceDto": {
         "type": "object",
         "properties": {
-          "url": {
+          "audioLink": {
+            "type": "string",
+            "nullable": true
+          },
+          "durationMs": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "videoName": {
             "type": "string",
             "nullable": true
           }
@@ -2483,6 +2586,16 @@
         "type": "object",
         "properties": {
           "contentName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaLinkRequestDto": {
+        "type": "object",
+        "properties": {
+          "MediaLink": {
             "type": "string",
             "nullable": true
           }

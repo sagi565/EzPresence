@@ -167,7 +167,7 @@ export const useVisionPlan = () => {
         payload.socialMediaLink = { url, offset: offsetSeconds, duration: durationSeconds };
       }
       const response = await api.post<any>('/studio/vision/creator/plan', payload);
-      const uuid = response?.plan_uuid || response?.planUuid || (typeof response === 'string' ? response : null);
+      const uuid = response?.plan_id || response?.planId || response?.plan_uuid || response?.planUuid || (typeof response === 'string' ? response : null);
       if (!uuid) { setError('No plan ID returned from server.'); return null; }
       sessionStorage.setItem(SESSION_KEY, uuid);
       setPlanUuid(uuid);

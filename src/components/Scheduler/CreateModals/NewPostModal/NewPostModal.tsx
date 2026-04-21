@@ -934,20 +934,20 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div className="chip-row-container" style={{ display: 'flex', flexWrap: 'nowrap', gap: '8px', alignItems: 'center' }}>
                             <div className="npm-date-wrapper" style={{ position: 'relative', flexShrink: 0 }}>
-                                <ChipButton className="chip-button" minWidth="148px" onClick={() => { closeAllPickers(); setShowDatePicker(true); }}>
+                                <ChipButton className="chip-button" minWidth="148px" onClick={() => { if (showDatePicker) { closeAllPickers(); } else { closeAllPickers(); setShowDatePicker(true); } }}>
                                     <span>{formData.date ? formData.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Date'}</span><ChipArrow />
                                 </ChipButton>
                                 <DatePicker selectedDate={formData.date} onChange={handleDateChange} minDate={new Date()} show={showDatePicker} onClose={() => setShowDatePicker(false)} />
                             </div>
                             <div className="npm-time-tz-container" style={{ display: 'flex', gap: '8px', flex: 1 }}>
                                 <div className="npm-time-wrapper" style={{ position: 'relative', flexShrink: 0 }}>
-                                    <ChipButton className="chip-button" minWidth="88px" onClick={() => { closeAllPickers(); setShowTimePicker(true); }}>
+                                    <ChipButton className="chip-button" minWidth="88px" onClick={() => { if (showTimePicker) { closeAllPickers(); } else { closeAllPickers(); setShowTimePicker(true); } }}>
                                         <span>{formData.time}</span><ChipArrow />
                                     </ChipButton>
                                     <TimePicker selectedTime={formData.time} onChange={handleTimeChange} show={showTimePicker} onClose={() => setShowTimePicker(false)} />
                                 </div>
                                 <div className="npm-timezone-wrapper" style={{ position: 'relative', flex: 1 }}>
-                                    <ChipButton className="chip-button npm-timezone-chip" minWidth="120px" onClick={() => { closeAllPickers(); setShowTimezoneSelector(true); }}>
+                                    <ChipButton className="chip-button npm-timezone-chip" minWidth="120px" onClick={() => { if (showTimezoneSelector) { closeAllPickers(); } else { closeAllPickers(); setShowTimezoneSelector(true); } }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2 }}>
                                             <span className="timezone-label" style={{ fontSize: '10px', color: 'var(--color-muted)', fontWeight: 600, display: 'none' }}>timezone</span>
                                             <span className="timezone-value" style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>Timezone</span>
@@ -960,7 +960,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                         </div>
                         <div className="chip-row-container npm-repeat-container" style={{ display: 'flex', flexWrap: 'nowrap', gap: '8px', alignItems: 'center' }}>
                             <div className="npm-repeat-wrapper" style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                                <ChipButton className="chip-button" minWidth="100%" style={{ width: '100%', boxSizing: 'border-box' }} onClick={() => { closeAllPickers(); setShowRepeatSelector(true); }}>
+                                <ChipButton className="chip-button" minWidth="100%" style={{ width: '100%', boxSizing: 'border-box' }} onClick={() => { if (showRepeatSelector) { closeAllPickers(); } else { closeAllPickers(); setShowRepeatSelector(true); } }}>
                                     <span>{formData.repeat.label}</span><ChipArrow />
                                 </ChipButton>
                                 <RepeatSelector selectedRepeat={formData.repeat} onChange={(repeat) => { setFormData({ ...formData, repeat }); setShowRepeatSelector(false); }} baseDate={formData.date} show={showRepeatSelector} onClose={() => setShowRepeatSelector(false)} />

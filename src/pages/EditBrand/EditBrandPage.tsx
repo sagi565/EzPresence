@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBrands } from '@hooks/brands/useBrands';
 import { useConnectedPlatforms } from '@hooks/platforms/useConnectedPlatforms';
-import { Container, Content, Header, Title, TitleHighlight, Subtitle, Form, MainContent, Row, NameAndSloganColumn, FormGroupStacked, Label, Required, LogoCenterLabel, LogoUploadArea, LogoPreviewContainer, LogoPreview, RemoveLogoBtn, LogoUploadPlaceholder, UploadIcon, UploadText, FormGroup, Input, InputWrapper, CharCountInside, CategorySelect, ErrorText, ErrorMessageWrapper, ErrorIcon, Actions, SubmitBtn, Ripple, Spinner, BackButton, FormGroupRight } from '../CreateNewBrand/styles';
+import { Container, Content, Header, Title, TitleHighlight, Subtitle, Form, MainContent, Row, NameAndSloganColumn, FormGroupStacked, Label, Required, LogoCenterLabel, LogoUploadArea, LogoPreviewContainer, LogoPreview, RemoveLogoBtn, LogoUploadPlaceholder, UploadIcon, UploadText, FormGroup, Input, InputWrapper, CharCountInside, CategorySelect, ErrorText, ErrorMessageWrapper, ErrorIcon, Actions, SubmitBtn, Ripple, Spinner, BackButton, FormGroupRight } from '@components/Brand/BrandSetupForm/styles';
 import { ConnectedPlatformsGrid } from '@components/SocialPlatform/ConnectedPlatformsGrid';
 import { BrandInitializeDto, getLogoDataUrl } from '@models/Brand';
 

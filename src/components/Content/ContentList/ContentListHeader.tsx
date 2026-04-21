@@ -29,6 +29,7 @@ interface ContentListHeaderProps {
   onUpload: (file: File) => void;
   onAddNavigate?: () => void;
   listType: 'video' | 'image';
+  acceptBoth?: boolean;
 }
 
 const ContentListHeader: React.FC<ContentListHeaderProps> = ({
@@ -43,6 +44,7 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
   onUpload,
   onAddNavigate,
   listType,
+  acceptBoth,
   isMobile,
 }) => {
   const [isEditMode, setIsEditMode] = useState(isNewList);
@@ -219,7 +221,7 @@ const ContentListHeader: React.FC<ContentListHeaderProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept={listType === 'video' ? 'video/*' : 'image/*'}
+            accept={acceptBoth ? 'video/*,image/*' : listType === 'video' ? 'video/*' : 'image/*'}
             style={{ display: 'none' }}
             onChange={handleFileChange}
           />

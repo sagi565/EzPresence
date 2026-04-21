@@ -104,7 +104,7 @@ export const TimeRow = styled.div`
   grid-template-columns: 80px repeat(4, 1fr);
   gap: 1px;
   background: ${props => props.theme.colors.muted}40;
-  min-height: 100px;
+  min-height: 50px;
   
   @media (max-width: 768px) {
     grid-template-columns: 50px repeat(4, 1fr);
@@ -143,8 +143,8 @@ export const DayCell = styled.div<{ $isToday?: boolean; $isPast?: boolean; $isHo
     
   padding: 4px;
   position: relative;
-  min-height: 100px;
-  max-height: 100px;
+  min-height: 50px;
+  max-height: 50px;
   transition: all 0.2s;
   cursor: ${props => props.$isPast ? 'default' : 'pointer'};
   overflow: visible;

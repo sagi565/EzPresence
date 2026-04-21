@@ -1,18 +1,24 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { VisionPlan } from '@hooks/useVisionPlan';
 import { Banner } from '@pages/Studio/VisionPage/styles';
 import {
-  ConsoleWrapper, TopBar, TopBarTitle, TopBarMeta, VersionBadge, ReadyDot, ChangedDot,
-  ReadyPill, SaveBtn, SplitPane,
+  ConsoleWrapper, TopBar, TopBarTitle, TopBarMeta, ReadyDot,
+  ReadyPill, TypeBadge, CategoryChip, SplitPane,
   Sidebar, SidebarSection, SidebarLabel, NavItem, NavIcon, NavLabel,
   SidebarDivider, SceneCountLabel, SceneTile, SceneTileNum, SceneTileInfo,
   SceneTilePrompt, DurationChip,
   ContentPanel, ContentInner, SectionHeading, HeadingIcon, HeadingText, HeadingSubtext,
-  ContentTextarea, FieldLabel, FieldCard, CharCountRow, CharCount,
-  VoiceSection, VoiceInput, GenderToggle, GenderBtn,
-  SceneTabs, SceneTab, SceneFieldGroup, DurationRow, DurationInput, DurationUnit,
-  BottomBar, BottomLeft, StatusText, GenerateBtn, BtnSpinner,
+  FieldCard, FieldLabel, ReadOnlyText, ReadOnlyPlaceholder,
+  VoiceSection, GenderDisplay, GenderBadge, GenderIcon,
+  SceneTabs, SceneTab, SceneFieldGroup,
+  DurationDisplay, DurationValue, DurationUnit,
+  TimelineWrapper, TimelineTrack, TimelineSegment, TimelineDot,
+  TimelineSegmentLabel, TimelineSegmentDur, TimelineEndDot, TimelineTotalLabel,
+  BottomBar, PromptSlotWrap, StatusText, GenerateBtn, BtnSpinner,
 } from './styles';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+const SCENE_COLORS = ['#9b5de5', '#14b8a6', '#f59e0b', '#ec4899', '#3b82f6', '#ef4444'];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function scenesToArray(scenes: any): any[] {
@@ -22,41 +28,66 @@ function scenesToArray(scenes: any): any[] {
 
 function getSceneLabel(scene: any, idx: number): string {
   const prompt: string = scene.sceneGenerationPrompt || scene.prompt || '';
-  const trimmed = prompt.slice(0, 50);
+  const trimmed = prompt.slice(0, 52);
   return trimmed ? (trimmed.length < prompt.length ? trimmed + '…' : trimmed) : `Scene ${idx + 1}`;
-}
-
-function buildDiff(original: VisionPlan, edited: VisionPlan): Record<string, any> | null {
-  const keys: (keyof VisionPlan)[] = [
-    'clipTitle', 'planType', 'category', 'clipVisualStyle',
-    'clipMusicInstructions', 'clipVoiceInstructions', 'clipVoiceGender',
-    'includeAudioInVideoGeneration', 'scenes',
-  ];
-  const diff: Record<string, any> = {};
-  for (const k of keys) {
-    if (JSON.stringify(original[k] ?? null) !== JSON.stringify(edited[k] ?? null)) {
-      diff[k] = edited[k];
-    }
-  }
-  return Object.keys(diff).length > 0 ? diff : null;
 }
 
 // ─── Section metadata ─────────────────────────────────────────────────────────
 type SectionId = 'visual' | 'music' | 'voice' | 'scenes';
 
 const SECTION_META: Record<SectionId, { icon: string; label: string; color: string; subtext: string }> = {
-  visual: { icon: '🎬', label: 'Visual Style', color: '#9b5de5', subtext: 'Define how the video looks and feels' },
-  music:  { icon: '🎵', label: 'Music',         color: '#14b8a6', subtext: 'Guide the music composition and mood' },
-  voice:  { icon: '🎤', label: 'Voice',          color: '#ec4899', subtext: 'Configure narration style and gender' },
-  scenes: { icon: '🎞',  label: 'Scenes',         color: '#f59e0b', subtext: 'Edit individual scene details' },
+  visual: { icon: '🎬', label: 'Visual Style', color: '#9b5de5', subtext: 'How the video looks and feels' },
+  music:  { icon: '🎵', label: 'Music',         color: '#14b8a6', subtext: 'Music composition and mood' },
+  voice:  { icon: '🎤', label: 'Voice',          color: '#ec4899', subtext: 'Narration style and gender' },
+  scenes: { icon: '🎞',  label: 'Scenes',         color: '#f59e0b', subtext: 'Individual scene details' },
 };
 
-const CHAR_LIMITS = {
-  visual: 600,
-  music: 600,
-  voiceInstructions: 400,
-  sceneVisual: 400,
-  scenePrompt: 600,
+// ─── Timeline Component ───────────────────────────────────────────────────────
+interface TimelineProps {
+  scenes: any[];
+  planType?: string;
+  activeIdx: number;
+  onSelect: (i: number) => void;
+}
+
+const SceneTimeline: React.FC<TimelineProps> = ({ scenes, planType, activeIdx, onSelect }) => {
+  const isSpeechless = planType === 'SPEECHLESS';
+  const durations = scenes.map(s => isSpeechless ? (s.sceneDuration || 6) : 1);
+  const total = durations.reduce((a, b) => a + b, 0) || 1;
+  const totalSecs = isSpeechless ? total : null;
+
+  return (
+    <TimelineWrapper>
+      <TimelineTrack>
+        {scenes.map((_, i) => {
+          const color = SCENE_COLORS[i % SCENE_COLORS.length];
+          const isActive = activeIdx === i;
+          return (
+            <TimelineSegment
+              key={i}
+              style={{ flex: durations[i] / total }}
+              $color={color}
+              $active={isActive}
+              onClick={() => onSelect(i)}
+              title={`Scene ${i + 1}${isSpeechless ? ` · ${durations[i]}s` : ''}`}
+            >
+              <TimelineDot $color={color} $active={isActive} />
+              <TimelineSegmentLabel $active={isActive}>
+                {i + 1}
+                {isSpeechless && <TimelineSegmentDur>{durations[i]}s</TimelineSegmentDur>}
+              </TimelineSegmentLabel>
+            </TimelineSegment>
+          );
+        })}
+        <TimelineEndDot
+          $color={SCENE_COLORS[(scenes.length - 1) % SCENE_COLORS.length] || '#9b5de5'}
+        />
+      </TimelineTrack>
+      {totalSecs !== null && (
+        <TimelineTotalLabel>{totalSecs}s total</TimelineTotalLabel>
+      )}
+    </TimelineWrapper>
+  );
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -73,18 +104,21 @@ interface ReadyViewV2Props {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
-  plan, updatePlan, executePlan, isUpdating, isExecuting, apiError, promptBoxSlot,
+  plan, executePlan, isExecuting, apiError, promptBoxSlot,
 }) => {
-  const [edited, setEdited] = useState<VisionPlan>(() => JSON.parse(JSON.stringify(plan)));
+  const isSpeechless = plan.planType === 'SPEECHLESS';
+
   const [activeSection, setActiveSection] = useState<SectionId>('visual');
   const [activeSceneIdx, setActiveSceneIdx] = useState(0);
   const [status, setStatus] = useState('');
   const statusRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setEdited(JSON.parse(JSON.stringify(plan)));
     setActiveSceneIdx(0);
-  }, [plan]);
+    if (isSpeechless && activeSection === 'voice') {
+      setActiveSection('visual');
+    }
+  }, [plan.planUuid]);
 
   const showStatus = (msg: string) => {
     setStatus(msg);
@@ -92,47 +126,8 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
     statusRef.current = setTimeout(() => setStatus(''), 3500);
   };
 
-  const setField = useCallback((key: keyof VisionPlan, val: any) => {
-    setEdited(p => ({ ...p, [key]: val }));
-  }, []);
-
-  const setSceneField = useCallback((idx: number, field: string, val: any) => {
-    setEdited(p => {
-      const arr = scenesToArray(p.scenes).map((s, i) => i === idx ? { ...s, [field]: val } : s);
-      return { ...p, scenes: arr };
-    });
-  }, []);
-
-  const setSceneOffsetField = useCallback((idx: number, field: string, val: any) => {
-    setEdited(p => {
-      const arr = scenesToArray(p.scenes).map((s, i) => {
-        if (i !== idx) return s;
-        const off = typeof s.sceneOffsetFrame === 'object' && s.sceneOffsetFrame !== null
-          ? s.sceneOffsetFrame : {};
-        return { ...s, sceneOffsetFrame: { ...off, [field]: val } };
-      });
-      return { ...p, scenes: arr };
-    });
-  }, []);
-
-  const diff = buildDiff(plan, edited);
-  const hasChanges = diff !== null;
-  const isBusy = isUpdating || isExecuting;
-
-  const handleSave = async () => {
-    if (!hasChanges || isBusy || !diff) return;
-    showStatus('Saving…');
-    const ok = await updatePlan(plan.planUuid, diff);
-    if (ok) showStatus('Saved.');
-  };
-
   const handleGenerate = async () => {
-    if (isBusy) return;
-    if (hasChanges && diff) {
-      showStatus('Saving changes…');
-      const ok = await updatePlan(plan.planUuid, diff);
-      if (!ok) return;
-    }
+    if (isExecuting) return;
     showStatus('Executing plan…');
     await executePlan(plan.planUuid, plan.version);
   };
@@ -142,40 +137,45 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
     setActiveSceneIdx(idx);
   };
 
-  const scenes = scenesToArray(edited.scenes);
+  const handleTimelineSelect = (idx: number) => {
+    setActiveSection('scenes');
+    setActiveSceneIdx(idx);
+  };
+
+  const scenes = scenesToArray(plan.scenes);
   const safeSceneIdx = Math.min(activeSceneIdx, Math.max(0, scenes.length - 1));
   const activeScene = scenes[safeSceneIdx];
 
-  const navSections: SectionId[] = ['visual', 'music', 'voice'];
+  const navSections: SectionId[] = isSpeechless
+    ? ['visual', 'music']
+    : ['visual', 'music', 'voice'];
 
-  const contentKey = activeSection === 'scenes'
-    ? `scenes-${safeSceneIdx}`
-    : activeSection;
-
+  const contentKey = activeSection === 'scenes' ? `scenes-${safeSceneIdx}` : activeSection;
   const activeMeta = SECTION_META[activeSection];
 
   return (
     <ConsoleWrapper>
       {/* ── Top Bar ── */}
       <TopBar>
-        <TopBarTitle
-          value={edited.clipTitle || ''}
-          onChange={e => setField('clipTitle', e.target.value)}
-          placeholder="Untitled Vision"
-        />
+        <TopBarTitle>{plan.clipTitle || 'Untitled Vision'}</TopBarTitle>
         <TopBarMeta>
-          <VersionBadge>v{plan.version || 1}</VersionBadge>
+          <TypeBadge $speechless={isSpeechless}>
+            {isSpeechless ? 'Speechless' : 'Narrated'}
+          </TypeBadge>
+          {plan.category && <CategoryChip>{plan.category}</CategoryChip>}
           <ReadyPill><ReadyDot />Ready</ReadyPill>
-          {hasChanges && (
-            <ReadyPill style={{ background: 'rgba(245,158,11,.07)', border: '1px solid rgba(245,158,11,.2)', color: '#b45309' }}>
-              <ChangedDot />Edited
-            </ReadyPill>
-          )}
-          <SaveBtn onClick={handleSave} disabled={!hasChanges || isBusy}>
-            Save
-          </SaveBtn>
         </TopBarMeta>
       </TopBar>
+
+      {/* ── Scene Timeline ── */}
+      {scenes.length > 0 && (
+        <SceneTimeline
+          scenes={scenes}
+          planType={plan.planType}
+          activeIdx={activeSection === 'scenes' ? safeSceneIdx : -1}
+          onSelect={handleTimelineSelect}
+        />
+      )}
 
       {/* ── Split Pane ── */}
       <SplitPane>
@@ -204,15 +204,17 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
             </SceneCountLabel>
             {scenes.map((scene, i) => {
               const isActive = activeSection === 'scenes' && safeSceneIdx === i;
+              const color = SCENE_COLORS[i % SCENE_COLORS.length];
               return (
-                <SceneTile key={i} $active={isActive} onClick={() => handleSceneTileClick(i)}>
-                  <SceneTileNum $active={isActive}>{i + 1}</SceneTileNum>
+                <SceneTile key={i} $active={isActive} $color={color}
+                  onClick={() => handleSceneTileClick(i)}>
+                  <SceneTileNum $active={isActive} $color={color}>{i + 1}</SceneTileNum>
                   <SceneTileInfo>
                     <SceneTilePrompt $active={isActive}>
                       {getSceneLabel(scene, i)}
                     </SceneTilePrompt>
                     {scene.sceneDuration && (
-                      <DurationChip>{scene.sceneDuration}s</DurationChip>
+                      <DurationChip $color={color}>{scene.sceneDuration}s</DurationChip>
                     )}
                   </SceneTileInfo>
                 </SceneTile>
@@ -237,17 +239,9 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
                 </SectionHeading>
                 <FieldCard $color={activeMeta.color}>
                   <FieldLabel>Style Description</FieldLabel>
-                  <ContentTextarea
-                    value={edited.clipVisualStyle || ''}
-                    onChange={e => setField('clipVisualStyle', e.target.value)}
-                    placeholder="Describe the visual style — colors, mood, cinematography, transitions…"
-                    style={{ minHeight: 160 }}
-                  />
-                  <CharCountRow>
-                    <CharCount $warn={(edited.clipVisualStyle?.length || 0) > CHAR_LIMITS.visual * 0.9}>
-                      {edited.clipVisualStyle?.length || 0} / {CHAR_LIMITS.visual}
-                    </CharCount>
-                  </CharCountRow>
+                  <ReadOnlyText>
+                    {plan.clipVisualStyle || <ReadOnlyPlaceholder>No visual style defined</ReadOnlyPlaceholder>}
+                  </ReadOnlyText>
                 </FieldCard>
               </>
             )}
@@ -264,23 +258,15 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
                 </SectionHeading>
                 <FieldCard $color={activeMeta.color}>
                   <FieldLabel>Music Direction</FieldLabel>
-                  <ContentTextarea
-                    value={edited.clipMusicInstructions || ''}
-                    onChange={e => setField('clipMusicInstructions', e.target.value)}
-                    placeholder="Describe the music direction — tempo, genre, emotional arc…"
-                    style={{ minHeight: 160 }}
-                  />
-                  <CharCountRow>
-                    <CharCount $warn={(edited.clipMusicInstructions?.length || 0) > CHAR_LIMITS.music * 0.9}>
-                      {edited.clipMusicInstructions?.length || 0} / {CHAR_LIMITS.music}
-                    </CharCount>
-                  </CharCountRow>
+                  <ReadOnlyText>
+                    {plan.clipMusicInstructions || <ReadOnlyPlaceholder>No music instructions defined</ReadOnlyPlaceholder>}
+                  </ReadOnlyText>
                 </FieldCard>
               </>
             )}
 
-            {/* ── Voice ── */}
-            {activeSection === 'voice' && (
+            {/* ── Voice (NARRATED only) ── */}
+            {activeSection === 'voice' && !isSpeechless && (
               <>
                 <SectionHeading>
                   <HeadingIcon $color={activeMeta.color}>{activeMeta.icon}</HeadingIcon>
@@ -292,27 +278,22 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
                 <VoiceSection>
                   <FieldCard $color={activeMeta.color}>
                     <FieldLabel>Direction</FieldLabel>
-                    <VoiceInput
-                      value={edited.clipVoiceInstructions || ''}
-                      onChange={e => setField('clipVoiceInstructions', e.target.value)}
-                      placeholder="Voice instructions — tone, pace, energy…"
-                    />
-                    <CharCountRow>
-                      <CharCount $warn={(edited.clipVoiceInstructions?.length || 0) > CHAR_LIMITS.voiceInstructions * 0.9}>
-                        {edited.clipVoiceInstructions?.length || 0} / {CHAR_LIMITS.voiceInstructions}
-                      </CharCount>
-                    </CharCountRow>
+                    <ReadOnlyText>
+                      {plan.clipVoiceInstructions || <ReadOnlyPlaceholder>No voice instructions defined</ReadOnlyPlaceholder>}
+                    </ReadOnlyText>
                   </FieldCard>
                   <FieldCard $color={activeMeta.color}>
                     <FieldLabel>Gender</FieldLabel>
-                    <GenderToggle>
-                      {['MALE', 'FEMALE', 'NEUTRAL'].map(g => (
-                        <GenderBtn key={g} $active={edited.clipVoiceGender === g}
-                          onClick={() => setField('clipVoiceGender', g)}>
-                          {g}
-                        </GenderBtn>
-                      ))}
-                    </GenderToggle>
+                    <GenderDisplay>
+                      <GenderBadge $active={plan.clipVoiceGender === 'MALE'} $gender="MALE">
+                        <GenderIcon>♂</GenderIcon>
+                        Male
+                      </GenderBadge>
+                      <GenderBadge $active={plan.clipVoiceGender === 'FEMALE'} $gender="FEMALE">
+                        <GenderIcon>♀</GenderIcon>
+                        Female
+                      </GenderBadge>
+                    </GenderDisplay>
                   </FieldCard>
                 </VoiceSection>
               </>
@@ -322,75 +303,74 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
             {activeSection === 'scenes' && scenes.length > 0 && (
               <>
                 <SectionHeading>
-                  <HeadingIcon $color={activeMeta.color}>{activeMeta.icon}</HeadingIcon>
+                  <HeadingIcon $color={SCENE_COLORS[safeSceneIdx % SCENE_COLORS.length]}>
+                    {activeMeta.icon}
+                  </HeadingIcon>
                   <div>
-                    <HeadingText $color={activeMeta.color}>Scene {safeSceneIdx + 1}</HeadingText>
+                    <HeadingText $color={SCENE_COLORS[safeSceneIdx % SCENE_COLORS.length]}>
+                      Scene {safeSceneIdx + 1}
+                    </HeadingText>
                     <HeadingSubtext>{getSceneLabel(activeScene, safeSceneIdx)}</HeadingSubtext>
                   </div>
                 </SectionHeading>
 
                 <SceneTabs>
-                  {scenes.map((_, i) => (
-                    <SceneTab key={i} $active={safeSceneIdx === i}
-                      onClick={() => setActiveSceneIdx(i)}>
-                      {i + 1}
-                    </SceneTab>
-                  ))}
+                  {scenes.map((_, i) => {
+                    const color = SCENE_COLORS[i % SCENE_COLORS.length];
+                    return (
+                      <SceneTab key={i} $active={safeSceneIdx === i} $color={color}
+                        onClick={() => setActiveSceneIdx(i)}>
+                        {i + 1}
+                      </SceneTab>
+                    );
+                  })}
                 </SceneTabs>
 
                 {activeScene && (() => {
-                  const isObjOffset = typeof activeScene.sceneOffsetFrame === 'object' && activeScene.sceneOffsetFrame !== null;
+                  const activeColor = SCENE_COLORS[safeSceneIdx % SCENE_COLORS.length];
+                  const isObjOffset = typeof activeScene.sceneOffsetFrame === 'object'
+                    && activeScene.sceneOffsetFrame !== null;
                   const visualInstructions = isObjOffset
                     ? activeScene.sceneOffsetFrame?.staticVisualInstructions || ''
-                    : typeof activeScene.sceneOffsetFrame === 'string' ? activeScene.sceneOffsetFrame : '';
+                    : typeof activeScene.sceneOffsetFrame === 'string'
+                      ? activeScene.sceneOffsetFrame : '';
 
                   return (
                     <SceneFieldGroup>
-                      <FieldCard $color={activeMeta.color}>
-                        <FieldLabel>Duration</FieldLabel>
-                        <DurationRow>
-                          <DurationInput
-                            type="number" min={1} max={60}
-                            value={activeScene.sceneDuration || ''}
-                            onChange={e => setSceneField(safeSceneIdx, 'sceneDuration', Number(e.target.value))}
-                          />
-                          <DurationUnit>seconds</DurationUnit>
-                        </DurationRow>
-                      </FieldCard>
-
-                      {(isObjOffset || typeof activeScene.sceneOffsetFrame === 'string') && (
-                        <FieldCard $color={activeMeta.color}>
-                          <FieldLabel>Visual Setup</FieldLabel>
-                          <ContentTextarea
-                            value={isObjOffset ? visualInstructions : (activeScene.sceneOffsetFrame || '')}
-                            onChange={e => {
-                              if (isObjOffset) setSceneOffsetField(safeSceneIdx, 'staticVisualInstructions', e.target.value);
-                              else setSceneField(safeSceneIdx, 'sceneOffsetFrame', e.target.value);
-                            }}
-                            placeholder="Static visual setup for this scene…"
-                            style={{ minHeight: 100 }}
-                          />
-                          <CharCountRow>
-                            <CharCount $warn={visualInstructions.length > CHAR_LIMITS.sceneVisual * 0.9}>
-                              {visualInstructions.length} / {CHAR_LIMITS.sceneVisual}
-                            </CharCount>
-                          </CharCountRow>
+                      {activeScene.sceneDuration && (
+                        <FieldCard $color={activeColor}>
+                          <FieldLabel>Duration</FieldLabel>
+                          <DurationDisplay>
+                            <DurationValue>{activeScene.sceneDuration}</DurationValue>
+                            <DurationUnit>seconds</DurationUnit>
+                          </DurationDisplay>
                         </FieldCard>
                       )}
 
-                      <FieldCard $color={activeMeta.color}>
+                      {activeScene.sceneScriptSegment && (
+                        <FieldCard $color={activeColor}>
+                          <FieldLabel>Script</FieldLabel>
+                          <ReadOnlyText $italic>
+                            "{activeScene.sceneScriptSegment}"
+                          </ReadOnlyText>
+                        </FieldCard>
+                      )}
+
+                      {(visualInstructions || isObjOffset) && (
+                        <FieldCard $color={activeColor}>
+                          <FieldLabel>Visual Setup</FieldLabel>
+                          <ReadOnlyText>
+                            {visualInstructions || <ReadOnlyPlaceholder>No visual setup defined</ReadOnlyPlaceholder>}
+                          </ReadOnlyText>
+                        </FieldCard>
+                      )}
+
+                      <FieldCard $color={activeColor}>
                         <FieldLabel>Generation Prompt</FieldLabel>
-                        <ContentTextarea
-                          value={activeScene.sceneGenerationPrompt || ''}
-                          onChange={e => setSceneField(safeSceneIdx, 'sceneGenerationPrompt', e.target.value)}
-                          placeholder="Describe what happens in this scene…"
-                          style={{ minHeight: 140 }}
-                        />
-                        <CharCountRow>
-                          <CharCount $warn={(activeScene.sceneGenerationPrompt?.length || 0) > CHAR_LIMITS.scenePrompt * 0.9}>
-                            {activeScene.sceneGenerationPrompt?.length || 0} / {CHAR_LIMITS.scenePrompt}
-                          </CharCount>
-                        </CharCountRow>
+                        <ReadOnlyText>
+                          {activeScene.sceneGenerationPrompt
+                            || <ReadOnlyPlaceholder>No generation prompt defined</ReadOnlyPlaceholder>}
+                        </ReadOnlyText>
                       </FieldCard>
                     </SceneFieldGroup>
                   );
@@ -404,16 +384,11 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
 
       {/* ── Bottom Bar ── */}
       <BottomBar>
-        <BottomLeft>{promptBoxSlot}</BottomLeft>
+        <PromptSlotWrap>{promptBoxSlot}</PromptSlotWrap>
         {status && <StatusText>{status}</StatusText>}
-        <GenerateBtn
-          $loading={isBusy}
-          $hasChanges={hasChanges}
-          onClick={handleGenerate}
-          disabled={isBusy}
-        >
-          {isBusy ? <BtnSpinner /> : hasChanges ? '💾' : '▶'}
-          {isUpdating ? 'Saving…' : isExecuting ? 'Generating…' : hasChanges ? 'Save & Generate' : 'Generate Video'}
+        <GenerateBtn $loading={isExecuting} onClick={handleGenerate} disabled={isExecuting}>
+          {isExecuting ? <BtnSpinner /> : '▶'}
+          {isExecuting ? 'Generating…' : 'Generate Video'}
         </GenerateBtn>
       </BottomBar>
 

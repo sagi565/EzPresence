@@ -21,6 +21,7 @@ import {
 import { useContentUrl } from '@/hooks/contents/useContentUrl';
 import { DraggableProvided } from '@hello-pangea/dnd';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import ReportDialog from '../ReportDialog/ReportDialog';
 
 interface ContentItemProps {
   item: ContentItemType;
@@ -50,6 +51,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
   const [showPreview, setShowPreview] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(item.title || '');
+  const [showReportDialog, setShowReportDialog] = useState(false);
   const isMobile = useIsMobile();
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -188,6 +190,12 @@ const ContentItem: React.FC<ContentItemProps> = ({
     onDelete();
   };
 
+  const handleReportClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    setShowReportDialog(true);
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -197,6 +205,7 @@ const ContentItem: React.FC<ContentItemProps> = ({
   };
 
   return (
+    <>
       <ItemContainer
         ref={provided?.innerRef}
         {...provided?.draggableProps}
@@ -306,6 +315,17 @@ const ContentItem: React.FC<ContentItemProps> = ({
               >
                 <span>🗑️</span> Delete
               </MenuItem>
+              {item.isEzGenerated && (
+                <MenuItem
+                  $variant="report"
+                  $isHovered={hoveredBtn === 'report'}
+                  onClick={handleReportClick}
+                  onMouseEnter={() => setHoveredBtn('report')}
+                  onMouseLeave={() => setHoveredBtn(null)}
+                >
+                  <span>⚠️</span> Report
+                </MenuItem>
+              )}
             </MenuDropdown>
           )}
 
@@ -333,7 +353,17 @@ const ContentItem: React.FC<ContentItemProps> = ({
           )}
         </>
       )}
-    </ItemContainer>
+      </ItemContainer>
+
+      {item.isEzGenerated && (
+        <ReportDialog
+          isOpen={showReportDialog}
+          contentId={item.id}
+          contentName={item.title}
+          onClose={() => setShowReportDialog(false)}
+        />
+      )}
+    </>
   );
 };
 

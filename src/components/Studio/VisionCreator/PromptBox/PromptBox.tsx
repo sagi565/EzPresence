@@ -11,10 +11,10 @@ import AudioPickerPanel from '@components/Studio/VisionCreator/AudioPickerPanel/
 import { SocialVideoContext } from '@hooks/useVisionPlan';
 
 const DURATIONS = [
-  { key: 'snappy',        label: 'Teaser',  range: '5–15s',  avg: '~10s' },
-  { key: 'standard',      label: 'Clip',    range: '15–25s', avg: '~20s' },
-  { key: 'extended',      label: 'Short',   range: '25–40s', avg: '~30s' },
-  { key: 'comprehensive', label: 'Feature', range: '40–60s', avg: '~50s' },
+  { key: 'snappy',        label: 'Teaser',  range: '5–15s',  avg: '10s', minSec: 5,  maxSec: 15 },
+  { key: 'standard',      label: 'Clip',    range: '15–25s', avg: '20s', minSec: 15, maxSec: 25 },
+  { key: 'extended',      label: 'Short',   range: '25–40s', avg: '30s', minSec: 25, maxSec: 40 },
+  { key: 'comprehensive', label: 'Feature', range: '40–60s', avg: '50s', minSec: 40, maxSec: 60 },
 ] as const;
 type DurationKey = typeof DURATIONS[number]['key'];
 
@@ -61,8 +61,8 @@ interface PromptBoxProps {
     setWithCaptions: (v: boolean) => void;
     socialVideo: SocialVideoContext | null;
     setSocialVideo: (v: SocialVideoContext | null) => void;
-    duration: DurationKey | null;
-    setDuration: (v: DurationKey | null) => void;
+    duration: DurationKey;
+    setDuration: (v: DurationKey) => void;
     autoMode: boolean;
     setAutoMode: (v: boolean) => void;
     minimalist?: boolean;
@@ -78,6 +78,30 @@ const PromptBox: React.FC<PromptBoxProps> = ({
     const [audioOpen,    setAudioOpen]    = useState(false);
     const [durationOpen, setDurationOpen] = useState(false);
     const durationRef = useRef<HTMLDivElement>(null);
+    const durationBtnRef = useRef<HTMLButtonElement>(null);
+
+    /* Briefly twitches the duration button to signal: "trim is capped by your
+       chosen video duration — change it here if you want a longer/shorter clip". */
+    const nudgeDurationButton = useCallback(() => {
+      const el = durationBtnRef.current;
+      if (!el) return;
+      el.classList.remove('twitch');
+      // force reflow so the animation restarts even if class was just added
+      void el.offsetWidth;
+      el.classList.add('twitch');
+      window.setTimeout(() => el.classList.remove('twitch'), 520);
+    }, []);
+
+    /* When audio loads shorter than the current tier's min, drop to the highest
+       tier whose min still fits. (User explicitly: "if duration is something and
+       the sound is less than minimum, make the duration relate to this".) */
+    const handleAudioLoaded = useCallback((audioDurSec: number) => {
+      const current = DURATIONS.find(d => d.key === duration);
+      if (!current) return;
+      if (audioDurSec >= current.minSec) return;
+      const fit = [...DURATIONS].reverse().find(d => d.minSec <= audioDurSec);
+      if (fit && fit.key !== duration) setDuration(fit.key);
+    }, [duration, setDuration]);
 
     // Close duration dropdown on outside click
     useEffect(() => {
@@ -116,7 +140,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({
         return clearTw;
     },[tick,prompt]);
 
-    const currentDuration = DURATIONS.find(d => d.key === (duration ?? 'standard'))!;
+    const currentDuration = DURATIONS.find(d => d.key === duration)!;
 
     return (
     <>
@@ -153,7 +177,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({
         {!minimalist && (
           <>
             <TooltipWrap data-tip="Attach image">
-              <IconBtn onClick={()=>fileRef.current?.click()} aria-label="Attach image">
+              <IconBtn $active={files.length > 0} onClick={()=>fileRef.current?.click()} aria-label="Attach image">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
                 </svg>
@@ -167,7 +191,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({
                 </svg>
               </IconBtn>
             </TooltipWrap>
-            <TooltipWrap data-tip="Use an Audio from Social Media">
+            <TooltipWrap data-tip="Use Sound from Social Media">
               <IconBtn $active={!!socialVideo||audioOpen} onClick={()=>setAudioOpen(v=>!v)} aria-label="Social media audio">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 18V5l12-2v13"/>
@@ -179,24 +203,25 @@ const PromptBox: React.FC<PromptBoxProps> = ({
             <DurationWrap ref={durationRef}>
               <TooltipWrap data-tip={`Duration: ${currentDuration.label} (${currentDuration.range})`}>
                 <IconBtn
-                  $active={durationOpen || duration !== null}
+                  ref={durationBtnRef}
+                  $active={durationOpen || true}
                   onClick={() => setDurationOpen(v => !v)}
                   aria-label="Set video duration"
                   style={{ position: 'relative' }}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={duration !== null ? { transform: 'translateY(-2px)' } : undefined}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'translateY(-4px)' }}>
                     <circle cx="12" cy="13" r="8"/>
                     <polyline points="12 9 12 13 14.5 15.5"/>
                     <path d="M9 2h6M12 2v3"/>
                   </svg>
-                  {duration !== null && <DurationBadge>{currentDuration.avg}</DurationBadge>}
+                  <DurationBadge>{currentDuration.avg}</DurationBadge>
                 </IconBtn>
               </TooltipWrap>
               <DurationDropdown $open={durationOpen}>
                 {DURATIONS.map(d => (
                   <DurationOption key={d.key} $active={duration === d.key}
                     onClick={() => {
-                      setDuration(duration === d.key ? null : d.key);
+                      setDuration(d.key);
                       setDurationOpen(false);
                     }}>
                     <DurOptLabel $active={duration === d.key}>{d.label}</DurOptLabel>
@@ -209,7 +234,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({
         )}
         <Spacer/>
         {!minimalist && (
-          <TooltipWrap data-tip={autoMode ? 'Auto on — skip plan review' : 'Auto — generate without reviewing the plan'}>
+          <TooltipWrap data-tip="Auto — skip plan">
             <AutoIconBtn
               $active={autoMode}
               onClick={() => setAutoMode(!autoMode)}
@@ -233,7 +258,11 @@ const PromptBox: React.FC<PromptBoxProps> = ({
       <AudioPickerPanel
         onClose={()=>setAudioOpen(false)}
         value={socialVideo}
-        onChange={v=>{setSocialVideo(v);if(v)setAudioOpen(false);}}
+        onChange={v=>setSocialVideo(v)}
+        minDurationSec={currentDuration.minSec}
+        maxDurationSec={currentDuration.maxSec}
+        onTrimLimitHit={nudgeDurationButton}
+        onAudioLoaded={handleAudioLoaded}
       />
     )}
     </>

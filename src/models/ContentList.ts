@@ -17,6 +17,7 @@ export interface ContentItem {
   durationSec?: number;
   createdAt?: string;
   mediaType?: string;
+  isEzGenerated?: boolean;
 }
 
 export interface ContentList {

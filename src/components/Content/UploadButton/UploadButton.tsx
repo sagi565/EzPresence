@@ -10,9 +10,11 @@ interface UploadButtonProps {
   onUpload: (file: File) => void;
   /** When provided, clicking navigates instead of opening a file dialog */
   onNavigate?: () => void;
+  /** When true, accepts both video and image file types */
+  acceptBoth?: boolean;
 }
 
-const UploadButton: React.FC<UploadButtonProps> = ({ listType, onUpload, onNavigate }) => {
+const UploadButton: React.FC<UploadButtonProps> = ({ listType, onUpload, onNavigate, acceptBoth }) => {
   const [isHovered, setIsHovered] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
@@ -49,7 +51,7 @@ const UploadButton: React.FC<UploadButtonProps> = ({ listType, onUpload, onNavig
       <input
         ref={fileInputRef}
         type="file"
-        accept={listType === 'video' ? 'video/*' : 'image/*'}
+        accept={acceptBoth ? 'video/*,image/*' : listType === 'video' ? 'video/*' : 'image/*'}
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />

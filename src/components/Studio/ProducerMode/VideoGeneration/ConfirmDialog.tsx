@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
-import { 
-  ConfirmOverlay, 
-  ConfirmDialogContainer, 
-  ConfirmTitle, 
-  ConfirmMessage, 
-  ConfirmButtons, 
-  ConfirmBtn 
+import { Sparkles } from 'lucide-react';
+import {
+  ConfirmOverlay,
+  ConfirmDialogContainer,
+  ConfirmIconWrap,
+  ConfirmTitle,
+  ConfirmMessage,
+  ConfirmButtons,
+  ConfirmBtn
 } from './styles';
 
 interface ConfirmDialogProps {
@@ -15,8 +17,6 @@ interface ConfirmDialogProps {
 }
 
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ onConfirm, onCancel }) => {
-  const [hoveredButton, setHoveredButton] = useState<'cancel' | 'confirm' | null>(null);
-
   return (
     <>
       {ReactDOM.createPortal(
@@ -25,29 +25,16 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ onConfirm, onCancel }) =>
       )}
       {ReactDOM.createPortal(
         <ConfirmDialogContainer>
+          <ConfirmIconWrap>
+            <Sparkles size={22} />
+          </ConfirmIconWrap>
           <ConfirmTitle>Are you sure you want to continue?</ConfirmTitle>
           <ConfirmMessage>
             This will use credits, start video generation, and may take some time—but you'll be notified once it's ready.
           </ConfirmMessage>
           <ConfirmButtons>
-            <ConfirmBtn
-              $type="cancel"
-              $isHovered={hoveredButton === 'cancel'}
-              onClick={onCancel}
-              onMouseEnter={() => setHoveredButton('cancel')}
-              onMouseLeave={() => setHoveredButton(null)}
-            >
-              Cancel
-            </ConfirmBtn>
-            <ConfirmBtn
-              $type="confirm"
-              $isHovered={hoveredButton === 'confirm'}
-              onClick={onConfirm}
-              onMouseEnter={() => setHoveredButton('confirm')}
-              onMouseLeave={() => setHoveredButton(null)}
-            >
-              Generate
-            </ConfirmBtn>
+            <ConfirmBtn $variant="cancel" onClick={onCancel}>Cancel</ConfirmBtn>
+            <ConfirmBtn $variant="confirm" onClick={onConfirm}>Generate</ConfirmBtn>
           </ConfirmButtons>
         </ConfirmDialogContainer>,
         document.body

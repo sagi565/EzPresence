@@ -214,7 +214,7 @@ export const MenuDropdown = styled.div`
   animation: ${fadeIn} 0.2s ease;
 `;
 
-export const MenuItem = styled.button<{ $variant?: 'default' | 'delete'; $isHovered?: boolean }>`
+export const MenuItem = styled.button<{ $variant?: 'default' | 'delete' | 'report'; $isHovered?: boolean }>`
   padding: 10px 12px;
   border-radius: 8px;
   cursor: pointer;
@@ -230,13 +230,18 @@ export const MenuItem = styled.button<{ $variant?: 'default' | 'delete'; $isHove
   width: 100%;
   transition: all 0.2s;
 
-  ${props => props.$isHovered && (props.$variant === 'delete' ? css`
-    background: rgba(239, 68, 68, 0.08);
-    color: #ef4444;
-  ` : css`
-    background: ${props.theme.colors.primary}14;
-    color: ${props.theme.colors.primary};
-  `)}
+  ${props => props.$isHovered && (
+    props.$variant === 'delete' ? css`
+      background: rgba(239, 68, 68, 0.08);
+      color: #ef4444;
+    ` : props.$variant === 'report' ? css`
+      background: rgba(245, 158, 11, 0.08);
+      color: #d97706;
+    ` : css`
+      background: ${props.theme.colors.primary}14;
+      color: ${props.theme.colors.primary};
+    `
+  )}
 `;
 
 export const ContentTitle = styled.div<{ $isVisible?: boolean; $isMobile?: boolean }>`

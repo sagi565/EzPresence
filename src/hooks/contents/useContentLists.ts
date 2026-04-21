@@ -80,7 +80,8 @@ export const useContentLists = (brandId?: string) => {
                 thumbnail: c.thumbnailObject || '',
                 favorite: c.isFavorite || false,
                 status: 'success',
-                createdAt: c.createdAt
+                createdAt: c.createdAt,
+                isEzGenerated: c.isEzGenerated || false,
               };
             });
         });

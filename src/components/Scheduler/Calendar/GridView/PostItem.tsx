@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Post } from '@models/Post';
-import { Repeat } from 'lucide-react';
+import PolicyRepeatIcon from '../PolicyRepeatIcon';
 import {
   PostItemContainer,
   PostFirstLine,
@@ -18,13 +18,15 @@ import { getPolicyBackground, getPolicyAccent } from '@utils/policyColors';
 interface PostItemProps {
   post: Post;
   onClick: (post: Post) => void;
+  onPostContextMenu?: (post: Post, x: number, y: number) => void;
 }
 
-const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
+const PostItem: React.FC<PostItemProps> = ({ post, onClick, onPostContextMenu }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isStatusHovered, setIsStatusHovered] = useState(false);
   const [isMediaHovered, setIsMediaHovered] = useState(false);
   const [isRepeatHovered, setIsRepeatHovered] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mediaEmoji = post.media === 'video' ? '🎥' : '🖼️';
   const mediaText = post.media === 'video' ? 'Video' : 'Image';
   const getStatusText = (status: string) => {
@@ -61,6 +63,25 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
         e.stopPropagation();
         onClick(post);
       }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onPostContextMenu?.(post, e.clientX, e.clientY);
+      }}
+      onTouchStart={(e) => {
+        const touch = e.touches[0];
+        const x = touch.clientX;
+        const y = touch.clientY;
+        longPressTimer.current = setTimeout(() => {
+          onPostContextMenu?.(post, x, y);
+        }, 500);
+      }}
+      onTouchMove={() => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+      }}
+      onTouchEnd={() => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+      }}
     >
       <PostFirstLine>
         <PostLeft>
@@ -94,11 +115,10 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick }) => {
               onMouseEnter={() => setIsRepeatHovered(true)}
               onMouseLeave={() => setIsRepeatHovered(false)}
             >
-              <Repeat
+              <PolicyRepeatIcon
                 size={14}
                 color="#000"
-                strokeWidth={2.5}
-                style={{ opacity: 0.7 }}
+                style={{ opacity: 0.8 }}
               />
               {isRepeatHovered && (
                 <BlackTooltip>Repeat {post.type}</BlackTooltip>

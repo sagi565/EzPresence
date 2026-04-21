@@ -222,6 +222,7 @@ const ContentList: React.FC<ContentListProps> = ({
           onUpload={onUpload}
           onAddNavigate={onAddNavigate}
           listType={list.listType}
+          acceptBoth={!list.isSystem}
           listId={list.id}
           isMobile={isMobile}
         />
@@ -232,7 +233,7 @@ const ContentList: React.FC<ContentListProps> = ({
           $isInvalidDropTarget={isInvalidDropTarget}
         >
           {!isMobile && (
-            <UploadButton listType={list.listType} onUpload={onUpload} onNavigate={onAddNavigate} />
+            <UploadButton listType={list.listType} onUpload={onUpload} onNavigate={onAddNavigate} acceptBoth={!list.isSystem} />
           )}
 
           {list.items.map((item) => (

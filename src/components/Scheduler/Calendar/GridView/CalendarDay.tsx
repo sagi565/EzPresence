@@ -21,6 +21,7 @@ interface CalendarDayProps {
   onPostClick: (post: Post) => void;
   activeDropDate?: Date | null;
   onContextMenu?: (e: React.MouseEvent, date: Date) => void;
+  onPostContextMenu?: (post: Post, x: number, y: number) => void;
 }
 
 const MONTH_NAMES = [
@@ -40,6 +41,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
   onPostClick,
   activeDropDate,
   onContextMenu,
+  onPostContextMenu,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -95,7 +97,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
         )}
       </DayNumber>
       {visiblePosts.map((post) => (
-        <PostItem key={post.id} post={post} onClick={onPostClick} />
+        <PostItem key={post.id} post={post} onClick={onPostClick} onPostContextMenu={onPostContextMenu} />
       ))}
       {hasOverflow && (
         <OverflowIndicator>+{posts.length - maxVisible}</OverflowIndicator>

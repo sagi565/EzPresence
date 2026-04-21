@@ -8,6 +8,7 @@ import PromptBox, { FileAtt } from '@components/Studio/VisionCreator/PromptBox/P
 import PlanningView from '@components/Studio/VisionCreator/PlanningView/PlanningView';
 import ReadyView from '@components/Studio/VisionCreator/ReadyView/ReadyView';
 import ReadyViewV2 from '@components/Studio/VisionCreator/ReadyViewV2/ReadyViewV2';
+import ReadyViewV3 from '@components/Studio/VisionCreator/ReadyViewV3/ReadyViewV3';
 import ConfirmDialog from '@components/Studio/VisionCreator/ConfirmDialog/ConfirmDialog';
 
 import { VisionContainer, BackBtn, BackBtnLabel, BackBtnAccent, LogoMark, ContentWrapper, Banner, VersionToggle, VersionBtn } from './styles';
@@ -29,11 +30,11 @@ const VisionPage: React.FC = () => {
   const [withCaptions, setWithCaptions] = useState(_savedMeta?.withCaptions ?? false);
   const [socialVideo,  setSocialVideo]  = useState<SocialVideoContext | null>(null);
   const [quickMode,    setQuickMode]    = useState(false);
-  const [duration,     setDuration]     = useState<'snappy'|'standard'|'extended'|'comprehensive'|null>(_savedMeta?.duration as any ?? null);
+  const [duration,     setDuration]     = useState<'snappy'|'standard'|'extended'|'comprehensive'>(_savedMeta?.duration as any ?? 'standard');
   const [autoMode,     setAutoMode]     = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
-  const [planView, setPlanView] = useState<'v1'|'v2'>(() =>
-    (localStorage.getItem('vision_plan_view') as 'v1'|'v2') ?? 'v1'
+  const [planView, setPlanView] = useState<'v1'|'v2'|'v3'>(() =>
+    (localStorage.getItem('vision_plan_view') as 'v1'|'v2'|'v3') ?? 'v1'
   );
 
   useEffect(() => { localStorage.setItem('vision_plan_view', planView); }, [planView]);
@@ -63,10 +64,12 @@ const VisionPage: React.FC = () => {
   const onDragLeave = (e: DragEvent) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false); };
   const onDrop      = (e: DragEvent) => {
     e.preventDefault(); setDragging(false);
-    Array.from(e.dataTransfer.files).forEach(f => setFiles(p => [...p, { id: `${f.name}-${Date.now()}`, name: f.name }]));
+    const f = e.dataTransfer.files[0];
+    if (f) setFiles([{ id: `${f.name}-${Date.now()}`, name: f.name }]);
   };
   const onFile = (e: ChangeEvent<HTMLInputElement>) => {
-    Array.from(e.target.files || []).forEach(f => setFiles(p => [...p, { id: `${f.name}-${Date.now()}`, name: f.name }]));
+    const f = (e.target.files || [])[0];
+    if (f) setFiles([{ id: `${f.name}-${Date.now()}`, name: f.name }]);
     e.target.value = '';
   };
 
@@ -180,6 +183,7 @@ const VisionPage: React.FC = () => {
         <VersionToggle>
           <VersionBtn $active={planView === 'v1'} onClick={() => setPlanView('v1')}>V1</VersionBtn>
           <VersionBtn $active={planView === 'v2'} onClick={() => setPlanView('v2')}>V2</VersionBtn>
+          <VersionBtn $active={planView === 'v3'} onClick={() => setPlanView('v3')}>V3</VersionBtn>
         </VersionToggle>
       )}
 
@@ -227,8 +231,20 @@ const VisionPage: React.FC = () => {
           onRequestDelete={() => setConfirmAction('delete')}
         />
       )}
+      {showReady && plan && planView === 'v3' && (
+        <ReadyViewV3
+          plan={plan}
+          updatePlan={updatePlan}
+          executePlan={handleExecutePlan}
+          isUpdating={isUpdating}
+          isExecuting={isExecuting}
+          apiError={apiError}
+          promptBoxSlot={renderPromptBox(true)}
+          onRequestDelete={() => setConfirmAction('delete')}
+        />
+      )}
 
-      <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={onFile} />
+      <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFile} />
 
       {confirmAction === 'back' && (
         <ConfirmDialog

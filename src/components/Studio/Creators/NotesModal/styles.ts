@@ -425,80 +425,97 @@ export const GenerateBtn = styled.button`
 `;
 
 // Confirm Dialog Components
+const confirmFadeIn = keyframes`from { opacity: 0; } to { opacity: 1; }`;
+const confirmSlideUp = keyframes`
+  from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+`;
+
 export const ConfirmOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 3001;
+  z-index: 9998;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  animation: ${confirmFadeIn} 0.18s ease both;
 `;
 
 export const ConfirmDialog = styled.div`
   position: fixed;
   top: 50%;
   left: 50%;
+  z-index: 9999;
   transform: translate(-50%, -50%);
-  background: white;
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-  z-index: 3002;
-  maxWidth: 400px;
-  width: 90%;
-  textAlign: center;
+  width: min(400px, 90vw);
+  background: ${p => p.theme.colors.surface};
+  border: 1.5px solid rgba(139, 92, 246, 0.2);
+  border-radius: 20px;
+  padding: 32px 28px 28px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(139, 92, 246, 0.08);
+  animation: ${confirmSlideUp} 0.22s cubic-bezier(0.34, 1.1, 0.64, 1) both;
+  text-align: center;
 `;
 
-export const ConfirmTitle = styled.h3`
+export const ConfirmIconWrap = styled.div`
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  background: rgba(139, 92, 246, 0.1);
+  color: #9b5de5;
+`;
+
+export const ConfirmTitle = styled.div`
   font-size: 18px;
   font-weight: 700;
-  margin-bottom: 16px;
-  color: ${props => props.theme.colors.text};
+  color: ${p => p.theme.colors.text};
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
 `;
 
-export const ConfirmMessage = styled.p`
+export const ConfirmMessage = styled.div`
   font-size: 14px;
-  line-height: 1.6;
-  color: ${props => props.theme.colors.muted};
-  margin-bottom: 24px;
+  line-height: 1.65;
+  color: ${p => p.theme.colors.muted};
+  margin-bottom: 28px;
   white-space: pre-line;
 `;
 
 export const CreditsBold = styled.span`
-  fontWeight: 700;
-  color: ${props => props.theme.colors.text};
+  font-weight: 700;
+  color: ${p => p.theme.colors.text};
 `;
 
 export const ConfirmButtons = styled.div`
   display: flex;
-  gap: 12px;
-  justify-content: center;
+  gap: 10px;
 `;
 
 export const ConfirmBtn = styled.button<{ $proceed?: boolean }>`
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-weight: 600;
+  flex: 1;
+  padding: 11px 16px;
+  border-radius: 12px;
   font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s;
-  border: none;
+  transition: all 0.18s;
+  letter-spacing: 0.01em;
 
-  ${props => props.$proceed ? css`
-    background: ${props => props.theme.gradients.innovator};
-    color: white;
-    box-shadow: 0 4px 12px ${props => props.theme.colors.primary}4D;
-
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px ${props => props.theme.colors.primary}66;
-    }
+  ${p => p.$proceed ? css`
+    background: linear-gradient(135deg, #9b5de5 0%, #7c3aed 100%);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35);
+    &:hover { box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5); transform: translateY(-1px); }
   ` : css`
-    background: ${props => props.theme.colors.muted}1A;
-    color: ${props => props.theme.colors.muted};
-
-    &:hover {
-      background: rgba(107, 114, 128, 0.15);
-    }
+    background: rgba(139, 92, 246, 0.07);
+    color: ${p.theme.colors.muted};
+    border: 1.5px solid rgba(139, 92, 246, 0.12);
+    &:hover { background: rgba(139, 92, 246, 0.12); border-color: rgba(139, 92, 246, 0.25); }
   `}
 `;
 

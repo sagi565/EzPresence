@@ -3,6 +3,16 @@ import styled, { keyframes, css } from 'styled-components';
 export const blink     = keyframes`0%,100%{opacity:1}50%{opacity:0}`;
 export const spin      = keyframes`from{transform:rotate(0deg)}to{transform:rotate(360deg)}`;
 export const rippleA   = keyframes`0%{transform:scale(0);opacity:.6}100%{transform:scale(2.8);opacity:0}`;
+/* subtle wiggle — hints the user that duration can be changed when trim hits the limit */
+export const durationTwitch = keyframes`
+  0%   { transform: translateX(0);     }
+  18%  { transform: translateX(-1.5px);}
+  34%  { transform: translateX(1.5px); }
+  50%  { transform: translateX(-1px);  }
+  66%  { transform: translateX(1px);   }
+  82%  { transform: translateX(-.5px); }
+  100% { transform: translateX(0);     }
+`;
 
 export const StyledPromptBox = styled.div<{$drag:boolean;$focus:boolean}>`
   width:100%;background:${p=>p.theme.colors.surface};border-radius:20px;
@@ -22,7 +32,7 @@ export const AttachChip = styled.div`display:inline-flex;align-items:center;gap:
 export const AttachName = styled.span`overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`;
 export const RemoveBtn = styled.button`background:none;border:none;cursor:pointer;padding:0;color:${p=>p.theme.colors.muted};font-size:16px;line-height:1;display:flex;align-items:center;flex-shrink:0;opacity:.5;&:hover{opacity:1;color:#8b5cf6;}`;
 export const Toolbar   = styled.div<{$minimalist?:boolean}>`display:flex;align-items:center;padding:${p=>p.$minimalist?'7px 12px':'10px 13px'};gap:6px;border-top:1px solid ${p=>p.theme.colors.primaryLight};margin-top:${p=>p.$minimalist?'6px':'10px'};@media(max-width:480px){padding:8px 10px;gap:4px;}`;
-export const IconBtn   = styled.button<{$active?:boolean}>`display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;flex-shrink:0;border:1.5px solid ${p=>p.$active?'rgba(139,92,246,.4)':'rgba(139,92,246,.1)'};background:${p=>p.$active?'rgba(139,92,246,.1)':'transparent'};color:${p=>p.$active?'#8b5cf6':p.theme.colors.muted};cursor:pointer;transition:all .18s;&:hover{background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.3);color:#8b5cf6;}@media(max-width:480px){width:29px;height:29px;border-radius:8px;}`;
+export const IconBtn   = styled.button<{$active?:boolean}>`display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;flex-shrink:0;border:1.5px solid ${p=>p.$active?'rgba(139,92,246,.4)':'rgba(139,92,246,.1)'};background:${p=>p.$active?'rgba(139,92,246,.1)':'transparent'};color:${p=>p.$active?'#8b5cf6':p.theme.colors.muted};cursor:pointer;transition:all .18s;&:hover{background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.3);color:#8b5cf6;}&.twitch{animation:${durationTwitch} .5s cubic-bezier(.36,.07,.19,.97) both;border-color:rgba(139,92,246,.55);background:rgba(139,92,246,.14);color:#8b5cf6;}@media(max-width:480px){width:29px;height:29px;border-radius:8px;}`;
 export const Spacer    = styled.div`flex:1;`;
 export const CharCount = styled.span<{$w:boolean}>`font-size:11.5px;color:${p=>p.$w?'#f59e0b':p.theme.colors.muted};opacity:.65;font-variant-numeric:tabular-nums;`;
 export const QuickBtn  = styled.button<{$ready:boolean;$loading:boolean}>`display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:12px;font-size:13.5px;font-weight:600;font-family:inherit;border:1.5px solid rgba(139,92,246,.3);background:transparent;color:rgba(139,92,246,.7);cursor:${p=>(p.$ready&&!p.$loading)?'pointer':'default'};transition:all .2s;opacity:${p=>(!p.$ready||p.$loading)?0.4:1};${p=>p.$ready&&!p.$loading&&css`&:hover{background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.5);color:#8b5cf6;}`}@media(max-width:480px){padding:7px 12px;font-size:12.5px;border-radius:10px;}`;

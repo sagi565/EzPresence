@@ -25,12 +25,11 @@ export const TopBar = styled.div`
   box-shadow:0 1px 6px ${p=>p.theme.mode==='dark'?'rgba(0,0,0,.3)':'rgba(0,0,0,.05)'};
 `;
 
-export const TopBarTitle = styled.input`
-  flex:1;background:transparent;border:none;outline:none;
-  font-size:15px;font-weight:700;letter-spacing:-.3px;
-  color:${p=>p.theme.colors.text};font-family:inherit;
-  caret-color:${p=>p.theme.colors.primary};
-  &::placeholder{color:${p=>p.theme.colors.muted};opacity:.4;}
+export const TopBarTitle = styled.div`
+  flex:1;
+  font-size:16px;font-weight:700;letter-spacing:-.4px;
+  color:${p=>p.theme.colors.text};
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 `;
 
 export const TopBarMeta = styled.div`
@@ -46,16 +45,28 @@ export const VersionBadge = styled.div`
   letter-spacing:.05em;
 `;
 
+export const TypeBadge = styled.div<{$speechless?:boolean}>`
+  padding:3px 10px;border-radius:999px;
+  background:${p=>p.$speechless?'rgba(100,116,139,.08)':'rgba(20,184,166,.08)'};
+  border:1px solid ${p=>p.$speechless?'rgba(100,116,139,.2)':'rgba(20,184,166,.2)'};
+  font-size:10.5px;font-weight:700;
+  color:${p=>p.$speechless?'#64748b':'#0d9488'};
+  letter-spacing:.04em;
+`;
+
+export const CategoryChip = styled.div`
+  padding:3px 10px;border-radius:999px;
+  background:rgba(251,191,36,.08);
+  border:1px solid rgba(251,191,36,.2);
+  font-size:10.5px;font-weight:700;
+  color:#d97706;
+  letter-spacing:.04em;
+`;
+
 export const ReadyDot = styled.div`
   width:7px;height:7px;border-radius:50%;
   background:#22c55e;box-shadow:0 0 8px #22c55e;
   animation:${pulse} 1.6s ease-in-out infinite;
-`;
-
-export const ChangedDot = styled.div`
-  width:7px;height:7px;border-radius:50%;
-  background:#f59e0b;box-shadow:0 0 7px #f59e0b;
-  animation:${pulse} 1.2s ease-in-out infinite;
 `;
 
 export const ReadyPill = styled.div`
@@ -66,15 +77,60 @@ export const ReadyPill = styled.div`
   letter-spacing:.06em;text-transform:uppercase;
 `;
 
-export const SaveBtn = styled.button`
-  padding:6px 16px;border-radius:8px;
-  border:1px solid rgba(155,93,229,.2);
-  cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;
-  background:${p=>p.theme.colors.primaryLight};
-  color:${p=>p.theme.colors.primary};
-  transition:all .18s;
-  &:hover{background:rgba(155,93,229,.12);border-color:rgba(155,93,229,.35);}
-  &:disabled{opacity:.35;cursor:default;}
+// ─── Scene Timeline ────────────────────────────────────────────────────────────
+export const TimelineWrapper = styled.div`
+  height:48px;flex-shrink:0;
+  display:flex;align-items:center;
+  padding:0 24px;gap:10px;
+  border-bottom:1px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)'};
+  background:${p=>p.theme.mode==='dark'?'rgba(0,0,0,.15)':'rgba(0,0,0,.02)'};
+`;
+
+export const TimelineTrack = styled.div`
+  flex:1;display:flex;align-items:center;height:34px;
+  border-radius:8px;overflow:hidden;gap:2px;
+`;
+
+export const TimelineSegment = styled.button<{$color:string;$active:boolean}>`
+  display:flex;align-items:center;justify-content:center;
+  height:100%;padding:0 10px;min-width:28px;
+  border:none;cursor:pointer;font-family:inherit;
+  background:${p=>p.$active?p.$color:`${p.$color}22`};
+  color:${p=>p.$active?'white':p.$color};
+  position:relative;gap:6px;flex-shrink:0;
+  transition:background .2s,color .2s;
+  &:hover{background:${p=>p.$active?p.$color:`${p.$color}3a`};}
+`;
+
+export const TimelineDot = styled.div<{$color:string;$active:boolean}>`
+  width:${p=>p.$active?7:5}px;height:${p=>p.$active?7:5}px;
+  border-radius:50%;flex-shrink:0;
+  background:${p=>p.$active?'white':p.$color};
+  box-shadow:${p=>p.$active?'0 0 6px rgba(255,255,255,.5)':'none'};
+  opacity:${p=>p.$active?1:.7};
+  transition:all .2s;
+`;
+
+export const TimelineSegmentLabel = styled.div<{$active:boolean}>`
+  font-size:11px;font-weight:800;
+  color:${p=>p.$active?'white':'inherit'};
+  display:flex;align-items:center;gap:5px;
+  white-space:nowrap;
+`;
+
+export const TimelineSegmentDur = styled.span`
+  font-size:9.5px;font-weight:600;opacity:.75;
+`;
+
+export const TimelineEndDot = styled.div<{$color:string}>`
+  width:6px;height:6px;border-radius:50%;flex-shrink:0;
+  background:${p=>p.$color};opacity:.3;
+`;
+
+export const TimelineTotalLabel = styled.div`
+  font-size:11px;font-weight:700;
+  color:${p=>p.theme.colors.muted};opacity:.55;
+  white-space:nowrap;letter-spacing:.02em;
 `;
 
 // ─── Split pane ───────────────────────────────────────────────────────────────
@@ -82,7 +138,7 @@ export const SplitPane = styled.div`flex:1;display:flex;overflow:hidden;`;
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 export const Sidebar = styled.div`
-  width:240px;flex-shrink:0;
+  width:232px;flex-shrink:0;
   display:flex;flex-direction:column;
   border-right:1px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)'};
   background:${p=>p.theme.colors.surface};
@@ -90,12 +146,12 @@ export const Sidebar = styled.div`
   scrollbar-width:thin;scrollbar-color:rgba(155,93,229,.15) transparent;
 `;
 
-export const SidebarSection = styled.div`padding:16px 0 8px;`;
+export const SidebarSection = styled.div`padding:14px 0 6px;`;
 
 export const SidebarLabel = styled.div`
   padding:0 16px 8px;
   font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
-  color:${p=>p.theme.colors.muted};opacity:.55;
+  color:${p=>p.theme.colors.muted};opacity:.5;
 `;
 
 export const NavItem = styled.button<{$active:boolean;$color?:string}>`
@@ -108,7 +164,7 @@ export const NavItem = styled.button<{$active:boolean;$color?:string}>`
     :'transparent'};
   transition:color .15s,background .15s;
   &::before{
-    content:'';position:absolute;left:0;top:5px;bottom:5px;width:3px;
+    content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;
     border-radius:0 3px 3px 0;
     background:${p=>p.$color||p.theme.colors.primary};
     opacity:${p=>p.$active?1:0};transition:opacity .2s;
@@ -120,9 +176,9 @@ export const NavItem = styled.button<{$active:boolean;$color?:string}>`
 `;
 
 export const NavIcon = styled.div<{$active:boolean;$color?:string}>`
-  width:32px;height:32px;flex-shrink:0;
+  width:30px;height:30px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  font-size:15px;border-radius:8px;
+  font-size:14px;border-radius:8px;
   background:${p=>p.$active
     ?(p.$color?`${p.$color}18`:p.theme.colors.primaryLight)
     :(p.theme.mode==='dark'?'rgba(255,255,255,.04)':'rgba(0,0,0,.04)')};
@@ -139,29 +195,30 @@ export const SidebarDivider = styled.div`
 
 export const SceneCountLabel = styled.div`
   display:flex;align-items:center;justify-content:space-between;
-  padding:8px 16px 6px;
+  padding:6px 16px 5px;
   font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
-  color:${p=>p.theme.colors.muted};opacity:.55;
+  color:${p=>p.theme.colors.muted};opacity:.5;
 `;
 
-export const SceneTile = styled.button<{$active:boolean}>`
+export const SceneTile = styled.button<{$active:boolean;$color?:string}>`
   width:100%;display:flex;align-items:center;gap:9px;
   padding:8px 16px;border:none;cursor:pointer;
   font-family:inherit;text-align:left;position:relative;
-  background:${p=>p.$active?'rgba(245,158,11,.07)':'transparent'};
+  background:${p=>p.$active?(p.$color?`${p.$color}10`:'rgba(245,158,11,.07)'):'transparent'};
   transition:background .15s;
   &::before{
     content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;
-    border-radius:0 3px 3px 0;background:#f59e0b;
+    border-radius:0 3px 3px 0;
+    background:${p=>p.$color||'#f59e0b'};
     opacity:${p=>p.$active?1:0};transition:opacity .15s;
   }
-  &:hover{background:rgba(245,158,11,.04);}
+  &:hover{background:${p=>p.$color?`${p.$color}08`:'rgba(245,158,11,.04)'};}
 `;
 
-export const SceneTileNum = styled.div<{$active:boolean}>`
-  width:24px;height:24px;border-radius:7px;flex-shrink:0;
+export const SceneTileNum = styled.div<{$active:boolean;$color?:string}>`
+  width:22px;height:22px;border-radius:6px;flex-shrink:0;
   background:${p=>p.$active
-    ?'linear-gradient(135deg,#f59e0b,#d97706)'
+    ?(p.$color||'#f59e0b')
     :(p.theme.mode==='dark'?'rgba(255,255,255,.07)':'rgba(0,0,0,.06)')};
   display:flex;align-items:center;justify-content:center;
   font-size:10px;font-weight:800;
@@ -178,11 +235,12 @@ export const SceneTilePrompt = styled.div<{$active:boolean}>`
   transition:color .15s;
 `;
 
-export const DurationChip = styled.div`
-  font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;
-  background:rgba(245,158,11,.1);color:#d97706;
-  border:1px solid rgba(245,158,11,.15);
-  margin-top:3px;display:inline-block;
+export const DurationChip = styled.div<{$color?:string}>`
+  font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:4px;
+  background:${p=>p.$color?`${p.$color}14`:'rgba(245,158,11,.1)'};
+  color:${p=>p.$color||'#d97706'};
+  border:1px solid ${p=>p.$color?`${p.$color}28`:'rgba(245,158,11,.15)'};
+  margin-top:2px;display:inline-block;
 `;
 
 // ─── Content panel ────────────────────────────────────────────────────────────
@@ -222,133 +280,131 @@ export const HeadingSubtext = styled.div`
 // ─── Field card ───────────────────────────────────────────────────────────────
 export const FieldCard = styled.div<{$color?:string}>`
   background:${p=>p.theme.colors.surface};
-  border:1.5px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.08)':'rgba(0,0,0,.08)'};
-  border-radius:14px;padding:14px 16px;
+  border:1.5px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.07)':'rgba(0,0,0,.07)'};
+  border-radius:14px;padding:16px 18px;
   box-shadow:${p=>p.theme.shadows.sm};
-  transition:border-color .2s,box-shadow .2s;
-  &:focus-within{
-    border-color:${p=>p.$color?`${p.$color}55`:'rgba(155,93,229,.35)'};
-    box-shadow:0 0 0 3px ${p=>p.$color?`${p.$color}14`:'rgba(155,93,229,.08)'};
-  }
+  margin-bottom:14px;
 `;
 
 export const FieldLabel = styled.div`
-  font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:${p=>p.theme.colors.muted};margin-bottom:8px;
+  font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  color:${p=>p.theme.colors.muted};margin-bottom:10px;opacity:.65;
 `;
 
-export const CharCountRow = styled.div`
-  display:flex;justify-content:flex-end;margin-top:6px;
+// ─── Read-only display ────────────────────────────────────────────────────────
+export const ReadOnlyText = styled.div<{$italic?:boolean}>`
+  font-size:13.5px;line-height:1.75;
+  color:${p=>p.theme.colors.text};
+  font-style:${p=>p.$italic?'italic':'normal'};
+  white-space:pre-wrap;word-break:break-word;
 `;
 
-export const CharCount = styled.span<{$warn?:boolean}>`
-  font-size:10px;font-weight:600;
-  color:${p=>p.$warn?'#f59e0b':p.theme.colors.muted};
-  opacity:${p=>p.$warn?.8:.45};
-  transition:color .2s,opacity .2s;
+export const ReadOnlyPlaceholder = styled.span`
+  color:${p=>p.theme.colors.muted};opacity:.4;font-style:italic;
 `;
 
-export const ContentTextarea = styled.textarea`
-  width:100%;min-height:100px;max-height:300px;resize:vertical;
-  background:transparent;border:none;outline:none;padding:0;
-  font-size:13.5px;line-height:1.7;
-  color:${p=>p.theme.colors.text};font-family:inherit;
-  caret-color:${p=>p.theme.colors.primary};
-  box-sizing:border-box;
-  scrollbar-width:thin;scrollbar-color:rgba(155,93,229,.15) transparent;
-  &::placeholder{color:${p=>p.theme.colors.muted};opacity:.4;}
-`;
+// ─── Voice ────────────────────────────────────────────────────────────────────
+export const VoiceSection = styled.div`display:flex;flex-direction:column;gap:0;`;
 
-export const VoiceSection = styled.div`display:flex;flex-direction:column;gap:16px;`;
+export const GenderDisplay = styled.div`display:flex;gap:10px;`;
 
-export const VoiceInput = styled.input`
-  width:100%;background:transparent;border:none;outline:none;padding:0;
-  color:${p=>p.theme.colors.text};font-size:13.5px;font-family:inherit;
-  caret-color:${p=>p.theme.colors.primary};
-  &::placeholder{color:${p=>p.theme.colors.muted};opacity:.4;}
-`;
-
-export const GenderToggle = styled.div`display:flex;gap:8px;flex-wrap:wrap;`;
-
-export const GenderBtn = styled.button<{$active:boolean}>`
-  padding:9px 22px;border-radius:10px;
-  border:1.5px solid ${p=>p.$active?'rgba(236,72,153,.35)':(p.theme.mode==='dark'?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)')};
-  background:${p=>p.$active?'rgba(236,72,153,.08)':'transparent'};
-  color:${p=>p.$active?'#ec4899':p.theme.colors.muted};
-  font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;
+export const GenderBadge = styled.div<{$active:boolean;$gender:string}>`
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 22px;border-radius:12px;
+  border:1.5px solid ${p=>{
+    if (!p.$active) return p.theme.mode==='dark'?'rgba(255,255,255,.08)':'rgba(0,0,0,.08)';
+    return p.$gender==='MALE'?'rgba(59,130,246,.35)':'rgba(236,72,153,.35)';
+  }};
+  background:${p=>{
+    if (!p.$active) return 'transparent';
+    return p.$gender==='MALE'?'rgba(59,130,246,.08)':'rgba(236,72,153,.08)';
+  }};
+  color:${p=>{
+    if (!p.$active) return p.theme.colors.muted;
+    return p.$gender==='MALE'?'#3b82f6':'#ec4899';
+  }};
+  font-size:13px;font-weight:700;
+  opacity:${p=>p.$active?1:.45};
   transition:all .18s;
-  &:hover{border-color:rgba(236,72,153,.3);background:rgba(236,72,153,.05);}
+`;
+
+export const GenderIcon = styled.span`
+  font-size:20px;line-height:1;
 `;
 
 // ─── Scene panel ──────────────────────────────────────────────────────────────
 export const SceneTabs = styled.div`
-  display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;
+  display:flex;gap:6px;margin-bottom:22px;flex-wrap:wrap;
 `;
 
-export const SceneTab = styled.button<{$active:boolean}>`
-  padding:6px 15px;border-radius:9px;
-  border:1.5px solid ${p=>p.$active?'rgba(245,158,11,.4)':(p.theme.mode==='dark'?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)')};
-  background:${p=>p.$active?'rgba(245,158,11,.1)':'transparent'};
-  color:${p=>p.$active?'#d97706':p.theme.colors.muted};
+export const SceneTab = styled.button<{$active:boolean;$color?:string}>`
+  width:32px;height:32px;border-radius:9px;
+  border:1.5px solid ${p=>p.$active
+    ?(p.$color?`${p.$color}50`:'rgba(245,158,11,.4)')
+    :(p.theme.mode==='dark'?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)')};
+  background:${p=>p.$active
+    ?(p.$color?`${p.$color}14`:'rgba(245,158,11,.1)')
+    :'transparent'};
+  color:${p=>p.$active?(p.$color||'#d97706'):p.theme.colors.muted};
   font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
   transition:all .15s;
-  &:hover{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06);}
+  &:hover{
+    border-color:${p=>p.$color?`${p.$color}40`:'rgba(245,158,11,.3)'};
+    background:${p=>p.$color?`${p.$color}0c`:'rgba(245,158,11,.06)'};
+  }
 `;
 
-export const SceneFieldGroup = styled.div`display:flex;flex-direction:column;gap:16px;`;
+export const SceneFieldGroup = styled.div`display:flex;flex-direction:column;`;
 
-export const DurationRow = styled.div`display:flex;align-items:center;gap:10px;`;
+export const DurationDisplay = styled.div`display:flex;align-items:baseline;gap:8px;`;
 
-export const DurationInput = styled.input`
-  width:80px;padding:0;
-  background:transparent;border:none;outline:none;text-align:center;
-  color:${p=>p.theme.colors.text};
-  font-size:28px;font-weight:800;font-family:inherit;
-  caret-color:${p=>p.theme.colors.primary};
-  /* Hide number spinners */
-  &::-webkit-inner-spin-button,&::-webkit-outer-spin-button{-webkit-appearance:none;}
-  -moz-appearance:textfield;
+export const DurationValue = styled.div`
+  font-size:36px;font-weight:800;letter-spacing:-.02em;
+  color:${p=>p.theme.colors.text};line-height:1;
 `;
 
 export const DurationUnit = styled.span`
-  font-size:13px;font-weight:600;color:${p=>p.theme.colors.muted};
+  font-size:14px;font-weight:600;color:${p=>p.theme.colors.muted};
 `;
 
 // ─── Bottom bar ───────────────────────────────────────────────────────────────
 export const BottomBar = styled.div`
-  height:70px;flex-shrink:0;
+  flex-shrink:0;
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 24px;gap:12px;
+  padding:10px 20px;gap:14px;
   border-top:1px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)'};
   background:${p=>p.theme.colors.surface};
-  box-shadow:0 -1px 6px ${p=>p.theme.mode==='dark'?'rgba(0,0,0,.25)':'rgba(0,0,0,.05)'};
+  box-shadow:0 -1px 8px ${p=>p.theme.mode==='dark'?'rgba(0,0,0,.28)':'rgba(0,0,0,.06)'};
 `;
 
-export const BottomLeft = styled.div`flex:1;min-width:0;`;
+export const PromptSlotWrap = styled.div`
+  flex:1;min-width:0;
+  /* Tighten the card styling of the embedded PromptBox */
+  & > div {
+    border-radius:12px;
+    box-shadow:none !important;
+    border-color:${p=>p.theme.mode==='dark'?'rgba(139,92,246,.18)':'rgba(139,92,246,.15)'} !important;
+    &:hover { box-shadow: none !important; }
+  }
+`;
 
 export const StatusText = styled.div`
   font-size:12px;color:${p=>p.theme.colors.primary};
   font-weight:600;white-space:nowrap;opacity:.7;
 `;
 
-export const GenerateBtn = styled.button<{$loading:boolean;$hasChanges:boolean}>`
+export const GenerateBtn = styled.button<{$loading:boolean}>`
   display:inline-flex;align-items:center;gap:8px;
   padding:13px 30px;border-radius:12px;border:none;cursor:pointer;
   font-size:13.5px;font-weight:700;font-family:inherit;flex-shrink:0;
-  background:${p=>p.$hasChanges
-    ?'linear-gradient(135deg,#f59e0b,#d97706)'
-    :'linear-gradient(135deg,#9b5de5,#14b8a6)'};
+  background:linear-gradient(135deg,#9b5de5,#14b8a6);
   color:white;
-  box-shadow:${p=>p.$hasChanges
-    ?'0 4px 18px rgba(245,158,11,.35)'
-    :'0 4px 20px rgba(155,93,229,.35)'};
+  box-shadow:0 4px 20px rgba(155,93,229,.35);
   transition:all .22s cubic-bezier(.4,0,.2,1);
   opacity:${p=>p.$loading?.7:1};
   &:hover:not(:disabled){
     transform:translateY(-2px);
-    box-shadow:${p=>p.$hasChanges
-      ?'0 7px 24px rgba(245,158,11,.48)'
-      :'0 7px 26px rgba(155,93,229,.5)'};
+    box-shadow:0 7px 26px rgba(155,93,229,.5);
   }
   &:active{transform:translateY(0);}
   &:disabled{cursor:default;}

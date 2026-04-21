@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
-import { theme } from '@/theme/theme';
-import { styles } from './styles';
+import { Trash2, AlertTriangle } from 'lucide-react';
+import { Overlay, Dialog, IconWrap, Title, Message, Actions, CancelBtn, ConfirmBtn } from './styles';
 
 interface ConfirmDialogProps {
     isOpen: boolean;
@@ -24,64 +24,22 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     onConfirm,
     onCancel
 }) => {
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    if (!isOpen || !mounted) return null;
+    if (!isOpen) return null;
 
     return createPortal(
         <>
-            <div
-                style={styles.overlay}
-                onClick={onCancel}
-            >
-                <div
-                    style={styles.dialog}
-                    onClick={e => e.stopPropagation()}
-                >
-                    <div style={styles.titleRow}>
-                        <h3 style={styles.title}>
-                            {title}
-                        </h3>
-                    </div>
-
-                    <p style={styles.message}>
-                        {message}
-                    </p>
-
-                    <div style={styles.actions}>
-                        <button
-                            type="button"
-                            onClick={onCancel}
-                            style={styles.cancelBtn}
-                        >
-                            {cancelLabel}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={onConfirm}
-                            style={{
-                                ...styles.confirmBtn,
-                                background: danger ? '#EF4444' : theme.gradients.innovator,
-                                boxShadow: danger
-                                    ? '0 3px 12px rgba(239, 68, 68, 0.3)'
-                                    : '0 3px 12px rgba(155, 93, 229, 0.25)',
-                            }}
-                        >
-                            {confirmLabel}
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <style>{`
-                @keyframes confirmDialogFadeIn {
-                    from { opacity: 0; transform: scale(0.95); }
-                    to { opacity: 1; transform: scale(1); }
-                }
-            `}</style>
+            <Overlay onClick={onCancel} />
+            <Dialog>
+                <IconWrap $danger={danger}>
+                    {danger ? <Trash2 size={22} /> : <AlertTriangle size={22} />}
+                </IconWrap>
+                <Title>{title}</Title>
+                <Message>{message}</Message>
+                <Actions>
+                    <CancelBtn type="button" onClick={onCancel}>{cancelLabel}</CancelBtn>
+                    <ConfirmBtn type="button" $danger={danger} onClick={onConfirm}>{confirmLabel}</ConfirmBtn>
+                </Actions>
+            </Dialog>
         </>,
         document.body
     );

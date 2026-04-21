@@ -17,6 +17,7 @@ interface CalendarGridProps {
   onPostClick: (post: Post) => void;
   activeDropDate?: Date | null;
   onContextMenu?: (e: React.MouseEvent, date: Date) => void;
+  onPostContextMenu?: (post: Post, x: number, y: number) => void;
 }
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({
@@ -28,6 +29,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   onPostClick,
   activeDropDate,
   onContextMenu,
+  onPostContextMenu,
 }) => {
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -73,6 +75,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         onPostClick={onPostClick}
         activeDropDate={activeDropDate}
         onContextMenu={onContextMenu}
+        onPostContextMenu={onPostContextMenu}
       />
     );
   }
@@ -106,6 +109,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         onPostClick={onPostClick}
         activeDropDate={activeDropDate}
         onContextMenu={onContextMenu}
+        onPostContextMenu={onPostContextMenu}
       />
     );
   }
@@ -145,6 +149,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         onPostClick={onPostClick}
         activeDropDate={activeDropDate}
         onContextMenu={onContextMenu}
+        onPostContextMenu={onPostContextMenu}
       />
     );
   }

@@ -11,8 +11,12 @@ import ContentDrawer from '@components/Scheduler/ContentDrawer/ContentDrawer';
 import NewStoryModal from '@components/Scheduler/CreateModals/NewStoryModal/NewStoryModal';
 import NewPostModal from '@components/Scheduler/CreateModals/NewPostModal/NewPostModal';
 import CreateDropdown from '@components/Scheduler/SchedulerBar/CreateDropdown';
+import PostContextMenu from '@components/Scheduler/PostContextMenu/PostContextMenu';
+import ConfirmDialog from '@components/Scheduler/CreateModals/ConfirmDialog/ConfirmDialog';
+import RecurringActionDialog from '@components/Scheduler/CreateModals/RecurringActionDialog/RecurringActionDialog';
 import { StoryFormData } from '@/models/StorySchedule';
-import { PostFormData, parseRruleFrequency, generateRepeatLabel } from '@/models/ScheduleFormData';
+import { PostFormData, parseRruleFrequency, generateRepeatLabel, parseTimeString } from '@/models/ScheduleFormData';
+import { Post } from '@models/Post';
 import {
   Container,
   SchedulerContainer,
@@ -55,8 +59,16 @@ const SchedulerPage: React.FC = () => {
     posts,
     loading: schedulesLoading,
     error: schedulesError,
-    refetchSchedules
+    refetchSchedules,
+    deleteSchedule,
   } = useSchedules(currentBrand?.id || '');
+
+  // --- POST CONTEXT MENU (right-click / long-press delete) ---
+  const [contextMenuPost, setContextMenuPost] = useState<Post | null>(null);
+  const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [showPostDeleteConfirm, setShowPostDeleteConfirm] = useState(false);
+  const [showPostRecurringDialog, setShowPostRecurringDialog] = useState(false);
+  const [isDeletingPost, setIsDeletingPost] = useState(false);
 
   // Calculate visible date range based on view mode and current dates
   const visibleRange = useMemo(() => {
@@ -394,6 +406,43 @@ const SchedulerPage: React.FC = () => {
     }
   };
 
+  const handlePostContextMenu = (post: Post, x: number, y: number) => {
+    setContextMenuPost(post);
+    setContextMenuPos({ x, y });
+  };
+
+  const handlePostContextMenuDelete = () => {
+    if (!contextMenuPost) return;
+    if (contextMenuPost.isRecurring) {
+      setShowPostRecurringDialog(true);
+    } else {
+      setShowPostDeleteConfirm(true);
+    }
+  };
+
+  const executePostDelete = async (occurrenceOnly?: boolean) => {
+    if (!contextMenuPost) return;
+    try {
+      setIsDeletingPost(true);
+      const { hours, minutes } = parseTimeString(contextMenuPost.time);
+      const plannedDate = new Date(contextMenuPost.date);
+      plannedDate.setHours(hours, minutes, 0, 0);
+      const isPast = plannedDate < new Date();
+      await deleteSchedule(
+        contextMenuPost.calendarItemId || contextMenuPost.scheduleUuid || '',
+        plannedDate,
+        occurrenceOnly,
+        isPast
+      );
+      refetchSchedules();
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+    } finally {
+      setIsDeletingPost(false);
+      setContextMenuPost(null);
+    }
+  };
+
   // --- DOUBLE CLICK / SELECTION HANDLER ---
   const handleContentSelect = (selectedContent: ContentItem) => {
     console.log('✅ [SchedulerPage] Content selection received:', selectedContent.title);
@@ -479,6 +528,7 @@ const SchedulerPage: React.FC = () => {
             onPostClick={handlePostClick}
             activeDropDate={showDropActionModal ? dropData?.date : null}
             onContextMenu={handleContextMenu}
+            onPostContextMenu={handlePostContextMenu}
           />
         ) : (
           <FourDaysView
@@ -490,6 +540,7 @@ const SchedulerPage: React.FC = () => {
             onDrop={handleFourDaysViewDrop}
             onPostClick={handlePostClick}
             onContextMenu={handleFourDaysContextMenu}
+            onPostContextMenu={handlePostContextMenu}
           />
         )}
       </SchedulerContainer>
@@ -607,6 +658,47 @@ const SchedulerPage: React.FC = () => {
         }}
         onSelect={handleDropActionSelect}
         anchorPos={dropAnchorPos || undefined}
+      />
+
+      {contextMenuPost && contextMenuPos && !showPostDeleteConfirm && !showPostRecurringDialog && (
+        <PostContextMenu
+          x={contextMenuPos.x}
+          y={contextMenuPos.y}
+          onDelete={handlePostContextMenuDelete}
+          onClose={() => {
+            setContextMenuPost(null);
+            setContextMenuPos(null);
+          }}
+        />
+      )}
+
+      <ConfirmDialog
+        isOpen={showPostDeleteConfirm}
+        title="Delete Post"
+        message="Are you sure you want to delete this post? This action cannot be undone."
+        confirmLabel={isDeletingPost ? 'Deleting...' : 'Delete'}
+        danger
+        onConfirm={() => {
+          setShowPostDeleteConfirm(false);
+          executePostDelete();
+        }}
+        onCancel={() => {
+          setShowPostDeleteConfirm(false);
+          setContextMenuPost(null);
+        }}
+      />
+
+      <RecurringActionDialog
+        isOpen={showPostRecurringDialog}
+        mode="delete"
+        onConfirm={(option) => {
+          setShowPostRecurringDialog(false);
+          executePostDelete(option === 'this');
+        }}
+        onCancel={() => {
+          setShowPostRecurringDialog(false);
+          setContextMenuPost(null);
+        }}
       />
 
     </Container>
