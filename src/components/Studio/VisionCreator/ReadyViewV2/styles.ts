@@ -8,7 +8,7 @@ export const spin    = keyframes`from{transform:rotate(0deg)}to{transform:rotate
 
 // ─── Outer chrome ─────────────────────────────────────────────────────────────
 export const ConsoleWrapper = styled.div`
-  position:fixed;top:76px;left:0;right:0;bottom:0;
+  position:absolute;top:0;left:0;right:0;bottom:0;
   display:flex;flex-direction:column;
   background:${p=>p.theme.colors.bg};
   z-index:10;
@@ -19,10 +19,53 @@ export const ConsoleWrapper = styled.div`
 export const TopBar = styled.div`
   height:60px;flex-shrink:0;
   display:flex;align-items:center;gap:12px;
-  padding:0 24px;
+  padding:0 20px;
   border-bottom:1px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)'};
   background:${p=>p.theme.colors.surface};
   box-shadow:0 1px 6px ${p=>p.theme.mode==='dark'?'rgba(0,0,0,.3)':'rgba(0,0,0,.05)'};
+  @media (max-width:768px) {
+    height:auto;padding:10px 14px;flex-wrap:wrap;gap:8px;
+  }
+`;
+
+export const TopBarLogo = styled.a`
+  font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1;
+  background:linear-gradient(135deg,#9b5de5 0%,#fbbf24 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-decoration:none;pointer-events:none;white-space:nowrap;flex-shrink:0;
+  @media (max-width:768px) { font-size:18px; }
+`;
+
+export const TopBarDivider = styled.div`
+  width:1px;height:20px;flex-shrink:0;
+  background:${p=>p.theme.mode==='dark'?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)'};
+  @media (max-width:768px) { display:none; }
+`;
+
+export const TopBarBackBtn = styled.button`
+  display:inline-flex;align-items:center;gap:5px;flex-shrink:0;
+  background:transparent;border:none;padding:6px 10px;cursor:pointer;
+  font-size:12px;font-weight:700;color:${p=>p.theme.colors.muted};
+  font-family:inherit;transition:color .15s;white-space:nowrap;
+  &:hover{color:${p=>p.theme.colors.primary};}
+`;
+
+export const TopBarVersionToggle = styled.div`
+  display:flex;border-radius:8px;overflow:hidden;flex-shrink:0;
+  border:1.5px solid rgba(139,92,246,.15);
+  background:${p=>p.theme.colors.bg};
+  @media (max-width:768px) { display:none; }
+`;
+
+export const TopBarVersionBtn = styled.button<{$active:boolean}>`
+  padding:5px 11px;font-size:11px;font-weight:700;
+  font-family:inherit;border:none;cursor:pointer;
+  background:${p=>p.$active?'rgba(139,92,246,.12)':'transparent'};
+  color:${p=>p.$active?'#a78bfa':p.theme.colors.muted};
+  transition:all .15s;
+  border-right:1px solid rgba(139,92,246,.08);
+  &:last-child{border-right:none;}
+  &:hover{background:rgba(139,92,246,.06);}
 `;
 
 export const TopBarTitle = styled.div`
@@ -30,10 +73,42 @@ export const TopBarTitle = styled.div`
   font-size:16px;font-weight:700;letter-spacing:-.4px;
   color:${p=>p.theme.colors.text};
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  @media (max-width:768px) { font-size:13px;min-width:0; }
 `;
 
 export const TopBarMeta = styled.div`
   display:flex;align-items:center;gap:8px;flex-shrink:0;
+  @media (max-width:768px) { display:none; }
+`;
+
+export const VersionNav = styled.div`
+  display:inline-flex;align-items:center;gap:4px;flex-shrink:0;
+  padding:2px 6px;border-radius:8px;
+  background:${p=>p.theme.mode==='dark'?'rgba(255,255,255,.04)':'rgba(0,0,0,.04)'};
+  border:1px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)'};
+  @media (max-width:768px) { display:none; }
+`;
+
+export const VersionArrowBtn = styled.button`
+  width:22px;height:22px;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:transparent;border:none;border-radius:6px;
+  color:${p=>p.theme.colors.muted};cursor:pointer;
+  transition:background .15s, color .15s, opacity .15s;
+  &:hover:not(:disabled){
+    background:${p=>p.theme.mode==='dark'?'rgba(139,92,246,.12)':'rgba(139,92,246,.08)'};
+    color:${p=>p.theme.colors.primary};
+  }
+  &:disabled{opacity:.35;cursor:not-allowed;}
+`;
+
+export const VersionLabel = styled.div`
+  font-size:11px;font-weight:700;
+  color:${p=>p.theme.colors.muted};
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.02em;
+  min-width:42px;text-align:center;
+  user-select:none;
 `;
 
 export const VersionBadge = styled.div`
@@ -84,6 +159,7 @@ export const TimelineWrapper = styled.div`
   padding:0 24px;gap:10px;
   border-bottom:1px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)'};
   background:${p=>p.theme.mode==='dark'?'rgba(0,0,0,.15)':'rgba(0,0,0,.02)'};
+  @media (max-width:768px) { padding:0 14px;height:42px; }
 `;
 
 export const TimelineTrack = styled.div`
@@ -134,7 +210,10 @@ export const TimelineTotalLabel = styled.div`
 `;
 
 // ─── Split pane ───────────────────────────────────────────────────────────────
-export const SplitPane = styled.div`flex:1;display:flex;overflow:hidden;`;
+export const SplitPane = styled.div`
+  flex:1;display:flex;overflow:hidden;
+  @media (max-width:768px) { flex-direction:column; }
+`;
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 export const Sidebar = styled.div`
@@ -144,14 +223,27 @@ export const Sidebar = styled.div`
   background:${p=>p.theme.colors.surface};
   overflow-y:auto;
   scrollbar-width:thin;scrollbar-color:rgba(155,93,229,.15) transparent;
+  @media (max-width:768px) {
+    width:100%;flex-direction:row;align-items:center;
+    overflow-x:auto;overflow-y:hidden;
+    border-right:none;
+    border-bottom:1px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)'};
+    padding:8px 12px;gap:6px;height:auto;flex-shrink:0;
+    scrollbar-width:none;
+    &::-webkit-scrollbar{display:none;}
+  }
 `;
 
-export const SidebarSection = styled.div`padding:14px 0 6px;`;
+export const SidebarSection = styled.div`
+  padding:14px 0 6px;
+  @media (max-width:768px) { padding:0;display:flex;flex-direction:row;align-items:center;gap:4px;flex-shrink:0; }
+`;
 
 export const SidebarLabel = styled.div`
   padding:0 16px 8px;
   font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
   color:${p=>p.theme.colors.muted};opacity:.5;
+  @media (max-width:768px) { display:none; }
 `;
 
 export const NavItem = styled.button<{$active:boolean;$color?:string}>`
@@ -173,6 +265,13 @@ export const NavItem = styled.button<{$active:boolean;$color?:string}>`
     background:${p=>p.$color?`${p.$color}0a`:p.theme.colors.primaryLight};
     color:${p=>p.theme.colors.text};
   }
+  @media (max-width:768px) {
+    width:auto;padding:6px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0;
+    border:1.5px solid ${p=>p.$active
+      ?(p.$color?`${p.$color}50`:'rgba(139,92,246,.4)')
+      :(p.theme.mode==='dark'?'rgba(255,255,255,.1)':'rgba(0,0,0,.09)')};
+    &::before{display:none;}
+  }
 `;
 
 export const NavIcon = styled.div<{$active:boolean;$color?:string}>`
@@ -183,6 +282,7 @@ export const NavIcon = styled.div<{$active:boolean;$color?:string}>`
     ?(p.$color?`${p.$color}18`:p.theme.colors.primaryLight)
     :(p.theme.mode==='dark'?'rgba(255,255,255,.04)':'rgba(0,0,0,.04)')};
   transition:background .15s;
+  @media (max-width:768px) { width:20px;height:20px;font-size:12px;background:transparent; }
 `;
 
 export const NavLabel = styled.div`font-size:13px;font-weight:600;`;
@@ -191,6 +291,7 @@ export const SidebarDivider = styled.div`
   height:1px;
   background:${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)'};
   margin:6px 16px;
+  @media (max-width:768px) { height:22px;width:1px;margin:0 4px;flex-shrink:0; }
 `;
 
 export const SceneCountLabel = styled.div`
@@ -198,6 +299,7 @@ export const SceneCountLabel = styled.div`
   padding:6px 16px 5px;
   font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
   color:${p=>p.theme.colors.muted};opacity:.5;
+  @media (max-width:768px) { display:none; }
 `;
 
 export const SceneTile = styled.button<{$active:boolean;$color?:string}>`
@@ -213,6 +315,13 @@ export const SceneTile = styled.button<{$active:boolean;$color?:string}>`
     opacity:${p=>p.$active?1:0};transition:opacity .15s;
   }
   &:hover{background:${p=>p.$color?`${p.$color}08`:'rgba(245,158,11,.04)'};}
+  @media (max-width:768px) {
+    width:auto;padding:5px 10px;border-radius:16px;flex-shrink:0;
+    border:1.5px solid ${p=>p.$active
+      ?(p.$color?`${p.$color}50`:'rgba(245,158,11,.4)')
+      :(p.theme.mode==='dark'?'rgba(255,255,255,.1)':'rgba(0,0,0,.09)')};
+    &::before{display:none;}
+  }
 `;
 
 export const SceneTileNum = styled.div<{$active:boolean;$color?:string}>`
@@ -233,6 +342,7 @@ export const SceneTilePrompt = styled.div<{$active:boolean}>`
   color:${p=>p.$active?p.theme.colors.text:p.theme.colors.muted};
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   transition:color .15s;
+  @media (max-width:768px) { display:none; }
 `;
 
 export const DurationChip = styled.div<{$color?:string}>`
@@ -253,6 +363,7 @@ export const ContentInner = styled.div`
   flex:1;overflow-y:auto;padding:32px 40px;
   scrollbar-width:thin;scrollbar-color:rgba(155,93,229,.15) transparent;
   animation:${slideIn} .28s cubic-bezier(.4,0,.2,1) both;
+  @media (max-width:768px) { padding:18px 16px; }
 `;
 
 export const SectionHeading = styled.div`
@@ -271,6 +382,7 @@ export const HeadingIcon = styled.div<{$color?:string}>`
 export const HeadingText = styled.div<{$color?:string}>`
   font-size:22px;font-weight:800;letter-spacing:-.5px;
   color:${p=>p.$color||p.theme.colors.primary};
+  @media (max-width:768px) { font-size:18px; }
 `;
 
 export const HeadingSubtext = styled.div`
@@ -375,6 +487,7 @@ export const BottomBar = styled.div`
   border-top:1px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)'};
   background:${p=>p.theme.colors.surface};
   box-shadow:0 -1px 8px ${p=>p.theme.mode==='dark'?'rgba(0,0,0,.28)':'rgba(0,0,0,.06)'};
+  @media (max-width:768px) { flex-direction:column;align-items:stretch;padding:10px 14px 18px;gap:8px; }
 `;
 
 export const PromptSlotWrap = styled.div`
@@ -408,6 +521,7 @@ export const GenerateBtn = styled.button<{$loading:boolean}>`
   }
   &:active{transform:translateY(0);}
   &:disabled{cursor:default;}
+  @media (max-width:768px) { width:100%;justify-content:center;padding:14px; }
 `;
 
 export const BtnSpinner = styled.div`

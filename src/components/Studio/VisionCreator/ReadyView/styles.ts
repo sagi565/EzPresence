@@ -10,7 +10,7 @@ export const ReadyWrapper = styled.div`
 `;
 
 export const FloatingBar = styled.div`
-  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  position:fixed;bottom:0;left:var(--sidebar-w,0);right:0;z-index:100;
   display:flex;justify-content:center;align-items:flex-end;gap:10px;
   padding:10px 24px 16px;
   background:linear-gradient(to top,${p=>p.theme.colors.bg} 45%,transparent);

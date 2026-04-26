@@ -44,13 +44,16 @@ export const RippleEl  = styled.span`position:absolute;width:10px;height:10px;bo
 export const DurationWrap = styled.div`position:relative;display:inline-flex;`;
 export const DurationBadge = styled.span`
   position:absolute;
-  bottom:3px;left:50%;transform:translateX(-50%);
-  font-size:8px;font-weight:800;line-height:1;
-  font-variant-numeric:tabular-nums;letter-spacing:.02em;
-  color:currentColor;
+  top:-5px;right:-6px;
+  font-size:9px;font-weight:800;line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em;
+  color:white;
+  background:rgba(139,92,246,.9);
+  border-radius:10px;
+  padding:2px 4px;
   pointer-events:none;
-  opacity:.9;
-  min-width:14px;text-align:center;
+  min-width:13px;text-align:center;
+  white-space:nowrap;
 `;
 export const DurationDropdown = styled.div<{$open:boolean}>`
   display:${p=>p.$open?'flex':'none'};

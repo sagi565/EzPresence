@@ -43,7 +43,13 @@ export interface VisionPlan {
   mediaContentUuid?: string;
   version?: number;
   totalVersions?: number;
+  lastVersionNumber?: number;
 }
+
+export const fetchVisionPlanVersion = (uuid: string, version?: number) =>
+  api.get<VisionPlan>(
+    `/studio/vision/plans/${uuid}${version ? `?version=${version}` : ''}`
+  );
 
 const POLL_INTERVAL = 2500;
 const MAX_POLL_ATTEMPTS = 72; // 3 minutes

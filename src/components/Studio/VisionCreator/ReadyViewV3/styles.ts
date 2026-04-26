@@ -21,7 +21,7 @@ export const glowPulse = keyframes`
 
 // ─── Outer container ──────────────────────────────────────────────────────────
 export const StageWrapper = styled.div`
-  position: fixed; top: 76px; left: 0; right: 0; bottom: 0;
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   display: flex; flex-direction: column;
   background: ${p => p.theme.colors.bg};
   z-index: 10;

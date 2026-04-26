@@ -1,11 +1,12 @@
 import { forwardRef } from 'react';
-import { 
-  SlideSection, 
-  SlideContent, 
-  PreviewContainer, 
-  PreviewDisplay, 
-  PreviewLabel, 
+import {
+  SlideSection,
+  SlideContent,
+  PreviewContainer,
+  PreviewDisplay,
   PreviewDot,
+  PreviewVideo,
+  TagBadge,
   CreatorDetails,
   CreatorSubtitle,
   CreatorTitle,
@@ -26,6 +27,8 @@ interface CreatorSlideProps {
     mediaType: string;
     previewClass: string;
     icon: string;
+    videoSrc?: string;
+    tag?: string;
   };
   isActive: boolean;
   isMobile: boolean;
@@ -39,21 +42,30 @@ const CreatorSlide = forwardRef<HTMLElement, CreatorSlideProps>(
       <SlideSection ref={ref} $isMobile={isMobile}>
         <SlideContent $isMobile={isMobile}>
           <PreviewContainer>
-            <PreviewDisplay 
-              $isActive={isActive} 
-              $type={creator.id} 
+            <PreviewDisplay
+              $isActive={isActive}
+              $type={creator.id}
               $isMobile={isMobile}
             >
-              <PreviewLabel>
-                <PreviewDot />
-                Preview
-              </PreviewLabel>
+              {creator.videoSrc && (
+                <PreviewVideo
+                  src={creator.videoSrc}
+                  loop
+                  muted
+                  playsInline
+                  autoPlay
+                />
+              )}
+              <PreviewDot />
+              {creator.tag && (
+                <TagBadge $id={creator.id} $inVideo>{creator.tag}</TagBadge>
+              )}
             </PreviewDisplay>
           </PreviewContainer>
 
           <CreatorDetails $isMobile={isMobile}>
             <CreatorSubtitle>{creator.subtitle}</CreatorSubtitle>
-            
+
             <TitleRow $isMobile={isMobile}>
               {isMobile && (
                 <Pill $type={creator.mediaType === 'Video' ? 'video' : 'image'} $isInline>

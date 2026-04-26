@@ -26,7 +26,7 @@ const HomePage: React.FC = () => {
                         Hello, <NameHighlight>{firstName}</NameHighlight>
                     </Greeting>
                     <Subtitle>
-                        Manage your social presence and grow your brand.
+                        Staying present on social media has never been this easy.
                     </Subtitle>
                 </GreetingSection>
 

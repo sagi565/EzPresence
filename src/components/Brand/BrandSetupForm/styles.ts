@@ -196,7 +196,7 @@ export const LogoAndPickerRow = styled.div`
 
 export const PickerRightWrapper = styled.div`
   position: absolute;
-  left: calc(50% + 84px);
+  left: calc(50% + 92px);
   top: 0;
   display: flex;
   flex-direction: column;
@@ -679,7 +679,7 @@ export const SuggestionModalAvatar = styled.div`
   height: 80px;
   margin-bottom: 4px;
 
-  img {
+  > img:first-child {
     width: 100%;
     height: 100%;
     border-radius: 50%;

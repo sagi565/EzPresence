@@ -1,6 +1,5 @@
 import styled, { keyframes, css } from 'styled-components';
 
-/* ── Animations ────────────────────────────────────────────────── */
 const fadeDown = keyframes`
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0);    }
@@ -8,10 +7,6 @@ const fadeDown = keyframes`
 const fadeIn = keyframes`
   from { opacity: 0; }
   to   { opacity: 1; }
-`;
-const slideIn = keyframes`
-  from { opacity: 0; transform: translateY(2px); }
-  to   { opacity: 1; transform: translateY(0);   }
 `;
 const slideInFromRight = keyframes`
   from { opacity: 0; transform: translateX(10px); }
@@ -21,16 +16,14 @@ const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-/* ── Theme tokens ──────────────────────────────────────────────── */
-const ACCENT      = '#8b5cf6';
-const ACCENT_DARK = '#7c3aed';
-const ACCENT_TINT = 'rgba(139,92,246,.16)';
-const ACCENT_LINE = 'rgba(139,92,246,.22)';
-const BAR_DIM     = 'rgba(150,155,180,.62)';   // darker neutral — bars read clearly
-const BAR_OUT     = 'rgba(150,155,180,.52)';   // a touch lighter than BAR_DIM, still solid
-const SEL_FILL    = 'rgba(139,92,246,.06)';
+const ACCENT      = '#f59e0b';
+const ACCENT_DARK = '#d97706';
+const ACCENT_LINE = 'rgba(245,158,11,.28)';
+const BAR_IN      = 'rgba(110,108,148,.95)';
+const BAR_OUT     = 'rgba(120,118,158,.72)';
 
-/* ── Panel ─────────────────────────────────────────────────────── */
+export const TOKENS = { ACCENT, ACCENT_DARK, ACCENT_LINE, BAR_IN, BAR_OUT };
+
 export const Panel = styled.div`
   width: 100%;
   background: ${p => p.theme.colors.surface};
@@ -45,7 +38,6 @@ export const Panel = styled.div`
   gap: 9px;
 `;
 
-/* ── URL Row ───────────────────────────────────────────────────── */
 export const UrlRow = styled.div`
   display: flex;
   align-items: center;
@@ -79,7 +71,6 @@ export const ClearBtn = styled.button`
   &:hover { opacity: 1; background: rgba(255,255,255,.05); color: ${p => p.theme.colors.text}; }
 `;
 
-/* ── Info Row ──────────────────────────────────────────────────── */
 export const InfoRow = styled.div`
   display: flex;
   align-items: center;
@@ -90,20 +81,19 @@ export const InfoRow = styled.div`
 export const PlatformRow = styled.div`
   display: flex;
   align-items: center;
-  /* gap removed — each icon owns its own margin-right so it can collapse to 0 */
   flex-shrink: 0;
 `;
 
 export const PlatformIconImg = styled.img<{ $active: boolean; $small?: boolean; $visible?: boolean }>`
-  width:  ${p => p.$small ? '14px' : '17px'};
-  height: ${p => p.$small ? '14px' : '17px'};
+  width:  ${p => p.$small ? '17px' : '20px'};
+  height: ${p => p.$small ? '17px' : '20px'};
   object-fit: contain;
   flex-shrink: 0;
-  /* Inactive icons stay clearly readable — muted, not faded out. */
+  user-select: none;
+  -webkit-user-drag: none;
   opacity: ${p => (p.$visible === false ? 0 : (p.$active ? 1 : .62))};
   filter: ${p => p.$active ? 'none' : 'grayscale(.55)'};
-  /* collapse: shrink width, opacity, margin, scale together */
-  max-width: ${p => p.$visible === false ? '0px' : (p.$small ? '14px' : '17px')};
+  max-width: ${p => p.$visible === false ? '0px' : (p.$small ? '17px' : '20px')};
   margin-right: ${p => p.$visible === false ? '0px' : '7px'};
   transform: ${p => p.$visible === false ? 'scale(.6)' : 'scale(1)'};
   transform-origin: left center;
@@ -128,38 +118,6 @@ export const VideoName = styled.span`
   animation: ${slideInFromRight} .24s cubic-bezier(.2,.9,.25,1) both;
 `;
 
-export const VideoDurationBadge = styled.span`
-  font-size: 10.5px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  color: ${p => p.theme.colors.muted};
-  flex-shrink: 0;
-  letter-spacing: .02em;
-  animation: ${slideIn} .18s ease-out;
-`;
-
-/* Inline remove-sound X (only visible when audio is loaded) */
-export const RemoveSoundBtn = styled.button`
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 18px; height: 18px;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 50%;
-  cursor: pointer;
-  flex-shrink: 0;
-  color: ${p => p.theme.colors.muted};
-  transition: background .12s, color .12s, border-color .12s, transform .08s;
-  margin-left: 2px;
-
-  &:hover {
-    background: rgba(248,113,113,.14);
-    border-color: rgba(248,113,113,.35);
-    color: #fca5a5;
-  }
-  &:active { transform: scale(.92); }
-`;
-
-/* ── Loading status ─────────────────────────────────────────────── */
 export const LoadingChip = styled.span`
   display: inline-flex;
   align-items: center;
@@ -173,14 +131,13 @@ export const LoadingChip = styled.span`
 
 export const InlineSpinner = styled.span`
   display: inline-block;
-  width: 10px; height: 10px;
+  width: 14px; height: 14px;
   border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,.10);
+  border: 2px solid rgba(255,255,255,.15);
   border-top-color: ${ACCENT};
   animation: ${spin} .75s linear infinite;
 `;
 
-/* ── Player Wrap (no card / no background) ─────────────────────── */
 export const PlayerWrap = styled.div`
   position: relative;
   background: transparent;
@@ -194,9 +151,44 @@ export const PlayerWrap = styled.div`
 export const WaveStage = styled.div`
   position: relative;
   width: 100%;
-  height: 58px;
+  height: 70px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  box-sizing: border-box;
+
+  /* Hide the native scrollbar — we render a custom always-visible one below. */
+  &::-webkit-scrollbar { display: none; }
+  scrollbar-width: none;
+`;
+
+/* Custom scrollbar — minimalist, dark grey, always visible. The cursor
+   intentionally stays as default during interaction so dragging the scroll
+   thumb doesn't shift the cursor shape. */
+export const ScrollbarTrack = styled.div`
+  position: relative;
+  width: 100%;
+  height: 5px;
+  background: rgba(255,255,255,.04);
+  border-radius: 3px;
+  margin-top: 5px;
+  cursor: default;
+`;
+
+export const ScrollbarThumb = styled.div<{ $disabled: boolean }>`
+  position: absolute;
+  top: 0; bottom: 0;
+  background: ${p => p.$disabled ? 'rgba(120,120,128,.20)' : 'rgba(120,120,128,.55)'};
+  border-radius: 3px;
+  cursor: default;
+  min-width: 18px;
+`;
+
+export const WaveInner = styled.div`
+  position: relative;
+  height: 100%;
   padding: 0 6px;
   box-sizing: border-box;
+  min-width: 100%;
 `;
 
 export const WaveCanvas = styled.canvas`
@@ -206,18 +198,17 @@ export const WaveCanvas = styled.canvas`
   background: transparent;
 `;
 
-/* Subtle highlight layer for the SELECTED region (no side borders — handles mark edges) */
-export const SelectionFill = styled.div`
+export const TrimFill = styled.div`
   position: absolute;
-  top: 6px; bottom: 6px;
-  background: ${SEL_FILL};
+  top: 0;
+  bottom: 0;
+  background: rgba(251,146,60,.11);
+  border-left: 1px solid rgba(251,146,60,.22);
+  border-right: 1px solid rgba(251,146,60,.22);
   pointer-events: none;
-  border-radius: 4px;
+  z-index: 1;
 `;
 
-/* Asymmetric edge markers — start = bracket facing right, end = bracket facing left.
-   The vertical line sits exactly on the trim point; the rounded grip extends OUTWARD
-   on each side, making it visually clear which side is the "edge". */
 export const RangeHandle = styled.div<{ $side: 'start' | 'end'; $active: boolean }>`
   position: absolute;
   top: -2px; bottom: -2px;
@@ -228,7 +219,6 @@ export const RangeHandle = styled.div<{ $side: 'start' | 'end'; $active: boolean
   user-select: none;
   -webkit-user-select: none;
 
-  /* the vertical accent line right at the trim point */
   &::before {
     content: '';
     position: absolute;
@@ -240,7 +230,6 @@ export const RangeHandle = styled.div<{ $side: 'start' | 'end'; $active: boolean
     transition: background .12s, width .12s;
   }
 
-  /* asymmetric grip — sits on the OUTER side of the line, rounded on the outer end */
   &::after {
     content: '';
     position: absolute;
@@ -252,11 +241,11 @@ export const RangeHandle = styled.div<{ $side: 'start' | 'end'; $active: boolean
     transition: background-color .12s, width .12s, height .12s;
 
     ${p => p.$side === 'start' ? css`
-      right: 2px;                            /* attach to left face of the line */
-      border-radius: 3px 0 0 3px;            /* round only the outer (left) edge */
+      right: 2px;
+      border-radius: 3px 0 0 3px;
     ` : css`
-      left: 2px;                             /* attach to right face of the line */
-      border-radius: 0 3px 3px 0;            /* round only the outer (right) edge */
+      left: 2px;
+      border-radius: 0 3px 3px 0;
     `}
   }
 
@@ -269,21 +258,35 @@ export const RangeHandle = styled.div<{ $side: 'start' | 'end'; $active: boolean
   `}
 `;
 
-/* Hairline playhead — crisp 1px white over the asymmetric bars.
-   Position is driven imperatively at 60fps from the RAF draw loop, so we
-   intentionally have NO CSS transition here — a transition would always
-   lag one frame behind the true playback position. */
 export const PlayheadLine = styled.div`
   position: absolute;
   top: 3px; bottom: 3px;
   width: 1px;
-  background: #fff;
+  background: transparent;
   transform: translateX(-50%);
   pointer-events: none;
   opacity: .92;
-  z-index: 2;
-  box-shadow: 0 0 0.5px rgba(0,0,0,.35);
+  z-index: 5;
+  box-shadow: 0 0 1px rgba(0,0,0,.5);
   will-change: left;
+`;
+
+export const PlayheadHandle = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 15px; height: 15px;
+  background: #ef4444;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  box-shadow: 0 2px 6px rgba(0,0,0,.45);
+  pointer-events: auto;
+  border: 2px solid #fff;
+  transition: transform .1s, box-shadow .1s;
+
+  &:hover { transform: translate(-50%, -50%) scale(1.18); box-shadow: 0 2px 8px rgba(239,68,68,.5); }
+  &:active { cursor: grabbing; transform: translate(-50%, -50%) scale(1.05); }
 `;
 
 export const HoverLine = styled.div`
@@ -313,7 +316,6 @@ export const HoverTime = styled.div`
   z-index: 4;
 `;
 
-/* ── Controls Row (everything in one minimal line) ────────────── */
 export const ControlsRow = styled.div`
   display: flex;
   align-items: center;
@@ -330,19 +332,25 @@ export const PlayBtn = styled.button<{ $playing: boolean }>`
   border-radius: 50%;
   border: none;
   cursor: pointer; flex-shrink: 0;
-  background: ${p => p.$playing ? ACCENT : ACCENT_TINT};
-  color: ${p => p.$playing ? '#fff' : '#c4b5fd'};
-  transition: background .14s, color .14s, transform .08s;
+  background: rgba(245,158,11,.20);
+  color: #fbbf24;
+  transition: background .14s, color .14s, transform .08s, box-shadow .14s;
 
   &:disabled {
     opacity: .35; cursor: not-allowed;
     background: rgba(255,255,255,.04); color: ${p => p.theme.colors.muted};
   }
   &:not(:disabled):hover {
-    background: ${p => p.$playing ? ACCENT_DARK : 'rgba(139,92,246,.28)'};
-    color: #fff;
+    background: rgba(245,158,11,.50);
+    color: #78350f;
+    box-shadow: 0 0 0 3px rgba(245,158,11,.28);
   }
-  &:not(:disabled):active { transform: scale(.94); }
+  &:not(:disabled):active {
+    background: rgba(245,158,11,.55);
+    color: #78350f;
+    box-shadow: 0 0 0 3px rgba(245,158,11,.28);
+    transform: scale(.92);
+  }
 `;
 
 export const TimeText = styled.span`
@@ -373,60 +381,17 @@ export const ResetTrimBtn = styled.button`
   &:hover { color: ${p => p.theme.colors.text}; background: rgba(255,255,255,.06); }
 `;
 
-/* ── Error ─────────────────────────────────────────────────────── */
 export const ErrorBanner = styled.div`
-  font-size: 11px;
-  color: #f87171;
-  background: rgba(248,113,113,.06);
-  border: 1px solid rgba(248,113,113,.18);
-  border-radius: 7px;
-  padding: 5px 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ef4444;
+  background: rgba(239,68,68,.08);
+  border: 1px solid rgba(239,68,68,.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 4px;
 `;
-
-/* ── Legacy aliases (other files still import these names) ─────── */
-export const VideoInfoRow       = styled.div``;
-export const VideoInfoCard      = styled.div``;
-export const VideoNameRow       = styled.div``;
-export const VideoDurationHint  = styled.span``;
-export const PlatformGrid       = styled.div``;
-export const PlatformIconBtn    = styled.div``;
-export const PlatformLabel      = styled.span``;
-export const AudioPlayerSection = styled.div``;
-export const WaveformContainer  = styled.div``;
-export const PlayerControls     = styled.div``;
-export const LoadingOverlay     = styled.div``;
-export const LoadingSpinner     = styled.div``;
-export const LoadingText        = styled.span``;
-export const PlatformIcon       = PlatformIconImg;
-export const RangeSection       = styled.div``;
-export const RangeRow           = styled.div``;
-export const RangeLabel         = styled.span``;
-export const RangeInput         = styled.input``;
-export const TimeTag            = styled.span``;
-export const VideoTitle         = VideoName;
-export const PlatformChip       = styled.div``;
-export const LoadingDots        = styled.span``;
-export const SmallSpinner       = InlineSpinner;
-export const LoadingSweepBar    = styled.div``;
-export const Footer             = styled.div``;
-export const AttachedBadge      = styled.div``;
-export const AttachedClose      = styled.button``;
-export const ConfirmBtn         = styled.button``;
-export const TimeDisplay        = TimeText;
-export const TimeMuted          = styled.span``;
-export const TimeSep            = styled.span``;
-export const TrimRow            = styled.div``;
-export const TrimLabel          = styled.span``;
-export const TrimRange          = styled.span``;
-export const TrimChip           = styled.span``;
-export const TrimDuration       = styled.span``;
-
-/* Token re-exports for canvas drawing */
-export const TOKENS = {
-  ACCENT,
-  ACCENT_DARK,
-  ACCENT_LINE,
-  BAR_DIM,
-  BAR_OUT,
-  SEL_FILL,
-};

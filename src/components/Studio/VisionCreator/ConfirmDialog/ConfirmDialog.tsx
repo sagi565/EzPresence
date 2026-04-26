@@ -7,14 +7,16 @@ interface ConfirmDialogProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  secondaryLabel?: string;
   danger?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  onSecondary?: () => void;
 }
 
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel',
-  danger = false, onConfirm, onCancel,
+  secondaryLabel, danger = false, onConfirm, onCancel, onSecondary,
 }) => ReactDOM.createPortal(
   <>
     <Overlay onClick={onCancel} />
@@ -36,6 +38,9 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       <Message>{message}</Message>
       <Buttons>
         <Btn onClick={onCancel}>{cancelLabel}</Btn>
+        {secondaryLabel && onSecondary && (
+          <Btn $secondary onClick={onSecondary}>{secondaryLabel}</Btn>
+        )}
         <Btn $danger={danger} $primary={!danger} onClick={onConfirm}>{confirmLabel}</Btn>
       </Buttons>
     </Dialog>

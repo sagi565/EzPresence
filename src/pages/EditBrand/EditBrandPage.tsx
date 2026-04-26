@@ -1,10 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Upload, X } from 'lucide-react';
 import { useBrands } from '@hooks/brands/useBrands';
 import { useConnectedPlatforms } from '@hooks/platforms/useConnectedPlatforms';
-import { Container, Content, Header, Title, TitleHighlight, Subtitle, Form, MainContent, Row, NameAndSloganColumn, FormGroupStacked, Label, Required, LogoCenterLabel, LogoUploadArea, LogoPreviewContainer, LogoPreview, RemoveLogoBtn, LogoUploadPlaceholder, UploadIcon, UploadText, FormGroup, Input, InputWrapper, CharCountInside, CategorySelect, ErrorText, ErrorMessageWrapper, ErrorIcon, Actions, SubmitBtn, Ripple, Spinner, BackButton, FormGroupRight } from '@components/Brand/BrandSetupForm/styles';
+import { Container, Content, Header, Title, TitleHighlight, Subtitle, Form, MainContent, Row, NameAndSloganColumn, FormGroupStacked, Label, Required, LogoCenterLabel, LogoUploadArea, LogoPreviewContainer, LogoPreview, RemoveLogoBtn, LogoUploadPlaceholder, UploadIcon, UploadText, FormGroup, Input, InputWrapper, CharCountInside, CategorySelect, ErrorText, ErrorMessageWrapper, ErrorIcon, Actions, SubmitBtn, Ripple, Spinner, BackButton, FormGroupRight, LogoAndPickerRow, PickerRightWrapper, SuggestionOverlay, SuggestionModal, SuggestionModalAvatar, SuggestionModalBadge, SuggestionModalTitle, SuggestionModalSub, SuggestionModalActions, SuggestionModalAcceptBtn, SuggestionModalDeclineBtn } from '@components/Brand/BrandSetupForm/styles';
 import { ConnectedPlatformsGrid } from '@components/SocialPlatform/ConnectedPlatformsGrid';
+import PlatformLogoPicker from '@components/Brand/PlatformLogoPicker/PlatformLogoPicker';
 import { BrandInitializeDto, getLogoDataUrl } from '@models/Brand';
+import { ConnectedPlatform, getPlatformIconPath } from '@/models/Platform';
+import { SocialPlatform } from '@models/SocialAccount';
+import { urlToBase64 } from '@utils/imageUtils';
 
 const BRAND_CATEGORIES = [
   'Restaurant', 'Cafe', 'Retail', 'Fashion', 'Beauty', 'Fitness', 'Healthcare',
@@ -35,15 +40,27 @@ const EditBrandPage: React.FC = () => {
     slogan: string;
     categories: string[];
     logo?: File;
+    logoBase64?: string;
+    logoSource?: { type: 'file'; file: File } | { type: 'platform'; platform: SocialPlatform };
   }>({
     name: '',
     slogan: '',
     categories: [],
   });
 
-  const { platforms: connectedPlatforms, refetch: refetchPlatforms } = useConnectedPlatforms(id, false);
+  const { platforms: connectedPlatforms, refetch: refetchPlatforms, loading: platformsLoading } = useConnectedPlatforms(id, false);
 
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [suggestionCp, setSuggestionCp] = useState<ConnectedPlatform | null>(null);
+  const [convertingPlatform, setConvertingPlatform] = useState<SocialPlatform | null>(null);
+
+  const OFFERED_KEY = 'ezp_logo_offered_platforms_edit';
+  const prevConnectedRef = useRef<SocialPlatform[]>([]);
+  const didInitRef = useRef(false);
+  const offeredRef = useRef<Set<SocialPlatform>>(
+    new Set(JSON.parse(sessionStorage.getItem(OFFERED_KEY) || '[]') as SocialPlatform[])
+  );
+  const logoBase64Ref = useRef<string | undefined>(undefined);
   const [nameError, setNameError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -60,11 +77,12 @@ const EditBrandPage: React.FC = () => {
     if (brands.length > 0 && id) {
       const brand = brands.find(b => b.id === id);
       if (brand) {
-        setFormData({
+        setFormData(prev => ({
+          ...prev,
           name: brand.name,
           slogan: brand.slogan || '',
           categories: brand.category ? [brand.category] : [],
-        });
+        }));
         if (brand.logo) {
           setLogoPreview(getLogoDataUrl(brand.logo) || null);
         }
@@ -74,6 +92,71 @@ const EditBrandPage: React.FC = () => {
     }
   }, [brands, id, brandsLoading]);
 
+  useEffect(() => {
+    logoBase64Ref.current = formData.logoBase64 || logoPreview || undefined;
+    if (!logoBase64Ref.current) {
+      offeredRef.current = new Set();
+      sessionStorage.removeItem(OFFERED_KEY);
+    }
+  }, [formData.logoBase64, logoPreview]);
+
+  useEffect(() => {
+    if (platformsLoading) return;
+
+    const current = connectedPlatforms
+      .filter(p => p.isConnected && !!p.profilePicture)
+      .map(p => p.platform);
+
+    if (!didInitRef.current) {
+      prevConnectedRef.current = current;
+      didInitRef.current = true;
+      return;
+    }
+
+    if (!logoBase64Ref.current) {
+      const newPlatform = current.find(
+        p => !prevConnectedRef.current.includes(p) && !offeredRef.current.has(p)
+      );
+      if (newPlatform) {
+        const cp = connectedPlatforms.find(p => p.platform === newPlatform);
+        if (cp) {
+          offeredRef.current.add(newPlatform);
+          sessionStorage.setItem(OFFERED_KEY, JSON.stringify([...offeredRef.current]));
+          setSuggestionCp(cp);
+        }
+      }
+    }
+
+    prevConnectedRef.current = current;
+  }, [connectedPlatforms, platformsLoading]);
+
+  useEffect(() => {
+    if ((formData.logoBase64 || logoPreview) && suggestionCp) setSuggestionCp(null);
+  }, [formData.logoBase64, logoPreview, suggestionCp]);
+
+  const handleSuggestionDecline = () => setSuggestionCp(null);
+
+  const handlePlatformPicSelect = async (cp: ConnectedPlatform) => {
+    if (!cp.profilePicture) return;
+    setConvertingPlatform(cp.platform);
+    try {
+      const base64 = await urlToBase64(cp.profilePicture);
+      setFormData(prev => ({
+        ...prev,
+        logo: undefined,
+        logoBase64: base64,
+        logoSource: { type: 'platform', platform: cp.platform }
+      }));
+      setLogoPreview(getLogoDataUrl(base64));
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch {
+      // ignore
+    } finally {
+      setConvertingPlatform(null);
+      setSuggestionCp(null);
+    }
+  };
+
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -81,13 +164,13 @@ const EditBrandPage: React.FC = () => {
         alert('File size must be less than 5MB');
         return;
       }
-      setFormData({ ...formData, logo: file });
+      setFormData({ ...formData, logo: file, logoBase64: undefined, logoSource: { type: 'file', file } });
       setLogoPreview(URL.createObjectURL(file));
     }
   };
 
   const handleRemoveLogo = () => {
-    setFormData({ ...formData, logo: undefined });
+    setFormData({ ...formData, logo: undefined, logoBase64: undefined, logoSource: undefined });
     setLogoPreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -109,6 +192,8 @@ const EditBrandPage: React.FC = () => {
       let logoBase64: string | null = null;
       if (formData.logo) {
         logoBase64 = await fileToBase64(formData.logo);
+      } else if (formData.logoBase64) {
+        logoBase64 = formData.logoBase64;
       }
 
       const updateData: Partial<BrandInitializeDto> = {
@@ -139,8 +224,38 @@ const EditBrandPage: React.FC = () => {
     );
   }
 
+  const selectedPlatform = formData.logoSource?.type === 'platform' ? formData.logoSource.platform : null;
+
   return (
     <Container>
+      {suggestionCp && (
+        <SuggestionOverlay onClick={handleSuggestionDecline}>
+          <SuggestionModal onClick={(e) => e.stopPropagation()}>
+            <SuggestionModalAvatar>
+              <img src={suggestionCp.profilePicture!} alt={suggestionCp.username} />
+              <SuggestionModalBadge
+                src={getPlatformIconPath(suggestionCp.platform)}
+                alt={suggestionCp.platform}
+              />
+            </SuggestionModalAvatar>
+            <SuggestionModalTitle>{suggestionCp.username}</SuggestionModalTitle>
+            <SuggestionModalSub>Use as brand logo?</SuggestionModalSub>
+            <SuggestionModalActions>
+              <SuggestionModalAcceptBtn
+                type="button"
+                onClick={() => handlePlatformPicSelect(suggestionCp)}
+                disabled={convertingPlatform === suggestionCp.platform}
+              >
+                {convertingPlatform === suggestionCp.platform ? 'Loading…' : 'Use it'}
+              </SuggestionModalAcceptBtn>
+              <SuggestionModalDeclineBtn type="button" onClick={handleSuggestionDecline}>
+                Skip
+              </SuggestionModalDeclineBtn>
+            </SuggestionModalActions>
+          </SuggestionModal>
+        </SuggestionOverlay>
+      )}
+
       <Content>
         <BackButton
           onClick={() => navigate('/')}
@@ -205,31 +320,45 @@ const EditBrandPage: React.FC = () => {
 
               <FormGroupRight>
                 <LogoCenterLabel>Brand Logo</LogoCenterLabel>
-                <LogoUploadArea>
-                  {logoPreview ? (
-                    <LogoPreviewContainer>
-                      <LogoPreview src={logoPreview} alt="Logo preview" />
-                      <RemoveLogoBtn type="button" onClick={handleRemoveLogo}>✕</RemoveLogoBtn>
-                    </LogoPreviewContainer>
-                  ) : (
-                    <LogoUploadPlaceholder
-                      $isHovered={isLogoHovered}
-                      onClick={() => fileInputRef.current?.click()}
-                      onMouseEnter={() => setIsLogoHovered(true)}
-                      onMouseLeave={() => setIsLogoHovered(false)}
-                    >
-                      <UploadIcon>📷</UploadIcon>
-                      <UploadText>Upload</UploadText>
-                    </LogoUploadPlaceholder>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleLogoUpload}
-                  />
-                </LogoUploadArea>
+                <LogoAndPickerRow>
+                  <LogoUploadArea>
+                    {logoPreview ? (
+                      <LogoPreviewContainer>
+                        <LogoPreview src={logoPreview} alt="Logo preview" />
+                        <RemoveLogoBtn type="button" onClick={handleRemoveLogo} title="Remove logo">
+                          <X size={12} strokeWidth={2.5} />
+                        </RemoveLogoBtn>
+                      </LogoPreviewContainer>
+                    ) : (
+                      <LogoUploadPlaceholder
+                        $isHovered={isLogoHovered}
+                        onClick={() => fileInputRef.current?.click()}
+                        onMouseEnter={() => setIsLogoHovered(true)}
+                        onMouseLeave={() => setIsLogoHovered(false)}
+                      >
+                        <UploadIcon>
+                          <Upload size={48} strokeWidth={1.75} />
+                        </UploadIcon>
+                        <UploadText>Upload</UploadText>
+                      </LogoUploadPlaceholder>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleLogoUpload}
+                    />
+                  </LogoUploadArea>
+                  <PickerRightWrapper>
+                    <PlatformLogoPicker
+                      connectedPlatforms={connectedPlatforms}
+                      selectedPlatform={selectedPlatform}
+                      onSelect={handlePlatformPicSelect}
+                      convertingPlatform={convertingPlatform}
+                    />
+                  </PickerRightWrapper>
+                </LogoAndPickerRow>
               </FormGroupRight>
             </Row>
 

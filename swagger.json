@@ -1313,6 +1313,63 @@
       }
     },
     "/api/studio/vision/plans": {
+      "get": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Retrieves all vision plans for the current active brand.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VisionPlanSummaryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VisionPlanSummaryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VisionPlanSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "Studio"
@@ -1421,7 +1478,24 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1453,7 +1527,24 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1730,7 +1821,24 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1762,7 +1870,24 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              }
+            }
           }
         }
       }
@@ -2175,6 +2300,9 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StudioPlanStatus"
           }
         },
         "additionalProperties": false
@@ -2226,11 +2354,11 @@
       "AtlasSceneDto": {
         "type": "object",
         "properties": {
-          "scene_number": {
+          "sceneNumber": {
             "type": "integer",
             "format": "int32"
           },
-          "scene_script_segment": {
+          "sceneScriptSegment": {
             "type": "string",
             "nullable": true
           },
@@ -2247,11 +2375,11 @@
       "AtlasSceneUpdateRequestDto": {
         "type": "object",
         "properties": {
-          "plan_uuid": {
+          "planUuid": {
             "type": "string",
             "format": "uuid"
           },
-          "scene_number": {
+          "sceneNumber": {
             "type": "integer",
             "format": "int32"
           },
@@ -2595,7 +2723,7 @@
       "MediaLinkRequestDto": {
         "type": "object",
         "properties": {
-          "MediaLink": {
+          "mediaLink": {
             "type": "string",
             "nullable": true
           }
@@ -2789,6 +2917,24 @@
           }
         },
         "additionalProperties": false
+      },
+      "StudioPlanResponseDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StudioPlanStatus": {
+        "enum": [
+          "Draft",
+          "Processing",
+          "Done"
+        ],
+        "type": "string"
       },
       "UserCreateDto": {
         "type": "object",
@@ -3057,6 +3203,9 @@
           "totalVersions": {
             "type": "integer",
             "format": "int32"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StudioPlanStatus"
           }
         },
         "additionalProperties": false
@@ -3064,7 +3213,7 @@
       "VisionPlanPromptUpdateRequestDto": {
         "type": "object",
         "properties": {
-          "plan_uuid": {
+          "planUuid": {
             "type": "string",
             "format": "uuid"
           },
@@ -3104,6 +3253,40 @@
           },
           "socialMediaLink": {
             "$ref": "#/components/schemas/SocialMediaLinkDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VisionPlanSummaryDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clipTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/StudioPlanStatus"
+          },
+          "lastVersionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mediaContentUuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "thumbnailObject": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false

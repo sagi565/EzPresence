@@ -72,8 +72,8 @@ export const PreviewContainer = styled.div`
 `;
 
 export const PreviewDisplay = styled.div<{ $isActive: boolean; $type: string; $isMobile?: boolean }>`
-  width: 330px;
-  height: calc(330px * 16 / 9);
+  width: 340px;
+  height: calc(340px * 16 / 9);
   border-radius: 28px;
   position: relative;
   overflow: hidden;
@@ -81,7 +81,7 @@ export const PreviewDisplay = styled.div<{ $isActive: boolean; $type: string; $i
   transform: translateY(0);
   transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 
-  ${props => props.$type === 'show-time' && css`background: linear-gradient(135deg, #dea86bff 0%, #b5762eff 100%);`}
+  ${props => props.$type === 'atlas' && css`background: linear-gradient(135deg, #dea86bff 0%, #b5762eff 100%);`}
   ${props => props.$type === 'frames' && css`background: linear-gradient(135deg, #25c99f 0%, #0b8b6e 100%);`}
   ${props => props.$type === 'notes' && css`background: linear-gradient(135deg, #ff8ec6 0%, #df4790 100%);`}
   ${props => props.$type === 'picasso' && css`background: linear-gradient(135deg, #6f9cff 0%, #3356f7 100%);`}
@@ -100,35 +100,43 @@ export const PreviewDisplay = styled.div<{ $isActive: boolean; $type: string; $i
   `}
 `;
 
-export const PreviewLabel = styled.div`
+export const PreviewVideo = styled.video`
   position: absolute;
-  top: 20px;
-  left: 20px;
-  background: ${props => props.theme.colors.surface}F2;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  color: ${props => props.theme.colors.text};
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  backdrop-filter: blur(10px);
-
-  @media (max-width: 768px) {
-    top: 12px;
-    left: 12px;
-    padding: 6px 12px;
-  }
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 `;
 
 export const PreviewDot = styled.div`
+  position: absolute;
+  top: 16px;
+  left: 16px;
   width: 8px;
   height: 8px;
   background: ${props => props.theme.colors.teal};
   border-radius: 50%;
   box-shadow: 0 0 8px ${props => props.theme.colors.teal}99;
   animation: ${pulse} 2s infinite;
+  z-index: 2;
+`;
+
+export const TagBadge = styled.span<{ $id?: string; $inVideo?: boolean }>`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: rgba(30, 20, 10, 0.52);
+  color: #fde8c0;
+  backdrop-filter: blur(6px);
 `;
 
 export const CreatorDetails = styled.div<{ $isMobile?: boolean }>`

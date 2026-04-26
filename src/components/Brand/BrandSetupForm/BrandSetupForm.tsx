@@ -7,7 +7,8 @@ import SocialsBackground from '@components/Background/SocialsBackground';
 import PlatformLogoPicker from '@components/Brand/PlatformLogoPicker/PlatformLogoPicker';
 import { BrandInitializeDto, getLogoDataUrl } from '@models/Brand';
 import { ConnectedPlatform, getPlatformIconPath } from '@/models/Platform';
-import { SocialPlatform } from '@models/SocialAccount';
+import { SocialPlatform, PLATFORM_NAMES } from '@models/SocialAccount';
+import { api } from '@/utils/apiClient';
 import { fileToBase64 } from '@utils/fileUtils';
 import { urlToBase64 } from '@utils/imageUtils';
 import {
@@ -72,7 +73,7 @@ const BrandSetupForm: React.FC<BrandSetupFormProps> = ({
   });
 
   const [uninitializedBrandId, setUninitializedBrandId] = useState<string | null>(null);
-  const { platforms: connectedPlatforms, refetch: refetchPlatforms } =
+  const { platforms: connectedPlatforms, refetch: refetchPlatforms, loading: platformsLoading } =
     useConnectedPlatforms(uninitializedBrandId, true);
 
   const [nameError, setNameError] = useState(false);
@@ -136,6 +137,8 @@ const BrandSetupForm: React.FC<BrandSetupFormProps> = ({
 
   // Detect newly-connected platform → show suggestion if no logo selected
   useEffect(() => {
+    if (platformsLoading) return;
+
     const current = connectedPlatforms
       .filter(p => p.isConnected && !!p.profilePicture)
       .map(p => p.platform);
@@ -161,7 +164,7 @@ const BrandSetupForm: React.FC<BrandSetupFormProps> = ({
     }
 
     prevConnectedRef.current = current;
-  }, [connectedPlatforms]);
+  }, [connectedPlatforms, platformsLoading]);
 
   // Close popup if a logo gets set while it's open
   useEffect(() => {
@@ -278,6 +281,23 @@ const BrandSetupForm: React.FC<BrandSetupFormProps> = ({
     }
   };
 
+  const handleBack = async () => {
+    const platformsToDisconnect = connectedPlatforms.filter(p => p.isConnected);
+    if (platformsToDisconnect.length > 0 && uninitializedBrandId) {
+      try {
+        await Promise.allSettled(
+          platformsToDisconnect.map(p => {
+            const platformParam = PLATFORM_NAMES[p.platform] || p.platform;
+            return api.delete(`/platforms/disconnect?platform=${platformParam}&uninitializedBrandUuid=${uninitializedBrandId}`);
+          })
+        );
+      } catch (err) {
+        console.error('Failed to disconnect platforms on back', err);
+      }
+    }
+    onBack();
+  };
+
   const titleMain = variant === 'first' ? 'Create Your ' : 'Create ';
   const titleHighlight = variant === 'first' ? 'First Brand' : 'New Brand';
   const backTitle = variant === 'first' ? 'Back to profile setup' : 'Back to home';
@@ -302,8 +322,8 @@ const BrandSetupForm: React.FC<BrandSetupFormProps> = ({
       {showBackground && <SocialsBackground />}
 
       {suggestionCp && (
-        <SuggestionOverlay>
-          <SuggestionModal>
+        <SuggestionOverlay onClick={handleSuggestionDecline}>
+          <SuggestionModal onClick={(e) => e.stopPropagation()}>
             <SuggestionModalAvatar>
               <img src={suggestionCp.profilePicture!} alt={suggestionCp.username} />
               <SuggestionModalBadge
@@ -330,7 +350,7 @@ const BrandSetupForm: React.FC<BrandSetupFormProps> = ({
       )}
 
       <Content>
-        <BackButton onClick={onBack} title={backTitle} type="button">
+        <BackButton onClick={handleBack} title={backTitle} type="button">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ overflow: 'visible' }}>
             <path className="arrow-group" d="M19 12H5m0 0l7 7m-7-7l7-7" />
           </svg>

@@ -14,6 +14,8 @@ interface Creator {
   mediaType: string;
   previewClass: string;
   icon: string;
+  videoSrc?: string;
+  tag?: string;
 }
 
 const CREATORS: Creator[] = [
@@ -25,6 +27,19 @@ const CREATORS: Creator[] = [
     mediaType: 'Video',
     previewClass: 'vision',
     icon: '✨',
+    videoSrc: '/studio_creators_previews/vision.mp4',
+    tag: 'AI',
+  },
+  {
+    id: 'atlas',
+    name: 'Atlas',
+    subtitle: 'Idea → Short Video',
+    description: "Bring your idea to life as a cinematic short video. Atlas isn't generative AI—it's a decision-making AI agent that curates, selects, and assembles resources from online stock libraries on your behalf. It analyzes your concept, allocates the right visuals, audio, and pacing, and transforms your idea into a polished short video that feels both intentional and alive.",
+    mediaType: 'Video',
+    previewClass: 'atlas',
+    icon: '🎬',
+    videoSrc: '/studio_creators_previews/atlas.mp4',
+    tag: 'Real Footage',
   },
   {
     id: 'frames',
@@ -34,15 +49,6 @@ const CREATORS: Creator[] = [
     mediaType: 'Video',
     previewClass: 'frames',
     icon: '🎥',
-  },
-  {
-    id: 'show-time',
-    name: 'Show Time',
-    subtitle: 'Idea → Short Video',
-    description: "Bring your idea to life as a cinematic short video. Show Time isn't generative AI—it's a decision-making AI agent that curates, selects, and assembles resources from online stock libraries on your behalf. It analyzes your concept, allocates the right visuals, audio, and pacing, and transforms your idea into a polished short video that feels both intentional and alive.",
-    mediaType: 'Video',
-    previewClass: 'show-time',
-    icon: '⏰',
   },
   {
     id: 'notes',

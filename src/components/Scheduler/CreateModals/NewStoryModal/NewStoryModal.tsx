@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
     getDefaultStoryFormData,
     DEFAULT_INSTAGRAM_CONFIG,
     DEFAULT_FACEBOOK_CONFIG,
     generateRepeatLabel,
-    generateRruleText
+    generateRruleText,
+    parseTimeString
 } from '@/models/ScheduleFormData';
 import { StoryFormData } from '@/models/StorySchedule';
 import DatePicker from '../DatePicker/DatePicker';
@@ -24,11 +26,13 @@ import { useContentPicking } from '../useContentPicking';
 import ScheduleModalLayout from '../ScheduleModalLayout/ScheduleModalLayout';
 import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import ContentPreview from '../ContentPreview';
-import ChipButton from '../ChipButton/ChipButton';
-import ChipArrow from '../ChipArrow/ChipArrow';
 import SectionContainer from '../SectionContainer/SectionContainer';
 import RecurringActionDialog from '../RecurringActionDialog/RecurringActionDialog';
 import ContentDetailModal from '@/components/Content/ContentDetailModal/ContentDetailModal';
+import { useDragDropContent } from '../Shared/useDragDropContent';
+import { ScheduleDateTimeSection } from '../Shared/ScheduleDateTimeSection';
+import { ScheduleModalFooter } from '../Shared/ScheduleModalFooter';
+import { sharedStyles } from '../Shared/styles';
 
 
 interface NewStoryModalProps {
@@ -45,16 +49,6 @@ interface NewStoryModalProps {
     lastPickedContent?: ContentItem | null;
     status?: string;
 }
-
-const parseTimeString = (time: string): { hours: number; minutes: number } => {
-    const [timePart, period] = time.split(' ');
-    const [hourStr, minuteStr] = timePart.split(':');
-    let hours = parseInt(hourStr);
-    const minutes = parseInt(minuteStr);
-    if (period?.toUpperCase() === 'PM' && hours !== 12) hours += 12;
-    else if (period?.toUpperCase() === 'AM' && hours === 12) hours = 0;
-    return { hours, minutes };
-};
 
 const NewStoryModal: React.FC<NewStoryModalProps> = ({
     isOpen,
@@ -98,7 +92,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [showRepeatSelector, setShowRepeatSelector] = useState(false);
     const [showTimezoneSelector, setShowTimezoneSelector] = useState(false);
-    const [isDragOver, setIsDragOver] = useState(false);
+    const [showTimezoneInfo, setShowTimezoneInfo] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationErrors, setValidationErrors] = useState<{ title?: string; platform?: string; date?: string; content?: string }>({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -109,65 +103,27 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     const [isDraftHovered, setIsDraftHovered] = useState(false);
     const [selectedDetailContent, setSelectedDetailContent] = useState<ContentItem | null>(null);
 
-    // ✅ THE FIX: drag counter lives in the parent, not ContentPreview
-    const dragCounter = useRef(0);
-
-    const handleDragEnter = (e: React.DragEvent) => {
-        e.preventDefault();
-        dragCounter.current += 1;
-        if (dragCounter.current === 1) setIsDragOver(true);
+    const handleContentSelect = (selectedContent: ContentItem) => {
+        setFormData(prev => ({ ...prev, contentId: selectedContent.id, contentTitle: selectedContent.title || 'Untitled', contentThumbnail: selectedContent.thumbnail || '' }));
+        if (validationErrors.content) setValidationErrors(prev => ({ ...prev, content: undefined }));
+        if (onCancelPicking) onCancelPicking();
     };
+    const { startPicking, cancelPicking, isPicking } = useContentPicking({
+        onPick: (item: any) => handleContentSelect(content.find(c => c.id === item.id) || item),
+        targetType: 'story'
+    });
 
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-    };
-
-    const handleDragLeave = (_e: React.DragEvent) => {
-        dragCounter.current -= 1;
-        if (dragCounter.current <= 0) {
-            dragCounter.current = 0;
-            setIsDragOver(false);
-        }
-    };
-
-    const handleManualDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        dragCounter.current = 0;
-        setIsDragOver(false);
-        const contentId = e.dataTransfer.getData('contentId');
-        if (contentId) {
-            const droppedContent = content.find(c => c.id === contentId);
-            if (droppedContent) {
-                handleContentSelect(droppedContent);
-                cancelPicking(); // Ensure picking state and scrim are cleaned up
-                if (onContentDrop) onContentDrop();
-            }
-        }
-    };
-
-    // Reset counter when drag ends anywhere on page
-    useEffect(() => {
-        const reset = () => {
-            dragCounter.current = 0;
-            setIsDragOver(false);
-        };
-        window.addEventListener('dragend', reset);
-        return () => window.removeEventListener('dragend', reset);
-    }, []);
+    const { isDragOver, handleDragEnter, handleDragOver, handleDragLeave, handleManualDrop } = useDragDropContent(
+        content,
+        handleContentSelect,
+        cancelPicking,
+        onContentDrop
+    );
 
     const { platforms } = useConnectedPlatforms(brandId);
     const { profile } = useUserProfile();
 
-    const handleContentPick = (item: any) => {
-        const contentItem = content.find(c => c.id === item.id) || item;
-        handleContentSelect(contentItem);
-    };
 
-    const { startPicking, cancelPicking, isPicking } = useContentPicking({
-        onPick: handleContentPick,
-        targetType: 'story'
-    });
 
     useEffect(() => {
         if (profile?.country && !formData.timezone) {
@@ -223,15 +179,15 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            const isInsidePicker = target.closest('.date-picker, .time-picker, .timezone-selector, .repeat-selector');
+            const isInsidePicker = target.closest('.date-picker, .time-picker, .timezone-selector, .repeat-selector, .npm-timezone-info');
             const isInsideChip = target.closest('.chip-button') || target.closest('[role="button"]') || target.closest('button');
             if (!isInsidePicker && !isInsideChip) closeAllPickers();
         };
-        if (isOpen && (showDatePicker || showTimePicker || showTimezoneSelector || showRepeatSelector)) {
+        if (isOpen && (showDatePicker || showTimePicker || showTimezoneSelector || showTimezoneInfo || showRepeatSelector)) {
             const timeoutId = setTimeout(() => { document.addEventListener('mousedown', handleClickOutside); }, 100);
             return () => { clearTimeout(timeoutId); document.removeEventListener('mousedown', handleClickOutside); };
         }
-    }, [isOpen, showDatePicker, showTimePicker, showTimezoneSelector, showRepeatSelector]);
+    }, [isOpen, showDatePicker, showTimePicker, showTimezoneSelector, showTimezoneInfo, showRepeatSelector]);
 
     const isFormValid = useMemo(() => {
         const selectedPlatforms = (Object.keys(formData.platforms) as Array<'instagram' | 'facebook'>).filter(k => formData.platforms[k]?.enabled);
@@ -256,6 +212,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         setShowDatePicker(false);
         setShowTimePicker(false);
         setShowTimezoneSelector(false);
+        setShowTimezoneInfo(false);
         setShowRepeatSelector(false);
     };
 
@@ -530,11 +487,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         );
     };
 
-    const handleContentSelect = (selectedContent: ContentItem) => {
-        setFormData(prev => ({ ...prev, contentId: selectedContent.id, contentTitle: selectedContent.title || 'Untitled', contentThumbnail: selectedContent.thumbnail || '' }));
-        if (validationErrors.content) setValidationErrors(prev => ({ ...prev, content: undefined }));
-        if (onCancelPicking) onCancelPicking();
-    };
+
 
     const handleRemoveContent = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -542,11 +495,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         if (onCancelPicking) onCancelPicking();
     };
 
-    const formatDateLabel = (date: Date): string => {
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
-    };
+
 
     const getSelectedContent = () => {
         if (!formData.contentId) return null;
@@ -555,10 +504,6 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
         return { id: formData.contentId, title: formData.contentTitle || '', thumbnail: formData.contentThumbnail || '', type: 'video' as const, mediaType: 'video' };
     };
 
-
-    const draftBtnStyle: React.CSSProperties = { padding: '10px 22px', border: 'none', borderRadius: '10px', background: 'var(--color-surface)', fontSize: '14px', fontWeight: 600, color: 'var(--color-muted)', cursor: 'pointer', transition: 'all .18s', boxShadow: '0 1px 4px rgba(0, 0, 0, .08)' };
-    const scheduleBtnStyle: React.CSSProperties = { padding: '10px 28px', border: 'none', borderRadius: '10px', background: theme.gradients.innovator, color: '#fff', fontSize: '14px', fontWeight: 700, cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: 'all .2s', boxShadow: '0 3px 12px rgba(155, 93, 229, .25)', opacity: isSubmitting ? 0.7 : 1 };
-    const titleInputStyle: React.CSSProperties = { width: 'calc(70% - 28px)', border: 'none', borderBottom: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, .2)' : 'rgba(0, 0, 0, .1)'}`, outline: 'none', fontSize: '22px', fontWeight: 700, color: isDarkMode ? '#fff' : '#111827', padding: '16px 0 6px', marginLeft: '28px', background: 'transparent', fontFamily: 'inherit', transition: 'border-color .2s ease' };
 
     return (
         <div className={`new-story-modal-wrapper ${isShattering ? 'shatter-animation' : ''}`}>
@@ -571,11 +516,11 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                 title=""
                 icon="📖"
                 beforeBody={
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={sharedStyles.flexColumn}>
                         <input
                             className="nsm-title-input"
                             type="text"
-                            style={{ ...titleInputStyle, ...(validationErrors.title ? { borderBottomColor: '#EF4444' } : {}) }}
+                            style={{ ...sharedStyles.titleInput, ...(validationErrors.title ? { borderBottomColor: '#EF4444' } : {}) }}
                             placeholder={formData.calendarItemId ? (isReadOnly ? "View story" : "Edit story") : "New story"}
                             value={formData.title}
                             readOnly={isReadOnly}
@@ -586,7 +531,7 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                             }}
                             maxLength={80}
                         />
-                        {validationErrors.title && <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginLeft: 0, marginTop: '4px' }}>{validationErrors.title}</span>}
+                        {validationErrors.title && <span style={{ ...sharedStyles.errorText, marginLeft: 0, marginTop: '4px' }}>{validationErrors.title}</span>}
                     </div>
                 }
                 rightColumn={
@@ -607,62 +552,42 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                             onDragEnter={handleDragEnter}
                             placeholderText="Click to add content"
                         />
-                        {validationErrors.content && <div style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, textAlign: 'center', marginTop: '8px' }}>{validationErrors.content}</div>}
+                        {validationErrors.content && <div style={{ ...sharedStyles.errorText, textAlign: 'center', marginTop: '8px' }}>{validationErrors.content}</div>}
                     </div>
                 }
                 footer={
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                        <button
-                            className="nsm-draft-btn"
-                            onClick={handleSaveDraft} 
-                            disabled={!isDraftEnabled}
-                            onMouseEnter={() => setIsDraftHovered(true)}
-                            onMouseLeave={() => setIsDraftHovered(false)}
-                            style={{ ...draftBtnStyle, opacity: !isDraftEnabled ? 0.5 : 1, cursor: !isDraftEnabled ? 'not-allowed' : 'pointer', ...(isDraftHovered && isDraftEnabled ? { background: 'rgba(155, 93, 229, 0.1)', color: '#9b5de5', boxShadow: '0 2px 8px rgba(155, 93, 229, 0.2)' } : {}) }}
-                        >
-                            Save as Draft
-                        </button>
-                        <button 
-                            className="nsm-schedule-btn"
-                            onClick={handleSchedule} 
-                            disabled={isSubmitting || isReadOnly || !isFormValid}
-                            style={{ ...scheduleBtnStyle, opacity: (isSubmitting || isReadOnly || !isFormValid) ? 0.7 : 1, cursor: (isSubmitting || isReadOnly || !isFormValid) ? 'not-allowed' : 'pointer' }}
-                        >
-                            {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update' : 'Schedule'))}
-                        </button>
-                        </div>
-                    </div>
+                    <ScheduleModalFooter
+                        onSaveDraft={handleSaveDraft}
+                        isDraftEnabled={isDraftEnabled}
+                        isDraftHovered={isDraftHovered}
+                        setIsDraftHovered={setIsDraftHovered}
+                        onSchedule={handleSchedule}
+                        isSubmitting={isSubmitting}
+                        isReadOnly={isReadOnly}
+                        isFormValid={isFormValid}
+                        calendarItemId={formData.calendarItemId}
+                        isDarkMode={isDarkMode}
+                    />
                 }
             >
-                <SectionContainer icon="🕐" className="nsm-date-section">
-                    <div className="chip-row-container" style={{ display: 'flex', flexWrap: 'nowrap', gap: '8px', alignItems: 'center' }}>
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <ChipButton className="chip-button" minWidth="148px" onClick={() => { if (showDatePicker) { closeAllPickers(); } else { closeAllPickers(); setShowDatePicker(true); } }}>
-                                <span>{formatDateLabel(formData.date)}</span><ChipArrow />
-                            </ChipButton>
-                            <DatePicker selectedDate={formData.date} onChange={handleDateChange} minDate={new Date()} show={showDatePicker} onClose={() => setShowDatePicker(false)} />
-                        </div>
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <ChipButton className="chip-button" minWidth="88px" onClick={() => { if (showTimePicker) { closeAllPickers(); } else { closeAllPickers(); setShowTimePicker(true); } }}>
-                                <span>{formData.time}</span><ChipArrow />
-                            </ChipButton>
-                            <TimePicker selectedTime={formData.time} onChange={handleTimeChange} show={showTimePicker} onClose={() => setShowTimePicker(false)} />
-                        </div>
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <ChipButton className="chip-button" minWidth="120px" onClick={() => { if (showTimezoneSelector) { closeAllPickers(); } else { closeAllPickers(); setShowTimezoneSelector(true); } }}>
-                                <span style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>Timezone</span><ChipArrow />
-                            </ChipButton>
-                            <TimezoneSelector selectedTimezone={formData.timezone || 'America/New_York'} onChange={(tz) => { setFormData(prev => ({ ...prev, timezone: tz })); setShowTimezoneSelector(false); }} show={showTimezoneSelector} onClose={() => setShowTimezoneSelector(false)} />
-                        </div>
-                        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                            <ChipButton className="chip-button" minWidth="100%" style={{ width: '100%', boxSizing: 'border-box' }} onClick={() => { if (showRepeatSelector) { closeAllPickers(); } else { closeAllPickers(); setShowRepeatSelector(true); } }}>
-                                <span>{formData.repeat.label}</span><ChipArrow />
-                            </ChipButton>
-                            <RepeatSelector selectedRepeat={formData.repeat} onChange={(repeat) => { setFormData({ ...formData, repeat }); setShowRepeatSelector(false); }} baseDate={formData.date} show={showRepeatSelector} onClose={() => setShowRepeatSelector(false)} />
-                        </div>
-                    </div>
-                </SectionContainer>
+                <ScheduleDateTimeSection
+                    formData={formData}
+                    setFormData={setFormData}
+                    showDatePicker={showDatePicker}
+                    setShowDatePicker={setShowDatePicker}
+                    showTimePicker={showTimePicker}
+                    setShowTimePicker={setShowTimePicker}
+                    showTimezoneInfo={showTimezoneInfo}
+                    setShowTimezoneInfo={setShowTimezoneInfo}
+                    showRepeatSelector={showRepeatSelector}
+                    setShowRepeatSelector={setShowRepeatSelector}
+                    closeAllPickers={closeAllPickers}
+                    handleDateChange={handleDateChange}
+                    handleTimeChange={handleTimeChange}
+                    currentBrand={currentBrand}
+                    isDarkMode={isDarkMode}
+                    isMobileLayout={false}
+                />
 
                 <SectionContainer icon="📲" className="nsm-platform-section">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -671,10 +596,10 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                         )}
                         {platforms.some(p => p.platform === 'instagram' && p.isConnected) && renderPlatformSection('instagram')}
                         {platforms.some(p => p.platform === 'facebook' && p.isConnected) && renderPlatformSection('facebook')}
-                        {validationErrors.platform && <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginTop: '-4px' }}>{validationErrors.platform}</span>}
+                        {validationErrors.platform && <span style={{ ...sharedStyles.errorText, marginTop: '-4px' }}>{validationErrors.platform}</span>}
                     </div>
                 </SectionContainer>
-                {validationErrors.date && <div style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginLeft: '42px', marginTop: '-16px' }}>{validationErrors.date}</div>}
+                {validationErrors.date && <div style={{ ...sharedStyles.errorText, marginLeft: '42px', marginTop: '-16px' }}>{validationErrors.date}</div>}
             </ScheduleModalLayout>
 
             <ConfirmDialog isOpen={showDeleteConfirm} title="Delete Story" message="Are you sure you want to delete this story? This action cannot be undone." onConfirm={confirmDelete} onCancel={() => setShowDeleteConfirm(false)} />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, DragEvent, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useVisionPlan, SocialVideoContext, saveVisionMeta, readVisionMeta } from '@hooks/useVisionPlan';
+import { useVisionPlan, SocialVideoContext, saveVisionMeta, readVisionMeta, VisionPlan } from '@hooks/useVisionPlan';
+import { saveLocalStatus } from '@hooks/useVisionHistory';
 
 import VisionBackground from '@components/Studio/VisionCreator/VisionBackground/VisionBackground';
 import VisionHeader from '@components/Studio/VisionCreator/VisionHeader/VisionHeader';
@@ -10,8 +11,14 @@ import ReadyView from '@components/Studio/VisionCreator/ReadyView/ReadyView';
 import ReadyViewV2 from '@components/Studio/VisionCreator/ReadyViewV2/ReadyViewV2';
 import ReadyViewV3 from '@components/Studio/VisionCreator/ReadyViewV3/ReadyViewV3';
 import ConfirmDialog from '@components/Studio/VisionCreator/ConfirmDialog/ConfirmDialog';
+import PlanHistoryPanel from '@components/Studio/VisionCreator/PlanHistoryPanel/PlanHistoryPanel';
+import { PlanStatus } from '@components/Studio/VisionCreator/PlanHistoryPanel/PlanHistoryPanel';
+import { SIDEBAR_W_OPEN, SIDEBAR_W_COLLAPSED } from '@components/Studio/VisionCreator/PlanHistoryPanel/styles';
 
-import { VisionContainer, BackBtn, BackBtnLabel, BackBtnAccent, LogoMark, ContentWrapper, Banner, VersionToggle, VersionBtn } from './styles';
+import {
+  VisionContainer, BackBtn, BackBtnLabel, BackBtnAccent,
+  LogoMark, ContentWrapper, Banner,
+} from './styles';
 
 type ConfirmAction = 'back' | 'delete' | null;
 
@@ -25,7 +32,7 @@ const VisionPage: React.FC = () => {
   const [dragging,     setDragging]     = useState(false);
   const [files,        setFiles]        = useState<FileAtt[]>([]);
   const [ripple,       setRipple]       = useState<{x:number;y:number}|null>(null);
-  const [planLeaving,  setPlanLeaving]  = useState(false);
+  const [planLeaving]                   = useState(false);
   const [planElapsed,  setPlanElapsed]  = useState(0);
   const [withCaptions, setWithCaptions] = useState(_savedMeta?.withCaptions ?? false);
   const [socialVideo,  setSocialVideo]  = useState<SocialVideoContext | null>(null);
@@ -36,8 +43,18 @@ const VisionPage: React.FC = () => {
   const [planView, setPlanView] = useState<'v1'|'v2'|'v3'>(() =>
     (localStorage.getItem('vision_plan_view') as 'v1'|'v2'|'v3') ?? 'v1'
   );
+  const [historyDetailPlan,   setHistoryDetailPlan]   = useState<VisionPlan | null>(null);
+  const [historyDetailStatus, setHistoryDetailStatus] = useState<PlanStatus>('done');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
+    localStorage.getItem('vision_sidebar_collapsed') === 'true'
+  );
 
   useEffect(() => { localStorage.setItem('vision_plan_view', planView); }, [planView]);
+  useEffect(() => {
+    localStorage.setItem('vision_sidebar_collapsed', String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  const sidebarW = sidebarCollapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W_OPEN;
 
   const planTimerRef = useRef<ReturnType<typeof setInterval>|null>(null);
   const fileRef      = useRef<HTMLInputElement>(null);
@@ -48,7 +65,6 @@ const VisionPage: React.FC = () => {
   const showReady    = !!plan && !isBusy && !quickMode;
   const showIdle     = !plan && !isBusy && !quickMode;
 
-  // Planning elapsed timer
   useEffect(() => {
     if (isPolling) {
       setPlanElapsed(0);
@@ -59,7 +75,6 @@ const VisionPage: React.FC = () => {
     return () => { if (planTimerRef.current) clearInterval(planTimerRef.current); };
   }, [isPolling]);
 
-  // Drag & Drop
   const onDragOver  = (e: DragEvent) => { e.preventDefault(); setDragging(true); };
   const onDragLeave = (e: DragEvent) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false); };
   const onDrop      = (e: DragEvent) => {
@@ -79,11 +94,7 @@ const VisionPage: React.FC = () => {
     setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     setTimeout(() => setRipple(null), 600);
     saveVisionMeta({ prompt, withCaptions, duration: duration ?? 'standard' });
-    await generatePlan(prompt, {
-      withCaptions,
-      durationLevel: duration ?? 'standard',
-      socialVideo: socialVideo ?? undefined,
-    });
+    await generatePlan(prompt, { withCaptions, durationLevel: duration ?? 'standard', socialVideo: socialVideo ?? undefined });
   };
 
   const handleQuickSend = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -93,11 +104,7 @@ const VisionPage: React.FC = () => {
     setTimeout(() => setRipple(null), 600);
     saveVisionMeta({ prompt, withCaptions, duration: duration ?? 'standard' });
     setQuickMode(true);
-    await generatePlan(prompt, {
-      withCaptions,
-      durationLevel: duration ?? 'standard',
-      socialVideo: socialVideo ?? undefined,
-    });
+    await generatePlan(prompt, { withCaptions, durationLevel: duration ?? 'standard', socialVideo: socialVideo ?? undefined });
   };
 
   useEffect(() => {
@@ -109,7 +116,11 @@ const VisionPage: React.FC = () => {
 
   const handleExecutePlan = async (uuid: string, version?: number) => {
     const ok = await executePlan(uuid, version);
-    if (ok) { reset(); navigate('/studio'); }
+    if (ok) {
+      saveLocalStatus(uuid, 'done');
+      reset();
+      navigate('/studio');
+    }
     return ok;
   };
 
@@ -125,7 +136,7 @@ const VisionPage: React.FC = () => {
 
   const handleBackClick = () => {
     if (showReady) {
-      setConfirmAction('back');
+      handleSaveDraft();
     } else {
       navigate('/studio');
     }
@@ -133,125 +144,146 @@ const VisionPage: React.FC = () => {
 
   const handleConfirm = () => {
     if (confirmAction === 'back') {
-      navigate('/studio');
+      reset(); navigate('/studio');
     } else if (confirmAction === 'delete') {
       handleNewConversation();
     }
     setConfirmAction(null);
   };
 
+  const handleSaveDraft = () => {
+    if (plan) saveLocalStatus(plan.planUuid, 'draft');
+    reset();
+    navigate('/studio');
+    setConfirmAction(null);
+  };
+
   const renderPromptBox = (minimalist = false) => (
     <PromptBox
-      prompt={prompt}
-      setPrompt={setPrompt}
-      focused={focused}
-      setFocused={setFocused}
-      dragging={dragging}
-      files={files}
-      setFiles={setFiles}
-      handleSend={handleSend}
-      handleQuickSend={handleQuickSend}
-      isReady={isReady}
-      isBusy={isBusy}
-      isLoading={isLoading}
-      isPolling={isPolling}
-      ripple={ripple}
-      fileRef={fileRef}
-      showReady={showReady}
-      withCaptions={withCaptions}
-      setWithCaptions={setWithCaptions}
-      socialVideo={socialVideo}
-      setSocialVideo={setSocialVideo}
-      duration={duration}
-      setDuration={setDuration}
-      autoMode={autoMode}
-      setAutoMode={setAutoMode}
+      prompt={prompt} setPrompt={setPrompt}
+      focused={focused} setFocused={setFocused}
+      dragging={dragging} files={files} setFiles={setFiles}
+      handleSend={handleSend} handleQuickSend={handleQuickSend}
+      isReady={isReady} isBusy={isBusy} isLoading={isLoading} isPolling={isPolling}
+      ripple={ripple} fileRef={fileRef} showReady={showReady}
+      withCaptions={withCaptions} setWithCaptions={setWithCaptions}
+      socialVideo={socialVideo} setSocialVideo={setSocialVideo}
+      duration={duration} setDuration={setDuration}
+      autoMode={autoMode} setAutoMode={setAutoMode}
       minimalist={minimalist}
     />
   );
 
   return (
-    <VisionContainer onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
-      <LogoMark href="/">EZpresence</LogoMark>
-      <BackBtn onClick={handleBackClick}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        <BackBtnLabel>Back to <BackBtnAccent>Studio</BackBtnAccent></BackBtnLabel>
-      </BackBtn>
-      {showReady && (
-        <VersionToggle>
-          <VersionBtn $active={planView === 'v1'} onClick={() => setPlanView('v1')}>V1</VersionBtn>
-          <VersionBtn $active={planView === 'v2'} onClick={() => setPlanView('v2')}>V2</VersionBtn>
-          <VersionBtn $active={planView === 'v3'} onClick={() => setPlanView('v3')}>V3</VersionBtn>
-        </VersionToggle>
-      )}
-
-      {/* ── IDLE ── */}
+    <>
+      {/* ── Sidebar — only visible in idle/start view ── */}
       {showIdle && (
-        <ContentWrapper>
-          <VisionBackground />
-          <VisionHeader />
-          {renderPromptBox()}
-          {apiError && <Banner $ok={false}>⚠️ {apiError}</Banner>}
-        </ContentWrapper>
-      )}
-
-      {/* ── PLANNING ── */}
-      {showPlanning && (
-        <PlanningView
-          isLoading={isLoading}
-          planElapsed={planElapsed}
-          planLeaving={planLeaving}
+        <PlanHistoryPanel
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(v => !v)}
+          onPlanSelect={(p, status) => {
+            setHistoryDetailPlan(p);
+            setHistoryDetailStatus(status);
+            if (window.innerWidth <= 768) setSidebarCollapsed(true);
+          }}
+          onPlanDeselect={() => setHistoryDetailPlan(null)}
+          activePlanUuid={historyDetailPlan?.planUuid}
         />
       )}
 
-      {/* ── READY ── */}
-      {showReady && plan && planView === 'v1' && (
-        <ReadyView
-          plan={plan}
-          updatePlan={updatePlan}
-          executePlan={handleExecutePlan}
-          isUpdating={isUpdating}
-          isExecuting={isExecuting}
-          apiError={apiError}
-          promptBoxSlot={renderPromptBox(true)}
-          onRequestDelete={() => setConfirmAction('delete')}
-        />
-      )}
-      {showReady && plan && planView === 'v2' && (
-        <ReadyViewV2
-          plan={plan}
-          updatePlan={updatePlan}
-          executePlan={handleExecutePlan}
-          isUpdating={isUpdating}
-          isExecuting={isExecuting}
-          apiError={apiError}
-          promptBoxSlot={renderPromptBox(true)}
-          onRequestDelete={() => setConfirmAction('delete')}
-        />
-      )}
-      {showReady && plan && planView === 'v3' && (
-        <ReadyViewV3
-          plan={plan}
-          updatePlan={updatePlan}
-          executePlan={handleExecutePlan}
-          isUpdating={isUpdating}
-          isExecuting={isExecuting}
-          apiError={apiError}
-          promptBoxSlot={renderPromptBox(true)}
-          onRequestDelete={() => setConfirmAction('delete')}
-        />
-      )}
+      {/* ── Main content area — offset by sidebar width ── */}
+      <VisionContainer
+        style={{ left: showIdle ? sidebarW : 0, '--sidebar-w': showIdle ? `${sidebarW}px` : '0px' } as React.CSSProperties}
+        onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
+      >
+        {/* Fixed logo + back btn — only when ReadyViewV2 is NOT handling the top bar */}
+        {!showReady && !historyDetailPlan && (
+          <>
+            <LogoMark href="/">EZpresence</LogoMark>
+            <BackBtn onClick={handleBackClick}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              <BackBtnLabel>Back to <BackBtnAccent>Studio</BackBtnAccent></BackBtnLabel>
+            </BackBtn>
+          </>
+        )}
 
-      <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFile} />
+        {/* ── IDLE ── */}
+        {showIdle && !historyDetailPlan && (
+          <ContentWrapper>
+            <VisionBackground />
+            <VisionHeader />
+            {renderPromptBox()}
+            {apiError && <Banner $ok={false}>⚠️ {apiError}</Banner>}
+          </ContentWrapper>
+        )}
 
+        {/* ── HISTORY DETAIL ── */}
+        {showIdle && historyDetailPlan && (
+          <ReadyViewV2
+            plan={historyDetailPlan}
+            updatePlan={updatePlan}
+            executePlan={handleExecutePlan}
+            isUpdating={isUpdating}
+            isExecuting={isExecuting}
+            apiError={apiError}
+            readonly={historyDetailStatus === 'done'}
+            promptBoxSlot={historyDetailStatus !== 'done' ? renderPromptBox(true) : undefined}
+            onRequestDelete={() => setHistoryDetailPlan(null)}
+            onBack={handleBackClick}
+          />
+        )}
+
+        {/* ── PLANNING ── */}
+        {showPlanning && (
+          <PlanningView
+            isLoading={isLoading}
+            planElapsed={planElapsed}
+            planLeaving={planLeaving}
+          />
+        )}
+
+        {/* ── READY ── */}
+        {showReady && plan && planView === 'v1' && (
+          <ReadyView
+            plan={plan} updatePlan={updatePlan} executePlan={handleExecutePlan}
+            isUpdating={isUpdating} isExecuting={isExecuting} apiError={apiError}
+            promptBoxSlot={renderPromptBox(true)}
+            onRequestDelete={() => setConfirmAction('delete')}
+          />
+        )}
+        {showReady && plan && planView === 'v2' && (
+          <ReadyViewV2
+            plan={plan} updatePlan={updatePlan} executePlan={handleExecutePlan}
+            isUpdating={isUpdating} isExecuting={isExecuting} apiError={apiError}
+            promptBoxSlot={renderPromptBox(true)}
+            onRequestDelete={() => setConfirmAction('delete')}
+            onBack={handleBackClick}
+            planView={planView}
+            onPlanViewChange={setPlanView}
+          />
+        )}
+        {showReady && plan && planView === 'v3' && (
+          <ReadyViewV3
+            plan={plan} updatePlan={updatePlan} executePlan={handleExecutePlan}
+            isUpdating={isUpdating} isExecuting={isExecuting} apiError={apiError}
+            promptBoxSlot={renderPromptBox(true)}
+            onRequestDelete={() => setConfirmAction('delete')}
+          />
+        )}
+
+        <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFile} />
+      </VisionContainer>
+
+      {/* ── Dialogs ── */}
       {confirmAction === 'back' && (
         <ConfirmDialog
           title="Leave Vision Creator?"
-          message="Going back to Studio will permanently delete this plan. This cannot be undone."
-          confirmLabel="Delete & Leave"
-          danger
+          message="Your plan is saved on the server. Save it as a draft to find it easily in history, or just leave."
+          confirmLabel="Leave"
+          secondaryLabel="Save as Draft"
+          onSecondary={handleSaveDraft}
           onConfirm={handleConfirm}
           onCancel={() => setConfirmAction(null)}
         />
@@ -266,7 +298,7 @@ const VisionPage: React.FC = () => {
           onCancel={() => setConfirmAction(null)}
         />
       )}
-    </VisionContainer>
+    </>
   );
 };
 

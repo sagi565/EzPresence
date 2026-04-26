@@ -63,7 +63,7 @@ export const Buttons = styled.div`
   gap: 10px;
 `;
 
-export const Btn = styled.button<{ $primary?: boolean; $danger?: boolean }>`
+export const Btn = styled.button<{ $primary?: boolean; $danger?: boolean; $secondary?: boolean }>`
   flex: 1;
   padding: 11px 16px;
   border-radius: 12px;
@@ -85,6 +85,11 @@ export const Btn = styled.button<{ $primary?: boolean; $danger?: boolean }>`
     color: #fff;
     box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35);
     &:hover { box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5); transform: translateY(-1px); }
+  ` : p.$secondary ? `
+    background: rgba(251, 191, 36, 0.1);
+    color: #d97706;
+    border: 1.5px solid rgba(251, 191, 36, 0.28);
+    &:hover { background: rgba(251, 191, 36, 0.18); border-color: rgba(251, 191, 36, 0.45); transform: translateY(-1px); }
   ` : `
     background: rgba(139, 92, 246, 0.07);
     color: ${p.theme.colors.muted};

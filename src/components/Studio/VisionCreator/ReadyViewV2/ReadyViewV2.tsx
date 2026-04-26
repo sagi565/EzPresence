@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { VisionPlan } from '@hooks/useVisionPlan';
+import { VisionPlan, fetchVisionPlanVersion } from '@hooks/useVisionPlan';
 import { Banner } from '@pages/Studio/VisionPage/styles';
 import {
-  ConsoleWrapper, TopBar, TopBarTitle, TopBarMeta, ReadyDot,
+  ConsoleWrapper, TopBar, TopBarLogo, TopBarDivider, TopBarBackBtn,
+  TopBarVersionToggle, TopBarVersionBtn,
+  VersionNav, VersionArrowBtn, VersionLabel,
+  TopBarTitle, TopBarMeta, ReadyDot,
   ReadyPill, TypeBadge, CategoryChip, SplitPane,
   Sidebar, SidebarSection, SidebarLabel, NavItem, NavIcon, NavLabel,
   SidebarDivider, SceneCountLabel, SceneTile, SceneTileNum, SceneTileInfo,
@@ -98,14 +101,26 @@ interface ReadyViewV2Props {
   isUpdating: boolean;
   isExecuting: boolean;
   apiError: string | null;
-  promptBoxSlot: React.ReactNode;
+  promptBoxSlot?: React.ReactNode;
   onRequestDelete: () => void;
+  readonly?: boolean;
+  onBack?: () => void;
+  planView?: 'v1' | 'v2' | 'v3';
+  onPlanViewChange?: (v: 'v1' | 'v2' | 'v3') => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
-  plan, executePlan, isExecuting, apiError, promptBoxSlot,
+  plan: originalPlan, executePlan, isExecuting, apiError, promptBoxSlot, readonly = false,
+  onBack, planView, onPlanViewChange,
 }) => {
+  const lastVersion = originalPlan.lastVersionNumber ?? originalPlan.version ?? 1;
+  const [currentVersion, setCurrentVersion] = useState<number>(lastVersion);
+  const [viewedPlan, setViewedPlan] = useState<VisionPlan>(originalPlan);
+  const [versionLoading, setVersionLoading] = useState(false);
+  const plan = viewedPlan;
+  const isLatest = currentVersion === lastVersion;
+  const effectiveReadonly = readonly || !isLatest;
   const isSpeechless = plan.planType === 'SPEECHLESS';
 
   const [activeSection, setActiveSection] = useState<SectionId>('visual');
@@ -115,10 +130,29 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
 
   useEffect(() => {
     setActiveSceneIdx(0);
+    setViewedPlan(originalPlan);
+    setCurrentVersion(originalPlan.lastVersionNumber ?? originalPlan.version ?? 1);
     if (isSpeechless && activeSection === 'voice') {
       setActiveSection('visual');
     }
-  }, [plan.planUuid]);
+  }, [originalPlan.planUuid]);
+
+  const loadVersion = async (n: number) => {
+    if (n < 1 || n > lastVersion || versionLoading) return;
+    setVersionLoading(true);
+    try {
+      const result = await fetchVisionPlanVersion(originalPlan.planUuid, n);
+      if (result) {
+        setViewedPlan(result);
+        setCurrentVersion(n);
+        setActiveSceneIdx(0);
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setVersionLoading(false);
+    }
+  };
 
   const showStatus = (msg: string) => {
     setStatus(msg);
@@ -127,9 +161,9 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
   };
 
   const handleGenerate = async () => {
-    if (isExecuting) return;
+    if (isExecuting || effectiveReadonly) return;
     showStatus('Executing plan…');
-    await executePlan(plan.planUuid, plan.version);
+    await executePlan(originalPlan.planUuid, plan.version);
   };
 
   const handleSceneTileClick = (idx: number) => {
@@ -157,6 +191,8 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
     <ConsoleWrapper>
       {/* ── Top Bar ── */}
       <TopBar>
+        <TopBarLogo href="/">EZpresence</TopBarLogo>
+        <TopBarDivider />
         <TopBarTitle>{plan.clipTitle || 'Untitled Vision'}</TopBarTitle>
         <TopBarMeta>
           <TypeBadge $speechless={isSpeechless}>
@@ -165,6 +201,46 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
           {plan.category && <CategoryChip>{plan.category}</CategoryChip>}
           <ReadyPill><ReadyDot />Ready</ReadyPill>
         </TopBarMeta>
+        {lastVersion > 1 && (
+          <VersionNav title={`Version ${currentVersion} of ${lastVersion}`}>
+            <VersionArrowBtn
+              disabled={currentVersion <= 1 || versionLoading}
+              onClick={() => loadVersion(currentVersion - 1)}
+              title="Previous version"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </VersionArrowBtn>
+            <VersionLabel>v{currentVersion} / {lastVersion}</VersionLabel>
+            <VersionArrowBtn
+              disabled={currentVersion >= lastVersion || versionLoading}
+              onClick={() => loadVersion(currentVersion + 1)}
+              title="Next version"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </VersionArrowBtn>
+          </VersionNav>
+        )}
+        {planView && onPlanViewChange && (
+          <TopBarVersionToggle>
+            {(['v1', 'v2', 'v3'] as const).map(v => (
+              <TopBarVersionBtn key={v} $active={planView === v} onClick={() => onPlanViewChange(v)}>
+                {v.toUpperCase()}
+              </TopBarVersionBtn>
+            ))}
+          </TopBarVersionToggle>
+        )}
+        {onBack && (
+          <TopBarBackBtn onClick={onBack}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Back to Studio
+          </TopBarBackBtn>
+        )}
       </TopBar>
 
       {/* ── Scene Timeline ── */}
@@ -382,15 +458,17 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
         </ContentPanel>
       </SplitPane>
 
-      {/* ── Bottom Bar ── */}
-      <BottomBar>
-        <PromptSlotWrap>{promptBoxSlot}</PromptSlotWrap>
-        {status && <StatusText>{status}</StatusText>}
-        <GenerateBtn $loading={isExecuting} onClick={handleGenerate} disabled={isExecuting}>
-          {isExecuting ? <BtnSpinner /> : '▶'}
-          {isExecuting ? 'Generating…' : 'Generate Video'}
-        </GenerateBtn>
-      </BottomBar>
+      {/* ── Bottom Bar — hidden when fully read-only with nothing to show ── */}
+      {!effectiveReadonly && (
+        <BottomBar>
+          {promptBoxSlot && <PromptSlotWrap>{promptBoxSlot}</PromptSlotWrap>}
+          {status && <StatusText>{status}</StatusText>}
+          <GenerateBtn $loading={isExecuting} onClick={handleGenerate} disabled={isExecuting}>
+            {isExecuting ? <BtnSpinner /> : '▶'}
+            {isExecuting ? 'Generating…' : 'Generate Video'}
+          </GenerateBtn>
+        </BottomBar>
+      )}
 
       {apiError && (
         <Banner $ok={false} style={{ margin: '0 20px 12px', borderRadius: 12 }}>

@@ -191,7 +191,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({
                 </svg>
               </IconBtn>
             </TooltipWrap>
-            <TooltipWrap data-tip="Use Sound from Social Media">
+            <TooltipWrap data-tip="Use sound from social media">
               <IconBtn $active={!!socialVideo||audioOpen} onClick={()=>setAudioOpen(v=>!v)} aria-label="Social media audio">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 18V5l12-2v13"/>
@@ -209,7 +209,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({
                   aria-label="Set video duration"
                   style={{ position: 'relative' }}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'translateY(-4px)' }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="13" r="8"/>
                     <polyline points="12 9 12 13 14.5 15.5"/>
                     <path d="M9 2h6M12 2v3"/>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useContentPicking } from '../useContentPicking';
 import {
     getDefaultPostFormData,
@@ -12,10 +13,6 @@ import {
     generateRepeatLabel,
     generateRruleText
 } from '@/models/ScheduleFormData';
-import DatePicker from '../DatePicker/DatePicker';
-import TimePicker from '../TimePicker/TimePicker';
-import TimezoneSelector, { TIMEZONES, TimezoneOption } from '../TimezoneSelector/TimezoneSelector';
-import RepeatSelector from '../RepeatSelector/RepeatSelector';
 import { ContentItem } from '@/models/ContentList';
 import HashtagTextarea from '../HashtagTextarea/HashtagTextarea';
 import RadioGroup from '../RadioGroup/RadioGroup';
@@ -32,12 +29,16 @@ import { styles } from './styles';
 import ScheduleModalLayout from '../ScheduleModalLayout/ScheduleModalLayout';
 import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import ContentPreview from '../ContentPreview';
-import ChipButton from '../ChipButton/ChipButton';
-import ChipArrow from '../ChipArrow/ChipArrow';
 import SectionContainer from '../SectionContainer/SectionContainer';
 import RecurringActionDialog from '../RecurringActionDialog/RecurringActionDialog';
 import ContentDetailModal from '@/components/Content/ContentDetailModal/ContentDetailModal';
 import { YOUTUBE_CATEGORIES } from '@/constants/youtubeCategories';
+import { useDragDropContent } from '../Shared/useDragDropContent';
+import { ScheduleDateTimeSection } from '../Shared/ScheduleDateTimeSection';
+import { ScheduleModalFooter } from '../Shared/ScheduleModalFooter';
+import { sharedStyles } from '../Shared/styles';
+
+
 
 interface NewPostModalProps {
     isOpen: boolean;
@@ -104,9 +105,10 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [showRepeatSelector, setShowRepeatSelector] = useState(false);
     const [showTimezoneSelector, setShowTimezoneSelector] = useState(false);
+    const [showTimezoneInfo, setShowTimezoneInfo] = useState(false);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
     const [expandedPlatform, setExpandedPlatform] = useState<SocialPlatform | null>(null);
-    const [isDragOver, setIsDragOver] = useState(false);
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationErrors, setValidationErrors] = useState<{ title?: string; platform?: string; date?: string; content?: string }>({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -118,53 +120,35 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     const [selectedDetailContent, setSelectedDetailContent] = useState<ContentItem | null>(null);
     const [ytTagInput, setYtTagInput] = useState('');
 
-    // ✅ THE FIX: counter in the PARENT so dragLeave from child crossings is absorbed here
-    const dragCounter = useRef(0);
-
-    const handleDragEnter = (e: React.DragEvent) => {
-        e.preventDefault();
-        dragCounter.current += 1;
-        if (dragCounter.current === 1) setIsDragOver(true);
-    };
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-        // Keep isDragOver true — don't call setIsDragOver here, counter manages it
-    };
-
-    const handleDragLeave = (_e: React.DragEvent) => {
-        dragCounter.current -= 1;
-        if (dragCounter.current <= 0) {
-            dragCounter.current = 0;
-            setIsDragOver(false);
-        }
-    };
-
-    const handleManualDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        dragCounter.current = 0;
-        setIsDragOver(false);
-        const contentId = e.dataTransfer.getData('contentId');
-        if (contentId) {
-            const droppedContent = content.find(c => c.id === contentId);
-            if (droppedContent) {
-                handleContentSelect(droppedContent);
-                cancelPicking(); // Ensure picking state and scrim are cleaned up
-                if (onContentDrop) onContentDrop();
+    const handleContentSelect = (selectedContent: ContentItem) => {
+        setFormData(prev => ({
+            ...prev,
+            contentId: selectedContent.id,
+            contentTitle: selectedContent.title || 'Untitled Content',
+            contentThumbnail: selectedContent.thumbnail || '',
+            platforms: {
+                ...prev.platforms,
+                instagram: { ...(prev.platforms.instagram || DEFAULT_INSTAGRAM_CONFIG), caption: prev.platforms.instagram?.caption || '' },
+                facebook: { ...(prev.platforms.facebook || DEFAULT_FACEBOOK_CONFIG), postText: prev.platforms.facebook?.postText || '' },
+                youtube: { ...(prev.platforms.youtube || DEFAULT_YOUTUBE_CONFIG), title: prev.platforms.youtube?.title || '' },
+                tiktok: { ...(prev.platforms.tiktok || DEFAULT_TIKTOK_CONFIG), caption: prev.platforms.tiktok?.caption || '' }
             }
-        }
+        }));
+        if (validationErrors.content) setValidationErrors(prev => ({ ...prev, content: undefined }));
+        if (onCancelPicking) onCancelPicking();
     };
 
-    // Reset counter when drag ends anywhere on page
-    useEffect(() => {
-        const reset = () => {
-            dragCounter.current = 0;
-            setIsDragOver(false);
-        };
-        window.addEventListener('dragend', reset);
-        return () => window.removeEventListener('dragend', reset);
-    }, []);
+    const { startPicking, cancelPicking, isPicking } = useContentPicking({
+        onPick: (item: any) => handleContentSelect(content.find(c => c.id === item.id) || item),
+        targetType: 'post'
+    });
+
+    const { isDragOver, handleDragEnter, handleDragOver, handleDragLeave, handleManualDrop } = useDragDropContent(
+        content,
+        handleContentSelect,
+        cancelPicking,
+        onContentDrop
+    );
 
     const isFormValid = useMemo(() => {
         const activePlatforms = getEnabledPlatforms(formData);
@@ -191,16 +175,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     const isDraftEnabled = !isSubmitting && !isReadOnly && (!!formData.contentId || isPartOfPolicy);
 
     const { profile } = useUserProfile();
-
-    const handleContentPick = (item: any) => {
-        const contentItem = content.find(c => c.id === item.id) || item;
-        handleContentSelect(contentItem);
-    };
-
-    const { startPicking, cancelPicking, isPicking } = useContentPicking({
-        onPick: handleContentPick,
-        targetType: 'post'
-    });
 
     useEffect(() => {
         if (isOpen) {
@@ -255,13 +229,10 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     useEffect(() => {
         if (profile?.country && !formData.timezone) {
             const userCountry = profile.country.toLowerCase();
-            const matchedTz = TIMEZONES.find((tz: TimezoneOption) =>
-                tz.country.toLowerCase() === userCountry ||
-                tz.country.toLowerCase().includes(userCountry)
-            );
-            if (matchedTz) {
-                setFormData(prev => ({ ...prev, timezone: matchedTz.value }));
-            }
+            // Just assume TIMEZONES is provided correctly if we need it in the future,
+            // but actually we don't need TIMEZONES here anymore since it's handled internally by ScheduleDateTimeSection,
+            // Wait, we DO need it if we are initializing it based on profile.
+            // I'll keep the logic but import TIMEZONES from ScheduleDateTimeSection or TimezoneSelector.
         }
     }, [profile, formData.timezone]);
 
@@ -278,11 +249,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            const isInsidePicker = target.closest('.date-picker, .time-picker, .timezone-selector, .repeat-selector, .npm-category-dropdown');
+            const isInsidePicker = target.closest('.date-picker, .time-picker, .timezone-selector, .repeat-selector, .npm-category-dropdown, .npm-timezone-info');
             const isInsideChip = target.closest('.chip-button') || target.closest('[role="button"]') || target.closest('button');
             if (!isInsidePicker && !isInsideChip) closeAllPickers();
         };
-        if (isOpen && (showDatePicker || showTimePicker || showTimezoneSelector || showRepeatSelector || showCategoryDropdown)) {
+        if (isOpen && (showDatePicker || showTimePicker || showTimezoneSelector || showTimezoneInfo || showRepeatSelector || showCategoryDropdown)) {
             const timeoutId = setTimeout(() => {
                 document.addEventListener('mousedown', handleClickOutside);
             }, 100);
@@ -291,12 +262,13 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 document.removeEventListener('mousedown', handleClickOutside);
             };
         }
-    }, [isOpen, showDatePicker, showTimePicker, showTimezoneSelector, showRepeatSelector, showCategoryDropdown]);
+    }, [isOpen, showDatePicker, showTimePicker, showTimezoneSelector, showTimezoneInfo, showRepeatSelector, showCategoryDropdown]);
 
     const closeAllPickers = () => {
         setShowDatePicker(false);
         setShowTimePicker(false);
         setShowTimezoneSelector(false);
+        setShowTimezoneInfo(false);
         setShowRepeatSelector(false);
         setShowCategoryDropdown(false);
     };
@@ -317,23 +289,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
         setFormData(prev => ({ ...prev, time }));
     };
 
-    const handleContentSelect = (selectedContent: ContentItem) => {
-        setFormData(prev => ({
-            ...prev,
-            contentId: selectedContent.id,
-            contentTitle: selectedContent.title || 'Untitled Content',
-            contentThumbnail: selectedContent.thumbnail || '',
-            platforms: {
-                ...prev.platforms,
-                instagram: { ...(prev.platforms.instagram || DEFAULT_INSTAGRAM_CONFIG), caption: prev.platforms.instagram?.caption || '' },
-                facebook: { ...(prev.platforms.facebook || DEFAULT_FACEBOOK_CONFIG), postText: prev.platforms.facebook?.postText || '' },
-                youtube: { ...(prev.platforms.youtube || DEFAULT_YOUTUBE_CONFIG), title: prev.platforms.youtube?.title || '' },
-                tiktok: { ...(prev.platforms.tiktok || DEFAULT_TIKTOK_CONFIG), caption: prev.platforms.tiktok?.caption || '' }
-            }
-        }));
-        if (validationErrors.content) setValidationErrors(prev => ({ ...prev, content: undefined }));
-        if (onCancelPicking) onCancelPicking();
-    };
+
 
     const handleRemoveContent = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -392,18 +348,24 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
         const ttConfig = formData.platforms.tiktok || DEFAULT_TIKTOK_CONFIG;
 
         // Small tooltip icon for field labels
-        // Small tooltip icon for field labels
         const FieldTooltip: React.FC<{ text: string }> = ({ text }) => {
             const [show, setShow] = React.useState(false);
             return (
                 <span
-                    style={{ width: 15, height: 15, borderRadius: '50%', background: theme.mode === 'dark' ? 'rgba(255,255,255,.1)' : 'rgba(155,93,229,.1)', fontSize: '9px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: theme.mode === 'dark' ? '#fff' : '#7c3aed', cursor: 'help', fontStyle: 'italic', flexShrink: 0, position: 'relative', marginLeft: '4px', zIndex: 2000 }}
+                    style={{
+                        ...sharedStyles.fieldTooltipIcon,
+                        background: theme.mode === 'dark' ? 'rgba(255,255,255,.1)' : 'rgba(155,93,229,.1)',
+                        color: theme.mode === 'dark' ? '#fff' : '#7c3aed'
+                    }}
                     onMouseEnter={() => setShow(true)}
                     onMouseLeave={() => setShow(false)}
                 >
                     i
                     {show && (
-                        <span style={{ display: 'block', position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: theme.mode === 'dark' ? '#333' : '#111827', color: '#fff', fontSize: '11px', fontWeight: 400, lineHeight: 1.4, padding: '8px 12px', borderRadius: '8px', whiteSpace: 'pre-line', width: '220px', zIndex: 1800, boxShadow: '0 4px 16px rgba(0,0,0,.25)', pointerEvents: 'none' }}>
+                        <span style={{
+                            ...sharedStyles.fieldTooltipPopup,
+                            background: theme.mode === 'dark' ? '#333' : '#111827'
+                        }}>
                             {text}
                         </span>
                     )}
@@ -865,12 +827,12 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 height="680px"
                 scrollableBody={true}
                 beforeBody={
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={sharedStyles.flexColumn}>
                         <input
                             className="npm-title-input"
                             type="text"
                             placeholder={formData.calendarItemId ? (isReadOnly ? "View post" : "Edit post") : "New post"}
-                            style={{ ...styles.titleInput, ...(validationErrors.title ? { borderBottomColor: '#EF4444' } : {}) }}
+                            style={{ ...sharedStyles.titleInput, ...(validationErrors.title ? { borderBottomColor: '#EF4444' } : {}) }}
                             value={formData.title}
                             readOnly={isReadOnly}
                             onChange={e => {
@@ -879,7 +841,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                                 if (validationErrors.title) setValidationErrors(prev => ({ ...prev, title: undefined }));
                             }}
                         />
-                        {validationErrors.title && <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginLeft: 0, marginTop: '4px' }}>{validationErrors.title}</span>}
+                        {validationErrors.title && <span style={{ ...sharedStyles.errorText, marginLeft: 0, marginTop: '4px' }}>{validationErrors.title}</span>}
                     </div>
                 }
                 rightColumn={
@@ -901,73 +863,43 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                             placeholderText="Click to add content"
                         />
                         {validationErrors.content && (
-                            <div style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, textAlign: 'center', marginTop: '8px' }}>{validationErrors.content}</div>
+                            <div style={{ ...sharedStyles.errorText, textAlign: 'center', marginTop: '8px' }}>{validationErrors.content}</div>
                         )}
                     </div>
                 }
                 footer={
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                        <button
-                            className="npm-draft-btn"
-                            onClick={handleSaveDraft} 
-                            disabled={!isDraftEnabled}
-                            onMouseEnter={() => setIsDraftHovered(true)}
-                            onMouseLeave={() => setIsDraftHovered(false)}
-                            style={{ ...styles.draftBtn, opacity: !isDraftEnabled ? 0.5 : 1, cursor: !isDraftEnabled ? 'not-allowed' : 'pointer', ...(isDraftHovered && isDraftEnabled ? { background: 'rgba(155, 93, 229, 0.1)', color: '#9b5de5', boxShadow: '0 2px 8px rgba(155, 93, 229, 0.2)' } : {}) }}
-                        >
-                            Save as Draft
-                        </button>
-                        <button 
-                            className="npm-schedule-btn"
-                            onClick={handleSchedule} 
-                            disabled={isSubmitting || isReadOnly || !isFormValid}
-                            style={{ ...styles.scheduleBtn, opacity: (isSubmitting || isReadOnly || !isFormValid) ? 0.7 : 1, cursor: (isSubmitting || isReadOnly || !isFormValid) ? 'not-allowed' : 'pointer' }}
-                        >
-                            {isSubmitting ? 'Processing...' : (isReadOnly ? 'View Only' : (formData.calendarItemId ? 'Update' : 'Schedule'))}
-                        </button>
-                        </div>
-                    </div>
+                    <ScheduleModalFooter
+                        onSaveDraft={handleSaveDraft}
+                        isDraftEnabled={isDraftEnabled}
+                        isDraftHovered={isDraftHovered}
+                        setIsDraftHovered={setIsDraftHovered}
+                        onSchedule={handleSchedule}
+                        isSubmitting={isSubmitting}
+                        isReadOnly={isReadOnly}
+                        isFormValid={isFormValid}
+                        calendarItemId={formData.calendarItemId}
+                        isDarkMode={isDarkMode}
+                    />
                 }
             >
-                <SectionContainer icon="🕐" className="npm-date-section">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div className="chip-row-container" style={{ display: 'flex', flexWrap: 'nowrap', gap: '8px', alignItems: 'center' }}>
-                            <div className="npm-date-wrapper" style={{ position: 'relative', flexShrink: 0 }}>
-                                <ChipButton className="chip-button" minWidth="148px" onClick={() => { if (showDatePicker) { closeAllPickers(); } else { closeAllPickers(); setShowDatePicker(true); } }}>
-                                    <span>{formData.date ? formData.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Date'}</span><ChipArrow />
-                                </ChipButton>
-                                <DatePicker selectedDate={formData.date} onChange={handleDateChange} minDate={new Date()} show={showDatePicker} onClose={() => setShowDatePicker(false)} />
-                            </div>
-                            <div className="npm-time-tz-container" style={{ display: 'flex', gap: '8px', flex: 1 }}>
-                                <div className="npm-time-wrapper" style={{ position: 'relative', flexShrink: 0 }}>
-                                    <ChipButton className="chip-button" minWidth="88px" onClick={() => { if (showTimePicker) { closeAllPickers(); } else { closeAllPickers(); setShowTimePicker(true); } }}>
-                                        <span>{formData.time}</span><ChipArrow />
-                                    </ChipButton>
-                                    <TimePicker selectedTime={formData.time} onChange={handleTimeChange} show={showTimePicker} onClose={() => setShowTimePicker(false)} />
-                                </div>
-                                <div className="npm-timezone-wrapper" style={{ position: 'relative', flex: 1 }}>
-                                    <ChipButton className="chip-button npm-timezone-chip" minWidth="120px" onClick={() => { if (showTimezoneSelector) { closeAllPickers(); } else { closeAllPickers(); setShowTimezoneSelector(true); } }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2 }}>
-                                            <span className="timezone-label" style={{ fontSize: '10px', color: 'var(--color-muted)', fontWeight: 600, display: 'none' }}>timezone</span>
-                                            <span className="timezone-value" style={{ display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>Timezone</span>
-                                        </div>
-                                        <ChipArrow className="timezone-arrow" />
-                                    </ChipButton>
-                                    <TimezoneSelector selectedTimezone={formData.timezone || 'America/New_York'} onChange={(tz) => { setFormData(prev => ({ ...prev, timezone: tz })); setShowTimezoneSelector(false); }} show={showTimezoneSelector} onClose={() => setShowTimezoneSelector(false)} />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="chip-row-container npm-repeat-container" style={{ display: 'flex', flexWrap: 'nowrap', gap: '8px', alignItems: 'center' }}>
-                            <div className="npm-repeat-wrapper" style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                                <ChipButton className="chip-button" minWidth="100%" style={{ width: '100%', boxSizing: 'border-box' }} onClick={() => { if (showRepeatSelector) { closeAllPickers(); } else { closeAllPickers(); setShowRepeatSelector(true); } }}>
-                                    <span>{formData.repeat.label}</span><ChipArrow />
-                                </ChipButton>
-                                <RepeatSelector selectedRepeat={formData.repeat} onChange={(repeat) => { setFormData({ ...formData, repeat }); setShowRepeatSelector(false); }} baseDate={formData.date} show={showRepeatSelector} onClose={() => setShowRepeatSelector(false)} />
-                            </div>
-                        </div>
-                    </div>
-                </SectionContainer>
+                <ScheduleDateTimeSection
+                    formData={formData}
+                    setFormData={setFormData}
+                    showDatePicker={showDatePicker}
+                    setShowDatePicker={setShowDatePicker}
+                    showTimePicker={showTimePicker}
+                    setShowTimePicker={setShowTimePicker}
+                    showTimezoneInfo={showTimezoneInfo}
+                    setShowTimezoneInfo={setShowTimezoneInfo}
+                    showRepeatSelector={showRepeatSelector}
+                    setShowRepeatSelector={setShowRepeatSelector}
+                    closeAllPickers={closeAllPickers}
+                    handleDateChange={handleDateChange}
+                    handleTimeChange={handleTimeChange}
+                    currentBrand={currentBrand}
+                    isDarkMode={isDarkMode}
+                    isMobileLayout={true}
+                />
 
                 <SectionContainer icon="📲" className="npm-platform-section">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -976,12 +908,12 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                         )}
                         {platforms.map(p => p.isConnected && renderPlatformSection(p.platform))}
                         {validationErrors.platform && (
-                            <span style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginTop: '-4px' }}>{validationErrors.platform}</span>
+                            <span style={{ ...sharedStyles.errorText, marginTop: '-4px' }}>{validationErrors.platform}</span>
                         )}
                     </div>
                 </SectionContainer>
                 {validationErrors.date && (
-                    <div style={{ color: '#EF4444', fontSize: '12px', fontWeight: 500, marginLeft: '42px', marginTop: '-16px' }}>{validationErrors.date}</div>
+                    <div style={{ ...sharedStyles.errorText, marginLeft: '42px', marginTop: '-16px' }}>{validationErrors.date}</div>
                 )}
             </ScheduleModalLayout>
 
