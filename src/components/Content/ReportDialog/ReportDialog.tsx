@@ -95,7 +95,7 @@ const ReportDialog: React.FC<ReportDialogProps> = ({
           <Title>Report Video Quality</Title>
         </Header>
         <Description>
-          Your feedback is streamed directly to our AI models — so you can be sure we will improve
+          Your feedback is streamed directly to our AI agents department — so you can be sure we will improve
           based on what you tell us. Every report helps us make Studio-generated content better.
         </Description>
 

@@ -7,18 +7,20 @@ const fadeIn  = keyframes`from{opacity:0;transform:translateX(-4px)}to{opacity:1
 
 export const SIDEBAR_W_OPEN     = 264;
 export const SIDEBAR_W_COLLAPSED = 52;
+export const SIDEBAR_W_MIN       = 200;
+export const SIDEBAR_W_MAX       = 480;
 
 /* Fixed full-height sidebar — sits from top:0 to bottom:0 */
-export const SidebarWrapper = styled.div<{ $collapsed: boolean }>`
+export const SidebarWrapper = styled.div<{ $collapsed: boolean; $width?: number }>`
   position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
-  width: ${p => p.$collapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W_OPEN}px;
+  width: ${p => p.$collapsed ? SIDEBAR_W_COLLAPSED : (p.$width ?? SIDEBAR_W_OPEN)}px;
   z-index: 15;
   display: flex;
   flex-direction: column;
-  background: ${p => p.theme.colors.surface};
+  background: ${p => p.theme.mode === 'dark' ? '#161618' : '#f5f5f7'};
   border-right: 1px solid ${p => p.theme.mode === 'dark' ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.08)'};
   box-shadow: 2px 0 12px ${p => p.theme.mode === 'dark' ? 'rgba(0,0,0,.25)' : 'rgba(0,0,0,.06)'};
   transition: width .22s cubic-bezier(.4,0,.2,1);
@@ -31,6 +33,34 @@ export const SidebarWrapper = styled.div<{ $collapsed: boolean }>`
       ? '2px 0 8px rgba(0,0,0,.08)'
       : '4px 0 40px rgba(0,0,0,.25)'};
   }
+`;
+
+export const ResizeHandle = styled.div<{ $active?: boolean }>`
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 20;
+  user-select: none;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 2px;
+    transform: translateX(-50%);
+    background: ${p => p.$active
+      ? p.theme.colors.primary
+      : 'transparent'};
+    transition: background .12s;
+  }
+  &:hover::after {
+    background: ${p => p.theme.colors.primary};
+    opacity: ${p => p.$active ? 1 : .55};
+  }
+  @media (max-width: 768px) { display: none; }
 `;
 
 /* ── Collapsed state ─────────────────────────────────────────────────────── */
@@ -58,12 +88,10 @@ export const CollapsedToggle = styled.button`
 `;
 
 export const PlansLabel = styled.span`
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  color: ${p => p.theme.colors.muted};
-  opacity: .4;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: ${p => p.theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.55)'};
   user-select: none;
   transition: opacity .15s;
 `;
@@ -89,12 +117,10 @@ export const SidebarIcon = styled.div`
 `;
 
 export const SidebarTitle = styled.div`
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: ${p => p.theme.colors.muted};
-  opacity: .55;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -.1px;
+  color: ${p => p.theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.75)'};
   white-space: nowrap;
   flex: 1;
 `;
@@ -146,8 +172,7 @@ export const GroupLabel = styled.div`
   font-weight: 800;
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: ${p => p.theme.colors.muted};
-  opacity: .4;
+  color: ${p => p.theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.55)'};
   white-space: nowrap;
 `;
 
@@ -183,6 +208,23 @@ export const PlanRow = styled.button<{ $loading?: boolean; $active?: boolean }>`
   animation: ${fadeIn} .2s ease both;
 `;
 
+export const NewPlanRow = styled(PlanRow)`
+  &::before { display: none; }
+`;
+
+export const NewPlanIcon = styled.div`
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${p => p.theme.mode === 'dark' ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)'};
+  color: ${p => p.theme.colors.primary};
+  margin-top: 1px;
+`;
+
 const STATUS_ICON_BG: Record<PlanStatus, string> = {
   draft:      'rgba(251,191,36,.1)',
   done:       'rgba(34,197,94,.1)',
@@ -190,8 +232,8 @@ const STATUS_ICON_BG: Record<PlanStatus, string> = {
 };
 
 export const ThumbWrap = styled.div`
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border-radius: 8px;
   flex-shrink: 0;
   position: relative;
@@ -203,6 +245,13 @@ export const ThumbWrap = styled.div`
   align-items: center;
   justify-content: center;
   color: ${p => p.theme.colors.muted};
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  &:hover {
+    transform: scale(1.06);
+    border-color: ${p => p.theme.colors.primary};
+    box-shadow: 0 2px 8px rgba(139,92,246,.25);
+  }
 `;
 
 export const ThumbImage = styled.img`
@@ -212,42 +261,10 @@ export const ThumbImage = styled.img`
   display: block;
 `;
 
-export const ThumbVideo = styled.video`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  background: #000;
-`;
-
 export const ThumbPlaceholder = styled.div`
   font-size: 13px;
   opacity: .6;
   line-height: 1;
-`;
-
-export const PlayOverlay = styled.div<{ $playing?: boolean }>`
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${p => p.$playing ? 'rgba(0,0,0,.25)' : 'rgba(0,0,0,.45)'};
-  color: #fff;
-  opacity: ${p => p.$playing ? 0 : 0};
-  transition: opacity .15s;
-  cursor: pointer;
-  ${PlanRow}:hover & { opacity: 1; }
-  &:hover { opacity: 1 !important; background: rgba(0,0,0,.55); }
-`;
-
-export const PlayOverlayMini = styled.div`
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
 `;
 
 const STATUS_FALLBACK_COLOR: Record<PlanStatus, string> = {
@@ -257,8 +274,8 @@ const STATUS_FALLBACK_COLOR: Record<PlanStatus, string> = {
 };
 
 export const StatusFallbackIcon = styled.div<{ $status: PlanStatus }>`
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border-radius: 8px;
   flex-shrink: 0;
   display: flex;
@@ -276,6 +293,45 @@ export const StatusFallbackIcon = styled.div<{ $status: PlanStatus }>`
       : 'rgba(34,197,94,.22)'};
   color: ${p => STATUS_FALLBACK_COLOR[p.$status]};
   margin-top: 1px;
+`;
+
+export const TooltipBubble = styled.div`
+  position: fixed;
+  z-index: 9999;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: ${p => p.theme.mode === 'dark' ? 'rgba(30,30,34,.92)' : 'rgba(30,30,34,.85)'};
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+`;
+
+const dotPulse = keyframes`
+  0%, 80%, 100% { transform: scale(.55); opacity: .35; }
+  40%           { transform: scale(1.15); opacity: 1; }
+`;
+
+export const ProcessingDots = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  width: 18px;
+  height: 14px;
+  justify-content: center;
+`;
+
+export const ProcessingDot = styled.span<{ $i: number }>`
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  animation: ${dotPulse} 1.1s ease-in-out infinite;
+  animation-delay: ${p => p.$i * 0.18}s;
 `;
 
 export const StatusSpinner = styled.div`
@@ -304,7 +360,7 @@ export const PlanInfo = styled.div`flex: 1; min-width: 0;`;
 
 export const PlanTitle = styled.div`
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -.1px;
   color: ${p => p.theme.colors.text};
   white-space: nowrap;
@@ -323,8 +379,7 @@ export const PlanMeta = styled.div`
 
 export const PlanDate = styled.div`
   font-size: 10px;
-  color: ${p => p.theme.colors.muted};
-  opacity: .55;
+  color: ${p => p.theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.55)'};
 `;
 
 const STATUS_MAP: Record<PlanStatus, { bg: string; border: string; color: string }> = {
@@ -369,8 +424,7 @@ export const RowSpinner = styled.div`
 export const EmptyMsg = styled.div`
   padding: 24px 14px;
   font-size: 11.5px;
-  color: ${p => p.theme.colors.muted};
-  opacity: .45;
+  color: ${p => p.theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.55)'};
   text-align: center;
   font-style: italic;
   line-height: 1.6;

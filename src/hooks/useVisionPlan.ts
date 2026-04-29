@@ -211,7 +211,7 @@ export const useVisionPlan = () => {
     setIsExecuting(true);
     setError(null);
     try {
-      await api.post('/studio/vision/creator/execute', { planUuid: uuid, useMockAssets: false, version });
+      await api.post('/studio/vision/creator/execute', { planUuid: uuid, useMockAssets: true, version });
       return true;
     } catch (err: any) {
       setError(err?.message || 'Failed to execute plan.');

@@ -11,10 +11,10 @@ import AudioPickerPanel from '@components/Studio/VisionCreator/AudioPickerPanel/
 import { SocialVideoContext } from '@hooks/useVisionPlan';
 
 const DURATIONS = [
-  { key: 'snappy',        label: 'Teaser',  range: '5–15s',  avg: '10s', minSec: 5,  maxSec: 15 },
-  { key: 'standard',      label: 'Clip',    range: '15–25s', avg: '20s', minSec: 15, maxSec: 25 },
-  { key: 'extended',      label: 'Short',   range: '25–40s', avg: '30s', minSec: 25, maxSec: 40 },
-  { key: 'comprehensive', label: 'Feature', range: '40–60s', avg: '50s', minSec: 40, maxSec: 60 },
+  { key: 'snappy',        label: 'Teaser',  range: '5–15s',  avg: '10s', minSec: 5,  maxSec: 15, avgSec: 10 },
+  { key: 'standard',      label: 'Clip',    range: '15–25s', avg: '20s', minSec: 15, maxSec: 25, avgSec: 20 },
+  { key: 'extended',      label: 'Short',   range: '25–40s', avg: '30s', minSec: 25, maxSec: 40, avgSec: 30 },
+  { key: 'comprehensive', label: 'Feature', range: '40–60s', avg: '50s', minSec: 40, maxSec: 60, avgSec: 50 },
 ] as const;
 type DurationKey = typeof DURATIONS[number]['key'];
 
@@ -261,6 +261,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({
         onChange={v=>setSocialVideo(v)}
         minDurationSec={currentDuration.minSec}
         maxDurationSec={currentDuration.maxSec}
+        avgDurationSec={currentDuration.avgSec}
         onTrimLimitHit={nudgeDurationButton}
         onAudioLoaded={handleAudioLoaded}
       />

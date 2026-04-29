@@ -133,13 +133,14 @@ interface Props {
   onChange: (v: SocialVideoContext | null) => void;
   minDurationSec: number;
   maxDurationSec: number;
+  avgDurationSec: number;
   onTrimLimitHit?: () => void;
   onAudioLoaded?: (audioDurSec: number) => void;
 }
 
 const AudioPickerPanel: React.FC<Props> = ({
   onClose, value, onChange,
-  minDurationSec, maxDurationSec,
+  minDurationSec, maxDurationSec, avgDurationSec,
   onTrimLimitHit, onAudioLoaded,
 }) => {
   const [url, setUrl] = useState(value?.url ?? '');
@@ -371,21 +372,15 @@ const AudioPickerPanel: React.FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, dragging, selStart, selEnd, audioDur]);
 
-  /* ── Re-clamp trim when duration tier changes ── */
+  /* ── Snap trim to tier average when duration tier changes ── */
   useEffect(() => {
     if (audioDur === 0) return;
     const minD = Math.max(MIN_TRIM_SEC, Math.min(minDurationSec, audioDur));
     const maxD = Math.min(maxDurationSec, audioDur);
-    const len = selEnd - selStart;
-    if (len >= minD && len <= maxD) return;
+    const targetLen = Math.max(minD, Math.min(maxD, avgDurationSec));
     let s = selStart;
-    let e = selEnd;
-    if (len < minD) {
-      e = Math.min(audioDur, s + minD);
-      if (e - s < minD) s = Math.max(0, e - minD);
-    } else if (len > maxD) {
-      e = s + maxD;
-    }
+    let e = s + targetLen;
+    if (e > audioDur) { e = audioDur; s = Math.max(0, e - targetLen); }
     setSelStart(s);
     setSelEnd(e);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -420,9 +415,10 @@ const AudioPickerPanel: React.FC<Props> = ({
 
     const cy = H / 2;
     const MID_GAP = 1;
+    const TOP_PAD = 7;
     const TOP_RATIO = 1.0;
     const BOT_RATIO = 0.62;
-    const topMax = cy - MID_GAP / 2 - 1;
+    const topMax = cy - MID_GAP / 2 - 1 - TOP_PAD;
     const botMax = H - cy - MID_GAP / 2 - 1;
 
     /* No edge fade on real waveforms — bar height should reflect actual
@@ -833,13 +829,22 @@ const AudioPickerPanel: React.FC<Props> = ({
     teardownAudio();
   };
 
-  const resetTrim = () => {
-    const minD = Math.max(MIN_TRIM_SEC, Math.min(minDurationSec, audioDur));
-    const maxD = Math.min(maxDurationSec, audioDur);
-    const len = Math.max(minD, Math.min(maxD, audioDur));
-    setSelStart(0);
-    setSelEnd(len);
-  };
+  const replayFromTrimStart = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || !ready) return;
+    audio.currentTime = selStart;
+    syncTime(selStart);
+    setCurrentTime(selStart);
+    if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume().catch(() => {});
+    }
+    const p = audio.play();
+    if (p && typeof p.then === 'function') {
+      p.then(() => setIsPlaying(true)).catch(() => {});
+    } else {
+      setIsPlaying(true);
+    }
+  }, [ready, selStart]);
 
   const pctOf = (t: number) => audioDur > 0 ? Math.min(100, Math.max(0, (t / audioDur) * 100)) : 0;
   const startPct = pctOf(selStart);
@@ -1083,14 +1088,13 @@ const AudioPickerPanel: React.FC<Props> = ({
                 <span className="val">{fmtSec(selStart)}</span>
                 <span className="arrow">→</span>
                 <span className="val">{fmtSec(selEnd)}</span>
-                {trimChanged && (
-                  <ResetTrimBtn onClick={resetTrim} title="Reset trim" aria-label="Reset trim">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="1 4 1 10 7 10"/>
-                      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-                    </svg>
-                  </ResetTrimBtn>
-                )}
+                <ResetTrimBtn onClick={replayFromTrimStart} title="Replay from start" aria-label="Replay from start">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="1 4 1 10 7 10"/>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    <polygon fill="currentColor" stroke="none" points="10 8.5 10 15.5 16 12"/>
+                  </svg>
+                </ResetTrimBtn>
               </TrimGroup>
             )}
           </ControlsRow>

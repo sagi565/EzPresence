@@ -61,14 +61,13 @@ export const LogoMark = styled.a`
 `;
 
 export const ContentWrapper = styled.div`
-  display: flex; flex-direction: column; align-items: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 24px; width: 100%; max-width: 700px;
-  padding: 80px 24px 100px;
-  overflow-y: auto; overflow-x: hidden;
+  padding: 24px;
+  overflow: hidden;
   height: 100%;
   position: relative; z-index: 1;
   animation: ${fadeInUp} .7s cubic-bezier(.4,0,.2,1) both;
-  scrollbar-width: thin; scrollbar-color: rgba(139,92,246,.15) transparent;
 `;
 
 export const Banner = styled.div<{ $ok: boolean }>`

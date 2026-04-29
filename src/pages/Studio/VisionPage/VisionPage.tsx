@@ -13,7 +13,7 @@ import ReadyViewV3 from '@components/Studio/VisionCreator/ReadyViewV3/ReadyViewV
 import ConfirmDialog from '@components/Studio/VisionCreator/ConfirmDialog/ConfirmDialog';
 import PlanHistoryPanel from '@components/Studio/VisionCreator/PlanHistoryPanel/PlanHistoryPanel';
 import { PlanStatus } from '@components/Studio/VisionCreator/PlanHistoryPanel/PlanHistoryPanel';
-import { SIDEBAR_W_OPEN, SIDEBAR_W_COLLAPSED } from '@components/Studio/VisionCreator/PlanHistoryPanel/styles';
+import { SIDEBAR_W_OPEN, SIDEBAR_W_COLLAPSED, SIDEBAR_W_MIN, SIDEBAR_W_MAX } from '@components/Studio/VisionCreator/PlanHistoryPanel/styles';
 
 import {
   VisionContainer, BackBtn, BackBtnLabel, BackBtnAccent,
@@ -48,13 +48,21 @@ const VisionPage: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
     localStorage.getItem('vision_sidebar_collapsed') === 'true'
   );
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    const saved = parseInt(localStorage.getItem('vision_sidebar_width') || '', 10);
+    if (!Number.isFinite(saved)) return SIDEBAR_W_OPEN;
+    return Math.min(SIDEBAR_W_MAX, Math.max(SIDEBAR_W_MIN, saved));
+  });
 
   useEffect(() => { localStorage.setItem('vision_plan_view', planView); }, [planView]);
   useEffect(() => {
     localStorage.setItem('vision_sidebar_collapsed', String(sidebarCollapsed));
   }, [sidebarCollapsed]);
+  useEffect(() => {
+    localStorage.setItem('vision_sidebar_width', String(sidebarWidth));
+  }, [sidebarWidth]);
 
-  const sidebarW = sidebarCollapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W_OPEN;
+  const sidebarW = sidebarCollapsed ? SIDEBAR_W_COLLAPSED : sidebarWidth;
 
   const planTimerRef = useRef<ReturnType<typeof setInterval>|null>(null);
   const fileRef      = useRef<HTMLInputElement>(null);
@@ -180,6 +188,8 @@ const VisionPage: React.FC = () => {
       {showIdle && (
         <PlanHistoryPanel
           collapsed={sidebarCollapsed}
+          width={sidebarWidth}
+          onResize={setSidebarWidth}
           onToggle={() => setSidebarCollapsed(v => !v)}
           onPlanSelect={(p, status) => {
             setHistoryDetailPlan(p);

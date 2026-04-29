@@ -19,7 +19,7 @@ const spin = keyframes`
 const ACCENT      = '#f59e0b';
 const ACCENT_DARK = '#d97706';
 const ACCENT_LINE = 'rgba(245,158,11,.28)';
-const BAR_IN      = 'rgba(110,108,148,.95)';
+const BAR_IN      = 'rgba(88,86,120,.95)';
 const BAR_OUT     = 'rgba(120,118,158,.72)';
 
 export const TOKENS = { ACCENT, ACCENT_DARK, ACCENT_LINE, BAR_IN, BAR_OUT };
@@ -236,7 +236,7 @@ export const RangeHandle = styled.div<{ $side: 'start' | 'end'; $active: boolean
     top: 50%;
     transform: translateY(-50%);
     width: 5px; height: 22px;
-    background: ${ACCENT};
+    background: ${ACCENT_DARK};
     box-shadow: 0 1px 3px rgba(0,0,0,.28);
     transition: background-color .12s, width .12s, height .12s;
 
@@ -276,7 +276,7 @@ export const PlayheadHandle = styled.div`
   top: 50%;
   left: 50%;
   width: 15px; height: 15px;
-  background: #ef4444;
+  background: #ff4900;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   cursor: grab;
@@ -285,7 +285,7 @@ export const PlayheadHandle = styled.div`
   border: 2px solid #fff;
   transition: transform .1s, box-shadow .1s;
 
-  &:hover { transform: translate(-50%, -50%) scale(1.18); box-shadow: 0 2px 8px rgba(239,68,68,.5); }
+  &:hover { transform: translate(-50%, -50%) scale(1.18); box-shadow: 0 2px 8px rgba(255,73,0,.5); }
   &:active { cursor: grabbing; transform: translate(-50%, -50%) scale(1.05); }
 `;
 

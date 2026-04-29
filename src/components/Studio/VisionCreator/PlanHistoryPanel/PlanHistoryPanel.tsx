@@ -1,18 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { VisionPlan } from '@hooks/useVisionPlan';
 import useVisionHistory, { PlanHistorySummary, PlanStatus } from '@hooks/useVisionHistory';
-import { useContentUrl } from '@hooks/contents/useContentUrl';
+import ContentDetailModal from '@components/Content/ContentDetailModal/ContentDetailModal';
+import { ContentItem } from '@models/ContentList';
 export type { PlanStatus };
 import {
-  SidebarWrapper, SidebarHeader, SidebarIcon, SidebarTitle, CountBadge, ToggleBtn,
+  SidebarWrapper, SidebarHeader, SidebarIcon, SidebarTitle, ToggleBtn,
   CollapsedToggle, PlansLabel,
   SidebarBody, GroupLabel, PlanRow, PlanInfo,
   PlanTitle, PlanMeta, PlanDate, RowSpinner,
   EmptyMsg, ErrorMsg, SkeletonRow, SkeletonBlock,
-  ThumbWrap, ThumbImage, ThumbVideo, ThumbPlaceholder,
-  PlayOverlay, PlayOverlayMini,
-  StatusFallbackIcon, StatusSpinner,
+  ThumbWrap, ThumbImage, ThumbPlaceholder,
+  StatusFallbackIcon, NewPlanRow, NewPlanIcon,
+  ProcessingDots, ProcessingDot,
+  TooltipBubble,
+  ResizeHandle,
+  SIDEBAR_W_MIN, SIDEBAR_W_MAX,
 } from './styles';
+
+const TOOLTIP_DELAY = 0;
+
+interface TooltipProps {
+  label: string;
+  children: React.ReactElement;
+}
+
+const Tooltip: React.FC<TooltipProps> = ({ label, children }) => {
+  const [visible, setVisible] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const anchorRef = useRef<HTMLElement | null>(null);
+
+  const show = () => {
+    if (!anchorRef.current) return;
+    const r = anchorRef.current.getBoundingClientRect();
+    setPos({ top: r.top - 6, left: r.left + r.width / 2 });
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (TOOLTIP_DELAY > 0) {
+      timerRef.current = setTimeout(() => setVisible(true), TOOLTIP_DELAY);
+    } else {
+      setVisible(true);
+    }
+  };
+  const hide = () => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    setVisible(false);
+  };
+
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  const child = React.cloneElement(children, {
+    ref: (node: HTMLElement) => { anchorRef.current = node; },
+    onMouseEnter: (e: React.MouseEvent) => { children.props.onMouseEnter?.(e); show(); },
+    onMouseLeave: (e: React.MouseEvent) => { children.props.onMouseLeave?.(e); hide(); },
+    onFocus:      (e: React.FocusEvent) => { children.props.onFocus?.(e); show(); },
+    onBlur:       (e: React.FocusEvent) => { children.props.onBlur?.(e); hide(); },
+  });
+
+  return (
+    <>
+      {child}
+      {visible && pos && ReactDOM.createPortal(
+        <TooltipBubble style={{ top: pos.top, left: pos.left }}>{label}</TooltipBubble>,
+        document.body
+      )}
+    </>
+  );
+};
 
 const STATUS_LABELS: Record<PlanStatus, string> = {
   draft:      'Draft',
@@ -26,22 +81,19 @@ function processThumbnail(thumb: string | null | undefined): string | null {
   return `data:image/jpeg;base64,${thumb}`;
 }
 
-const PlayIcon: React.FC = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M8 5v14l11-7z" />
-  </svg>
-);
-const StopIcon: React.FC = () => (
-  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <rect x="6" y="6" width="12" height="12" rx="1.5" />
-  </svg>
-);
 const DraftIcon: React.FC = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
     <polyline points="14 2 14 8 20 8" />
     <line x1="9" y1="14" x2="15" y2="14" />
   </svg>
+);
+const ProcessIcon: React.FC = () => (
+  <ProcessingDots aria-hidden="true">
+    <ProcessingDot $i={0} />
+    <ProcessingDot $i={1} />
+    <ProcessingDot $i={2} />
+  </ProcessingDots>
 );
 const VideoIcon: React.FC = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -54,47 +106,50 @@ interface PlanThumbProps {
   status: PlanStatus;
   mediaContentUuid?: string | null;
   thumbnailObject?: string | null;
+  clipTitle?: string;
+  createdAt?: string;
+  onOpenContent: (item: ContentItem) => void;
 }
 
-const PlanThumb: React.FC<PlanThumbProps> = ({ status, mediaContentUuid, thumbnailObject }) => {
-  const [playing, setPlaying] = useState(false);
-  const { url, loading, fetchUrl } = useContentUrl();
-
+const PlanThumb: React.FC<PlanThumbProps> = ({
+  status, mediaContentUuid, thumbnailObject, clipTitle, createdAt, onOpenContent,
+}) => {
   if (!mediaContentUuid) {
     return (
-      <StatusFallbackIcon $status={status} title={STATUS_LABELS[status]}>
-        {status === 'in_process' ? <StatusSpinner />
-         : status === 'draft'    ? <DraftIcon />
-         :                          <VideoIcon />}
-      </StatusFallbackIcon>
+      <Tooltip label={STATUS_LABELS[status]}>
+        <StatusFallbackIcon $status={status}>
+          {status === 'in_process' ? <ProcessIcon />
+           : status === 'draft'    ? <DraftIcon />
+           :                          <VideoIcon />}
+        </StatusFallbackIcon>
+      </Tooltip>
     );
   }
 
   const thumbSrc = processThumbnail(thumbnailObject);
 
-  const handleToggle = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (playing) {
-      setPlaying(false);
-      return;
-    }
-    if (!url && !loading) fetchUrl(mediaContentUuid);
-    setPlaying(true);
+    onOpenContent({
+      id: mediaContentUuid,
+      type: 'video',
+      title: clipTitle || 'Untitled',
+      thumbnail: thumbnailObject || '',
+      createdAt,
+      mediaType: 'video',
+    });
   };
 
   return (
-    <ThumbWrap>
-      {playing && url ? (
-        <ThumbVideo src={url} autoPlay muted loop playsInline />
-      ) : thumbSrc ? (
-        <ThumbImage src={thumbSrc} alt="" />
-      ) : (
-        <ThumbPlaceholder><VideoIcon /></ThumbPlaceholder>
-      )}
-      <PlayOverlay $playing={playing} onClick={handleToggle} title={playing ? 'Stop preview' : 'Play preview'}>
-        <PlayOverlayMini>{playing ? <StopIcon /> : <PlayIcon />}</PlayOverlayMini>
-      </PlayOverlay>
-    </ThumbWrap>
+    <Tooltip label={STATUS_LABELS[status]}>
+      <ThumbWrap onClick={handleClick}>
+        {thumbSrc ? (
+          <ThumbImage src={thumbSrc} alt="" />
+        ) : (
+          <ThumbPlaceholder><VideoIcon /></ThumbPlaceholder>
+        )}
+      </ThumbWrap>
+    </Tooltip>
   );
 };
 
@@ -119,6 +174,8 @@ interface PlanHistoryPanelProps {
   onPlanSelect: (plan: VisionPlan, status: PlanStatus) => void;
   onPlanDeselect: () => void;
   activePlanUuid?: string;
+  width?: number;
+  onResize?: (w: number) => void;
 }
 
 const ChevronRight = () => (
@@ -134,11 +191,35 @@ const ChevronLeft = () => (
 
 const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
   collapsed, onToggle, onPlanSelect, onPlanDeselect, activePlanUuid,
+  width, onResize,
 }) => {
   const { groupedPlans, plans, loading, error, fetchHistory, fetchPlanDetail } = useVisionHistory();
   const [loadingUuid, setLoadingUuid] = useState<string | null>(null);
+  const [modalItem, setModalItem] = useState<ContentItem | null>(null);
+  const [resizing, setResizing] = useState(false);
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!onResize) return;
+    setResizing(true);
+    const onMove = (ev: MouseEvent) => {
+      const next = Math.min(SIDEBAR_W_MAX, Math.max(SIDEBAR_W_MIN, ev.clientX));
+      onResize(next);
+    };
+    const onUp = () => {
+      setResizing(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
 
   const handlePlanClick = async (summary: PlanHistorySummary) => {
     if (loadingUuid) return;
@@ -163,11 +244,10 @@ const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
 
   /* ── Expanded ── */
   return (
-    <SidebarWrapper $collapsed={false}>
+    <SidebarWrapper $collapsed={false} $width={width}>
       <SidebarHeader>
         <SidebarIcon>📋</SidebarIcon>
-        <SidebarTitle>Plans</SidebarTitle>
-        {!loading && plans.length > 0 && <CountBadge>{plans.length}</CountBadge>}
+        <SidebarTitle>Your Plans</SidebarTitle>
         <ToggleBtn onClick={onToggle} title="Collapse">
           <ChevronLeft />
         </ToggleBtn>
@@ -186,6 +266,20 @@ const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
               </SkeletonRow>
             ))}
           </>
+        )}
+
+        {!loading && (
+          <NewPlanRow onClick={onPlanDeselect} title="Create New Plan">
+            <NewPlanIcon>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </NewPlanIcon>
+            <PlanInfo style={{ display: 'flex', alignItems: 'center', height: '32px' }}>
+              <PlanTitle>Create New Plan</PlanTitle>
+            </PlanInfo>
+          </NewPlanRow>
         )}
 
         {!loading && error && <ErrorMsg>⚠ {error}</ErrorMsg>}
@@ -213,6 +307,9 @@ const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
                     status={status}
                     mediaContentUuid={p.mediaContentUuid}
                     thumbnailObject={p.thumbnailObject}
+                    clipTitle={p.clipTitle}
+                    createdAt={p.createdAt}
+                    onOpenContent={setModalItem}
                   />
                   <PlanInfo>
                     <PlanTitle>{p.clipTitle || 'Untitled Plan'}</PlanTitle>
@@ -227,6 +324,17 @@ const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
           </React.Fragment>
         ))}
       </SidebarBody>
+
+      <ContentDetailModal
+        isOpen={!!modalItem}
+        item={modalItem}
+        onClose={() => setModalItem(null)}
+        onRename={() => {}}
+        onDelete={() => setModalItem(null)}
+        onToggleFavorite={() => {}}
+      />
+
+      {onResize && <ResizeHandle $active={resizing} onMouseDown={handleResizeStart} />}
     </SidebarWrapper>
   );
 };
