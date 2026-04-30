@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { VisionPlan, fetchVisionPlanVersion } from '@hooks/useVisionPlan';
-import { Banner } from '@pages/Studio/VisionPage/styles';
+import { BackBtn, BackBtnLabel, BackBtnAccent } from '@pages/Studio/VisionPage/styles';
 import {
-  ConsoleWrapper, TopBar, TopBarLogo, TopBarDivider, TopBarBackBtn,
+  ConsoleWrapper, TopBar, TopBarLogo, TopBarDivider,
   TopBarVersionToggle, TopBarVersionBtn,
   VersionNav, VersionArrowBtn, VersionLabel,
-  TopBarTitle, TopBarMeta, ReadyDot,
-  ReadyPill, TypeBadge, CategoryChip, SplitPane,
+  TopBarTitle, TopBarMeta, TypeBadge, CategoryChip, SplitPane,
   Sidebar, SidebarSection, SidebarLabel, NavItem, NavIcon, NavLabel,
   SidebarDivider, SceneCountLabel, SceneTile, SceneTileNum, SceneTileInfo,
   SceneTilePrompt, DurationChip,
@@ -14,10 +13,9 @@ import {
   FieldCard, FieldLabel, ReadOnlyText, ReadOnlyPlaceholder,
   VoiceSection, GenderDisplay, GenderBadge, GenderIcon,
   SceneTabs, SceneTab, SceneFieldGroup,
-  DurationDisplay, DurationValue, DurationUnit,
   TimelineWrapper, TimelineTrack, TimelineSegment, TimelineDot,
   TimelineSegmentLabel, TimelineSegmentDur, TimelineEndDot, TimelineTotalLabel,
-  BottomBar, PromptSlotWrap, StatusText, GenerateBtn, BtnSpinner,
+  BottomBar, PromptSlotWrap, StatusText, GenerateBtn, BtnSpinner, RegeneratingOverlay,
 } from './styles';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -51,16 +49,17 @@ interface TimelineProps {
   planType?: string;
   activeIdx: number;
   onSelect: (i: number) => void;
+  inline?: boolean;
 }
 
-const SceneTimeline: React.FC<TimelineProps> = ({ scenes, planType, activeIdx, onSelect }) => {
+const SceneTimeline: React.FC<TimelineProps> = ({ scenes, planType, activeIdx, onSelect, inline }) => {
   const isSpeechless = planType === 'SPEECHLESS';
   const durations = scenes.map(s => isSpeechless ? (s.sceneDuration || 6) : 1);
   const total = durations.reduce((a, b) => a + b, 0) || 1;
   const totalSecs = isSpeechless ? total : null;
 
   return (
-    <TimelineWrapper>
+    <TimelineWrapper $inline={inline}>
       <TimelineTrack>
         {scenes.map((_, i) => {
           const color = SCENE_COLORS[i % SCENE_COLORS.length];
@@ -100,6 +99,7 @@ interface ReadyViewV2Props {
   executePlan: (uuid: string, version?: number) => Promise<boolean>;
   isUpdating: boolean;
   isExecuting: boolean;
+  isRegenerating?: boolean;
   apiError: string | null;
   promptBoxSlot?: React.ReactNode;
   onRequestDelete: () => void;
@@ -111,7 +111,7 @@ interface ReadyViewV2Props {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
-  plan: originalPlan, executePlan, isExecuting, apiError, promptBoxSlot, readonly = false,
+  plan: originalPlan, executePlan, isExecuting, isRegenerating = false, apiError, promptBoxSlot, readonly = false,
   onBack, planView, onPlanViewChange,
 }) => {
   const lastVersion = originalPlan.lastVersionNumber ?? originalPlan.version ?? 1;
@@ -188,6 +188,13 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
   const activeMeta = SECTION_META[activeSection];
 
   return (
+    <>
+      {isRegenerating && (
+        <RegeneratingOverlay>
+          <BtnSpinner />
+          <span>Regenerating plan…</span>
+        </RegeneratingOverlay>
+      )}
     <ConsoleWrapper>
       {/* ── Top Bar ── */}
       <TopBar>
@@ -199,7 +206,6 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
             {isSpeechless ? 'Speechless' : 'Narrated'}
           </TypeBadge>
           {plan.category && <CategoryChip>{plan.category}</CategoryChip>}
-          <ReadyPill><ReadyDot />Ready</ReadyPill>
         </TopBarMeta>
         {lastVersion > 1 && (
           <VersionNav title={`Version ${currentVersion} of ${lastVersion}`}>
@@ -234,24 +240,14 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
           </TopBarVersionToggle>
         )}
         {onBack && (
-          <TopBarBackBtn onClick={onBack}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <BackBtn onClick={onBack} style={{ position: 'relative', top: 'auto', right: 'auto', flexShrink: 0 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
             </svg>
-            Back to Studio
-          </TopBarBackBtn>
+            <BackBtnLabel>Back to <BackBtnAccent>Studio</BackBtnAccent></BackBtnLabel>
+          </BackBtn>
         )}
       </TopBar>
-
-      {/* ── Scene Timeline ── */}
-      {scenes.length > 0 && (
-        <SceneTimeline
-          scenes={scenes}
-          planType={plan.planType}
-          activeIdx={activeSection === 'scenes' ? safeSceneIdx : -1}
-          onSelect={handleTimelineSelect}
-        />
-      )}
 
       {/* ── Split Pane ── */}
       <SplitPane>
@@ -278,6 +274,16 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
               <span>Scenes</span>
               <span>{scenes.length}</span>
             </SceneCountLabel>
+            {scenes.length > 0 && (
+              <div style={{ padding: '4px 12px 8px', pointerEvents: 'none' }}>
+                <SceneTimeline
+                  scenes={scenes}
+                  planType={plan.planType}
+                  activeIdx={-1}
+                  onSelect={() => {}}
+                />
+              </div>
+            )}
             {scenes.map((scene, i) => {
               const isActive = activeSection === 'scenes' && safeSceneIdx === i;
               const color = SCENE_COLORS[i % SCENE_COLORS.length];
@@ -382,10 +388,17 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
                   <HeadingIcon $color={SCENE_COLORS[safeSceneIdx % SCENE_COLORS.length]}>
                     {activeMeta.icon}
                   </HeadingIcon>
-                  <div>
-                    <HeadingText $color={SCENE_COLORS[safeSceneIdx % SCENE_COLORS.length]}>
-                      Scene {safeSceneIdx + 1}
-                    </HeadingText>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <HeadingText $color={SCENE_COLORS[safeSceneIdx % SCENE_COLORS.length]}>
+                        Scene {safeSceneIdx + 1}
+                      </HeadingText>
+                      {activeScene?.sceneDuration && (
+                        <DurationChip $color={SCENE_COLORS[safeSceneIdx % SCENE_COLORS.length]}>
+                          {activeScene.sceneDuration}s
+                        </DurationChip>
+                      )}
+                    </div>
                     <HeadingSubtext>{getSceneLabel(activeScene, safeSceneIdx)}</HeadingSubtext>
                   </div>
                 </SectionHeading>
@@ -413,16 +426,6 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
 
                   return (
                     <SceneFieldGroup>
-                      {activeScene.sceneDuration && (
-                        <FieldCard $color={activeColor}>
-                          <FieldLabel>Duration</FieldLabel>
-                          <DurationDisplay>
-                            <DurationValue>{activeScene.sceneDuration}</DurationValue>
-                            <DurationUnit>seconds</DurationUnit>
-                          </DurationDisplay>
-                        </FieldCard>
-                      )}
-
                       {activeScene.sceneScriptSegment && (
                         <FieldCard $color={activeColor}>
                           <FieldLabel>Script</FieldLabel>
@@ -470,12 +473,8 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
         </BottomBar>
       )}
 
-      {apiError && (
-        <Banner $ok={false} style={{ margin: '0 20px 12px', borderRadius: 12 }}>
-          ⚠️ {apiError}
-        </Banner>
-      )}
     </ConsoleWrapper>
+    </>
   );
 };
 

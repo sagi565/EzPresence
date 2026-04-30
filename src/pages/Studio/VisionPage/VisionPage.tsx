@@ -39,6 +39,7 @@ const VisionPage: React.FC = () => {
   const [quickMode,    setQuickMode]    = useState(false);
   const [duration,     setDuration]     = useState<'snappy'|'standard'|'extended'|'comprehensive'>(_savedMeta?.duration as any ?? 'standard');
   const [autoMode,     setAutoMode]     = useState(false);
+  const [frozenPlan, setFrozenPlan] = useState<VisionPlan | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [planView, setPlanView] = useState<'v1'|'v2'|'v3'>(() =>
     (localStorage.getItem('vision_plan_view') as 'v1'|'v2'|'v3') ?? 'v1'
@@ -69,9 +70,11 @@ const VisionPage: React.FC = () => {
 
   const isBusy   = isLoading || isPolling;
   const isReady  = prompt.trim().length > 0;
-  const showPlanning = isBusy || quickMode;
-  const showReady    = !!plan && !isBusy && !quickMode;
-  const showIdle     = !plan && !isBusy && !quickMode;
+  const isRegenerating   = isBusy && !!frozenPlan;
+  const showPlanning     = (isBusy || quickMode) && !frozenPlan;
+  const showReady        = (!!plan && !isBusy && !quickMode) || isRegenerating;
+  const showIdle         = !plan && !isBusy && !quickMode && !frozenPlan;
+  const planToShow       = plan ?? frozenPlan;
 
   useEffect(() => {
     if (isPolling) {
@@ -82,6 +85,10 @@ const VisionPage: React.FC = () => {
     }
     return () => { if (planTimerRef.current) clearInterval(planTimerRef.current); };
   }, [isPolling]);
+
+  useEffect(() => {
+    if (plan) setFrozenPlan(null);
+  }, [plan]);
 
   const onDragOver  = (e: DragEvent) => { e.preventDefault(); setDragging(true); };
   const onDragLeave = (e: DragEvent) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false); };
@@ -102,6 +109,7 @@ const VisionPage: React.FC = () => {
     setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     setTimeout(() => setRipple(null), 600);
     saveVisionMeta({ prompt, withCaptions, duration: duration ?? 'standard' });
+    if (plan) setFrozenPlan(plan);
     await generatePlan(prompt, { withCaptions, durationLevel: duration ?? 'standard', socialVideo: socialVideo ?? undefined });
   };
 
@@ -112,6 +120,7 @@ const VisionPage: React.FC = () => {
     setTimeout(() => setRipple(null), 600);
     saveVisionMeta({ prompt, withCaptions, duration: duration ?? 'standard' });
     setQuickMode(true);
+    if (plan) setFrozenPlan(plan);
     await generatePlan(prompt, { withCaptions, durationLevel: duration ?? 'standard', socialVideo: socialVideo ?? undefined });
   };
 
@@ -237,6 +246,7 @@ const VisionPage: React.FC = () => {
             executePlan={handleExecutePlan}
             isUpdating={isUpdating}
             isExecuting={isExecuting}
+            isRegenerating={false}
             apiError={apiError}
             readonly={historyDetailStatus === 'done'}
             promptBoxSlot={historyDetailStatus !== 'done' ? renderPromptBox(true) : undefined}
@@ -255,18 +265,19 @@ const VisionPage: React.FC = () => {
         )}
 
         {/* ── READY ── */}
-        {showReady && plan && planView === 'v1' && (
+        {showReady && planToShow && planView === 'v1' && (
           <ReadyView
-            plan={plan} updatePlan={updatePlan} executePlan={handleExecutePlan}
+            plan={planToShow} updatePlan={updatePlan} executePlan={handleExecutePlan}
             isUpdating={isUpdating} isExecuting={isExecuting} apiError={apiError}
             promptBoxSlot={renderPromptBox(true)}
             onRequestDelete={() => setConfirmAction('delete')}
           />
         )}
-        {showReady && plan && planView === 'v2' && (
+        {showReady && planToShow && planView === 'v2' && (
           <ReadyViewV2
-            plan={plan} updatePlan={updatePlan} executePlan={handleExecutePlan}
-            isUpdating={isUpdating} isExecuting={isExecuting} apiError={apiError}
+            plan={planToShow} updatePlan={updatePlan} executePlan={handleExecutePlan}
+            isUpdating={isUpdating} isExecuting={isExecuting} isRegenerating={isRegenerating}
+            apiError={apiError}
             promptBoxSlot={renderPromptBox(true)}
             onRequestDelete={() => setConfirmAction('delete')}
             onBack={handleBackClick}
@@ -274,9 +285,9 @@ const VisionPage: React.FC = () => {
             onPlanViewChange={setPlanView}
           />
         )}
-        {showReady && plan && planView === 'v3' && (
+        {showReady && planToShow && planView === 'v3' && (
           <ReadyViewV3
-            plan={plan} updatePlan={updatePlan} executePlan={handleExecutePlan}
+            plan={planToShow} updatePlan={updatePlan} executePlan={handleExecutePlan}
             isUpdating={isUpdating} isExecuting={isExecuting} apiError={apiError}
             promptBoxSlot={renderPromptBox(true)}
             onRequestDelete={() => setConfirmAction('delete')}

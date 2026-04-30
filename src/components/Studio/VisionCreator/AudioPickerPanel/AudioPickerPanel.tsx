@@ -1046,7 +1046,7 @@ const AudioPickerPanel: React.FC<Props> = ({
             </WaveInner>
           </WaveStage>
 
-          {ready && (
+          {ready && audioDur > MAX_VISIBLE_SEC && (
             <ScrollbarTrack ref={trackRef} onMouseDown={onScrollbarTrackDown}>
               <ScrollbarThumb
                 $disabled={scrollDisabled}

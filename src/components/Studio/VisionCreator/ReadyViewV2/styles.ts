@@ -153,13 +153,13 @@ export const ReadyPill = styled.div`
 `;
 
 // ─── Scene Timeline ────────────────────────────────────────────────────────────
-export const TimelineWrapper = styled.div`
-  height:48px;flex-shrink:0;
+export const TimelineWrapper = styled.div<{$inline?:boolean}>`
+  height:${p=>p.$inline?'32px':'48px'};flex-shrink:0;
   display:flex;align-items:center;
-  padding:0 24px;gap:10px;
-  border-bottom:1px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)'};
-  background:${p=>p.theme.mode==='dark'?'rgba(0,0,0,.15)':'rgba(0,0,0,.02)'};
-  @media (max-width:768px) { padding:0 14px;height:42px; }
+  padding:${p=>p.$inline?'0':'0 24px'};gap:${p=>p.$inline?'6px':'10px'};
+  ${p=>!p.$inline&&`border-bottom:1px solid ${p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)'};`}
+  ${p=>!p.$inline&&`background:${p.theme.mode==='dark'?'rgba(0,0,0,.15)':'rgba(0,0,0,.02)'};`}
+  @media (max-width:768px) { padding:${p=>p.$inline?'0':'0 14px'};height:${p=>p.$inline?'28px':'42px'}; }
 `;
 
 export const TimelineTrack = styled.div`
@@ -507,21 +507,40 @@ export const StatusText = styled.div`
 `;
 
 export const GenerateBtn = styled.button<{$loading:boolean}>`
-  display:inline-flex;align-items:center;gap:8px;
-  padding:13px 30px;border-radius:12px;border:none;cursor:pointer;
-  font-size:13.5px;font-weight:700;font-family:inherit;flex-shrink:0;
+  position:relative;overflow:hidden;
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 28px;border-radius:14px;border:none;cursor:pointer;
+  font-size:15px;font-weight:700;font-family:inherit;flex-shrink:0;
+  letter-spacing:.01em;
   background:linear-gradient(135deg,#9b5de5,#14b8a6);
   color:white;
-  box-shadow:0 4px 20px rgba(155,93,229,.35);
-  transition:all .22s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(155,93,229,.35),0 2px 8px rgba(20,184,166,.2);
+  transition:all .28s cubic-bezier(.4,0,.2,1);
   opacity:${p=>p.$loading?.7:1};
-  &:hover:not(:disabled){
-    transform:translateY(-2px);
-    box-shadow:0 7px 26px rgba(155,93,229,.5);
+  &::after{
+    content:'';position:absolute;top:0;left:-100%;
+    width:100%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);
+    transition:left .55s ease;
   }
-  &:active{transform:translateY(0);}
+  &:hover:not(:disabled){
+    transform:translateY(-3px) scale(1.02);
+    box-shadow:0 12px 32px rgba(155,93,229,.5),0 6px 16px rgba(20,184,166,.3);
+    filter:brightness(1.08);
+    &::after{left:100%;}
+  }
+  &:active:not(:disabled){transform:translateY(-1px) scale(1);}
   &:disabled{cursor:default;}
   @media (max-width:768px) { width:100%;justify-content:center;padding:14px; }
+`;
+
+export const RegeneratingOverlay = styled.div`
+  position:fixed;inset:0;z-index:50;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  color:white;font-size:15px;font-weight:600;letter-spacing:.01em;
+  animation:${fadeIn} .25s ease both;
 `;
 
 export const BtnSpinner = styled.div`

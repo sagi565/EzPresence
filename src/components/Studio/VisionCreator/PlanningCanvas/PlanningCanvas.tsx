@@ -4,21 +4,21 @@ import { CanvasEl } from './styles';
 // ─── Node positions (offsets from viewport center) ───────────────────────────
 // 11 nodes: outer heptagon (0-6) + inner triangle (7-9) + center (10)
 const NODES: [number, number][] = [
-  [   0,  -72],  // 0  top
-  [  60,  -36],  // 1  upper-right
-  [  66,   24],  // 2  lower-right
-  [  24,   68],  // 3  bottom-right
-  [ -28,   62],  // 4  bottom-left
-  [ -62,   12],  // 5  left
-  [ -40,  -54],  // 6  upper-left
-  [  26,  -28],  // 7  inner right
-  [   0,   36],  // 8  inner bottom
-  [ -28,  -16],  // 9  inner left
+  [   0, -101],  // 0  top
+  [  84,  -50],  // 1  upper-right
+  [  92,   34],  // 2  lower-right
+  [  34,   95],  // 3  bottom-right
+  [ -39,   87],  // 4  bottom-left
+  [ -87,   17],  // 5  left
+  [ -56,  -76],  // 6  upper-left
+  [  36,  -39],  // 7  inner right
+  [   0,   50],  // 8  inner bottom
+  [ -39,  -22],  // 9  inner left
   [   0,    0],  // 10 center
 ];
 
 // Schedule stretched 2.4× → full build ~23.7s.
-const TIME_SCALE = 2.4;
+const TIME_SCALE = 3.6;
 const RAW_SCHEDULE: Array<{ a: number; b: number; at: number }> = [
   // outer ring — draws around clockwise
   { a: 0, b: 1, at:    0 },
@@ -55,7 +55,7 @@ const EDGE_SCHEDULE = RAW_SCHEDULE.map(e => ({ ...e, at: e.at * TIME_SCALE }));
 const DRAW_DUR = 750; // ms per edge — slower, more deliberate
 
 // Orbit ring radii
-const RING_RADII = [150, 225, 300, 375];
+const RING_RADII = [175, 260, 345, 430];
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Beam {
@@ -97,8 +97,8 @@ interface Star {
 }
 
 // Per-node organic wobble — small independent drift so the body feels alive.
-const wobbleX = (i: number, now: number) => 0.9 * Math.sin(now / (900 + i * 70) + i);
-const wobbleY = (i: number, now: number) => 0.9 * Math.cos(now / (1100 + i * 60) + i * 1.7);
+const wobbleX = (i: number, now: number) => 2.2 * Math.sin(now / (900 + i * 70) + i);
+const wobbleY = (i: number, now: number) => 2.2 * Math.cos(now / (1100 + i * 60) + i * 1.7);
 
 // ─── Component ───────────────────────────────────────────────────────────────
 const PlanningCanvas: React.FC = () => {
@@ -107,8 +107,9 @@ const PlanningCanvas: React.FC = () => {
   const dotsRef    = useRef<OrbitDot[]>([]);
   const pulseEdges = useRef<PulseEdge[]>([]);
   const shimmersRef = useRef<Shimmer[]>([]);
-  const starsRef   = useRef<Star[]>([]);
-  const rafRef     = useRef<number>(0);
+  const starsRef      = useRef<Star[]>([]);
+  const nodeOffsets   = useRef<[number, number][]>([]);
+  const rafRef        = useRef<number>(0);
   const sizeRef    = useRef({ w: 0, h: 0 });
   const startRef   = useRef<number | null>(null);
 
@@ -154,6 +155,11 @@ const PlanningCanvas: React.FC = () => {
     resize();
     window.addEventListener('resize', resize);
 
+    // One-time random shape variation — center node stays fixed.
+    nodeOffsets.current = NODES.map((_, i) =>
+      i === 10 ? [0, 0] : [(Math.random() - 0.5) * 18, (Math.random() - 0.5) * 18]
+    );
+
     const SHAPE_DONE = EDGE_SCHEDULE[EDGE_SCHEDULE.length - 1].at + DRAW_DUR + 600;
 
     const getBuildProgress = () => {
@@ -168,12 +174,21 @@ const PlanningCanvas: React.FC = () => {
     let cancelled = false;
 
     const fireBurst = () => {
+      if (!startRef.current) return;
+      const elapsed = performance.now() - startRef.current;
+      // Only fire from nodes whose first edge has already been drawn.
+      const visible = NODES.map((_, i) => i).filter(i => {
+        const fe = EDGE_SCHEDULE.find(e => e.a === i || e.b === i);
+        return fe !== undefined && elapsed >= fe.at;
+      });
+      if (visible.length === 0) return;
+
       const progress  = getBuildProgress();
-      const count     = 1 + Math.floor(progress * 3 + Math.random() * (1 + progress));
+      const count     = Math.floor(0.5 + progress * 4.5 + Math.random() * (0.5 + progress * 1.5));
       const usedNodes = new Set<number>();
       for (let i = 0; i < count; i++) {
-        let n = Math.floor(Math.random() * NODES.length);
-        if (usedNodes.size < NODES.length) while (usedNodes.has(n)) n = Math.floor(Math.random() * NODES.length);
+        let n = visible[Math.floor(Math.random() * visible.length)];
+        if (usedNodes.size < visible.length) while (usedNodes.has(n)) n = visible[Math.floor(Math.random() * visible.length)];
         usedNodes.add(n);
 
         const [nx, ny] = NODES[n];
@@ -181,7 +196,8 @@ const PlanningCanvas: React.FC = () => {
         const sourceAngle = isCenter
           ? Math.random() * Math.PI * 2
           : Math.atan2(ny, nx);
-        const jitter  = isCenter ? 0 : (Math.random() - 0.5) * (Math.PI / 3);
+        // Tighter jitter — beam stays close to the node's outward direction.
+        const jitter  = isCenter ? 0 : (Math.random() - 0.5) * (Math.PI / 6);
         const toAngle = sourceAngle + jitter;
 
         setTimeout(() => {
@@ -293,7 +309,7 @@ const PlanningCanvas: React.FC = () => {
       ctx.lineDashOffset = 0;
 
       // ── breathing scale + slow global rotation ────────────────────────────
-      const breathe = 1 + 0.025 * Math.sin(now / 1200);
+      const breathe = 1 + 0.045 * Math.sin(now / 1200);
       const globalAngle = now * 0.00004; // very slow, ~0.04 rad/sec
       const cosG = Math.cos(globalAngle);
       const sinG = Math.sin(globalAngle);
@@ -301,8 +317,11 @@ const PlanningCanvas: React.FC = () => {
       // Resolve a node's current screen position (rotation + breathe + wobble).
       const nodePos = (i: number): [number, number] => {
         const [nx, ny] = NODES[i];
-        const rx = nx * cosG - ny * sinG;
-        const ry = nx * sinG + ny * cosG;
+        const [ox, oy] = nodeOffsets.current[i] ?? [0, 0];
+        const bx = nx + ox;
+        const by = ny + oy;
+        const rx = bx * cosG - by * sinG;
+        const ry = bx * sinG + by * cosG;
         return [
           CX + rx * breathe + wobbleX(i, now),
           CY + ry * breathe + wobbleY(i, now),
@@ -312,7 +331,7 @@ const PlanningCanvas: React.FC = () => {
       // ── central core glow — grows with build progress ─────────────────────
       const buildProgress = Math.max(0, Math.min(1, elapsed / SHAPE_DONE));
       const corePulse = 0.85 + 0.15 * Math.sin(now / 700);
-      const coreRadius = 22 + 60 * buildProgress * corePulse;
+      const coreRadius = 22 + 80 * buildProgress * corePulse;
       const coreAlpha  = 0.04 + 0.18 * buildProgress;
       const coreGrad = ctx.createRadialGradient(CX, CY, 0, CX, CY, coreRadius);
       coreGrad.addColorStop(0,   `rgba(220,200,255,${coreAlpha})`);
@@ -334,7 +353,7 @@ const PlanningCanvas: React.FC = () => {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t);
         ctx.strokeStyle = 'rgba(167,139,250,0.32)';
-        ctx.lineWidth = 0.9;
+        ctx.lineWidth = 1.4;
         ctx.stroke();
       });
 
@@ -402,7 +421,7 @@ const PlanningCanvas: React.FC = () => {
         else if (sinceFirst < 700)   scale = 1.4 - 0.4 * ((sinceFirst - 350) / 350);
         else                         scale = 1.0;
         const pulse = 0.5 + 0.5 * Math.sin(now / 1000 + i * 0.9);
-        const r = (2.0 + pulse * 0.7) * scale;
+        const r = (2.8 + pulse * 1.0) * scale;
         const [px, py] = nodePos(i);
 
         // Crisp dot, no halo
@@ -422,7 +441,8 @@ const PlanningCanvas: React.FC = () => {
 
         if (t >= 1 && !b.dotBorn) {
           b.dotBorn = true;
-          if (dotsRef.current.length < 32) {
+          const maxDots = Math.floor(4 + 28 * getBuildProgress());
+          if (dotsRef.current.length < maxDots) {
             dotsRef.current.push({
               ringR:      b.ringR,
               angle:      b.toAngle,
@@ -485,15 +505,6 @@ const PlanningCanvas: React.FC = () => {
         else                   alpha = 1 - (frac - 0.65) / 0.35;
         const dx = CX + Math.cos(d.angle) * d.ringR;
         const dy = CY + Math.sin(d.angle) * d.ringR;
-        // Subtle glow
-        const dotGrad = ctx.createRadialGradient(dx, dy, 0, dx, dy, d.size * 3);
-        dotGrad.addColorStop(0, `rgba(196,170,255,${Math.max(0, alpha) * 0.35})`);
-        dotGrad.addColorStop(1, 'rgba(139,92,246,0)');
-        ctx.fillStyle = dotGrad;
-        ctx.beginPath();
-        ctx.arc(dx, dy, d.size * 3, 0, Math.PI * 2);
-        ctx.fill();
-        // Core
         ctx.beginPath();
         ctx.arc(dx, dy, d.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(167,139,250,${Math.max(0, alpha) * 0.85})`;
