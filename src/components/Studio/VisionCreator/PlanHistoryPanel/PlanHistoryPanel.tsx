@@ -176,6 +176,7 @@ interface PlanHistoryPanelProps {
   activePlanUuid?: string;
   width?: number;
   onResize?: (w: number) => void;
+  onResizingChange?: (resizing: boolean) => void;
 }
 
 const ChevronRight = () => (
@@ -191,7 +192,7 @@ const ChevronLeft = () => (
 
 const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
   collapsed, onToggle, onPlanSelect, onPlanDeselect, activePlanUuid,
-  width, onResize,
+  width, onResize, onResizingChange,
 }) => {
   const { groupedPlans, plans, loading, error, fetchHistory, fetchPlanDetail } = useVisionHistory();
   const [loadingUuid, setLoadingUuid] = useState<string | null>(null);
@@ -204,12 +205,14 @@ const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
     e.preventDefault();
     if (!onResize) return;
     setResizing(true);
+    onResizingChange?.(true);
     const onMove = (ev: MouseEvent) => {
       const next = Math.min(SIDEBAR_W_MAX, Math.max(SIDEBAR_W_MIN, ev.clientX));
       onResize(next);
     };
     const onUp = () => {
       setResizing(false);
+      onResizingChange?.(false);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       window.removeEventListener('mousemove', onMove);
@@ -223,7 +226,7 @@ const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
 
   const handlePlanClick = async (summary: PlanHistorySummary) => {
     if (loadingUuid) return;
-    if (summary.planUuid === activePlanUuid) { onPlanDeselect(); return; }
+    if (summary.planUuid === activePlanUuid) return;
     setLoadingUuid(summary.planUuid);
     const plan = await fetchPlanDetail(summary.planUuid);
     setLoadingUuid(null);
@@ -233,7 +236,7 @@ const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
   /* ── Collapsed ── */
   if (collapsed) {
     return (
-      <SidebarWrapper $collapsed>
+      <SidebarWrapper $collapsed $noTransition={resizing}>
         <CollapsedToggle onClick={onToggle} title="Open plans">
           <ChevronRight />
           <PlansLabel>Plans</PlansLabel>
@@ -244,7 +247,7 @@ const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
 
   /* ── Expanded ── */
   return (
-    <SidebarWrapper $collapsed={false} $width={width}>
+    <SidebarWrapper $collapsed={false} $width={width} $noTransition={resizing}>
       <SidebarHeader>
         <SidebarIcon>📋</SidebarIcon>
         <SidebarTitle>Your Plans</SidebarTitle>

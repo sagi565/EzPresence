@@ -38,10 +38,15 @@ function fmtSec(s: number) {
   return `${Math.floor(t / 60)}:${(t % 60).toString().padStart(2, '0')}`;
 }
 
-const BAR_COUNT       = 120;
+const BAR_COUNT       = 120;   // used for live-level analyser mapping only
 const MIN_TRIM_SEC    = 1;
-const MAX_VISIBLE_SEC = 300;
 const MAX_FETCH_BYTES = 120 * 1024 * 1024;
+const PEAKS_HI_RES    = 2048;  // stored resolution; draw resamples to canvas width
+const BARS_PER_PX     = 0.24;  // target density: 120 bars / 500 px reference
+
+/* Reference values: at REFERENCE_WIDTH px the stage shows REFERENCE_MAX_SEC of audio. */
+const REFERENCE_WIDTH   = 500;
+const REFERENCE_MAX_SEC = 300;
 
 /* Static "fake waveform" silhouette used during loading — smoothed noise with
    sharp peaks so it reads as a real audio waveform rather than a generic bar. */
@@ -127,6 +132,25 @@ function computePeaks(buf: AudioBuffer, bars: number): number[] {
   return raw.map(p => Math.max(0.02, Math.min(1, p / norm)));
 }
 
+/* Down- or up-sample a peaks array to exactly n bars by averaging buckets. */
+function resample(src: number[], n: number): number[] {
+  const len = src.length;
+  if (len === 0 || n <= 0) return new Array(Math.max(0, n)).fill(0.4);
+  if (len === n) return src;
+  const out = new Array(n);
+  const ratio = len / n;
+  for (let i = 0; i < n; i++) {
+    const lo = i * ratio;
+    const hi = Math.min(len, lo + ratio);
+    const iLo = Math.floor(lo);
+    const iHi = Math.min(len - 1, Math.ceil(hi - 1e-9));
+    let sum = 0;
+    for (let j = iLo; j <= iHi; j++) sum += src[j];
+    out[i] = sum / Math.max(1, iHi - iLo + 1);
+  }
+  return out;
+}
+
 interface Props {
   onClose: () => void;
   value: SocialVideoContext | null;
@@ -136,12 +160,15 @@ interface Props {
   avgDurationSec: number;
   onTrimLimitHit?: () => void;
   onAudioLoaded?: (audioDurSec: number) => void;
+  readonly?: boolean;
+  visible?: boolean;
 }
 
 const AudioPickerPanel: React.FC<Props> = ({
   onClose, value, onChange,
   minDurationSec, maxDurationSec, avgDurationSec,
-  onTrimLimitHit, onAudioLoaded,
+  onTrimLimitHit, onAudioLoaded, readonly = false,
+  visible = true,
 }) => {
   const [url, setUrl] = useState(value?.url ?? '');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -185,6 +212,9 @@ const AudioPickerPanel: React.FC<Props> = ({
   const playheadRef  = useRef<HTMLDivElement | null>(null);
   const peaksRef     = useRef<number[]>([]);
 
+  // Stage width — drives max-visible-seconds / scrollRatio
+  const [stageWidth, setStageWidth] = useState(REFERENCE_WIDTH);
+
   // Smooth playhead time interpolation
   const syncedTimeRef = useRef({ value: 0, at: 0 });
   const syncTime = (t: number) => { syncedTimeRef.current = { value: t, at: performance.now() }; };
@@ -225,6 +255,17 @@ const AudioPickerPanel: React.FC<Props> = ({
     teardownAudio();
     if (debounceRef.current) clearTimeout(debounceRef.current);
   }, [teardownAudio]);
+
+  // Pause audio when the panel is hidden (component stays mounted)
+  useEffect(() => {
+    if (visible !== false) return;
+    const audio = audioRef.current;
+    if (audio && isPlayingRef.current) {
+      audio.pause();
+      setIsPlaying(false);
+      syncTime(audio.currentTime);
+    }
+  }, [visible]);
 
   // Cancellation token so a newer load supersedes an older one
   const loadTokenRef = useRef(0);
@@ -279,8 +320,7 @@ const AudioPickerPanel: React.FC<Props> = ({
       ? decoded.duration
       : apiRes.durationMs / 1000;
 
-    const totalBars = Math.round(BAR_COUNT * Math.max(1, dur / MAX_VISIBLE_SEC));
-    peaksRef.current = computePeaks(decoded, totalBars);
+    peaksRef.current = computePeaks(decoded, PEAKS_HI_RES);
 
     // Build playable audio element from a same-origin blob (analyser-friendly)
     const blob = new Blob([bytes], { type: 'audio/mpeg' });
@@ -404,9 +444,10 @@ const AudioPickerPanel: React.FC<Props> = ({
     const W = cssW, H = cssH;
     ctx.clearRect(0, 0, W, H);
 
-    const peaks = peaksRef.current;
-    const haveReal = ready && peaks.length > 0;
-    const nBars = haveReal ? peaks.length : BAR_COUNT;
+    const hiResPeaks = peaksRef.current;
+    const haveReal = ready && hiResPeaks.length > 0;
+    const nBars = haveReal ? Math.max(20, Math.round(W * BARS_PER_PX)) : BAR_COUNT;
+    const peaks = haveReal ? resample(hiResPeaks, nBars) : hiResPeaks;
 
     let barW = (W - (nBars - 1)) / nBars;
     barW = Math.max(1.4, Math.min(2.4, barW));
@@ -550,6 +591,21 @@ const AudioPickerPanel: React.FC<Props> = ({
     return () => cancelAnimationFrame(id);
   }, [needsAnimation, audioDur, currentTime, hoverInfo, selStart, selEnd, status]);
 
+  /* ── Stage width measurement — drives bar density and maxVisibleSec ──
+     Depends on `status` because WaveStage is only rendered once loading
+     begins (showPlayer = true). On mount status='idle' → stageRef is null,
+     so we re-run as soon as status changes to 'fetching' or later. */
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const ro = new ResizeObserver(() => {
+      const w = stage.clientWidth;
+      if (w > 0) setStageWidth(w);
+    });
+    ro.observe(stage);
+    return () => ro.disconnect();
+  }, [status]);
+
   /* ── Play / pause ── */
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
@@ -592,7 +648,7 @@ const AudioPickerPanel: React.FC<Props> = ({
   const dragOffsetRef = useRef(0);
 
   const onCanvasMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!ready || audioDur === 0) return;
+    if (!ready || audioDur === 0 || readonly) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const t = (e.clientX - rect.left) / rect.width * audioDur;
     const trimLen = selEnd - selStart;
@@ -851,7 +907,8 @@ const AudioPickerPanel: React.FC<Props> = ({
   const endPct = pctOf(selEnd);
   const progressPct = pctOf(currentTime);
 
-  const scrollRatio = audioDur > MAX_VISIBLE_SEC ? audioDur / MAX_VISIBLE_SEC : 1;
+  const maxVisibleSec = Math.max(60, Math.round(stageWidth * (REFERENCE_MAX_SEC / REFERENCE_WIDTH)));
+  const scrollRatio = audioDur > maxVisibleSec ? audioDur / maxVisibleSec : 1;
 
   /* ── Custom always-visible scrollbar — driven by stage scrollLeft ── */
   const trackRef = useRef<HTMLDivElement | null>(null);
@@ -921,7 +978,7 @@ const AudioPickerPanel: React.FC<Props> = ({
   const hasSound = !!audioInfo && ready;
 
   const canvasCursor = (() => {
-    if (!ready) return 'default';
+    if (!ready || readonly) return 'default';
     if (dragging === 'both') return 'grabbing';
     if (hoverInfo && audioDur > 0) {
       const trimLen = selEnd - selStart;
@@ -933,7 +990,7 @@ const AudioPickerPanel: React.FC<Props> = ({
 
   return (
     <Panel>
-      <UrlRow>
+      {!readonly && <UrlRow>
         <UrlInput
           value={url}
           onChange={onUrlChange}
@@ -950,7 +1007,7 @@ const AudioPickerPanel: React.FC<Props> = ({
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </ClearBtn>
-      </UrlRow>
+      </UrlRow>}
 
       <InfoRow>
         <PlatformRow>
@@ -1012,7 +1069,7 @@ const AudioPickerPanel: React.FC<Props> = ({
                   ref={playheadRef}
                   style={{ left: `calc(6px + (100% - 12px) * ${progressPct / 100})` }}
                 >
-                  <PlayheadHandle onMouseDown={(e) => { e.preventDefault(); setDragging('playhead'); }} />
+                  <PlayheadHandle $readonly={readonly} onMouseDown={(e) => { if (readonly) return; e.preventDefault(); setDragging('playhead'); }} />
                 </PlayheadLine>
               )}
 
@@ -1028,16 +1085,18 @@ const AudioPickerPanel: React.FC<Props> = ({
                   <RangeHandle
                     $side="start"
                     $active={dragging === 'start'}
+                    $readonly={readonly}
                     style={{ left: `calc(6px + (100% - 12px) * ${startPct / 100})` }}
-                    onMouseDown={(e) => { e.preventDefault(); setDragging('start'); }}
+                    onMouseDown={(e) => { if (readonly) return; e.preventDefault(); setDragging('start'); }}
                     title="Drag to set start"
                     aria-label="Set start"
                   />
                   <RangeHandle
                     $side="end"
                     $active={dragging === 'end'}
+                    $readonly={readonly}
                     style={{ left: `calc(6px + (100% - 12px) * ${endPct / 100})` }}
-                    onMouseDown={(e) => { e.preventDefault(); setDragging('end'); }}
+                    onMouseDown={(e) => { if (readonly) return; e.preventDefault(); setDragging('end'); }}
                     title="Drag to set end"
                     aria-label="Set end"
                   />
@@ -1046,7 +1105,7 @@ const AudioPickerPanel: React.FC<Props> = ({
             </WaveInner>
           </WaveStage>
 
-          {ready && audioDur > MAX_VISIBLE_SEC && (
+          {ready && audioDur > maxVisibleSec && (
             <ScrollbarTrack ref={trackRef} onMouseDown={onScrollbarTrackDown}>
               <ScrollbarThumb
                 $disabled={scrollDisabled}

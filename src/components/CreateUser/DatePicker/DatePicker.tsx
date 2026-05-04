@@ -109,11 +109,24 @@ const CustomDropdown: React.FC<DropdownProps> = ({
   };
 
   return (
-    <DropdownContainer ref={containerRef}>
+    <DropdownContainer
+      ref={containerRef}
+      onBlur={(e) => {
+        if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+          setIsOpen(false);
+          setSearchTerm('');
+        }
+      }}
+    >
       <Select
         $isOpen={isOpen}
         $isError={error}
+        tabIndex={0}
         onClick={() => {
+          setIsOpen(true);
+          setTimeout(() => inputRef.current?.focus(), 0);
+        }}
+        onFocus={() => {
           setIsOpen(true);
           setTimeout(() => inputRef.current?.focus(), 0);
         }}
@@ -126,6 +139,7 @@ const CustomDropdown: React.FC<DropdownProps> = ({
             type="text"
             name={name}
             autoComplete={autoComplete}
+            tabIndex={-1}
             placeholder={placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

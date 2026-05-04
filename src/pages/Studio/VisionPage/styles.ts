@@ -6,7 +6,7 @@ export const fadeOut  = keyframes`from{opacity:1;transform:scale(1)}to{opacity:0
 const bgAnim          = keyframes`0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}`;
 
 /* Main content area — left edge set dynamically via style prop to match sidebar width */
-export const VisionContainer = styled.div`
+export const VisionContainer = styled.div<{ $noTransition?: boolean }>`
   position: fixed;
   top: 0; right: 0; bottom: 0;
   /* left is set via inline style from VisionPage */
@@ -22,7 +22,7 @@ export const VisionContainer = styled.div`
   );
   background-size: 300% 300%;
   animation: ${bgAnim} 20s ease-in-out infinite;
-  transition: left .22s cubic-bezier(.4,0,.2,1);
+  transition: ${p => p.$noTransition ? 'none' : 'left .22s cubic-bezier(.4,0,.2,1)'};
 `;
 
 export const BackBtn = styled.button`
@@ -45,14 +45,14 @@ export const BackBtnAccent = styled.span`
   background-clip: text;
 `;
 
-export const LogoMark = styled.a`
+export const LogoMark = styled.a<{ $noTransition?: boolean }>`
   position: fixed; left: calc(var(--sidebar-w, 0px) + 24px); top: 24px; z-index: 20;
   font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
   background: linear-gradient(135deg,#9b5de5 0%,#fbbf24 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text; text-decoration: none; cursor: default;
   pointer-events: none; white-space: nowrap; line-height: 1;
-  transition: left .22s cubic-bezier(.4,0,.2,1);
+  transition: ${p => p.$noTransition ? 'none' : 'left .22s cubic-bezier(.4,0,.2,1)'};
   @media (max-width: 768px) {
     font-size: 22px;
     left: calc(var(--sidebar-w, 0px) + 14px);
@@ -64,7 +64,6 @@ export const ContentWrapper = styled.div`
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 24px; width: 100%; max-width: 700px;
   padding: 24px;
-  overflow: hidden;
   height: 100%;
   position: relative; z-index: 1;
   animation: ${fadeInUp} .7s cubic-bezier(.4,0,.2,1) both;

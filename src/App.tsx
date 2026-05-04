@@ -93,6 +93,14 @@ function App() {
             }
           />
           <Route
+            path="/studio/vision/:planUuid"
+            element={
+              <ProtectedRoute>
+                <StudioPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/studio/:section?"
             element={
               <ProtectedRoute>

@@ -73,7 +73,15 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({
   };
 
   return (
-    <div style={styles.container} ref={containerRef}>
+    <div
+      style={styles.container}
+      ref={containerRef}
+      onBlur={(e) => {
+        if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+          setIsOpen(false);
+        }
+      }}
+    >
       <label style={styles.label}>{label}</label>
 
       <div

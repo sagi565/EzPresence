@@ -764,6 +764,49 @@
         }
       }
     },
+    "/api/contents/{id}/report": {
+      "post": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Reports an issue with a generated video.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentReportRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentReportRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentReportRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/isalive": {
       "get": {
         "tags": [
@@ -1577,6 +1620,55 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/studio/vision/creator/direct-execute": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "CREATOR ENDPOINT - Generates a structured vision plan and executes it immediately for video output.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionDirectExecuteRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionDirectExecuteRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionDirectExecuteRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              }
+            }
           }
         }
       }
@@ -2525,6 +2617,20 @@
         },
         "additionalProperties": false
       },
+      "ContentReportRequestDto": {
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "ContentStatus": {
         "enum": [
           "Uploading",
@@ -3065,6 +3171,46 @@
             "nullable": true
           },
           "preferredLanguage": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "VisionDirectExecuteRequestDto": {
+        "type": "object",
+        "properties": {
+          "userPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "durationLevel": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagesList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "numScenes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "llmModel": {
+            "type": "string",
+            "nullable": true
+          },
+          "socialMediaLink": {
+            "$ref": "#/components/schemas/SocialMediaLinkDto"
+          },
+          "useMockAssets": {
+            "type": "boolean"
+          },
+          "captions": {
             "type": "string",
             "nullable": true
           }

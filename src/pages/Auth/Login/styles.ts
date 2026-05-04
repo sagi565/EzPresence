@@ -12,6 +12,15 @@ export const StyledLink = styled(Link)`
   color: ${props => props.theme.colors.blue};
   text-decoration: none;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+export const FooterText = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 `;
 
 export const ForgotLink = styled(Link)`

@@ -3,9 +3,10 @@ import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import AuthLayout from '@components/Auth/AuthLayout/AuthLayout';
 import AuthField from '@components/Auth/AuthField/AuthField';
 import SocialButtons from '@components/Auth/SocialButtons/SocialButtons';
-import { Form, StyledLink, ForgotLink, PrimaryBtn, OrContainer, Line, OrText, ErrorText, SuccessMessage } from './styles';
+import { Form, StyledLink, ForgotLink, PrimaryBtn, OrContainer, Line, OrText, ErrorText, SuccessMessage, FooterText } from './styles';
 import { useAuth } from '@auth/AuthProvider';
 import PasswordInput from '@components/Auth/PasswordInput/PasswordInput';
+import { ArrowRight } from 'lucide-react';
 
 // Map Firebase auth errors to friendly messages (login)
 function mapLoginError(err: any): string {
@@ -74,12 +75,12 @@ const LoginPage: React.FC = () => {
       title="Log In"
       subtitle="Manage your network presence effortlessly"
       footer={
-        <span>
+        <FooterText>
           Don't have an account?{' '}
           <StyledLink to="/signup">
-            Sign up
+            Sign up <ArrowRight size={16} />
           </StyledLink>
-        </span>
+        </FooterText>
       }
     >
       <Form onSubmit={onSubmit}>

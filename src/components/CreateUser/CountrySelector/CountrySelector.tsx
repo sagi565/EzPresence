@@ -149,7 +149,16 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
   };
 
   return (
-    <div style={styles.container} ref={containerRef}>
+    <div
+      style={styles.container}
+      ref={containerRef}
+      onBlur={(e) => {
+        if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+          setIsOpen(false);
+          setSearchTerm('');
+        }
+      }}
+    >
       <label style={styles.label}>{label}</label>
 
       <div
@@ -157,7 +166,12 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
           ...styles.inputContainer,
           ...(isOpen ? styles.inputContainerFocused : {}),
         }}
+        tabIndex={0}
         onClick={() => {
+          setIsOpen(true);
+          setTimeout(() => inputRef.current?.focus(), 0);
+        }}
+        onFocus={() => {
           setIsOpen(true);
           setTimeout(() => inputRef.current?.focus(), 0);
         }}
@@ -178,6 +192,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
           <input
             ref={inputRef}
             type="text"
+            tabIndex={-1}
             style={styles.searchInput}
             placeholder="Select a country"
             value={searchTerm}

@@ -9,11 +9,12 @@ import VisionPage from './VisionPage/VisionPage';
 import { PageContainer } from './styles';
 
 const StudioPage: React.FC = () => {
-  const { section } = useParams<{ section?: string }>();
+  const { section, planUuid } = useParams<{ section?: string; planUuid?: string }>();
+  const effectiveSection = section ?? (planUuid !== undefined ? 'vision' : undefined);
   const { brands, currentBrand, switchBrand } = useBrands();
 
   const renderContent = () => {
-    switch (section) {
+    switch (effectiveSection) {
       case 'wizard':
         return <WizardPage />;
       case 'producer':
@@ -28,7 +29,7 @@ const StudioPage: React.FC = () => {
 
   return (
     <PageContainer>
-      {section !== 'vision' && <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />}
+      {effectiveSection !== 'vision' && <GlobalNav brands={brands} currentBrand={currentBrand} onBrandChange={switchBrand} />}
       {renderContent()}
     </PageContainer>
   );

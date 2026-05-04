@@ -38,7 +38,7 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
 
         return (
           <NavItem key={creator.id}>
-            {isHovered && !isMobile && (
+            {!isMobile && (
               <Label $isMobile={isMobile}>{creator.name}</Label>
             )}
 
@@ -53,7 +53,6 @@ const ScrollNavigation: React.FC<ScrollNavigationProps> = ({
                 $isMobile={isMobile}
               >
                 <Icon 
-                  $visible={isHovered || isActive}
                   $isMobile={isMobile}
                 >
                   {creator.icon}

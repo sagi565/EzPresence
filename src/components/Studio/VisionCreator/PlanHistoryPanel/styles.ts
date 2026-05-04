@@ -11,7 +11,7 @@ export const SIDEBAR_W_MIN       = 200;
 export const SIDEBAR_W_MAX       = 480;
 
 /* Fixed full-height sidebar — sits from top:0 to bottom:0 */
-export const SidebarWrapper = styled.div<{ $collapsed: boolean; $width?: number }>`
+export const SidebarWrapper = styled.div<{ $collapsed: boolean; $width?: number; $noTransition?: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
@@ -23,7 +23,7 @@ export const SidebarWrapper = styled.div<{ $collapsed: boolean; $width?: number 
   background: ${p => p.theme.mode === 'dark' ? '#161618' : '#f5f5f7'};
   border-right: 1px solid ${p => p.theme.mode === 'dark' ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.08)'};
   box-shadow: 2px 0 12px ${p => p.theme.mode === 'dark' ? 'rgba(0,0,0,.25)' : 'rgba(0,0,0,.06)'};
-  transition: width .22s cubic-bezier(.4,0,.2,1);
+  transition: ${p => p.$noTransition ? 'none' : 'width .22s cubic-bezier(.4,0,.2,1)'};
   overflow: hidden;
 
   @media (max-width: 768px) {

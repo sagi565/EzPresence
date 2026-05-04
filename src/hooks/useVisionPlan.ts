@@ -25,6 +25,12 @@ export interface SocialVideoContext {
 }
 
 export interface VisionScene {
+  sceneTitle?: string;
+  sceneGenerationPrompt?: string;
+  sceneScriptSegment?: string;
+  sceneDuration?: number;
+  sceneOffsetFrame?: string | { staticVisualInstructions?: string };
+  prompt?: string;
   [key: string]: any;
 }
 
@@ -190,6 +196,29 @@ export const useVisionPlan = () => {
     }
   }, [pollPlan, stopPolling]);
 
+  /** Update plan via LLM prompt — calls the creator update-plan endpoint then polls for the result */
+  const updatePlanWithPrompt = useCallback(async (uuid: string, prompt: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    setPlan(null);
+    stopPolling();
+    try {
+      await api.post('/studio/vision/creator/update-plan', { planUuid: uuid, prompt });
+      sessionStorage.setItem(SESSION_KEY, uuid);
+      setPlanUuid(uuid);
+      setIsLoading(false);
+      setIsPolling(true);
+      attemptsRef.current = 0;
+      pollRef.current = setTimeout(() => pollPlan(uuid), POLL_INTERVAL);
+      return true;
+    } catch (err: any) {
+      setError(err?.message || 'Failed to update plan.');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pollPlan, stopPolling]);
+
   /** Update plan fields on the server (only changed fields) */
   const updatePlan = useCallback(async (uuid: string, updatedProperties: Record<string, any>): Promise<boolean> => {
     setIsUpdating(true);
@@ -211,13 +240,44 @@ export const useVisionPlan = () => {
     setIsExecuting(true);
     setError(null);
     try {
-      await api.post('/studio/vision/creator/execute', { planUuid: uuid, useMockAssets: true, version });
+      await api.post('/studio/vision/creator/execute', { planUuid: uuid, useMockAssets: false, version });
       return true;
     } catch (err: any) {
       setError(err?.message || 'Failed to execute plan.');
       return false;
     } finally {
       setIsExecuting(false);
+    }
+  }, []);
+
+  /** Generate and execute in one shot (auto mode) */
+  const directExecute = useCallback(async (
+    prompt: string,
+    options?: GeneratePlanOptions
+  ): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const payload: any = {
+        userPrompt: prompt,
+        durationLevel: options?.durationLevel,
+        imagesList: options?.imagesList,
+        numScenes: options?.numScenes,
+        llmModel: options?.llmModel,
+        useMockAssets: true,
+      };
+      if (options?.withCaptions) payload.captions = 'enabled';
+      if (options?.socialVideo) {
+        const sv = options.socialVideo;
+        payload.socialMediaLink = { url: sv.url, offset: sv.offsetSeconds, duration: sv.durationSeconds };
+      }
+      await api.post('/studio/vision/creator/direct-execute', payload);
+      return true;
+    } catch (err: any) {
+      setError(err?.message || 'Failed to generate and execute vision.');
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -247,6 +307,6 @@ export const useVisionPlan = () => {
   return {
     isLoading, isPolling, isUpdating, isExecuting,
     error, planUuid, plan,
-    generatePlan, updatePlan, executePlan, reset,
+    generatePlan, updatePlanWithPrompt, updatePlan, executePlan, directExecute, reset,
   };
 };

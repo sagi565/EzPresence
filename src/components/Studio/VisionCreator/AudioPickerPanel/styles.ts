@@ -209,12 +209,12 @@ export const TrimFill = styled.div`
   z-index: 1;
 `;
 
-export const RangeHandle = styled.div<{ $side: 'start' | 'end'; $active: boolean }>`
+export const RangeHandle = styled.div<{ $side: 'start' | 'end'; $active: boolean; $readonly?: boolean }>`
   position: absolute;
   top: -2px; bottom: -2px;
   width: 12px;
   transform: translateX(${p => p.$side === 'start' ? '-100%' : '0'});
-  cursor: ew-resize;
+  cursor: ${p => p.$readonly ? 'default' : 'ew-resize'};
   z-index: 3;
   user-select: none;
   -webkit-user-select: none;
@@ -271,7 +271,7 @@ export const PlayheadLine = styled.div`
   will-change: left;
 `;
 
-export const PlayheadHandle = styled.div`
+export const PlayheadHandle = styled.div<{ $readonly?: boolean }>`
   position: absolute;
   top: 50%;
   left: 50%;
@@ -279,7 +279,7 @@ export const PlayheadHandle = styled.div`
   background: #ff4900;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  cursor: grab;
+  cursor: ${p => p.$readonly ? 'default' : 'grab'};
   box-shadow: 0 2px 6px rgba(0,0,0,.45);
   pointer-events: auto;
   border: 2px solid #fff;

@@ -75,8 +75,9 @@ const PromptBox: React.FC<PromptBoxProps> = ({
     duration, setDuration, autoMode, setAutoMode,
     minimalist = false,
 }) => {
-    const [audioOpen,    setAudioOpen]    = useState(false);
-    const [durationOpen, setDurationOpen] = useState(false);
+    const [audioOpen,      setAudioOpen]      = useState(false);
+    const [hasOpenedAudio, setHasOpenedAudio] = useState(false);
+    const [durationOpen,   setDurationOpen]   = useState(false);
     const durationRef = useRef<HTMLDivElement>(null);
     const durationBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -144,13 +145,13 @@ const PromptBox: React.FC<PromptBoxProps> = ({
 
     return (
     <>
-    <StyledPromptBox $drag={dragging} $focus={focused} style={showReady?{marginTop:0}:{marginTop:16}}>
+    <StyledPromptBox $drag={dragging} $focus={focused} $minimalist={minimalist} style={showReady?{marginTop:0}:{marginTop:16}}>
       <DragOverlay $v={dragging}>
         <div style={{color:'#a78bfa',fontSize:32}}>📎</div>
         <div style={{fontSize:'12px',fontWeight:700,letterSpacing:'.06em',color:'#a78bfa',textTransform:'uppercase'}}>Drop images here</div>
       </DragOverlay>
       <TextareaWrap $minimalist={minimalist}>
-        <Placeholder $v={!focused&&!prompt}>
+        <Placeholder $v={!focused&&!prompt} $minimalist={minimalist}>
           <TwText>{tw}</TwText><Cursor/>
         </Placeholder>
         <Textarea
@@ -192,7 +193,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({
               </IconBtn>
             </TooltipWrap>
             <TooltipWrap data-tip="Use sound from social media">
-              <IconBtn $active={!!socialVideo||audioOpen} onClick={()=>setAudioOpen(v=>!v)} aria-label="Social media audio">
+              <IconBtn $active={!!socialVideo||audioOpen} onClick={()=>{ setHasOpenedAudio(true); setAudioOpen(v=>!v); }} aria-label="Social media audio">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 18V5l12-2v13"/>
                   <circle cx="6" cy="18" r="3"/>
@@ -254,17 +255,20 @@ const PromptBox: React.FC<PromptBoxProps> = ({
         </TooltipWrap>
       </Toolbar>
     </StyledPromptBox>
-    {audioOpen&&(
-      <AudioPickerPanel
-        onClose={()=>setAudioOpen(false)}
-        value={socialVideo}
-        onChange={v=>setSocialVideo(v)}
-        minDurationSec={currentDuration.minSec}
-        maxDurationSec={currentDuration.maxSec}
-        avgDurationSec={currentDuration.avgSec}
-        onTrimLimitHit={nudgeDurationButton}
-        onAudioLoaded={handleAudioLoaded}
-      />
+    {hasOpenedAudio && (
+      <div style={{ display: audioOpen ? undefined : 'none' }}>
+        <AudioPickerPanel
+          onClose={()=>setAudioOpen(false)}
+          value={socialVideo}
+          onChange={v=>setSocialVideo(v)}
+          minDurationSec={currentDuration.minSec}
+          maxDurationSec={currentDuration.maxSec}
+          avgDurationSec={currentDuration.avgSec}
+          onTrimLimitHit={nudgeDurationButton}
+          onAudioLoaded={handleAudioLoaded}
+          visible={audioOpen}
+        />
+      </div>
     )}
     </>
     );

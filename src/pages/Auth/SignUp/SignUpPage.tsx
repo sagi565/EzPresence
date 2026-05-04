@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import AuthLayout from '@components/Auth/AuthLayout/AuthLayout';
 import AuthField from '@components/Auth/AuthField/AuthField';
-import { Form, StyledLink, PrimaryBtn, ErrorText } from './styles';
+import { Form, StyledLink, PrimaryBtn, ErrorText, FooterText } from './styles';
 import { useAuth } from '@auth/AuthProvider';
 import PasswordInput from '@components/Auth/PasswordInput/PasswordInput';
+import { ArrowRight } from 'lucide-react';
 
 const SignUpPage: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
@@ -45,10 +46,12 @@ const SignUpPage: React.FC = () => {
       title="Sign Up"
       subtitle="Build your presence across networks"
       footer={
-        <span>
+        <FooterText>
           Already have an account?{' '}
-          <StyledLink to="/login">Log in</StyledLink>
-        </span>
+          <StyledLink to="/login">
+            Log in <ArrowRight size={16} />
+          </StyledLink>
+        </FooterText>
       }
     >
       <Form onSubmit={onSubmit}>

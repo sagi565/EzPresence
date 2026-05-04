@@ -2,7 +2,7 @@
 // The full Director's Console experience lives in ReadyViewV2.
 import React from 'react';
 import { VisionPlan } from '@hooks/useVisionPlan';
-import ReadyViewV2 from '@components/Studio/VisionCreator/ReadyViewV2/ReadyViewV2';
+import ReadyViewV2 from '@/components/Studio/VisionCreator/ReadyView/ReadyView';
 import { Wrap } from './styles';
 
 interface Props {

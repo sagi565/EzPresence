@@ -218,7 +218,7 @@ export const ListScrollWrapper = styled.div<{ $isDropTarget?: boolean; $isInvali
   gap: 20px;
   overflow-x: auto;
   overflow-y: visible;
-  padding: 16px 8px;
+  padding: 80px 24px;
   scroll-behavior: smooth;
   scrollbar-width: none;
   ms-overflow-style: none;

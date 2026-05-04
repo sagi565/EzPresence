@@ -22,8 +22,8 @@ export const Dialog = styled.div`
   padding: 32px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
   z-index: 100000;
-  max-width: 460px;
-  width: 90%;
+  max-width: 500px;
+  width: 100%;
   animation: ${scaleIn} 0.2s ease-out;
 `;
 
@@ -82,6 +82,13 @@ export const Textarea = styled.textarea`
   }
 `;
 
+export const CharCount = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.muted};
+  text-align: right;
+  margin-top: 4px;
+`;
+
 export const ButtonGroup = styled.div`
   display: flex;
   gap: 12px;
@@ -96,12 +103,12 @@ export const CancelButton = styled.button`
   font-size: 14px;
   cursor: pointer;
   border: none;
-  background: ${({ theme }) => theme.colors.bg};
+  background: rgba(107, 114, 128, 0.08);
   color: ${({ theme }) => theme.colors.muted};
   transition: all 0.2s;
 
   &:hover {
-    background: rgba(107, 114, 128, 0.12);
+    background: rgba(107, 114, 128, 0.16);
   }
 `;
 

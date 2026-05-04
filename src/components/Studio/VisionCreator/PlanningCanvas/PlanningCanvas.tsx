@@ -440,9 +440,9 @@ const PlanningCanvas: React.FC = () => {
         const toY = CY + Math.sin(b.toAngle) * b.ringR;
 
         if (t >= 1 && !b.dotBorn) {
-          b.dotBorn = true;
           const maxDots = Math.floor(4 + 28 * getBuildProgress());
           if (dotsRef.current.length < maxDots) {
+            b.dotBorn = true;
             dotsRef.current.push({
               ringR:      b.ringR,
               angle:      b.toAngle,

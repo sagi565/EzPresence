@@ -13,6 +13,7 @@ import {
   CancelButton,
   SubmitButton,
   SuccessBanner,
+  CharCount,
 } from './styles';
 
 interface ReportDialogProps {
@@ -39,22 +40,8 @@ const ReportDialog: React.FC<ReportDialogProps> = ({
 
     setLoading(true);
     try {
-      const subject = `[STUDIO CONTENT REPORT]: ${contentId}`;
-      const body = [
-        '---REPORT START---',
-        `CONTENT_ID: ${contentId}`,
-        `CONTENT_NAME: ${contentName || 'Unknown'}`,
-        `REPORT_TIMESTAMP: ${new Date().toISOString()}`,
-        '---FEEDBACK START---',
-        feedback.trim(),
-        '---FEEDBACK END---',
-        '---REPORT END---',
-      ].join('\n');
-
-      await api.post('/contact/report', {
-        to: 'contact@ezpresence.com',
-        subject,
-        body,
+      await api.post(`/contents/${contentId}/report`, {
+        message: feedback.trim(),
       });
 
       setSubmitted(true);
@@ -88,15 +75,20 @@ const ReportDialog: React.FC<ReportDialogProps> = ({
   };
 
   return ReactDOM.createPortal(
-    <Overlay onClick={handleOverlayClick}>
+    <Overlay 
+      onClick={handleOverlayClick}
+      onPointerDown={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+    >
       <Dialog onClick={(e) => e.stopPropagation()}>
         <Header>
           <span style={{ fontSize: 22 }}>⚠️</span>
           <Title>Report Video Quality</Title>
         </Header>
         <Description>
-          Your feedback is streamed directly to our AI agents department — so you can be sure we will improve
-          based on what you tell us. Every report helps us make Studio-generated content better.
+          Your feedback is streamed directly to our AI agents department, so you can be sure we will improve
+          based on what you tell us.
         </Description>
 
         {submitted ? (
@@ -110,7 +102,9 @@ const ReportDialog: React.FC<ReportDialogProps> = ({
               onChange={(e) => setFeedback(e.target.value)}
               placeholder="e.g. The transitions look choppy, the color grading is off, incorrect aspect ratio..."
               disabled={loading}
+              maxLength={2000}
             />
+            <CharCount>{feedback.length} / 2000</CharCount>
             <ButtonGroup>
               <CancelButton onClick={onClose} disabled={loading}>
                 Cancel

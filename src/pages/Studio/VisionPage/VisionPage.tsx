@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef, DragEvent, ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useVisionPlan, SocialVideoContext, saveVisionMeta, readVisionMeta, VisionPlan } from '@hooks/useVisionPlan';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useVisionPlan, SocialVideoContext, saveVisionMeta, readVisionMeta, VisionPlan, fetchVisionPlanVersion } from '@hooks/useVisionPlan';
 import { saveLocalStatus } from '@hooks/useVisionHistory';
 
 import VisionBackground from '@components/Studio/VisionCreator/VisionBackground/VisionBackground';
 import VisionHeader from '@components/Studio/VisionCreator/VisionHeader/VisionHeader';
 import PromptBox, { FileAtt } from '@components/Studio/VisionCreator/PromptBox/PromptBox';
 import PlanningView from '@components/Studio/VisionCreator/PlanningView/PlanningView';
-import ReadyView from '@components/Studio/VisionCreator/ReadyView/ReadyView';
-import ReadyViewV2 from '@components/Studio/VisionCreator/ReadyViewV2/ReadyViewV2';
-import ReadyViewV3 from '@components/Studio/VisionCreator/ReadyViewV3/ReadyViewV3';
+import ReadyViewV2 from '@/components/Studio/VisionCreator/ReadyView/ReadyView';
 import ConfirmDialog from '@components/Studio/VisionCreator/ConfirmDialog/ConfirmDialog';
 import PlanHistoryPanel from '@components/Studio/VisionCreator/PlanHistoryPanel/PlanHistoryPanel';
 import { PlanStatus } from '@components/Studio/VisionCreator/PlanHistoryPanel/PlanHistoryPanel';
@@ -23,8 +21,10 @@ import {
 type ConfirmAction = 'back' | 'delete' | null;
 
 const VisionPage: React.FC = () => {
-  const { isLoading, isPolling, isUpdating, isExecuting, error: apiError, plan, generatePlan, updatePlan, executePlan, reset } = useVisionPlan();
+  const { isLoading, isPolling, isUpdating, isExecuting, error: apiError, plan, planUuid, generatePlan, updatePlanWithPrompt, updatePlan, executePlan, directExecute, reset } = useVisionPlan();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { planUuid: urlPlanUuid } = useParams<{ planUuid?: string }>();
 
   const _savedMeta = readVisionMeta();
   const [prompt,       setPrompt]       = useState(_savedMeta?.prompt ?? '');
@@ -38,14 +38,14 @@ const VisionPage: React.FC = () => {
   const [socialVideo,  setSocialVideo]  = useState<SocialVideoContext | null>(null);
   const [quickMode,    setQuickMode]    = useState(false);
   const [duration,     setDuration]     = useState<'snappy'|'standard'|'extended'|'comprehensive'>(_savedMeta?.duration as any ?? 'standard');
-  const [autoMode,     setAutoMode]     = useState(false);
-  const [frozenPlan, setFrozenPlan] = useState<VisionPlan | null>(null);
+  const [autoMode,      setAutoMode]      = useState(false);
+  const [frozenPlan,    setFrozenPlan]    = useState<VisionPlan | null>(null);
+  const [updatePrompt,  setUpdatePrompt]  = useState('');
+  const [updateFocused, setUpdateFocused] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
-  const [planView, setPlanView] = useState<'v1'|'v2'|'v3'>(() =>
-    (localStorage.getItem('vision_plan_view') as 'v1'|'v2'|'v3') ?? 'v1'
-  );
   const [historyDetailPlan,   setHistoryDetailPlan]   = useState<VisionPlan | null>(null);
   const [historyDetailStatus, setHistoryDetailStatus] = useState<PlanStatus>('done');
+  const [isSidebarResizing, setIsSidebarResizing] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
     localStorage.getItem('vision_sidebar_collapsed') === 'true'
   );
@@ -55,13 +55,34 @@ const VisionPage: React.FC = () => {
     return Math.min(SIDEBAR_W_MAX, Math.max(SIDEBAR_W_MIN, saved));
   });
 
-  useEffect(() => { localStorage.setItem('vision_plan_view', planView); }, [planView]);
   useEffect(() => {
     localStorage.setItem('vision_sidebar_collapsed', String(sidebarCollapsed));
   }, [sidebarCollapsed]);
   useEffect(() => {
     localStorage.setItem('vision_sidebar_width', String(sidebarWidth));
   }, [sidebarWidth]);
+
+  // Deep-link: load plan from URL param on mount
+  useEffect(() => {
+    if (!urlPlanUuid) return;
+    fetchVisionPlanVersion(urlPlanUuid).then(loaded => {
+      if (loaded) {
+        setHistoryDetailPlan(loaded);
+        setHistoryDetailStatus(loaded.mediaContentUuid ? 'done' : 'draft');
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync URL to the currently viewed plan UUID
+  useEffect(() => {
+    const shownUuid = historyDetailPlan?.planUuid ?? plan?.planUuid ?? planUuid ?? null;
+    const targetPath = shownUuid ? `/studio/vision/${shownUuid}` : '/studio/vision';
+    if (location.pathname !== targetPath) {
+      navigate(targetPath, { replace: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyDetailPlan?.planUuid, plan?.planUuid, planUuid]);
 
   const sidebarW = sidebarCollapsed ? SIDEBAR_W_COLLAPSED : sidebarWidth;
 
@@ -75,6 +96,7 @@ const VisionPage: React.FC = () => {
   const showReady        = (!!plan && !isBusy && !quickMode) || isRegenerating;
   const showIdle         = !plan && !isBusy && !quickMode && !frozenPlan;
   const planToShow       = plan ?? frozenPlan;
+  const showSidebar      = showIdle || showReady;
 
   useEffect(() => {
     if (isPolling) {
@@ -119,9 +141,11 @@ const VisionPage: React.FC = () => {
     setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     setTimeout(() => setRipple(null), 600);
     saveVisionMeta({ prompt, withCaptions, duration: duration ?? 'standard' });
-    setQuickMode(true);
-    if (plan) setFrozenPlan(plan);
-    await generatePlan(prompt, { withCaptions, durationLevel: duration ?? 'standard', socialVideo: socialVideo ?? undefined });
+    const ok = await directExecute(prompt, { withCaptions, durationLevel: duration ?? 'standard', socialVideo: socialVideo ?? undefined });
+    if (ok) {
+      reset();
+      navigate('/studio');
+    }
   };
 
   useEffect(() => {
@@ -175,7 +199,30 @@ const VisionPage: React.FC = () => {
     setConfirmAction(null);
   };
 
-  const renderPromptBox = (minimalist = false) => (
+  const handleUpdateSend = async (_e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!updatePrompt.trim() || isBusy) return;
+    const currentPlanUuid = plan?.planUuid ?? historyDetailPlan?.planUuid;
+    if (!currentPlanUuid) return;
+    if (plan) setFrozenPlan(plan);
+    await updatePlanWithPrompt(currentPlanUuid, updatePrompt);
+    setUpdatePrompt('');
+  };
+
+  const renderPromptBox = (minimalist = false) => minimalist ? (
+    <PromptBox
+      prompt={updatePrompt} setPrompt={setUpdatePrompt}
+      focused={updateFocused} setFocused={setUpdateFocused}
+      dragging={false} files={[]} setFiles={() => {}}
+      handleSend={handleUpdateSend} handleQuickSend={handleUpdateSend}
+      isReady={updatePrompt.trim().length > 0} isBusy={isBusy} isLoading={isLoading} isPolling={isPolling}
+      ripple={null} fileRef={fileRef} showReady={showReady}
+      withCaptions={withCaptions} setWithCaptions={setWithCaptions}
+      socialVideo={socialVideo} setSocialVideo={setSocialVideo}
+      duration={duration} setDuration={setDuration}
+      autoMode={autoMode} setAutoMode={setAutoMode}
+      minimalist
+    />
+  ) : (
     <PromptBox
       prompt={prompt} setPrompt={setPrompt}
       focused={focused} setFocused={setFocused}
@@ -187,38 +234,41 @@ const VisionPage: React.FC = () => {
       socialVideo={socialVideo} setSocialVideo={setSocialVideo}
       duration={duration} setDuration={setDuration}
       autoMode={autoMode} setAutoMode={setAutoMode}
-      minimalist={minimalist}
+      minimalist={false}
     />
   );
 
   return (
     <>
-      {/* ── Sidebar — only visible in idle/start view ── */}
-      {showIdle && (
+      {/* ── Sidebar — visible in idle/start view and ready/plan view ── */}
+      {showSidebar && (
         <PlanHistoryPanel
           collapsed={sidebarCollapsed}
           width={sidebarWidth}
           onResize={setSidebarWidth}
           onToggle={() => setSidebarCollapsed(v => !v)}
           onPlanSelect={(p, status) => {
+            if (showReady) reset();
             setHistoryDetailPlan(p);
             setHistoryDetailStatus(status);
             if (window.innerWidth <= 768) setSidebarCollapsed(true);
           }}
           onPlanDeselect={() => setHistoryDetailPlan(null)}
           activePlanUuid={historyDetailPlan?.planUuid}
+          onResizingChange={setIsSidebarResizing}
         />
       )}
 
       {/* ── Main content area — offset by sidebar width ── */}
       <VisionContainer
-        style={{ left: showIdle ? sidebarW : 0, '--sidebar-w': showIdle ? `${sidebarW}px` : '0px' } as React.CSSProperties}
+        $noTransition={isSidebarResizing}
+        style={{ left: showSidebar ? sidebarW : 0, '--sidebar-w': showSidebar ? `${sidebarW}px` : '0px' } as React.CSSProperties}
         onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
       >
         {/* Fixed logo + back btn — only when ReadyViewV2 is NOT handling the top bar */}
         {!showReady && !historyDetailPlan && (
           <>
-            <LogoMark href="/">EZpresence</LogoMark>
+            <LogoMark href="/" $noTransition={isSidebarResizing}>EZpresence</LogoMark>
             <BackBtn onClick={handleBackClick}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6" />
@@ -265,15 +315,7 @@ const VisionPage: React.FC = () => {
         )}
 
         {/* ── READY ── */}
-        {showReady && planToShow && planView === 'v1' && (
-          <ReadyView
-            plan={planToShow} updatePlan={updatePlan} executePlan={handleExecutePlan}
-            isUpdating={isUpdating} isExecuting={isExecuting} apiError={apiError}
-            promptBoxSlot={renderPromptBox(true)}
-            onRequestDelete={() => setConfirmAction('delete')}
-          />
-        )}
-        {showReady && planToShow && planView === 'v2' && (
+        {showReady && planToShow && (
           <ReadyViewV2
             plan={planToShow} updatePlan={updatePlan} executePlan={handleExecutePlan}
             isUpdating={isUpdating} isExecuting={isExecuting} isRegenerating={isRegenerating}
@@ -281,16 +323,6 @@ const VisionPage: React.FC = () => {
             promptBoxSlot={renderPromptBox(true)}
             onRequestDelete={() => setConfirmAction('delete')}
             onBack={handleBackClick}
-            planView={planView}
-            onPlanViewChange={setPlanView}
-          />
-        )}
-        {showReady && planToShow && planView === 'v3' && (
-          <ReadyViewV3
-            plan={planToShow} updatePlan={updatePlan} executePlan={handleExecutePlan}
-            isUpdating={isUpdating} isExecuting={isExecuting} apiError={apiError}
-            promptBoxSlot={renderPromptBox(true)}
-            onRequestDelete={() => setConfirmAction('delete')}
           />
         )}
 

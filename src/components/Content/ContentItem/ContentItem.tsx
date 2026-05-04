@@ -306,15 +306,6 @@ const ContentItem: React.FC<ContentItemProps> = ({
               >
                 <span>✏️</span> Rename
               </MenuItem>
-              <MenuItem
-                $variant="delete"
-                $isHovered={hoveredBtn === 'delete'}
-                onClick={handleDelete}
-                onMouseEnter={() => setHoveredBtn('delete')}
-                onMouseLeave={() => setHoveredBtn(null)}
-              >
-                <span>🗑️</span> Delete
-              </MenuItem>
               {item.isEzGenerated && (
                 <MenuItem
                   $variant="report"
@@ -326,6 +317,15 @@ const ContentItem: React.FC<ContentItemProps> = ({
                   <span>⚠️</span> Report
                 </MenuItem>
               )}
+              <MenuItem
+                $variant="delete"
+                $isHovered={hoveredBtn === 'delete'}
+                onClick={handleDelete}
+                onMouseEnter={() => setHoveredBtn('delete')}
+                onMouseLeave={() => setHoveredBtn(null)}
+              >
+                <span>🗑️</span> Delete
+              </MenuItem>
             </MenuDropdown>
           )}
 
