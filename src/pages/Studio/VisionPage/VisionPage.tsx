@@ -14,9 +14,10 @@ import { PlanStatus } from '@components/Studio/VisionCreator/PlanHistoryPanel/Pl
 import { SIDEBAR_W_OPEN, SIDEBAR_W_COLLAPSED, SIDEBAR_W_MIN, SIDEBAR_W_MAX } from '@components/Studio/VisionCreator/PlanHistoryPanel/styles';
 
 import {
-  VisionContainer, BackBtn, BackBtnLabel, BackBtnAccent,
+  VisionContainer, TopRightGroup, BackBtn, BackBtnLabel, BackBtnAccent,
   LogoMark, ContentWrapper, Banner,
 } from './styles';
+import ThemeToggle from '@components/Common/ThemeToggle/ThemeToggle';
 
 type ConfirmAction = 'back' | 'delete' | null;
 
@@ -45,19 +46,17 @@ const VisionPage: React.FC = () => {
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [historyDetailPlan,   setHistoryDetailPlan]   = useState<VisionPlan | null>(null);
   const [historyDetailStatus, setHistoryDetailStatus] = useState<PlanStatus>('done');
+  // When the user browses history while a plan is being generated
+  const [planningHistoryView, setPlanningHistoryView] = useState<VisionPlan | null>(null);
   const [isSidebarResizing, setIsSidebarResizing] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
-    localStorage.getItem('vision_sidebar_collapsed') === 'true'
-  );
+  // Plans panel always starts collapsed when the Vision page opens.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
     const saved = parseInt(localStorage.getItem('vision_sidebar_width') || '', 10);
     if (!Number.isFinite(saved)) return SIDEBAR_W_OPEN;
     return Math.min(SIDEBAR_W_MAX, Math.max(SIDEBAR_W_MIN, saved));
   });
 
-  useEffect(() => {
-    localStorage.setItem('vision_sidebar_collapsed', String(sidebarCollapsed));
-  }, [sidebarCollapsed]);
   useEffect(() => {
     localStorage.setItem('vision_sidebar_width', String(sidebarWidth));
   }, [sidebarWidth]);
@@ -84,7 +83,19 @@ const VisionPage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historyDetailPlan?.planUuid, plan?.planUuid, planUuid]);
 
-  const sidebarW = sidebarCollapsed ? SIDEBAR_W_COLLAPSED : sidebarWidth;
+  // Track viewport width so the sidebar offset stays in sync with the
+  // mobile width cap applied in PlanHistoryPanel styles.
+  const [vw, setVw] = useState<number>(() => typeof window === 'undefined' ? 1024 : window.innerWidth);
+  useEffect(() => {
+    const onResize = () => setVw(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const isMobileViewport = vw <= 768;
+  const sidebarW = sidebarCollapsed
+    ? SIDEBAR_W_COLLAPSED
+    : (isMobileViewport ? Math.min(sidebarWidth, Math.round(vw * 0.55)) : sidebarWidth);
 
   const planTimerRef = useRef<ReturnType<typeof setInterval>|null>(null);
   const fileRef      = useRef<HTMLInputElement>(null);
@@ -96,7 +107,9 @@ const VisionPage: React.FC = () => {
   const showReady        = (!!plan && !isBusy && !quickMode) || isRegenerating;
   const showIdle         = !plan && !isBusy && !quickMode && !frozenPlan;
   const planToShow       = plan ?? frozenPlan;
-  const showSidebar      = showIdle || showReady;
+  const showSidebar      = showIdle || showReady || showPlanning;
+  // Truncated prompt for the sidebar label during planning
+  const planningLabel    = showPlanning ? (prompt.trim().slice(0, 60) || 'New Plan') : null;
 
   useEffect(() => {
     if (isPolling) {
@@ -109,7 +122,11 @@ const VisionPage: React.FC = () => {
   }, [isPolling]);
 
   useEffect(() => {
-    if (plan) setFrozenPlan(null);
+    if (plan) {
+      setFrozenPlan(null);
+      // If user was browsing history during planning, clear that view
+      setPlanningHistoryView(null);
+    }
   }, [plan]);
 
   const onDragOver  = (e: DragEvent) => { e.preventDefault(); setDragging(true); };
@@ -240,41 +257,59 @@ const VisionPage: React.FC = () => {
 
   return (
     <>
-      {/* ── Sidebar — visible in idle/start view and ready/plan view ── */}
+      {/* ── Sidebar — visible in idle/start view, ready/plan view, AND planning ── */}
       {showSidebar && (
         <PlanHistoryPanel
           collapsed={sidebarCollapsed}
-          width={sidebarWidth}
+          width={isMobileViewport ? Math.min(sidebarWidth, Math.round(vw * 0.55)) : sidebarWidth}
           onResize={setSidebarWidth}
           onToggle={() => setSidebarCollapsed(v => !v)}
           onPlanSelect={(p, status) => {
-            if (showReady) reset();
-            setHistoryDetailPlan(p);
-            setHistoryDetailStatus(status);
+            if (showPlanning) {
+              // During planning: preview history without leaving the planning state
+              setPlanningHistoryView(p);
+            } else {
+              if (showReady) reset();
+              setHistoryDetailPlan(p);
+              setHistoryDetailStatus(status);
+            }
             if (window.innerWidth <= 768) setSidebarCollapsed(true);
           }}
-          onPlanDeselect={() => setHistoryDetailPlan(null)}
-          activePlanUuid={historyDetailPlan?.planUuid}
+          onPlanDeselect={() => {
+            setHistoryDetailPlan(null);
+            setPlanningHistoryView(null);
+          }}
+          activePlanUuid={showPlanning ? undefined : historyDetailPlan?.planUuid}
+          activePlanInProgress={planningLabel}
+          isViewingHistory={showPlanning && !!planningHistoryView}
+          onCurrentPlanSelect={() => setPlanningHistoryView(null)}
           onResizingChange={setIsSidebarResizing}
         />
       )}
 
-      {/* ── Main content area — offset by sidebar width ── */}
+      {/* ── Main content area — offset by sidebar only when idle/ready.
+           During pure planning the sidebar overlays on top so content stays centred. */}
       <VisionContainer
         $noTransition={isSidebarResizing}
-        style={{ left: showSidebar ? sidebarW : 0, '--sidebar-w': showSidebar ? `${sidebarW}px` : '0px' } as React.CSSProperties}
+        style={{
+          left: (showSidebar && !showPlanning) ? `${sidebarW}px` : 0,
+          '--sidebar-w': showSidebar ? `${sidebarW}px` : '0px',
+        } as React.CSSProperties}
         onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
       >
         {/* Fixed logo + back btn — only when ReadyViewV2 is NOT handling the top bar */}
-        {!showReady && !historyDetailPlan && (
+        {!showReady && !historyDetailPlan && !planningHistoryView && (
           <>
             <LogoMark href="/" $noTransition={isSidebarResizing}>EZpresence</LogoMark>
-            <BackBtn onClick={handleBackClick}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-              <BackBtnLabel>Back to <BackBtnAccent>Studio</BackBtnAccent></BackBtnLabel>
-            </BackBtn>
+            <TopRightGroup>
+              <ThemeToggle />
+              <BackBtn onClick={handleBackClick}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                <BackBtnLabel>Back to <BackBtnAccent>Studio</BackBtnAccent></BackBtnLabel>
+              </BackBtn>
+            </TopRightGroup>
           </>
         )}
 
@@ -306,11 +341,28 @@ const VisionPage: React.FC = () => {
         )}
 
         {/* ── PLANNING ── */}
-        {showPlanning && (
+        {showPlanning && !planningHistoryView && (
           <PlanningView
             isLoading={isLoading}
             planElapsed={planElapsed}
             planLeaving={planLeaving}
+          />
+        )}
+
+        {/* ── HISTORY PREVIEW DURING PLANNING ── */}
+        {showPlanning && planningHistoryView && (
+          <ReadyViewV2
+            plan={planningHistoryView}
+            updatePlan={updatePlan}
+            executePlan={handleExecutePlan}
+            isUpdating={isUpdating}
+            isExecuting={isExecuting}
+            isRegenerating={false}
+            apiError={null}
+            readonly={true}
+            backLabel="Back to Your Plan"
+            onRequestDelete={() => setPlanningHistoryView(null)}
+            onBack={() => setPlanningHistoryView(null)}
           />
         )}
 

@@ -156,7 +156,7 @@ export const styles: Record<string, CSSProperties> = {
 
     grid: {
         flex: 1,
-        padding: '24px',
+        padding: '24px 24px 40px 24px',
         overflowY: 'auto' as const,
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',

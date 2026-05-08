@@ -145,6 +145,10 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
         setIsOpen(false);
         setSearchTerm('');
         break;
+      case 'Tab':
+        setIsOpen(false);
+        setSearchTerm('');
+        break;
     }
   };
 
@@ -169,38 +173,26 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
         tabIndex={0}
         onClick={() => {
           setIsOpen(true);
+          setSearchTerm('');
           setTimeout(() => inputRef.current?.focus(), 0);
         }}
         onFocus={() => {
           setIsOpen(true);
+          setSearchTerm('');
           setTimeout(() => inputRef.current?.focus(), 0);
         }}
       >
-        {selectedCountry && !isOpen ? (
-          <div style={styles.selectedValue}>
-            <span style={styles.countryName}>{selectedCountry.name}</span>
-            <img
-              src={getFlagUrl(selectedCountry.code)}
-              alt={selectedCountry.name}
-              style={styles.flagImage}
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          </div>
-        ) : (
-          <input
-            ref={inputRef}
-            type="text"
-            tabIndex={-1}
-            style={styles.searchInput}
-            placeholder="Select a country"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setIsOpen(true)}
-          />
-        )}
+        <input
+          ref={inputRef}
+          type="text"
+          tabIndex={-1}
+          style={styles.searchInput}
+          placeholder="Select a country"
+          value={isOpen ? searchTerm : (selectedCountry?.name || '')}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setIsOpen(true)}
+        />
       </div>
 
       {isOpen && (
@@ -220,6 +212,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
                     // Updated: Check equality by code
                     ...(country.code === value ? styles.optionSelected : {}),
                   }}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSelect(country)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                 >

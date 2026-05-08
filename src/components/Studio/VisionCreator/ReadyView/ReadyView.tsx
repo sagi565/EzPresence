@@ -2,22 +2,24 @@ import React, { useState, useEffect, useRef } from 'react';
 import { VisionPlan, fetchVisionPlanVersion } from '@hooks/useVisionPlan';
 import { useContentUrl } from '@hooks/contents/useContentUrl';
 import { BackBtn, BackBtnLabel, BackBtnAccent } from '@pages/Studio/VisionPage/styles';
+import ThemeToggle from '@components/Common/ThemeToggle/ThemeToggle';
 import AudioPickerPanel from '@components/Studio/VisionCreator/AudioPickerPanel/AudioPickerPanel';
 import {
   ConsoleWrapper, TopBar, TopBarLogo, TopBarDivider,
   TopBarTitle, TopBarMeta, TypeBadge, CategoryChip, SplitPane,
-  Sidebar, SidebarSection, SidebarLabel, NavItem, NavIcon, NavLabel,
+  Sidebar, SidebarSection, SidebarLabel, SidebarLabelRow, SidebarPlanTitle, SidebarModeText, NavItem, NavIcon, NavLabel,
   SidebarDivider, SceneCountLabel, SceneTile, SceneTileNum, SceneTileInfo,
   SceneTilePrompt, DurationChip,
   ContentPanel, ContentInner, SectionHeading, HeadingIcon, HeadingText, HeadingSubtext,
   FieldCard, FieldLabel, ReadOnlyText, ReadOnlyPlaceholder,
-  VoiceSection, GenderDisplay, GenderBadge, GenderIcon,
+  VoiceSection, GenderDisplay, GenderBadge, GenderIcon, GenderChip,
   SceneTabs, SceneTab, SceneFieldGroup,
   TimelineWrapper, TimelineTrack, TimelineSegment, TimelineDot,
   TimelineSegmentLabel, TimelineSegmentDur, TimelineEndDot, TimelineTotalLabel,
   BottomBarOuter, BottomNavArrow, BottomBar, BottomActionRow,
   PromptSlotWrap, StatusText, GenerateBtn, BtnSpinner, RegeneratingOverlay, VersionLoadOverlay,
   VideoPanelWrap, VideoPanelLabel, VideoWrap, MinimalistVideo, VideoSpinnerWrap, VideoEmptyMsg,
+  VideoSkeletonPlay, VideoSkeletonLabel, VideoSkeletonBar, HideOnMobile,
 } from './styles';
 
 function detectSocialPlatform(url: string): 'youtube' | 'instagram' | 'tiktok' | 'facebook' {
@@ -49,7 +51,7 @@ type SectionId = 'visual' | 'music' | 'voice' | 'scenes';
 const SECTION_META: Record<SectionId, { icon: string; label: string; color: string; subtext: string }> = {
   visual: { icon: '🎬', label: 'Visual Style', color: '#9b5de5', subtext: 'How the video looks and feels' },
   music:  { icon: '🎵', label: 'Music',        color: '#14b8a6', subtext: 'Music composition and mood' },
-  voice:  { icon: '🎤', label: 'Voice',        color: '#ec4899', subtext: 'Narration style and gender' },
+  voice:  { icon: '🎤', label: 'Narrator',     color: '#ec4899', subtext: 'Narration style and gender' },
   scenes: { icon: '🗨',  label: 'Scenes',       color: '#f59e0b', subtext: 'Individual scene details' },
 };
 
@@ -120,12 +122,13 @@ interface ReadyViewV2Props {
   onRequestDelete: () => void;
   readonly?: boolean;
   onBack?: () => void;
+  backLabel?: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
   plan: originalPlan, executePlan, isExecuting, isRegenerating = false, promptBoxSlot, readonly = false,
-  onBack,
+  onBack, backLabel,
 }) => {
   const lastVersion = originalPlan.lastVersionNumber ?? originalPlan.version ?? 1;
   const [currentVersion, setCurrentVersion] = useState<number>(lastVersion);
@@ -157,6 +160,7 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
     setActiveSceneIdx(0);
     setViewedPlan(originalPlan);
     setCurrentVersion(originalPlan.lastVersionNumber ?? originalPlan.version ?? 1);
+    setHasMusicBeenViewed(activeSection === 'music');
     if (isSpeechless && activeSection === 'voice') {
       setActiveSection('visual');
     }
@@ -200,6 +204,7 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
   const safeSceneIdx = Math.min(activeSceneIdx, Math.max(0, scenes.length - 1));
   const activeScene = scenes[safeSceneIdx];
 
+
   const navSections: SectionId[] = isSpeechless
     ? ['visual', 'music']
     : ['visual', 'music', 'voice'];
@@ -218,16 +223,22 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
       {/* ── Top Bar ── */}
       <TopBar>
         <TopBarLogo href="/">EZpresence</TopBarLogo>
-        <TopBarDivider />
-        <TopBarTitle>{plan.clipTitle || 'Untitled Vision'}</TopBarTitle>
-        {onBack && (
-          <BackBtn onClick={onBack} style={{ position: 'relative', top: 'auto', right: 'auto', flexShrink: 0 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            <BackBtnLabel>Back to <BackBtnAccent>Studio</BackBtnAccent></BackBtnLabel>
-          </BackBtn>
-        )}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <ThemeToggle />
+          {onBack && (
+            <HideOnMobile>
+              <BackBtn onClick={onBack} style={{ position: 'relative', top: 'auto', right: 'auto', flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                {backLabel
+                  ? <BackBtnLabel>{backLabel}</BackBtnLabel>
+                  : <BackBtnLabel>Back to <BackBtnAccent>Studio</BackBtnAccent></BackBtnLabel>
+                }
+              </BackBtn>
+            </HideOnMobile>
+          )}
+        </div>
       </TopBar>
 
       {/* ── Split Pane ── */}
@@ -235,13 +246,11 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
         {/* ── Sidebar ── */}
         <Sidebar>
           <SidebarSection>
-            <SidebarLabel>Director</SidebarLabel>
-            <div style={{ display: 'flex', gap: 6, padding: '4px 12px 8px', flexWrap: 'wrap' }}>
-              <TypeBadge $speechless={isSpeechless}>
-                {isSpeechless ? 'Speechless' : 'Narrated'}
-              </TypeBadge>
-              {plan.category && <CategoryChip>{plan.category}</CategoryChip>}
-            </div>
+            <SidebarPlanTitle>{plan.clipTitle || 'Untitled Vision'}</SidebarPlanTitle>
+            <SidebarLabelRow>
+              <SidebarLabel>Director</SidebarLabel>
+              {plan.category && <SidebarModeText>{plan.category}</SidebarModeText>}
+            </SidebarLabelRow>
             {navSections.map(id => {
               const meta = SECTION_META[id];
               return (
@@ -260,7 +269,7 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
             <SceneCountLabel>
               <span>Scenes</span>
             </SceneCountLabel>
-            {scenes.length > 0 && (
+            {scenes.length > 0 && scenes.some(s => s.sceneDuration) && (
               <div style={{ padding: '4px 12px 8px', pointerEvents: 'none' }}>
                 <SceneTimeline
                   scenes={scenes}
@@ -326,31 +335,33 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
                     <HeadingSubtext>{activeMeta.subtext}</HeadingSubtext>
                   </div>
                 </SectionHeading>
-                <FieldCard $color={activeMeta.color}>
-                  <FieldLabel>Music Direction</FieldLabel>
-                  <ReadOnlyText>
-                    {plan.clipMusicInstructions || <ReadOnlyPlaceholder>No music instructions defined</ReadOnlyPlaceholder>}
-                  </ReadOnlyText>
-                </FieldCard>
+                {plan.clipMusicInstructions && (
+                  <FieldCard $color={activeMeta.color}>
+                    <FieldLabel>Music Direction</FieldLabel>
+                    <ReadOnlyText>{plan.clipMusicInstructions}</ReadOnlyText>
+                  </FieldCard>
+                )}
               </>
             )}
-            {hasMusicBeenViewed && plan.socialMediaLink?.url && (plan.socialMediaLink.duration ?? 0) > 0 && (
+            {hasMusicBeenViewed && plan.socialMediaLink?.url && (
               <div style={{ display: activeSection === 'music' ? undefined : 'none' }}>
-                <AudioPickerPanel
-                  value={{
-                    platform: detectSocialPlatform(plan.socialMediaLink.url),
-                    url: plan.socialMediaLink.url,
-                    offsetSeconds: plan.socialMediaLink.offset ?? 0,
-                    durationSeconds: plan.socialMediaLink.duration!,
-                  }}
-                  onChange={() => {}}
-                  onClose={() => {}}
-                  minDurationSec={plan.socialMediaLink.duration!}
-                  maxDurationSec={plan.socialMediaLink.duration!}
-                  avgDurationSec={plan.socialMediaLink.duration!}
-                  readonly
-                  visible={activeSection === 'music'}
-                />
+                {(() => {
+                  const offsetSec = (plan.socialMediaLink.offsetMs ?? 0) / 1000;
+                  const durSec = (plan.socialMediaLink.durationMs ?? 0) / 1000;
+                  return (
+                    <AudioPickerPanel
+                      cacheKey={plan.planUuid}
+                      value={{ platform: detectSocialPlatform(plan.socialMediaLink.url!), url: plan.socialMediaLink.url!, offsetSeconds: offsetSec, durationSeconds: durSec }}
+                      onChange={() => {}}
+                      onClose={() => {}}
+                      minDurationSec={durSec}
+                      maxDurationSec={durSec}
+                      avgDurationSec={durSec}
+                      readonly
+                      visible={activeSection === 'music'}
+                    />
+                  );
+                })()}
               </div>
             )}
 
@@ -359,10 +370,15 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
               <>
                 <SectionHeading>
                   <HeadingIcon $color={activeMeta.color}>{activeMeta.icon}</HeadingIcon>
-                  <div>
+                  <div style={{ flex: 1 }}>
                     <HeadingText $color={activeMeta.color}>{activeMeta.label}</HeadingText>
                     <HeadingSubtext>{activeMeta.subtext}</HeadingSubtext>
                   </div>
+                  {plan.clipVoiceGender && (
+                    <GenderChip $gender={plan.clipVoiceGender}>
+                      {plan.clipVoiceGender === 'MALE' ? '♂ Male' : '♀ Female'}
+                    </GenderChip>
+                  )}
                 </SectionHeading>
                 <VoiceSection>
                   <FieldCard $color={activeMeta.color}>
@@ -370,19 +386,6 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
                     <ReadOnlyText>
                       {plan.clipVoiceInstructions || <ReadOnlyPlaceholder>No voice instructions defined</ReadOnlyPlaceholder>}
                     </ReadOnlyText>
-                  </FieldCard>
-                  <FieldCard $color={activeMeta.color}>
-                    <FieldLabel>Gender</FieldLabel>
-                    <GenderDisplay>
-                      <GenderBadge $active={plan.clipVoiceGender === 'MALE'} $gender="MALE">
-                        <GenderIcon>♂</GenderIcon>
-                        Male
-                      </GenderBadge>
-                      <GenderBadge $active={plan.clipVoiceGender === 'FEMALE'} $gender="FEMALE">
-                        <GenderIcon>♀</GenderIcon>
-                        Female
-                      </GenderBadge>
-                    </GenderDisplay>
                   </FieldCard>
                 </VoiceSection>
               </>
@@ -410,55 +413,26 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
                   </div>
                 </SectionHeading>
 
-                <SceneTabs>
-                  {scenes.map((_, i) => {
-                    const color = SCENE_COLORS[i % SCENE_COLORS.length];
-                    return (
-                      <SceneTab key={i} $active={safeSceneIdx === i} $color={color}
-                        onClick={() => setActiveSceneIdx(i)}>
-                        {i + 1}
-                      </SceneTab>
-                    );
-                  })}
-                </SceneTabs>
+
 
                 {activeScene && (() => {
                   const activeColor = SCENE_COLORS[safeSceneIdx % SCENE_COLORS.length];
-                  const isObjOffset = typeof activeScene.sceneOffsetFrame === 'object'
-                    && activeScene.sceneOffsetFrame !== null;
-                  const visualInstructions = isObjOffset
-                    ? activeScene.sceneOffsetFrame?.staticVisualInstructions || ''
-                    : typeof activeScene.sceneOffsetFrame === 'string'
-                      ? activeScene.sceneOffsetFrame : '';
 
                   return (
                     <SceneFieldGroup>
-                      {activeScene.sceneTitle && (
-                        <FieldCard $color={activeColor}>
-                          <FieldLabel>Title</FieldLabel>
-                          <ReadOnlyText>{activeScene.sceneTitle}</ReadOnlyText>
-                        </FieldCard>
-                      )}
                       {activeScene.sceneScriptSegment && (
                         <FieldCard $color={activeColor}>
-                          <FieldLabel>Script</FieldLabel>
+                          <FieldLabel>Script Segment</FieldLabel>
                           <ReadOnlyText $italic>
                             "{activeScene.sceneScriptSegment}"
                           </ReadOnlyText>
                         </FieldCard>
                       )}
 
-                      {(visualInstructions || isObjOffset) && (
-                        <FieldCard $color={activeColor}>
-                          <FieldLabel>Visual Setup</FieldLabel>
-                          <ReadOnlyText>
-                            {visualInstructions || <ReadOnlyPlaceholder>No visual setup defined</ReadOnlyPlaceholder>}
-                          </ReadOnlyText>
-                        </FieldCard>
-                      )}
+
 
                       <FieldCard $color={activeColor}>
-                        <FieldLabel>Generation Prompt</FieldLabel>
+                        <FieldLabel>Details</FieldLabel>
                         <ReadOnlyText>
                           {activeScene.sceneGenerationPrompt
                             || <ReadOnlyPlaceholder>No generation prompt defined</ReadOnlyPlaceholder>}
@@ -478,7 +452,11 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
           <VideoPanelWrap>
             <VideoWrap>
               {videoLoading && (
-                <VideoSpinnerWrap><BtnSpinner /></VideoSpinnerWrap>
+                <VideoSpinnerWrap aria-label="Loading video" role="status">
+                  <VideoSkeletonPlay aria-hidden="true" />
+                  <VideoSkeletonLabel>Loading preview</VideoSkeletonLabel>
+                  <VideoSkeletonBar aria-hidden="true" />
+                </VideoSpinnerWrap>
               )}
               {!videoLoading && videoUrl && (
                 <MinimalistVideo src={videoUrl} controls playsInline loop />
@@ -509,7 +487,7 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
               {promptBoxSlot && <PromptSlotWrap>{promptBoxSlot}</PromptSlotWrap>}
               {status && <StatusText>{status}</StatusText>}
               <GenerateBtn $loading={isExecuting} onClick={handleGenerate} disabled={isExecuting}>
-                {isExecuting ? <BtnSpinner /> : '▶'}
+                {isExecuting && <BtnSpinner />}
                 {isExecuting ? 'Generating…' : 'Generate Video'}
               </GenerateBtn>
             </BottomActionRow>

@@ -620,6 +620,33 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
             const isRecurring = !!formData.repeat.rruleText;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
+            const activePlatforms = getEnabledPlatforms(formData);
+
+            const platformOptions = {
+                instagramOptions: activePlatforms.includes('instagram') ? {
+                    caption: formData.platforms.instagram?.caption || null,
+                    altText: formData.platforms.instagram?.altText || null,
+                    shareToFeed: formData.platforms.instagram?.shareToFeed ?? null,
+                    locationId: formData.platforms.instagram?.location || null,
+                } : undefined,
+                youTubeOptions: activePlatforms.includes('youtube') ? {
+                    title: formData.platforms.youtube?.title || null,
+                    description: formData.platforms.youtube?.description || null,
+                    privacyLevel: formData.platforms.youtube?.privacyStatus || null,
+                    categoryId: formData.platforms.youtube?.categoryId || null,
+                    tags: formData.platforms.youtube?.tags || null,
+                    selfDeclaredMadeForKids: formData.platforms.youtube?.madeForKids ?? null,
+                    containsSyntheticMedia: formData.platforms.youtube?.syntheticMedia ?? null,
+                } : undefined,
+                tikTokOptions: activePlatforms.includes('tiktok') ? {
+                    title: formData.platforms.tiktok?.caption || null,
+                    privacyLevel: formData.platforms.tiktok?.privacyLevel || null,
+                    disableComments: formData.platforms.tiktok?.disableComments ?? false,
+                    disableDuet: formData.platforms.tiktok?.disableDuet ?? false,
+                    disableStitch: formData.platforms.tiktok?.disableStitch ?? false,
+                } : undefined,
+            };
+
             if (formData.calendarItemId) {
                 const updates: Partial<any> = {};
                 let dateOrTimeChanged = false;
@@ -644,9 +671,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                     updates.rruleText = newRruleText;
                 }
                 if (endDateStr) updates.endDate = endDateStr;
+                
+                Object.assign(updates, platformOptions);
                 await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: getEnabledPlatforms(formData), media: mediaType, title: formData.title || 'New Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft' });
+                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: activePlatforms, media: mediaType, title: formData.title || 'New Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft', ...platformOptions });
             }
             if (onSaveDraft) onSaveDraft(formData);
             onClose();
@@ -762,6 +791,32 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
             const isRecurring = !!formData.repeat.rruleText;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
+            
+            const platformOptions = {
+                instagramOptions: activePlatforms.includes('instagram') ? {
+                    caption: formData.platforms.instagram?.caption || null,
+                    altText: formData.platforms.instagram?.altText || null,
+                    shareToFeed: formData.platforms.instagram?.shareToFeed ?? null,
+                    locationId: formData.platforms.instagram?.location || null,
+                } : undefined,
+                youTubeOptions: activePlatforms.includes('youtube') ? {
+                    title: formData.platforms.youtube?.title || null,
+                    description: formData.platforms.youtube?.description || null,
+                    privacyLevel: formData.platforms.youtube?.privacyStatus || null,
+                    categoryId: formData.platforms.youtube?.categoryId || null,
+                    tags: formData.platforms.youtube?.tags || null,
+                    selfDeclaredMadeForKids: formData.platforms.youtube?.madeForKids ?? null,
+                    containsSyntheticMedia: formData.platforms.youtube?.syntheticMedia ?? null,
+                } : undefined,
+                tikTokOptions: activePlatforms.includes('tiktok') ? {
+                    title: formData.platforms.tiktok?.caption || null,
+                    privacyLevel: formData.platforms.tiktok?.privacyLevel || null,
+                    disableComments: formData.platforms.tiktok?.disableComments ?? false,
+                    disableDuet: formData.platforms.tiktok?.disableDuet ?? false,
+                    disableStitch: formData.platforms.tiktok?.disableStitch ?? false,
+                } : undefined,
+            };
+
             if (formData.calendarItemId) {
                 const updates: Partial<any> = {};
                 let dateOrTimeChanged = false;
@@ -791,9 +846,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
                 if (endDateStr) updates.endDate = endDateStr;
 
+                Object.assign(updates, platformOptions);
+
                 await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: activePlatforms, media: mediaType, title: formData.title || 'New Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending' });
+                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: activePlatforms, media: mediaType, title: formData.title || 'New Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending', ...platformOptions });
             }
             if (onScheduleProp) onScheduleProp(formData);
             if (!isReadOnly) onClose();

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Gender, GENDER_OPTIONS } from '@models/User';
 import { styles } from './styles';
 
@@ -16,34 +16,44 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({
   error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = GENDER_OPTIONS.find(opt => opt.value === value);
 
-  // Close dropdown when clicking outside
+  const filteredOptions = useMemo(() => {
+    if (!searchTerm.trim()) return GENDER_OPTIONS;
+    const term = searchTerm.toLowerCase();
+    return GENDER_OPTIONS.filter(opt => opt.label.toLowerCase().includes(term));
+  }, [searchTerm]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setSearchTerm('');
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (searchTerm) setHighlightedIndex(0);
+  }, [searchTerm]);
+
   const handleSelect = (genderValue: Gender) => {
     onChange(genderValue);
     setIsOpen(false);
+    setSearchTerm('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!isOpen) {
-      if (e.key === 'Enter' || e.key === 'ArrowDown' || e.key === ' ') {
+      if (e.key === 'Enter' || e.key === 'ArrowDown') {
         e.preventDefault();
         setIsOpen(true);
-        setHighlightedIndex(0);
       }
       return;
     }
@@ -52,7 +62,7 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({
       case 'ArrowDown':
         e.preventDefault();
         setHighlightedIndex(prev =>
-          prev < GENDER_OPTIONS.length - 1 ? prev + 1 : prev
+          prev < filteredOptions.length - 1 ? prev + 1 : prev
         );
         break;
       case 'ArrowUp':
@@ -60,14 +70,18 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({
         setHighlightedIndex(prev => (prev > 0 ? prev - 1 : 0));
         break;
       case 'Enter':
-      case ' ':
         e.preventDefault();
-        if (highlightedIndex >= 0 && GENDER_OPTIONS[highlightedIndex]) {
-          handleSelect(GENDER_OPTIONS[highlightedIndex].value);
+        if (filteredOptions[highlightedIndex]) {
+          handleSelect(filteredOptions[highlightedIndex].value);
         }
         break;
       case 'Escape':
         setIsOpen(false);
+        setSearchTerm('');
+        break;
+      case 'Tab':
+        setIsOpen(false);
+        setSearchTerm('');
         break;
     }
   };
@@ -76,11 +90,6 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({
     <div
       style={styles.container}
       ref={containerRef}
-      onBlur={(e) => {
-        if (!containerRef.current?.contains(e.relatedTarget as Node)) {
-          setIsOpen(false);
-        }
-      }}
     >
       <label style={styles.label}>{label}</label>
 
@@ -90,37 +99,58 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({
           ...(isOpen ? styles.selectBoxFocused : {}),
           ...(error ? { borderColor: '#ef4444' } : {}),
         }}
-        onClick={() => setIsOpen(!isOpen)}
-        onKeyDown={handleKeyDown}
-        tabIndex={0}
-        role="combobox"
-        aria-expanded={isOpen}
       >
-        <span style={selectedOption ? styles.selectedText : styles.placeholder}>
-          {selectedOption ? selectedOption.label : 'Select gender'}
-        </span>
+        <input
+          type="text"
+          tabIndex={0}
+          style={styles.searchInput}
+          placeholder="Select gender"
+          value={isOpen ? searchTerm : (selectedOption?.label || '')}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onClick={() => {
+            setIsOpen(true);
+            setSearchTerm('');
+          }}
+          onFocus={() => {
+            setIsOpen(true);
+            setSearchTerm('');
+          }}
+          onBlur={(e) => {
+            if (!containerRef.current?.contains(e.relatedTarget as Node)) {
+              setIsOpen(false);
+              setSearchTerm('');
+            }
+          }}
+          onKeyDown={handleKeyDown}
+        />
       </div>
 
       {isOpen && (
         <div style={styles.dropdown}>
           <div style={styles.dropdownList}>
-            {GENDER_OPTIONS.map((option, index) => (
-              <div
-                key={option.value}
-                style={{
-                  ...styles.option,
-                  ...(index === highlightedIndex ? styles.optionHighlighted : {}),
-                  ...(option.value === value ? styles.optionSelected : {}),
-                }}
-                onClick={() => handleSelect(option.value)}
-                onMouseEnter={() => setHighlightedIndex(index)}
-              >
-                {option.label}
-              </div>
-            ))}
+            {filteredOptions.length === 0 ? (
+              <div style={styles.noResults}>No results</div>
+            ) : (
+              filteredOptions.map((option, index) => (
+                <div
+                  key={option.value}
+                  style={{
+                    ...styles.option,
+                    ...(index === highlightedIndex ? styles.optionHighlighted : {}),
+                    ...(option.value === value ? styles.optionSelected : {}),
+                  }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSelect(option.value)}
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                >
+                  {option.label}
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
+
       {error && (
         <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
           {error}

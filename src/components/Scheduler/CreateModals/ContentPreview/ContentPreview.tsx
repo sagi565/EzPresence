@@ -151,112 +151,114 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     const showFilled  = hasValidContent && !isLoading;
 
     return (
-        <div
-            ref={divRef}
-            id={id}
-            className={classNames}
-            onClick={handleClick}
-        >
-            {/* ── Empty placeholder ──────────────────────────────────────────── */}
+        <div className="content-preview-shadow-wrapper" style={{ padding: '24px', margin: '-24px', width: '100%' }}>
             <div
-                className="nsm-content-placeholder"
-                style={{ display: hasValidContent ? 'none' : 'flex', pointerEvents: 'none' }}
+                ref={divRef}
+                id={id}
+                className={classNames}
+                onClick={handleClick}
             >
-                <span className="placeholder-icon">
-                    <Video size={32} strokeWidth={2.5} />
-                </span>
-                <span className="placeholder-text">{isDragOver ? 'Release to drop' : placeholderText}</span>
-            </div>
-
-            {/* ── Loading shimmer — shown until media fires onLoad / canplay ─── */}
-            {showShimmer && (
-                <div className="nsm-content-loading" style={{ pointerEvents: 'none' }}>
-                    <div
-                        className="nsm-shimmer-bar"
-                        style={{ width: '55%', height: '11px', borderRadius: '6px', marginBottom: '8px' }}
-                    />
-                    <div
-                        className="nsm-shimmer-bar"
-                        style={{ width: '38%', height: '9px', borderRadius: '6px' }}
-                    />
-                    <div className="nsm-loading-dots">
-                        <Loader2 size={32} strokeWidth={2.5} className="nsm-spin-icon" style={{ color: 'rgba(var(--color-primary-rgb, 155, 93, 229), 0.7)' }} />
-                    </div>
+                {/* ── Empty placeholder ──────────────────────────────────────────── */}
+                <div
+                    className="nsm-content-placeholder"
+                    style={{ display: hasValidContent ? 'none' : 'flex', pointerEvents: 'none' }}
+                >
+                    <span className="placeholder-icon">
+                        <Video size={32} strokeWidth={2.5} />
+                    </span>
+                    <span className="placeholder-text">{isDragOver ? 'Release to drop' : placeholderText}</span>
                 </div>
-            )}
 
-            {/* ── Filled content ─────────────────────────────────────────────── */}
-            <div
-                className="nsm-content-filled"
-                style={{
-                    display: showFilled ? 'flex' : 'none',
-                    backgroundImage: (!isVideo && thumbSrc) ? `url(${thumbSrc})` : 'none',
-                    backgroundColor:
-                        showFilled && !thumbSrc && !isVideo
-                            ? 'rgba(155, 93, 229, 0.08)'
-                            : 'transparent',
-                    pointerEvents: 'none',
-                    animation: mediaReady
-                        ? 'contentFadeIn 0.28s cubic-bezier(0.16,1,0.3,1) forwards'
-                        : 'none',
-                }}
-            >
-                {/* Hidden img fires onLoad so we know when the thumbnail is painted */}
-                {!isVideo && thumbSrc && (
-                    <img
-                        key={thumbSrc}
-                        src={thumbSrc}
-                        alt=""
-                        onLoad={handleMediaLoaded}
-                        onError={handleMediaLoaded}
-                        style={{ display: 'none' }}
-                    />
-                )}
-
-                {isVideo && videoUrl && (
-                    <video
-                        key={videoUrl}
-                        src={videoUrl}
-                        style={{
-                            position: 'absolute', inset: 0,
-                            width: '100%', height: '100%',
-                            objectFit: 'cover', zIndex: 1,
-                            pointerEvents: 'none',
-                        }}
-                        autoPlay muted loop playsInline
-                        onCanPlay={handleMediaLoaded}
-                    />
-                )}
-
-                {/* Emoji fallback when no media src */}
-                {!thumbSrc && !videoUrl && content && (
-                    <div
-                        style={{
-                            position: 'absolute', inset: 0,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '32px', zIndex: 1, opacity: 0.5, pointerEvents: 'none',
-                        }}
-                    >
-                        {isVideo ? '🎬' : '🖼️'}
+                {/* ── Loading shimmer — shown until media fires onLoad / canplay ─── */}
+                {showShimmer && (
+                    <div className="nsm-content-loading" style={{ pointerEvents: 'none' }}>
+                        <div
+                            className="nsm-shimmer-bar"
+                            style={{ width: '55%', height: '11px', borderRadius: '6px', marginBottom: '8px' }}
+                        />
+                        <div
+                            className="nsm-shimmer-bar"
+                            style={{ width: '38%', height: '9px', borderRadius: '6px' }}
+                        />
+                        <div className="nsm-loading-dots">
+                            <Loader2 size={32} strokeWidth={2.5} className="nsm-spin-icon" style={{ color: 'rgba(var(--color-primary-rgb, 155, 93, 229), 0.7)' }} />
+                        </div>
                     </div>
                 )}
 
-                <div className="filled-title" style={{ pointerEvents: 'none' }}>
-                    {content?.title}
+                {/* ── Filled content ─────────────────────────────────────────────── */}
+                <div
+                    className="nsm-content-filled"
+                    style={{
+                        display: showFilled ? 'flex' : 'none',
+                        backgroundImage: (!isVideo && thumbSrc) ? `url(${thumbSrc})` : 'none',
+                        backgroundColor:
+                            showFilled && !thumbSrc && !isVideo
+                                ? 'rgba(155, 93, 229, 0.08)'
+                                : 'transparent',
+                        pointerEvents: 'none',
+                        animation: mediaReady
+                            ? 'contentFadeIn 0.28s cubic-bezier(0.16,1,0.3,1) forwards'
+                            : 'none',
+                    }}
+                >
+                    {/* Hidden img fires onLoad so we know when the thumbnail is painted */}
+                    {!isVideo && thumbSrc && (
+                        <img
+                            key={thumbSrc}
+                            src={thumbSrc}
+                            alt=""
+                            onLoad={handleMediaLoaded}
+                            onError={handleMediaLoaded}
+                            style={{ display: 'none' }}
+                        />
+                    )}
+
+                    {isVideo && videoUrl && (
+                        <video
+                            key={videoUrl}
+                            src={videoUrl}
+                            style={{
+                                position: 'absolute', inset: 0,
+                                width: '100%', height: '100%',
+                                objectFit: 'cover', zIndex: 1,
+                                pointerEvents: 'none',
+                            }}
+                            autoPlay muted loop playsInline
+                            onCanPlay={handleMediaLoaded}
+                        />
+                    )}
+
+                    {/* Emoji fallback when no media src */}
+                    {!thumbSrc && !videoUrl && content && (
+                        <div
+                            style={{
+                                position: 'absolute', inset: 0,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '32px', zIndex: 1, opacity: 0.5, pointerEvents: 'none',
+                            }}
+                        >
+                            {isVideo ? '🎬' : '🖼️'}
+                        </div>
+                    )}
+
+                    <div className="filled-title" style={{ pointerEvents: 'none' }}>
+                        {content?.title}
+                    </div>
+
+
                 </div>
 
-
+                {/* ── Remove button ──────────────────────────────────────────────── */}
+                <button
+                    className="nsm-remove-content"
+                    style={{ display: showFilled ? 'flex' : 'none' }}
+                    onClick={(e) => { e.stopPropagation(); onRemove(e); }}
+                    title="Remove content"
+                >
+                    ✕
+                </button>
             </div>
-
-            {/* ── Remove button ──────────────────────────────────────────────── */}
-            <button
-                className="nsm-remove-content"
-                style={{ display: showFilled ? 'flex' : 'none' }}
-                onClick={(e) => { e.stopPropagation(); onRemove(e); }}
-                title="Remove content"
-            >
-                ✕
-            </button>
         </div>
     );
 };

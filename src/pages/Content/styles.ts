@@ -38,9 +38,11 @@ export const ContentArea = styled.div<{ $isDraggingList?: boolean; $isReorderScr
   scrollbar-width: thin;
   scrollbar-color: ${props => props.theme.colors.primary}33 transparent;
   padding-right: 100px;
+  padding-left: 100px;
 
   ${media.tablet} {
     padding-right: 0;
+    padding-left: 0;
   }
 
   &::-webkit-scrollbar {
@@ -61,8 +63,8 @@ export const ListSection = styled.div<{ $isDeleting?: boolean }>`
   scroll-snap-stop: always;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: 60px 48px 60px 80px;
+  justify-content: center;
+  padding: 60px 48px;
   flex-shrink: 0;
   position: relative;
   

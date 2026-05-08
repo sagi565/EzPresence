@@ -15,26 +15,40 @@ export const durationTwitch = keyframes`
 `;
 
 export const StyledPromptBox = styled.div<{$drag:boolean;$focus:boolean;$minimalist?:boolean}>`
-  width:100%;background:${p=>p.theme.colors.surface};
-  border-radius:${p=>p.$minimalist?'12px':'20px'};
-  border:1.5px solid ${p=>p.$drag?'rgba(139,92,246,.8)':p.$focus?'rgba(139,92,246,.38)':'rgba(139,92,246,.1)'};
-  position:relative;z-index:2;transition:border-color .35s ease,box-shadow .35s ease;
-  box-shadow:${p=>p.$drag?'0 0 0 4px rgba(139,92,246,.12),0 8px 32px rgba(139,92,246,.14)':p.$focus?'0 0 0 3px rgba(139,92,246,.08),0 6px 24px rgba(139,92,246,.10)':'0 0 0 0px rgba(139,92,246,0)'};
-  &:hover{box-shadow:0 0 0 3px rgba(139,92,246,.06),0 4px 16px rgba(139,92,246,.08);}
-  ${p=>p.$minimalist&&css`display:flex;flex-direction:row;align-items:center;`}
+  width:100%;
+  position:relative;z-index:2;
+  ${p=>p.$minimalist?css`
+    background:${p.theme.colors.surface};
+    border:none;
+    border-radius:14px;
+    box-shadow:0 2px 16px rgba(0,0,0,.06);
+    display:flex;flex-direction:row;align-items:center;
+    transition:box-shadow .25s ease;
+    &:focus-within{box-shadow:0 0 0 2px rgba(139,92,246,.18),0 4px 20px rgba(139,92,246,.10);}
+  `:css`
+    background:${p.theme.colors.surface};
+    border-radius:20px;
+    border:1.5px solid ${p.$drag?'rgba(139,92,246,.8)':p.$focus?'rgba(139,92,246,.38)':'rgba(139,92,246,.1)'};
+    transition:border-color .35s ease,box-shadow .35s ease;
+    box-shadow:${p.$drag?'0 0 0 4px rgba(139,92,246,.12),0 8px 32px rgba(139,92,246,.14)':p.$focus?'0 0 0 3px rgba(139,92,246,.08),0 6px 24px rgba(139,92,246,.10)':'0 0 0 0px rgba(139,92,246,0)'};
+    &:hover{box-shadow:0 0 0 3px rgba(139,92,246,.06),0 4px 16px rgba(139,92,246,.08);}
+  `}
 `;
 export const DragOverlay = styled.div<{$v:boolean}>`position:absolute;inset:0;z-index:10;border-radius:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(139,92,246,.05);backdrop-filter:blur(1px);border:1px solid rgba(139,92,246,.2);opacity:${p=>p.$v?1:0};pointer-events:none;transition:opacity .2s;`;
 export const TextareaWrap = styled.div<{$minimalist?:boolean}>`
-  padding:${p=>p.$minimalist?'8px 12px':'18px 18px 0'};
+  padding:${p=>p.$minimalist?'10px 12px':'18px 18px 0'};
   position:relative;
-  ${p=>p.$minimalist&&css`flex:1;min-width:0;align-self:stretch;display:flex;align-items:center;`}
+  ${p=>p.$minimalist&&css`flex:1;min-width:0;align-self:center;display:flex;align-items:center;`}
 `;
 export const Placeholder = styled.div<{$v:boolean;$minimalist?:boolean}>`
   position:absolute;
-  top:${p=>p.$minimalist?'50%':'18px'};
-  left:${p=>p.$minimalist?'12px':'18px'};
-  right:${p=>p.$minimalist?'12px':'18px'};
-  ${p=>p.$minimalist&&css`transform:translateY(-50%);`}
+  ${p=>p.$minimalist?css`
+    top:50%;left:0;right:0;
+    transform:translateY(-50%);
+    text-align:center;
+  `:css`
+    top:18px;left:18px;right:18px;
+  `}
   pointer-events:none;
   font-size:${p=>p.$minimalist?'14px':'15px'};
   line-height:1.6;
@@ -44,18 +58,31 @@ export const Placeholder = styled.div<{$v:boolean;$minimalist?:boolean}>`
 `;
 export const TwText = styled.span`color:${p=>p.theme.colors.muted};`;
 export const Cursor = styled.span`display:inline-block;width:2px;height:1em;background:#8b5cf6;margin-left:2px;vertical-align:text-bottom;border-radius:1px;animation:${blink} 1s step-end infinite;`;
-export const Textarea = styled.textarea<{$minimalist?:boolean}>`width:100%;min-height:${p=>p.$minimalist?'36px':'76px'};max-height:${p=>p.$minimalist?'36px':'200px'};background:transparent;border:none;outline:none;resize:none;font-size:${p=>p.$minimalist?'14px':'15px'};line-height:1.6;color:${p=>p.theme.colors.text};font-family:inherit;box-sizing:border-box;padding:0;caret-color:#8b5cf6;overflow-y:${p=>p.$minimalist?'hidden':'auto'};scrollbar-width:thin;scrollbar-color:rgba(139,92,246,.15) transparent;&::placeholder{color:transparent;}`;
+export const Textarea = styled.textarea<{$minimalist?:boolean}>`
+  width:100%;min-height:${p=>p.$minimalist?'24px':'76px'};max-height:${p=>p.$minimalist?'120px':'200px'};
+  background:transparent;border:none;outline:none;resize:none;
+  font-size:${p=>p.$minimalist?'14px':'15px'};line-height:1.6;
+  color:${p=>p.theme.colors.text};font-family:inherit;
+  box-sizing:border-box;padding:0;caret-color:#8b5cf6;
+  overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(139,92,246,.15) transparent;
+  ${p=>p.$minimalist&&css`
+    text-align:center;
+    &:focus{text-align:left;}
+  `}
+  &::placeholder{color:transparent;}
+`;
 export const AttachList = styled.div`display:flex;flex-wrap:wrap;gap:6px;padding:10px 18px 0;`;
 export const AttachChip = styled.div`display:inline-flex;align-items:center;gap:5px;padding:4px 9px 4px 7px;background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.16);border-radius:7px;font-size:11.5px;color:#8b5cf6;font-weight:500;max-width:200px;`;
 export const AttachName = styled.span`overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`;
 export const RemoveBtn = styled.button`background:none;border:none;cursor:pointer;padding:0;color:${p=>p.theme.colors.muted};font-size:16px;line-height:1;display:flex;align-items:center;flex-shrink:0;opacity:.5;&:hover{opacity:1;color:#8b5cf6;}`;
 export const Toolbar   = styled.div<{$minimalist?:boolean}>`
   display:flex;align-items:center;
-  padding:${p=>p.$minimalist?'8px 10px 8px 4px':'10px 13px'};
+  padding:${p=>p.$minimalist?'8px 10px':'10px 13px'};
   gap:6px;
   border-top:${p=>p.$minimalist?'none':`1px solid ${p.theme.colors.primaryLight}`};
   margin-top:${p=>p.$minimalist?'0':'10px'};
   flex-shrink:${p=>p.$minimalist?0:'unset'};
+  align-self:${p=>p.$minimalist?'center':'unset'};
   @media(max-width:480px){padding:8px 10px;gap:4px;}
 `;
 export const IconBtn   = styled.button<{$active?:boolean}>`display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;flex-shrink:0;border:1.5px solid ${p=>p.$active?'rgba(139,92,246,.4)':'rgba(139,92,246,.1)'};background:${p=>p.$active?'rgba(139,92,246,.1)':'transparent'};color:${p=>p.$active?'#8b5cf6':p.theme.colors.muted};cursor:pointer;transition:all .18s;&:hover{background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.3);color:#8b5cf6;}&.twitch{animation:${durationTwitch} .5s cubic-bezier(.36,.07,.19,.97) both;border-color:rgba(139,92,246,.55);background:rgba(139,92,246,.14);color:#8b5cf6;}@media(max-width:480px){width:29px;height:29px;border-radius:8px;}`;

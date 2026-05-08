@@ -281,6 +281,16 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
             const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
             const isRecurring = !!formData.repeat.rruleText;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
+            
+            const platformOptions = {
+                instagramOptions: selectedPlatforms.includes('instagram') ? {
+                    caption: formData.platforms.instagram?.caption || null,
+                    altText: formData.platforms.instagram?.altText || null,
+                    shareToFeed: formData.platforms.instagram?.shareToFeed ?? null,
+                    locationId: formData.platforms.instagram?.location || null,
+                } : undefined,
+            };
+
             if (formData.calendarItemId) {
                 const updates: Partial<any> = {};
                 let dateOrTimeChanged = false;
@@ -310,9 +320,11 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
 
                 if (endDateStr) updates.endDate = endDateStr;
 
+                Object.assign(updates, platformOptions);
+
                 await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, platforms: selectedPlatforms, media: mediaType, title: formData.title || formData.contentTitle || 'New Story', contentUuids: formData.contentId ? [formData.contentId] : undefined, type: 'Story', rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending' });
+                await createSchedule({ date: formData.date, time: formData.time, platforms: selectedPlatforms, media: mediaType, title: formData.title || formData.contentTitle || 'New Story', contentUuids: formData.contentId ? [formData.contentId] : undefined, type: 'Story', rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending', ...platformOptions });
             }
             if (onScheduleProp) onScheduleProp(formData);
             if (!isReadOnly) onClose();
@@ -330,6 +342,16 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
             const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
             const isRecurring = !!formData.repeat.rruleText;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
+            
+            const platformOptions = {
+                instagramOptions: selectedPlatforms.includes('instagram') ? {
+                    caption: formData.platforms.instagram?.caption || null,
+                    altText: formData.platforms.instagram?.altText || null,
+                    shareToFeed: formData.platforms.instagram?.shareToFeed ?? null,
+                    locationId: formData.platforms.instagram?.location || null,
+                } : undefined,
+            };
+
             if (formData.calendarItemId) {
                 const updates: Partial<any> = {};
                 let dateOrTimeChanged = false;
@@ -352,9 +374,11 @@ const NewStoryModal: React.FC<NewStoryModalProps> = ({
                     updates.rruleText = newRruleText;
                 }
                 if (endDateStr) updates.endDate = endDateStr;
+                
+                Object.assign(updates, platformOptions);
                 await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, platforms: selectedPlatforms, media: mediaType, title: formData.title || formData.contentTitle || 'New Story', contentUuids: formData.contentId ? [formData.contentId] : undefined, type: 'Story', rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft' });
+                await createSchedule({ date: formData.date, time: formData.time, platforms: selectedPlatforms, media: mediaType, title: formData.title || formData.contentTitle || 'New Story', contentUuids: formData.contentId ? [formData.contentId] : undefined, type: 'Story', rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft', ...platformOptions });
             }
             if (onSaveDraft) onSaveDraft(formData);
             onClose();

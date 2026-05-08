@@ -243,10 +243,34 @@ export const SidebarSection = styled.div`
 `;
 
 export const SidebarLabel = styled.div`
-  padding:0 16px 8px;
   font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
   color:${p=>p.theme.colors.muted};opacity:.5;
   @media (max-width:768px) { display:none; }
+`;
+
+export const SidebarLabelRow = styled.div`
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px 6px;
+  @media (max-width:768px) { display:none; }
+`;
+
+export const SidebarPlanTitle = styled.div`
+  padding:14px 16px 10px;
+  font-size:13px;font-weight:700;letter-spacing:-.2px;
+  color:${p=>p.theme.colors.text};
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  width:100%;
+  border-bottom:1px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)'};
+  @media (max-width:768px) { display:none; }
+`;
+
+export const SidebarModeText = styled.span`
+  padding:2px 9px;border-radius:999px;
+  background:rgba(251,191,36,.08);
+  border:1px solid rgba(251,191,36,.25);
+  font-size:10px;font-weight:700;letter-spacing:.02em;
+  color:#d97706;
+  white-space:nowrap;
 `;
 
 export const NavItem = styled.button<{$active:boolean;$color?:string}>`
@@ -380,24 +404,140 @@ export const VideoPanelLabel = styled.div`
   color:${p=>p.theme.colors.muted};padding:2px 0 4px;width:100%;
 `;
 
+/* VideoWrap is the single source of truth for the video box's footprint:
+   it locks a 9:16 social-video aspect so the loading skeleton, the empty-
+   state, and the loaded video all render in the exact same box — no
+   layout shift when the video swaps in. */
 export const VideoWrap = styled.div`
-  width:100%;border-radius:12px;overflow:hidden;
+  position:relative;
+  width:100%;
+  aspect-ratio:9/16;
+  border-radius:12px;
+  overflow:hidden;
   line-height:0;
   border:1px solid rgba(155,93,229,.12);
   box-shadow:0 4px 24px rgba(0,0,0,.22);
+  background:#000;
 `;
 
 export const MinimalistVideo = styled.video`
-  display:block;width:100%;height:auto;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:#000;
+  display:block;
+`;
+
+/* ── Loading skeleton ─────────────────────────────────────────────────────────
+   Sized to match the loaded video (full width, 9:16 vertical social aspect).
+   Layered shimmer + brand gradient + subtle UI hints (play badge, timeline). */
+const skeletonShimmer = keyframes`
+  0%   { transform:translateX(-120%); }
+  100% { transform:translateX(120%);  }
+`;
+const playPulse = keyframes`
+  0%,100% { transform:scale(1);   box-shadow:0 0 0 0    rgba(155,93,229,.45); }
+  50%     { transform:scale(1.06);box-shadow:0 0 0 14px rgba(155,93,229,0);   }
+`;
+const barGrow = keyframes`
+  0%   { width:8%;  opacity:.4; }
+  60%  { width:72%; opacity:.95; }
+  100% { width:8%;  opacity:.4; }
 `;
 
 export const VideoSpinnerWrap = styled.div`
-  height:180px;display:flex;align-items:center;justify-content:center;
+  position:relative;
+  width:100%;
+  aspect-ratio:9/16;
+  overflow:hidden;
+  background:${p=>p.theme.mode==='dark'
+    ? 'linear-gradient(135deg,#1a1726 0%,#0f0d18 60%,#1c1530 100%)'
+    : 'linear-gradient(135deg,#f4eefe 0%,#ece6fb 60%,#f7f0ff 100%)'};
+
+  /* moving shimmer overlay */
+  &::before {
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(
+      110deg,
+      transparent 20%,
+      ${p=>p.theme.mode==='dark' ? 'rgba(255,255,255,.06)' : 'rgba(255,255,255,.7)'} 45%,
+      ${p=>p.theme.mode==='dark' ? 'rgba(167,139,250,.10)' : 'rgba(155,93,229,.18)'} 50%,
+      ${p=>p.theme.mode==='dark' ? 'rgba(255,255,255,.06)' : 'rgba(255,255,255,.7)'} 55%,
+      transparent 80%
+    );
+    animation:${skeletonShimmer} 1.6s ease-in-out infinite;
+    pointer-events:none;
+  }
+
+  /* soft vignette so the play badge pops */
+  &::after {
+    content:'';
+    position:absolute; inset:0;
+    background:radial-gradient(
+      ellipse at center,
+      transparent 40%,
+      ${p=>p.theme.mode==='dark' ? 'rgba(0,0,0,.35)' : 'rgba(155,93,229,.08)'} 100%
+    );
+    pointer-events:none;
+  }
+`;
+
+export const VideoSkeletonPlay = styled.div`
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:64px; height:64px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#9b5de5 0%,#7c3aed 100%);
+  color:#fff;
+  box-shadow:0 8px 28px rgba(124,58,237,.4);
+  animation:${playPulse} 1.8s ease-in-out infinite;
+  z-index:2;
+  &::before {
+    content:'';
+    width:0; height:0;
+    border-left:14px solid #fff;
+    border-top:9px solid transparent;
+    border-bottom:9px solid transparent;
+    margin-left:4px;
+  }
+`;
+
+export const VideoSkeletonLabel = styled.div`
+  position:absolute;
+  left:0; right:0; bottom:36px;
+  text-align:center;
+  font-size:11.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:${p=>p.theme.mode==='dark' ? 'rgba(255,255,255,.78)' : 'rgba(124,58,237,.85)'};
+  z-index:2;
+  text-shadow:${p=>p.theme.mode==='dark' ? '0 1px 8px rgba(0,0,0,.5)' : 'none'};
+`;
+
+export const VideoSkeletonBar = styled.div`
+  position:absolute;
+  left:14px; right:14px; bottom:14px;
+  height:4px; border-radius:999px;
+  background:${p=>p.theme.mode==='dark' ? 'rgba(255,255,255,.12)' : 'rgba(155,93,229,.18)'};
+  overflow:hidden;
+  z-index:2;
+  &::after {
+    content:'';
+    position:absolute; left:0; top:0; bottom:0;
+    border-radius:inherit;
+    background:linear-gradient(90deg,#a78bfa,#7c3aed);
+    animation:${barGrow} 1.8s ease-in-out infinite;
+  }
 `;
 
 export const VideoEmptyMsg = styled.div`
+  width:100%;
+  aspect-ratio:9/16;
+  display:flex; align-items:center; justify-content:center;
   font-size:12px;color:${p=>p.theme.colors.muted};
-  text-align:center;padding:20px 0;opacity:.6;
+  text-align:center;padding:20px;opacity:.7;
+  background:${p=>p.theme.mode==='dark' ? 'rgba(255,255,255,.03)' : 'rgba(0,0,0,.02)'};
 `;
 
 export const ContentInner = styled.div`
@@ -483,6 +623,15 @@ export const GenderBadge = styled.div<{$active:boolean;$gender:string}>`
 
 export const GenderIcon = styled.span`
   font-size:20px;line-height:1;
+`;
+
+export const GenderChip = styled.div<{$gender:string}>`
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:999px;flex-shrink:0;
+  font-size:11.5px;font-weight:700;
+  background:${p=>p.$gender==='MALE'?'rgba(59,130,246,.08)':'rgba(236,72,153,.08)'};
+  border:1px solid ${p=>p.$gender==='MALE'?'rgba(59,130,246,.2)':'rgba(236,72,153,.2)'};
+  color:${p=>p.$gender==='MALE'?'#3b82f6':'#ec4899'};
 `;
 
 // ─── Scene panel ──────────────────────────────────────────────────────────────
@@ -576,9 +725,6 @@ export const PromptSlotWrap = styled.div`
   flex:1;min-width:0;
   & > div {
     margin-top:0 !important;
-    box-shadow:none !important;
-    border-color:${p=>p.theme.mode==='dark'?'rgba(139,92,246,.18)':'rgba(139,92,246,.15)'} !important;
-    &:hover { box-shadow: none !important; }
   }
 `;
 
@@ -638,4 +784,9 @@ export const BtnSpinner = styled.div`
   border:2px solid rgba(255,255,255,.3);
   border-top-color:white;border-radius:50%;
   animation:${spin} .65s linear infinite;
+`;
+
+export const HideOnMobile = styled.span`
+  display:contents;
+  @media (max-width:768px) { display:none; }
 `;

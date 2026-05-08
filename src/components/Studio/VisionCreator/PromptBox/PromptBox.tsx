@@ -78,8 +78,18 @@ const PromptBox: React.FC<PromptBoxProps> = ({
     const [audioOpen,      setAudioOpen]      = useState(false);
     const [hasOpenedAudio, setHasOpenedAudio] = useState(false);
     const [durationOpen,   setDurationOpen]   = useState(false);
-    const durationRef = useRef<HTMLDivElement>(null);
+    const durationRef    = useRef<HTMLDivElement>(null);
     const durationBtnRef = useRef<HTMLButtonElement>(null);
+    const textareaRef    = useRef<HTMLTextAreaElement>(null);
+
+    // Auto-resize for minimalist mode: 1 line default, grows to 120px then scrolls
+    useEffect(() => {
+      if (!minimalist) return;
+      const el = textareaRef.current;
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+    }, [prompt, minimalist]);
 
     /* Briefly twitches the duration button to signal: "trim is capped by your
        chosen video duration — change it here if you want a longer/shorter clip". */
@@ -155,6 +165,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({
           <TwText>{tw}</TwText><Cursor/>
         </Placeholder>
         <Textarea
+          ref={minimalist ? textareaRef : undefined}
           $minimalist={minimalist}
           value={prompt}
           onChange={e=>setPrompt(e.target.value.slice(0,MAX))}
@@ -256,7 +267,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({
       </Toolbar>
     </StyledPromptBox>
     {hasOpenedAudio && (
-      <div style={{ display: audioOpen ? undefined : 'none' }}>
+      <div style={{ width: '100%', display: audioOpen ? undefined : 'none' }}>
         <AudioPickerPanel
           onClose={()=>setAudioOpen(false)}
           value={socialVideo}

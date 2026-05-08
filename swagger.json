@@ -2683,6 +2683,61 @@
         },
         "additionalProperties": false
       },
+      "InstagramUploadOptions": {
+        "type": "object",
+        "properties": {
+          "scheduleId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Optional caption for the post. Max 2,200 chars; hashtags and @mentions are plain text.",
+            "nullable": true
+          },
+          "altText": {
+            "type": "string",
+            "description": "Accessibility alt text for the post's image(s).\r\nMaps to Instagram Graph API container parameter `alt_text`.",
+            "nullable": true
+          },
+          "coverUrl": {
+            "type": "string",
+            "description": "Custom cover image URL. Reels only. Takes precedence over ThumbOffset.",
+            "nullable": true
+          },
+          "thumbOffsetMs": {
+            "type": "integer",
+            "description": "Millisecond offset for auto-selecting cover frame. Reels and Stories.",
+            "format": "int64",
+            "nullable": true
+          },
+          "shareToFeed": {
+            "type": "boolean",
+            "description": "Share to main feed flag. Reels only; defaults to true.",
+            "nullable": true
+          },
+          "locationId": {
+            "type": "string",
+            "description": "Location ID (WIP - placeholder).",
+            "nullable": true
+          },
+          "userTags": {
+            "type": "string",
+            "description": "User Tags (WIP - placeholder).",
+            "nullable": true
+          },
+          "additionalContentUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Additional URLs for a PhotoAlbum upload.\r\nPhotoAlbum only; up to 10 total images (including primary).",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Options specific to uploading content to Instagram."
+      },
       "MediaContentDto": {
         "type": "object",
         "properties": {
@@ -2917,6 +2972,15 @@
           "isDraft": {
             "type": "boolean",
             "example": false
+          },
+          "instagramOptions": {
+            "$ref": "#/components/schemas/InstagramUploadOptions"
+          },
+          "tikTokOptions": {
+            "$ref": "#/components/schemas/TikTokUploadOptions"
+          },
+          "youTubeOptions": {
+            "$ref": "#/components/schemas/YouTubeUploadOptions"
           }
         },
         "additionalProperties": false
@@ -3002,6 +3066,15 @@
             "type": "boolean",
             "nullable": true,
             "example": false
+          },
+          "instagramOptions": {
+            "$ref": "#/components/schemas/InstagramUploadOptions"
+          },
+          "tikTokOptions": {
+            "$ref": "#/components/schemas/TikTokUploadOptions"
+          },
+          "youTubeOptions": {
+            "$ref": "#/components/schemas/YouTubeUploadOptions"
           }
         },
         "additionalProperties": false
@@ -3013,11 +3086,11 @@
             "type": "string",
             "nullable": true
           },
-          "offset": {
+          "offsetMs": {
             "type": "number",
             "format": "double"
           },
-          "duration": {
+          "durationMs": {
             "type": "number",
             "format": "double"
           }
@@ -3038,9 +3111,73 @@
         "enum": [
           "Draft",
           "Processing",
-          "Done"
+          "Done",
+          "Failed"
         ],
         "type": "string"
+      },
+      "TikTokUploadOptions": {
+        "type": "object",
+        "properties": {
+          "scheduleId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string",
+            "description": "Optional title or description for the post (TikTok API maps this to post_info.title).\r\nMax 2,200 chars.",
+            "nullable": true
+          },
+          "privacyLevel": {
+            "type": "string",
+            "description": "Post privacy level. Validated against creator_info; falls back to first available if null.",
+            "nullable": true
+          },
+          "disableComments": {
+            "type": "boolean",
+            "description": "Specific flag to disable comments."
+          },
+          "disableDuet": {
+            "type": "boolean",
+            "description": "Specific flag to disable duet."
+          },
+          "disableStitch": {
+            "type": "boolean",
+            "description": "Specific flag to disable stitch."
+          },
+          "videoCoverTimestampMs": {
+            "type": "integer",
+            "description": "Timestamp in milliseconds to select the cover for a Video upload. Video only.",
+            "format": "int64",
+            "nullable": true
+          },
+          "photoCoverIndex": {
+            "type": "integer",
+            "description": "Index of the photo to use as the cover. PhotoAlbum only.",
+            "format": "int32",
+            "nullable": true
+          },
+          "autoAddMusic": {
+            "type": "boolean",
+            "description": "Flag to auto-add music. PhotoAlbum only.",
+            "nullable": true
+          },
+          "isAiGenerated": {
+            "type": "boolean",
+            "description": "Labels post as AI-generated; cannot be removed after posting.",
+            "nullable": true
+          },
+          "additionalContentUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Additional URLs for a PhotoAlbum upload (combined with ContentUrl).\r\nPhotoAlbum only; up to 35 total images.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Options specific to uploading content to TikTok."
       },
       "UserCreateDto": {
         "type": "object",
@@ -3288,6 +3425,9 @@
           },
           "socialMediaLink": {
             "$ref": "#/components/schemas/SocialMediaLinkDto"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StudioPlanStatus"
           }
         },
         "additionalProperties": false
@@ -3332,6 +3472,10 @@
             "nullable": true
           },
           "scenes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VisionSceneDto"
+            },
             "nullable": true
           },
           "socialMediaLink": {
@@ -3492,9 +3636,106 @@
           },
           "scenes": {
             "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/StudioPlanStatus"
           }
         },
         "additionalProperties": false
+      },
+      "VisionSceneDto": {
+        "type": "object",
+        "properties": {
+          "sceneTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "sceneScriptSegment": {
+            "type": "string",
+            "nullable": true
+          },
+          "sceneDuration": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sceneOffsetFrame": {
+            "description": "The static first frame definition for the scene. Can be a string (e.g., 'continuous') or an object.",
+            "nullable": true
+          },
+          "sceneGenerationPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "scenePersonalSegment": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "YouTubeUploadOptions": {
+        "required": [
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "scheduleId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string",
+            "description": "Required title of the YouTube video. Max 100 chars.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the video. Falls back to Title if null.",
+            "nullable": true
+          },
+          "privacyLevel": {
+            "type": "string",
+            "description": "Privacy status (\"public\" / \"unlisted\" / \"private\"). Defaults to \"private\".",
+            "nullable": true
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "description": "Custom thumbnail URL. Requires verified channel.",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of tags for the video. Combined length ≤ 500 chars.",
+            "nullable": true
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "YouTube video category ID.",
+            "nullable": true
+          },
+          "scheduledPublishAtUtc": {
+            "type": "string",
+            "description": "Scheduled publish time UTC. Only valid when PrivacyLevel = \"private\".",
+            "format": "date-time",
+            "nullable": true
+          },
+          "selfDeclaredMadeForKids": {
+            "type": "boolean",
+            "description": "COPPA compliance flag declaring if content is made for kids.",
+            "nullable": true
+          },
+          "containsSyntheticMedia": {
+            "type": "boolean",
+            "description": "Flag declaring if content contains synthetic/AI media.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Options specific to uploading content to YouTube."
       }
     },
     "securitySchemes": {

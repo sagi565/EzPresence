@@ -105,6 +105,10 @@ const CustomDropdown: React.FC<DropdownProps> = ({
         setIsOpen(false);
         setSearchTerm('');
         break;
+      case 'Tab':
+        setIsOpen(false);
+        setSearchTerm('');
+        break;
     }
   };
 
@@ -124,29 +128,27 @@ const CustomDropdown: React.FC<DropdownProps> = ({
         tabIndex={0}
         onClick={() => {
           setIsOpen(true);
+          setSearchTerm('');
           setTimeout(() => inputRef.current?.focus(), 0);
         }}
         onFocus={() => {
           setIsOpen(true);
+          setSearchTerm('');
           setTimeout(() => inputRef.current?.focus(), 0);
         }}
       >
-        {selectedOption && !isOpen ? (
-          <SelectedText>{selectedOption.label}</SelectedText>
-        ) : (
-          <SearchInput
-            ref={inputRef}
-            type="text"
-            name={name}
-            autoComplete={autoComplete}
-            tabIndex={-1}
-            placeholder={placeholder}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setIsOpen(true)}
-          />
-        )}
+        <SearchInput
+          ref={inputRef}
+          type="text"
+          name={name}
+          autoComplete={autoComplete}
+          tabIndex={-1}
+          placeholder={placeholder}
+          value={isOpen ? searchTerm : (selectedOption?.label || '')}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setIsOpen(true)}
+        />
       </Select>
 
       {isOpen && (
@@ -160,6 +162,7 @@ const CustomDropdown: React.FC<DropdownProps> = ({
                   key={option.value}
                   $isHighlighted={index === highlightedIndex}
                   $isSelected={option.value === value}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     onChange(option.value);
                     setIsOpen(false);

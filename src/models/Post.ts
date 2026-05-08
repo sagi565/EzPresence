@@ -17,6 +17,10 @@ export interface Post {
   contentUuids?: string[];
   isRecurring?: boolean;
   rruleText?: string | null;
+
+  instagramOptions?: InstagramUploadOptions;
+  tikTokOptions?: TikTokUploadOptions;
+  youTubeOptions?: YouTubeUploadOptions;
 }
 
 export interface PlatformBadge {
@@ -37,6 +41,45 @@ export interface SchedulePolicyDto {
   endTime?: string | null;
 }
 
+export interface InstagramUploadOptions {
+  scheduleId?: number;
+  caption?: string | null;
+  altText?: string | null;
+  coverUrl?: string | null;
+  thumbOffsetMs?: number | null;
+  shareToFeed?: boolean | null;
+  locationId?: string | null;
+  userTags?: string | null;
+  additionalContentUrls?: string[] | null;
+}
+
+export interface TikTokUploadOptions {
+  scheduleId?: number;
+  title?: string | null;
+  privacyLevel?: string | null;
+  disableComments?: boolean;
+  disableDuet?: boolean;
+  disableStitch?: boolean;
+  videoCoverTimestampMs?: number | null;
+  photoCoverIndex?: number | null;
+  autoAddMusic?: boolean | null;
+  isAiGenerated?: boolean | null;
+  additionalContentUrls?: string[] | null;
+}
+
+export interface YouTubeUploadOptions {
+  scheduleId?: number;
+  title?: string | null;
+  description?: string | null;
+  privacyLevel?: string | null;
+  thumbnailUrl?: string | null;
+  tags?: string[] | null;
+  categoryId?: string | null;
+  scheduledPublishAtUtc?: string | null;
+  selfDeclaredMadeForKids?: boolean | null;
+  containsSyntheticMedia?: boolean | null;
+}
+
 // Shape of a schedule returned by GET /api/schedules
 export interface ApiScheduleDto {
   calendarItemId?: string;
@@ -50,6 +93,9 @@ export interface ApiScheduleDto {
   contents?: string[] | null;
   scheduleType?: string | null;
   isDraft?: boolean;
+  instagramOptions?: InstagramUploadOptions;
+  tikTokOptions?: TikTokUploadOptions;
+  youTubeOptions?: YouTubeUploadOptions;
 }
 
 // Shape of the PUT /api/schedules request body
@@ -136,6 +182,9 @@ export const convertApiScheduleToPost = (apiSchedule: ApiScheduleDto, index: num
     rruleText,
     scheduleUuid: apiSchedule.scheduleId,
     calendarItemId: apiSchedule.calendarItemId,
+    instagramOptions: apiSchedule.instagramOptions,
+    tikTokOptions: apiSchedule.tikTokOptions,
+    youTubeOptions: apiSchedule.youTubeOptions,
   };
 };
 
@@ -155,6 +204,9 @@ export const convertPostToApiSchedule = (post: {
   endDate?: Date | null;
   type?: 'Post' | 'Story';
   status?: string;
+  instagramOptions?: InstagramUploadOptions;
+  tikTokOptions?: TikTokUploadOptions;
+  youTubeOptions?: YouTubeUploadOptions;
 }): ApiScheduleDto => {
   const { hours, minutes } = parseTimeString(post.time);
   const scheduledDate = new Date(post.date);
@@ -180,5 +232,8 @@ export const convertPostToApiSchedule = (post: {
     targets: convertPlatformsToTargets(post.platforms),
     contents: post.contentUuids ?? null,
     isDraft: post.status?.toLowerCase() === 'draft',
+    instagramOptions: post.instagramOptions,
+    tikTokOptions: post.tikTokOptions,
+    youTubeOptions: post.youTubeOptions,
   };
 };

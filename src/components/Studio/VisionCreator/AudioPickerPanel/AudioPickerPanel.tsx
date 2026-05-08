@@ -65,6 +65,17 @@ const PLACEHOLDER_BARS = (() => {
   return smoothed.map(v => 0.10 + 0.85 * Math.pow(v / max, 1.35));
 })();
 
+// Audio data cache — keyed by URL so the same track is never fetched twice
+type AudioDataCache = {
+  blobUrl: string;
+  peaks: number[];
+  duration: number;
+};
+const audioDataCache = new Map<string, AudioDataCache>();
+
+// Position cache — keyed by cacheKey (plan UUID) so each plan remembers its own playhead
+const audioPositionCache = new Map<string, number>();
+
 async function fetchAudioBytes(audioUrl: string): Promise<ArrayBuffer> {
   const token = await getAuthToken();
   const authHeaders: HeadersInit = token
@@ -162,13 +173,15 @@ interface Props {
   onAudioLoaded?: (audioDurSec: number) => void;
   readonly?: boolean;
   visible?: boolean;
+  /** Unique key for per-plan position memory (e.g. plan UUID). Defaults to value.url. */
+  cacheKey?: string;
 }
 
 const AudioPickerPanel: React.FC<Props> = ({
   onClose, value, onChange,
   minDurationSec, maxDurationSec, avgDurationSec,
   onTrimLimitHit, onAudioLoaded, readonly = false,
-  visible = true,
+  visible = true, cacheKey,
 }) => {
   const [url, setUrl] = useState(value?.url ?? '');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -227,8 +240,12 @@ const AudioPickerPanel: React.FC<Props> = ({
   const platform = detectPlatform(url);
   const ready = status === 'ready';
 
+  // Tracks previous URL (for data cache) and previous cacheKey (for position cache)
+  const prevUrlRef     = useRef<string | null>(value?.url ?? null);
+  const prevCacheKeyRef = useRef<string>(cacheKey ?? value?.url ?? '');
+
   /* ── Teardown ── */
-  const teardownAudio = useCallback(() => {
+  const teardownAudio = useCallback((skipCacheRevoke = false) => {
     if (audioRef.current) {
       try { audioRef.current.pause(); } catch {}
       audioRef.current.src = '';
@@ -246,13 +263,26 @@ const AudioPickerPanel: React.FC<Props> = ({
     liveLevelsRef.current = new Float32Array(BAR_COUNT);
     globalEnergyRef.current = 0;
     if (blobUrlRef.current) {
-      URL.revokeObjectURL(blobUrlRef.current);
+      if (!skipCacheRevoke) URL.revokeObjectURL(blobUrlRef.current);
       blobUrlRef.current = null;
     }
   }, []);
 
   useEffect(() => () => {
-    teardownAudio();
+    const currentUrl      = prevUrlRef.current;
+    const currentCacheKey = prevCacheKeyRef.current;
+    if (currentUrl && blobUrlRef.current && peaksRef.current.length > 0 && audioDurRef.current > 0) {
+      if (audioRef.current) { try { audioRef.current.pause(); } catch {} }
+      audioDataCache.set(currentUrl, {
+        blobUrl: blobUrlRef.current,
+        peaks: [...peaksRef.current],
+        duration: audioDurRef.current,
+      });
+      if (currentCacheKey) audioPositionCache.set(currentCacheKey, syncedTimeRef.current.value);
+      teardownAudio(true);
+    } else {
+      teardownAudio();
+    }
     if (debounceRef.current) clearTimeout(debounceRef.current);
   }, [teardownAudio]);
 
@@ -391,13 +421,110 @@ const AudioPickerPanel: React.FC<Props> = ({
     }
   }, [fetchAudioUrl, teardownAudio, onAudioLoaded, minDurationSec, maxDurationSec]);
 
-  /* ── Auto-load on mount when reopening with existing value ── */
+  /* ── Restore audio data from cache (no fetch, no decode) ── */
+  const restoreFromCache = useCallback((
+    entry: AudioDataCache,
+    preserve: { start: number; end: number } | undefined,
+    savedPosition: number,
+  ) => {
+    teardownAudio();
+    peaksRef.current = entry.peaks;
+
+    const audio = new Audio();
+    audio.crossOrigin = 'anonymous';
+    audio.preload = 'auto';
+    audio.src = entry.blobUrl;
+    audioRef.current = audio;
+    blobUrlRef.current = entry.blobUrl;
+
+    audio.addEventListener('timeupdate', () => {
+      syncTime(audio.currentTime);
+      setCurrentTime(audio.currentTime);
+    });
+    audio.addEventListener('ended', () => {
+      setIsPlaying(false);
+      audio.currentTime = selStartRef.current;
+      syncTime(selStartRef.current);
+      setCurrentTime(selStartRef.current);
+    });
+
+    setAudioDur(entry.duration);
+    onAudioLoaded?.(entry.duration);
+
+    if (preserve && preserve.end > preserve.start) {
+      setSelStart(preserve.start);
+      setSelEnd(preserve.end);
+    }
+
+    // Use saved position if we have one, otherwise start at trim start (or 0)
+    const resumeAt = Math.min(savedPosition, entry.duration);
+    audio.currentTime = resumeAt;
+    syncTime(resumeAt);
+    setCurrentTime(resumeAt);
+
+    try {
+      const ACtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (ACtx) {
+        if (!audioCtxRef.current) audioCtxRef.current = new ACtx();
+        const ctx = audioCtxRef.current!;
+        const src = ctx.createMediaElementSource(audio);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.78;
+        src.connect(analyser);
+        analyser.connect(ctx.destination);
+        sourceNodeRef.current = src;
+        analyserRef.current = analyser;
+        analyserBufRef.current = new Uint8Array(analyser.frequencyBinCount);
+      }
+    } catch {}
+
+    setStatus('ready');
+  }, [teardownAudio, onAudioLoaded]);
+
+  /* ── Load/switch on value?.url change (replaces auto-load on mount) ── */
   useEffect(() => {
-    if (value?.url) {
-      loadAudio(value.url, { start: value.offsetSeconds, end: value.offsetSeconds + value.durationSeconds });
+    const newUrl      = value?.url ?? null;
+    const newCacheKey = cacheKey ?? newUrl ?? '';
+    const oldUrl      = prevUrlRef.current;
+    const oldCacheKey = prevCacheKeyRef.current;
+
+    // Save current audio state before switching away
+    if (blobUrlRef.current && peaksRef.current.length > 0 && audioDurRef.current > 0) {
+      if (audioRef.current) { try { audioRef.current.pause(); } catch {} }
+      if (oldUrl) {
+        audioDataCache.set(oldUrl, {
+          blobUrl: blobUrlRef.current,
+          peaks: [...peaksRef.current],
+          duration: audioDurRef.current,
+        });
+      }
+      if (oldCacheKey) audioPositionCache.set(oldCacheKey, syncedTimeRef.current.value);
+      teardownAudio(true);
+      setStatus('idle');
+      setAudioDur(0);
+      setCurrentTime(0);
+      setIsPlaying(false);
+    }
+
+    prevUrlRef.current      = newUrl;
+    prevCacheKeyRef.current = newCacheKey;
+
+    if (!newUrl) return;
+
+    const preserve = value ? { start: value.offsetSeconds, end: value.offsetSeconds + value.durationSeconds } : undefined;
+
+    // Look up saved position for this plan (default: start of trim, i.e. offsetSeconds)
+    const savedPosition = audioPositionCache.get(newCacheKey) ?? (preserve?.start ?? 0);
+
+    const dataCached = audioDataCache.get(newUrl);
+    if (dataCached) {
+      restoreFromCache(dataCached, preserve, savedPosition);
+    } else {
+      loadAudio(newUrl, preserve);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [value?.url, cacheKey]);
 
   /* ── Auto-sync trim back to parent (idle, not dragging) ── */
   useEffect(() => {
@@ -446,8 +573,8 @@ const AudioPickerPanel: React.FC<Props> = ({
 
     const hiResPeaks = peaksRef.current;
     const haveReal = ready && hiResPeaks.length > 0;
-    const nBars = haveReal ? Math.max(20, Math.round(W * BARS_PER_PX)) : BAR_COUNT;
-    const peaks = haveReal ? resample(hiResPeaks, nBars) : hiResPeaks;
+    const nBars = Math.max(20, Math.round(W * BARS_PER_PX));
+    const peaks = haveReal ? resample(hiResPeaks, nBars) : resample(PLACEHOLDER_BARS, nBars);
 
     let barW = (W - (nBars - 1)) / nBars;
     barW = Math.max(1.4, Math.min(2.4, barW));
@@ -507,11 +634,11 @@ const AudioPickerPanel: React.FC<Props> = ({
       const hue = 270 + 10 * Math.sin(now * 1.4);
       const inhale = 0.91 + 0.09 * Math.sin(now * 1.1);
       const ripplePhase = now * 2.8;
-      for (let i = 0; i < BAR_COUNT; i++) {
+      for (let i = 0; i < nBars; i++) {
         const x = Math.round(ox + i * (barW + gap));
-        const t = i / (BAR_COUNT - 1);
+        const t = nBars > 1 ? i / (nBars - 1) : 0;
         const ripple = 1.0 + 0.18 * Math.sin(ripplePhase + i * 0.55);
-        const peak = (PLACEHOLDER_BARS[i] ?? 0.4) * envLoad(t) * inhale * ripple;
+        const peak = (peaks[i] ?? 0.4) * envLoad(t) * inhale * ripple;
         const dist = t - crestT;
         const crest = Math.exp(-dist * dist / (2 * 0.012));
         const baseAlpha = 0.55 + 0.10 * crest;
@@ -580,7 +707,7 @@ const AudioPickerPanel: React.FC<Props> = ({
     }
   };
 
-  const needsAnimation = !ready || isPlaying || !!dragging;
+  const needsAnimation = visible !== false && (!ready || isPlaying || !!dragging);
   useEffect(() => {
     drawRef.current();
     if (!needsAnimation) return;

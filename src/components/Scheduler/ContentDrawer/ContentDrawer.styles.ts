@@ -152,7 +152,10 @@ export const ContentList = styled.div`
   overflow-x: auto;
   overflow-y: hidden;
   flex-wrap: nowrap;
-  padding-bottom: 20px;
+  padding-top: 20px;
+  padding-bottom: 32px;
+  margin-top: -20px;
+  margin-bottom: -12px;
   align-items: flex-start;
 
   @media (max-width: 768px) {
