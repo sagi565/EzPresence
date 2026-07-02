@@ -137,33 +137,22 @@ const CustomDropdown: React.FC<DropdownProps> = ({
           setTimeout(() => inputRef.current?.focus(), 0);
         }}
       >
-        <SearchInput
-          ref={inputRef}
-          type="text"
-          name={name}
-          autoComplete={autoComplete}
-          tabIndex={-1}
-          placeholder={placeholder}
-          value={isOpen ? searchTerm : (selectedOption?.label || '')}
-          onChange={(e) => {
-            const inputValue = e.target.value;
-            const numInput = parseInt(inputValue, 10);
-            const match = options.find(opt =>
-              opt.label.toLowerCase() === inputValue.toLowerCase() ||
-              opt.value === inputValue ||
-              (!isNaN(numInput) && parseInt(opt.value, 10) === numInput)
-            );
-            if (match) {
-              onChange(match.value);
-              setIsOpen(false);
-              setSearchTerm('');
-            } else {
-              setSearchTerm(inputValue);
-            }
-          }}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setIsOpen(true)}
-        />
+        {selectedOption && !isOpen ? (
+          <SelectedText>{selectedOption.label}</SelectedText>
+        ) : (
+          <SearchInput
+            ref={inputRef}
+            type="text"
+            name={name}
+            autoComplete={autoComplete}
+            tabIndex={-1}
+            placeholder={placeholder}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setIsOpen(true)}
+          />
+        )}
       </Select>
 
       {isOpen && (

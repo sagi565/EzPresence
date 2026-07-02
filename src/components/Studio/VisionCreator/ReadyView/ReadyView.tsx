@@ -7,7 +7,7 @@ import AudioPickerPanel from '@components/Studio/VisionCreator/AudioPickerPanel/
 import {
   ConsoleWrapper, TopBar, TopBarLogo, TopBarDivider,
   TopBarTitle, TopBarMeta, TypeBadge, CategoryChip, SplitPane,
-  Sidebar, SidebarSection, SidebarLabel, SidebarLabelRow, SidebarPlanTitle, SidebarModeText, NavItem, NavIcon, NavLabel, NavGenderText,
+  Sidebar, SidebarSection, SidebarLabel, SidebarLabelRow, SidebarPlanTitle, SidebarModeText, NavItem, NavIcon, NavLabel,
   SidebarDivider, SceneCountLabel, SceneTile, SceneTileNum, SceneTileInfo,
   SceneTilePrompt, DurationChip,
   ContentPanel, ContentInner, SectionHeading, HeadingIcon, HeadingText, HeadingSubtext,
@@ -20,6 +20,7 @@ import {
   PromptSlotWrap, StatusText, GenerateBtn,
   VideoPanelWrap, VideoPanelLabel, VideoWrap, MinimalistVideo, VideoSpinnerWrap, VideoEmptyMsg,
   VideoSkeletonPlay, VideoSkeletonLabel, VideoSkeletonBar, HideOnMobile,
+  BtnSpinner,
 } from './styles';
 
 function detectSocialPlatform(url: string): 'youtube' | 'instagram' | 'tiktok' | 'facebook' {
@@ -253,9 +254,8 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
       <SplitPane>
         {/* ── Sidebar ── */}
         <Sidebar>
-          <SidebarSection style={{ paddingTop: 0 }}>
+          <SidebarSection>
             <SidebarPlanTitle>{plan.clipTitle || 'Untitled Vision'}</SidebarPlanTitle>
-            <SidebarDivider />
             <SidebarLabelRow>
               <SidebarLabel>Director</SidebarLabel>
               {plan.category && <SidebarModeText>{plan.category}</SidebarModeText>}
@@ -380,16 +380,14 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
                 <SectionHeading>
                   <HeadingIcon $color={activeMeta.color}>{activeMeta.icon}</HeadingIcon>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <HeadingText $color={activeMeta.color}>{activeMeta.label}</HeadingText>
-                      {plan.clipVoiceGender && (
-                        <GenderChip $gender={plan.clipVoiceGender}>
-                          {plan.clipVoiceGender === 'MALE' ? 'Male' : 'Female'}
-                        </GenderChip>
-                      )}
-                    </div>
+                    <HeadingText $color={activeMeta.color}>{activeMeta.label}</HeadingText>
                     <HeadingSubtext>{activeMeta.subtext}</HeadingSubtext>
                   </div>
+                  {plan.clipVoiceGender && (
+                    <GenderChip $gender={plan.clipVoiceGender}>
+                      {plan.clipVoiceGender === 'MALE' ? '♂ Male' : '♀ Female'}
+                    </GenderChip>
+                  )}
                 </SectionHeading>
                 <VoiceSection>
                   <FieldCard $color={activeMeta.color}>
@@ -497,7 +495,7 @@ const ReadyViewV2: React.FC<ReadyViewV2Props> = ({
             <BottomActionRow>
               {promptBoxSlot && <PromptSlotWrap>{promptBoxSlot}</PromptSlotWrap>}
               {status && <StatusText>{status}</StatusText>}
-              <GenerateBtn $loading={isExecuting} onClick={handleGenerate} disabled={isExecuting || isUpdating}>
+              <GenerateBtn $loading={isExecuting} onClick={handleGenerate} disabled={isExecuting}>
                 {isExecuting && <BtnSpinner />}
                 {isExecuting ? 'Generating…' : 'Generate Video'}
               </GenerateBtn>

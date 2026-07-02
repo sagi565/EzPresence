@@ -255,13 +255,12 @@ export const SidebarLabelRow = styled.div`
 `;
 
 export const SidebarPlanTitle = styled.div`
-  height:44px;
-  display:flex;align-items:center;
-  padding:0 16px;
+  padding:14px 16px 10px;
   font-size:13px;font-weight:700;letter-spacing:-.2px;
   color:${p=>p.theme.colors.text};
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   width:100%;
+  border-bottom:1px solid ${p=>p.theme.mode==='dark'?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)'};
   @media (max-width:768px) { display:none; }
 `;
 
