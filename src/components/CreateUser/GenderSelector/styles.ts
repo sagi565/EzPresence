@@ -74,4 +74,20 @@ export const styles: Record<string, CSSProperties> = {
   optionSelected: {
     background: 'rgba(155, 93, 229, 0.12)',
   },
+  searchInput: {
+    flex: 1,
+    border: 'none',
+    outline: 'none',
+    fontSize: '15px',
+    background: 'transparent',
+    color: theme.colors.text,
+    fontFamily: 'inherit',
+    width: '100%',
+  },
+  noResults: {
+    padding: '20px',
+    textAlign: 'center',
+    color: theme.colors.muted,
+    fontSize: '14px',
+  },
 };

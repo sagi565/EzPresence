@@ -177,6 +177,12 @@ interface PlanHistoryPanelProps {
   width?: number;
   onResize?: (w: number) => void;
   onResizingChange?: (resizing: boolean) => void;
+  /** Label for the plan currently being generated (shows a pinned row) */
+  activePlanInProgress?: string | null;
+  /** Whether the user is currently viewing a history item instead of the live planning view */
+  isViewingHistory?: boolean;
+  /** Called when user clicks the "in progress" row to go back to live planning */
+  onCurrentPlanSelect?: () => void;
 }
 
 const ChevronRight = () => (
@@ -193,6 +199,7 @@ const ChevronLeft = () => (
 const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
   collapsed, onToggle, onPlanSelect, onPlanDeselect, activePlanUuid,
   width, onResize, onResizingChange,
+  activePlanInProgress, isViewingHistory, onCurrentPlanSelect,
 }) => {
   const { groupedPlans, plans, loading, error, fetchHistory, fetchPlanDetail } = useVisionHistory();
   const [loadingUuid, setLoadingUuid] = useState<string | null>(null);
@@ -271,7 +278,29 @@ const PlanHistoryPanel: React.FC<PlanHistoryPanelProps> = ({
           </>
         )}
 
-        {!loading && (
+        {/* ── In-progress plan row (pinned at top during generation) ── */}
+        {activePlanInProgress != null && (
+          <PlanRow
+            $active={!isViewingHistory}
+            onClick={onCurrentPlanSelect}
+            title="View your plan being created"
+            style={{ borderBottom: '1px solid rgba(139,92,246,.08)', marginBottom: 4 }}
+          >
+            <StatusFallbackIcon $status="in_process">
+              <ProcessIcon />
+            </StatusFallbackIcon>
+            <PlanInfo>
+              <PlanTitle style={{ color: 'inherit' }}>
+                {activePlanInProgress || 'New Plan'}
+              </PlanTitle>
+              <PlanMeta>
+                <PlanDate style={{ color: '#9b5de5', fontWeight: 700 }}>Creating…</PlanDate>
+              </PlanMeta>
+            </PlanInfo>
+          </PlanRow>
+        )}
+
+        {!loading && !activePlanInProgress && (
           <NewPlanRow onClick={onPlanDeselect} title="Create New Plan">
             <NewPlanIcon>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

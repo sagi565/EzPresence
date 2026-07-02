@@ -56,9 +56,11 @@ export interface YouTubeConfig extends PlatformConfig {
     syntheticMedia: boolean;
 }
 
+export type TikTokPrivacyLevel = 'PUBLIC_TO_EVERYONE' | 'MUTUAL_FOLLOW_FRIENDS' | 'SELF_ONLY' | 'FOLLOWER_OF_CREATOR';
+
 export interface TikTokConfig extends PlatformConfig {
     caption: string;
-    privacyLevel: 'public' | 'friends' | 'private';
+    privacyLevel: TikTokPrivacyLevel;
     disableDuet: boolean;
     disableStitch: boolean;
     disableComments: boolean;
@@ -130,7 +132,7 @@ export const DEFAULT_YOUTUBE_CONFIG: YouTubeConfig = {
 export const DEFAULT_TIKTOK_CONFIG: TikTokConfig = {
     enabled: false,
     caption: '',
-    privacyLevel: 'public',
+    privacyLevel: 'PUBLIC_TO_EVERYONE',
     disableDuet: false,
     disableStitch: false,
     disableComments: false,

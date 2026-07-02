@@ -10,7 +10,9 @@ export const SIDEBAR_W_COLLAPSED = 52;
 export const SIDEBAR_W_MIN       = 200;
 export const SIDEBAR_W_MAX       = 480;
 
-/* Fixed full-height sidebar — sits from top:0 to bottom:0 */
+/* Fixed full-height sidebar — sits from top:0 to bottom:0.
+   On every breakpoint it pushes the main view aside (via VisionContainer's
+   left = --sidebar-w) instead of overlaying on top. */
 export const SidebarWrapper = styled.div<{ $collapsed: boolean; $width?: number; $noTransition?: boolean }>`
   position: fixed;
   top: 0;
@@ -26,13 +28,10 @@ export const SidebarWrapper = styled.div<{ $collapsed: boolean; $width?: number;
   transition: ${p => p.$noTransition ? 'none' : 'width .22s cubic-bezier(.4,0,.2,1)'};
   overflow: hidden;
 
-  @media (max-width: 768px) {
-    width: ${p => p.$collapsed ? SIDEBAR_W_COLLAPSED : 100}${p => p.$collapsed ? 'px' : 'vw'};
-    z-index: ${p => p.$collapsed ? 15 : 200};
-    box-shadow: ${p => p.$collapsed
-      ? '2px 0 8px rgba(0,0,0,.08)'
-      : '4px 0 40px rgba(0,0,0,.25)'};
-  }
+  /* No mobile-specific width override: the parent (VisionPage) clamps
+     the value passed in $width to 55vw on small viewports so the panel
+     and the view's left offset stay perfectly in sync — the panel sits
+     beside the view instead of overlaying it. */
 `;
 
 export const ResizeHandle = styled.div<{ $active?: boolean }>`

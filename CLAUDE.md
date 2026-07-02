@@ -225,7 +225,7 @@ npm run preview   # Preview production build
 npm run lint      # ESLint
 ```
 
-Vite is configured with HTTPS (via `@vitejs/plugin-basic-ssl`) and host `192.168.1.27`.
+Vite is configured with HTTPS (via `@vitejs/plugin-basic-ssl`) and host `192.168.1.12`.
 
 ---
 

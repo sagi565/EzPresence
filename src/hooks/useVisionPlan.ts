@@ -45,7 +45,7 @@ export interface VisionPlan {
   category?: string;
   includeAudioInVideoGeneration?: boolean;
   scenes?: any;
-  socialMediaLink?: { url?: string; offset?: number; duration?: number; };
+  socialMediaLink?: { url?: string; offsetMs?: number; durationMs?: number; };
   mediaContentUuid?: string;
   version?: number;
   totalVersions?: number;

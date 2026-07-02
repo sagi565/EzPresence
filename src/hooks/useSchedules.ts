@@ -8,6 +8,9 @@ import {
   convertPostToApiSchedule,
   convertPlatformsToTargets,
   parseTimeString,
+  InstagramUploadOptions,
+  TikTokUploadOptions,
+  YouTubeUploadOptions,
 } from '@models/Post';
 import { api } from '@utils/apiClient';
 
@@ -116,6 +119,9 @@ export const useSchedules = (brandId: string) => {
     type?: 'Post' | 'Story';
     timezone?: string;
     status?: string;
+    instagramOptions?: InstagramUploadOptions;
+    tikTokOptions?: TikTokUploadOptions;
+    youTubeOptions?: YouTubeUploadOptions;
   }) => {
     try {
       const apiData = convertPostToApiSchedule(scheduleData);
@@ -155,6 +161,9 @@ export const useSchedules = (brandId: string) => {
       rruleText: string | null;
       endDate: string | null;
       type: 'Post' | 'Story';
+      instagramOptions: InstagramUploadOptions;
+      tikTokOptions: TikTokUploadOptions;
+      youTubeOptions: YouTubeUploadOptions;
     }>,
     updateOccurrenceOnly: boolean = false
   ) => {
@@ -197,6 +206,18 @@ export const useSchedules = (brandId: string) => {
           policy.EndTime = updates.endDate;
         }
         updatedProperties.Policy = policy;
+      }
+
+      if (updates.instagramOptions !== undefined) {
+        updatedProperties.InstagramOptions = updates.instagramOptions;
+      }
+
+      if (updates.tikTokOptions !== undefined) {
+        updatedProperties.TikTokOptions = updates.tikTokOptions;
+      }
+
+      if (updates.youTubeOptions !== undefined) {
+        updatedProperties.YouTubeOptions = updates.youTubeOptions;
       }
 
       if (Object.keys(updatedProperties).length === 0) {

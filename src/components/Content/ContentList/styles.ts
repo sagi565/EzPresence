@@ -19,7 +19,9 @@ export const ListHeader = styled.div<{ $isMobile?: boolean }>`
   display: flex;
   align-items: center;
   gap: ${props => props.$isMobile ? '6px' : '20px'};
-  margin-bottom: 12px;
+  margin-bottom: 2px;
+  position: relative;
+  z-index: 10;
 `;
 
 export const ListIcon = styled.div<{ $isEditable?: boolean; $isHovered?: boolean; $isEditMode?: boolean; $isMobile?: boolean }>`
@@ -217,8 +219,9 @@ export const ListScrollWrapper = styled.div<{ $isDropTarget?: boolean; $isInvali
   display: flex;
   gap: 20px;
   overflow-x: auto;
-  overflow-y: visible;
-  padding: 80px 24px;
+  overflow-y: hidden;
+  padding: 40px 24px 64px 24px;
+  margin: -24px 0 -48px 0;
   scroll-behavior: smooth;
   scrollbar-width: none;
   ms-overflow-style: none;

@@ -155,8 +155,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
         if (activePlatforms.length === 0) return false;
         
         if (activePlatforms.includes('youtube') && !formData.platforms.youtube?.title?.trim()) return false;
-        if (activePlatforms.includes('instagram') && !formData.platforms.instagram?.caption?.trim()) return false;
-        if (activePlatforms.includes('tiktok') && !formData.platforms.tiktok?.caption?.trim()) return false;
 
         const isPolicy = !!formData.calendarItemId && (formData.repeat.frequency !== 'none' || !!formData.scheduleUuid);
         if (!formData.contentId && !isPolicy) return false;
@@ -193,6 +191,14 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                 });
             } else if (initialPlatforms && typeof initialPlatforms === 'object') {
                 formattedPlatforms = { ...formattedPlatforms, ...initialPlatforms };
+            }
+
+            // Migrate legacy TikTok privacy values
+            if (formattedPlatforms.tiktok?.privacyLevel) {
+                const ttPrivacy = formattedPlatforms.tiktok.privacyLevel as string;
+                if (ttPrivacy === 'public') formattedPlatforms.tiktok.privacyLevel = 'PUBLIC_TO_EVERYONE';
+                else if (ttPrivacy === 'friends') formattedPlatforms.tiktok.privacyLevel = 'MUTUAL_FOLLOW_FRIENDS';
+                else if (ttPrivacy === 'private') formattedPlatforms.tiktok.privacyLevel = 'SELF_ONLY';
             }
 
             let newFormData = {
@@ -600,7 +606,16 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                                 </div>
                                 <div style={styles.field}>
                                     <div style={styles.fieldLabel}>Privacy</div>
-                                    <RadioGroup options={[{ label: 'Public', value: 'public' }, { label: 'Friends', value: 'friends' }, { label: 'Private', value: 'private' }]} value={ttConfig.privacyLevel} onChange={val => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, tiktok: { ...ttConfig, privacyLevel: val as any } } }))} />
+                                    <RadioGroup
+                                        options={[
+                                            { label: 'Everyone', value: 'PUBLIC_TO_EVERYONE', tooltip: 'Anyone on TikTok can see this video.' },
+                                            { label: 'Friends', value: 'MUTUAL_FOLLOW_FRIENDS', tooltip: 'Only followers you follow back can see this video.' },
+                                            { label: 'Only me', value: 'SELF_ONLY', tooltip: 'Only you can see this video.' }
+                                        ]}
+                                        value={ttConfig.privacyLevel}
+                                        onChange={val => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, tiktok: { ...ttConfig, privacyLevel: val as any } } }))}
+                                        renderTooltip={(text) => <FieldTooltip text={text} />}
+                                    />
                                 </div>
                                 <ToggleRow label="Disable Duet" tooltip="Prevents other users from creating Duet videos with your content." checked={ttConfig.disableDuet} onChange={val => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, tiktok: { ...ttConfig, disableDuet: val } } }))} />
                                 <ToggleRow label="Disable Stitch" tooltip="Prevents other users from using clips of your video in their Stitch videos." checked={ttConfig.disableStitch} onChange={val => setFormData(prev => ({ ...prev, platforms: { ...prev.platforms, tiktok: { ...ttConfig, disableStitch: val } } }))} />
@@ -620,6 +635,33 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
             const isRecurring = !!formData.repeat.rruleText;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
+            const activePlatforms = getEnabledPlatforms(formData);
+
+            const platformOptions = {
+                instagramOptions: activePlatforms.includes('instagram') ? {
+                    caption: formData.platforms.instagram?.caption || null,
+                    altText: formData.platforms.instagram?.altText || null,
+                    shareToFeed: formData.platforms.instagram?.shareToFeed ?? null,
+                    locationId: formData.platforms.instagram?.location || null,
+                } : undefined,
+                youTubeOptions: activePlatforms.includes('youtube') ? {
+                    title: formData.platforms.youtube?.title || null,
+                    description: formData.platforms.youtube?.description || null,
+                    privacyLevel: formData.platforms.youtube?.privacyStatus || null,
+                    categoryId: formData.platforms.youtube?.categoryId || null,
+                    tags: formData.platforms.youtube?.tags || null,
+                    selfDeclaredMadeForKids: formData.platforms.youtube?.madeForKids ?? null,
+                    containsSyntheticMedia: formData.platforms.youtube?.syntheticMedia ?? null,
+                } : undefined,
+                tikTokOptions: activePlatforms.includes('tiktok') ? {
+                    title: formData.platforms.tiktok?.caption || null,
+                    privacyLevel: formData.platforms.tiktok?.privacyLevel || null,
+                    disableComments: formData.platforms.tiktok?.disableComments ?? false,
+                    disableDuet: formData.platforms.tiktok?.disableDuet ?? false,
+                    disableStitch: formData.platforms.tiktok?.disableStitch ?? false,
+                } : undefined,
+            };
+
             if (formData.calendarItemId) {
                 const updates: Partial<any> = {};
                 let dateOrTimeChanged = false;
@@ -644,9 +686,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
                     updates.rruleText = newRruleText;
                 }
                 if (endDateStr) updates.endDate = endDateStr;
+                
+                Object.assign(updates, platformOptions);
                 await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: getEnabledPlatforms(formData), media: mediaType, title: formData.title || 'New Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft' });
+                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: activePlatforms, media: mediaType, title: formData.title || 'New Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Draft', ...platformOptions });
             }
             if (onSaveDraft) onSaveDraft(formData);
             onClose();
@@ -734,8 +778,6 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
         const activePlatforms = getEnabledPlatforms(formData);
         if (activePlatforms.length === 0) errors.platform = 'Please select at least one platform';
         else if (activePlatforms.includes('youtube') && !formData.platforms.youtube?.title?.trim()) errors.platform = 'YouTube Title is required';
-        else if (activePlatforms.includes('instagram') && !formData.platforms.instagram?.caption?.trim()) errors.platform = 'Instagram Caption is required';
-        else if (activePlatforms.includes('tiktok') && !formData.platforms.tiktok?.caption?.trim()) errors.platform = 'TikTok Caption is required';
         const now = new Date();
         const { hours, minutes } = parseTimeString(formData.time);
         const scheduledDate = new Date(formData.date);
@@ -762,6 +804,32 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
             const mediaType = selectedContent?.mediaType === 'video' || selectedContent?.type === 'video' ? 'video' : 'image';
             const isRecurring = !!formData.repeat.rruleText;
             const endDateStr = isRecurring && formData.repeat.endDate ? `${formData.repeat.endDate.getFullYear()}-${String(formData.repeat.endDate.getMonth() + 1).padStart(2, '0')}-${String(formData.repeat.endDate.getDate()).padStart(2, '0')}` : null;
+            
+            const platformOptions = {
+                instagramOptions: activePlatforms.includes('instagram') ? {
+                    caption: formData.platforms.instagram?.caption || null,
+                    altText: formData.platforms.instagram?.altText || null,
+                    shareToFeed: formData.platforms.instagram?.shareToFeed ?? null,
+                    locationId: formData.platforms.instagram?.location || null,
+                } : undefined,
+                youTubeOptions: activePlatforms.includes('youtube') ? {
+                    title: formData.platforms.youtube?.title || null,
+                    description: formData.platforms.youtube?.description || null,
+                    privacyLevel: formData.platforms.youtube?.privacyStatus || null,
+                    categoryId: formData.platforms.youtube?.categoryId || null,
+                    tags: formData.platforms.youtube?.tags || null,
+                    selfDeclaredMadeForKids: formData.platforms.youtube?.madeForKids ?? null,
+                    containsSyntheticMedia: formData.platforms.youtube?.syntheticMedia ?? null,
+                } : undefined,
+                tikTokOptions: activePlatforms.includes('tiktok') ? {
+                    title: formData.platforms.tiktok?.caption || null,
+                    privacyLevel: formData.platforms.tiktok?.privacyLevel || null,
+                    disableComments: formData.platforms.tiktok?.disableComments ?? false,
+                    disableDuet: formData.platforms.tiktok?.disableDuet ?? false,
+                    disableStitch: formData.platforms.tiktok?.disableStitch ?? false,
+                } : undefined,
+            };
+
             if (formData.calendarItemId) {
                 const updates: Partial<any> = {};
                 let dateOrTimeChanged = false;
@@ -791,9 +859,11 @@ const NewPostModal: React.FC<NewPostModalProps> = ({
 
                 if (endDateStr) updates.endDate = endDateStr;
 
+                Object.assign(updates, platformOptions);
+
                 await updateSchedule(formData.calendarItemId, updates, occurrenceOnly);
             } else {
-                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: activePlatforms, media: mediaType, title: formData.title || 'New Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending' });
+                await createSchedule({ date: formData.date, time: formData.time, timezone: formData.timezone || 'America/New_York', platforms: activePlatforms, media: mediaType, title: formData.title || 'New Post', contentUuids: formData.contentId ? [formData.contentId] : undefined, rruleText: formData.repeat.rruleText, endDate: formData.repeat.endDate || undefined, status: 'Pending', ...platformOptions });
             }
             if (onScheduleProp) onScheduleProp(formData);
             if (!isReadOnly) onClose();

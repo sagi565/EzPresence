@@ -82,8 +82,8 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       https: {},
-      port: Number(env.VITE_PORT) || 5173,
-      host: '192.168.1.27',
+      port: Number(env.VITE_PORT) || 5176,
+      host: '192.168.1.12',
       strictPort: true,
     },
   }

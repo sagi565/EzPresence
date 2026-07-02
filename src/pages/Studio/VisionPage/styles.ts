@@ -14,19 +14,22 @@ export const VisionContainer = styled.div<{ $noTransition?: boolean }>`
   flex-direction: column;
   align-items: center;
   overflow: hidden;
-  background: linear-gradient(-45deg,
-    ${p => p.theme.colors.bg},
-    rgba(139,92,246,.03),
-    ${p => p.theme.colors.bg},
-    rgba(109,40,217,.02)
-  );
+  background: ${p => p.theme.mode === 'dark'
+    ? `linear-gradient(-45deg, #09090c, rgba(139,92,246,.03), #09090c, rgba(109,40,217,.02))`
+    : `linear-gradient(-45deg, ${p.theme.colors.bg}, rgba(139,92,246,.03), ${p.theme.colors.bg}, rgba(109,40,217,.02))`
+  };
   background-size: 300% 300%;
   animation: ${bgAnim} 20s ease-in-out infinite;
   transition: ${p => p.$noTransition ? 'none' : 'left .22s cubic-bezier(.4,0,.2,1)'};
 `;
 
-export const BackBtn = styled.button`
+export const TopRightGroup = styled.div`
   position: fixed; right: 24px; top: 24px; z-index: 20;
+  display: flex; align-items: center; gap: 8px;
+  @media (max-width: 768px) { top: 18px; right: 16px; }
+`;
+
+export const BackBtn = styled.button`
   display: inline-flex; align-items: center; gap: 6px;
   background: ${p => p.theme.colors.surface};
   border: 1.5px solid rgba(139,92,246,.12); border-radius: 10px;
@@ -34,7 +37,6 @@ export const BackBtn = styled.button`
   color: ${p => p.theme.colors.muted}; font-family: inherit; transition: all .18s;
   white-space: nowrap;
   &:hover { border-color: rgba(139,92,246,.35); background: rgba(139,92,246,.06); }
-  @media (max-width: 768px) { top: 18px; right: 16px; }
 `;
 
 export const BackBtnLabel = styled.span`color: ${p => p.theme.colors.muted};`;
@@ -61,9 +63,9 @@ export const LogoMark = styled.a<{ $noTransition?: boolean }>`
 `;
 
 export const ContentWrapper = styled.div`
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
   gap: 24px; width: 100%; max-width: 700px;
-  padding: 24px;
+  padding: 14vh 24px 24px;
   height: 100%;
   position: relative; z-index: 1;
   animation: ${fadeInUp} .7s cubic-bezier(.4,0,.2,1) both;

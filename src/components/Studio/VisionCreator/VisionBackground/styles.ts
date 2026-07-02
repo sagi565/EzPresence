@@ -14,7 +14,7 @@ export const BgOrb = styled.div<{$s:number;$x:string;$y:string;$c:string;$op:num
 export const OrbitsWrap = styled.div`position:absolute;top:40%;left:50%;pointer-events:none;z-index:-1;`;
 export const OrbitRing = styled.div<{$size:number}>`
   position:absolute;width:${p=>p.$size}px;height:${p=>p.$size}px;
-  border-radius:50%;border:1.5px dashed rgba(139,92,246,.1);
+  border-radius:50%;border:1.5px dashed ${p => p.theme.mode === 'dark' ? 'rgba(139,92,246,.2)' : 'rgba(139,92,246,.1)'};
   top:50%;left:50%;transform:translate(-50%,-50%);
 `;
 export const OrbitDot = styled.div<{$r:number;$dur:string;$delay:string;$size:number}>`
