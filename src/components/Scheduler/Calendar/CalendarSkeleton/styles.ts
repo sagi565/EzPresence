@@ -18,6 +18,7 @@ export const ShimmerBase = styled.div`
 // Month View Skeleton Styles
 export const MonthGridWrapper = styled.div`
   background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.primary}1A;
   border-radius: 16px;
   padding: 16px;
   box-shadow: ${props => props.theme.shadows.md};
@@ -99,6 +100,7 @@ export const PostSkeleton = styled(ShimmerBase)`
 // 4 Days View Skeleton Styles
 export const FourDaysContainer = styled.div`
   background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.primary}1A;
   border-radius: 16px;
   padding: 16px;
   box-shadow: ${props => props.theme.shadows.md};

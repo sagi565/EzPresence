@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Video, Image as ImageIcon } from 'lucide-react';
 import { Post } from '@models/Post';
 import PolicyRepeatIcon from '../PolicyRepeatIcon';
 import {
@@ -24,8 +25,6 @@ interface FourDaysViewPostProps {
 
 const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = false, onClick, onPostContextMenu }) => {
   const [isStatusHovered, setIsStatusHovered] = useState(false);
-  const mediaEmoji = post.media === 'video' ? '🎥' : '🖼️';
-
   const [isMediaHovered, setIsMediaHovered] = useState(false);
   const [isRepeatHovered, setIsRepeatHovered] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -112,7 +111,7 @@ const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = fals
             >
               <PolicyRepeatIcon
                 size={14}
-                color="#000"
+                color="currentColor"
                 style={{ opacity: 0.8 }}
               />
               {isRepeatHovered && (
@@ -131,11 +130,10 @@ const FourDaysViewPost: React.FC<FourDaysViewPostProps> = ({ post, isHalf = fals
               onMouseEnter={() => setIsMediaHovered(true)}
               onMouseLeave={() => setIsMediaHovered(false)}
             >
-              {mediaEmoji}
+              {post.media === 'video' ? <Video size={11} /> : <ImageIcon size={11} />}
               {isMediaHovered && (
                 <BlackTooltip>{mediaText}</BlackTooltip>
               )}
-
             </MediaIcon>
           </div>
         </PostLeft>

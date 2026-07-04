@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 export const CalendarGridWrapper = styled.div`
   background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.primary}1A;
   border-radius: 16px;
   padding: 16px;
   box-shadow: ${props => props.theme.shadows.md};
@@ -24,7 +25,7 @@ export const CalendarHeaderRow = styled.div`
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
   margin-bottom: 1px;
-  background: ${props => props.theme.colors.muted}40;
+  background: ${props => props.theme.colors.muted}26;
   border-radius: 12px 12px 0 0;
   overflow: hidden;
 `;
@@ -32,15 +33,18 @@ export const CalendarHeaderRow = styled.div`
 export const DayHeaderCell = styled.div`
   padding: 10px;
   text-align: center;
-  font-weight: 600;
+  font-weight: 700;
   color: ${props => props.theme.colors.muted};
   background: ${props => props.theme.colors.surface};
-  font-size: 14px;
-  
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
   @media (max-width: 768px) {
-    font-size: 11px;
+    font-size: 10px;
     padding: 8px 4px;
-    
+    letter-spacing: 0.04em;
+
     /* Hide full names and show truncated on mobile via JS, but we can also use CSS text-overflow */
     white-space: nowrap;
     overflow: hidden;
@@ -52,9 +56,11 @@ export const CalendarBodyGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
-  background: ${props => props.theme.colors.muted}40;
+  background: ${props => props.theme.colors.muted}26;
   flex: 1;
-  
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+
   /* grid-template-rows is applied dynamically inline */
 `;
 
@@ -119,18 +125,19 @@ export const DayCircle = styled.span`
   justify-content: center;
   width: 25px;
   height: 25px;
-  background-color: ${props => props.theme.colors.primary};
+  background: ${props => props.theme.gradients.vibe};
   color: white;
   border-radius: 50%;
   margin: 0 auto;
   line-height: 1;
+  box-shadow: 0 2px 8px ${props => props.theme.colors.primary}66;
 `;
 
 export const MonthLabel = styled.span`
   display: block;
   font-size: 10px;
   font-weight: 500;
-  color: #b0b0bc;
+  color: ${props => props.theme.colors.muted};
   text-align: center;
   letter-spacing: 0.02em;
   margin-top: 1px;
@@ -166,8 +173,16 @@ export const PostItemContainer = styled.div`
   cursor: pointer;
   transition: all 0.2s;
   min-width: 0;
-  border-left: 3px solid transparent;
-  
+  border: 1px solid ${props => props.theme.colors.muted}1A;
+  border-left: 3px solid ${props => props.theme.colors.primary}99;
+
+  &:hover {
+    transform: translateX(2px);
+    box-shadow: 0 2px 8px ${props => props.theme.colors.primary}26;
+    border-color: ${props => props.theme.colors.primary}40;
+    border-left-color: ${props => props.theme.colors.primary};
+  }
+
   @media (max-width: 768px) {
     padding: 4px 6px;
     margin-bottom: 2px;
@@ -245,8 +260,10 @@ export const PostTime = styled.span`
 `;
 
 export const MediaIcon = styled.div`
-  font-size: 12px;
-  
+  display: flex;
+  align-items: center;
+  color: ${props => props.theme.colors.muted};
+
   @media (max-width: 768px) {
     display: none; /* Hide on mobile to save space */
   }

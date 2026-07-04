@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Video, Image as ImageIcon } from 'lucide-react';
 import { Post } from '@models/Post';
 import PolicyRepeatIcon from '../PolicyRepeatIcon';
 import {
@@ -22,12 +23,10 @@ interface PostItemProps {
 }
 
 const PostItem: React.FC<PostItemProps> = ({ post, onClick, onPostContextMenu }) => {
-  const [isHovered, setIsHovered] = useState(false);
   const [isStatusHovered, setIsStatusHovered] = useState(false);
   const [isMediaHovered, setIsMediaHovered] = useState(false);
   const [isRepeatHovered, setIsRepeatHovered] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mediaEmoji = post.media === 'video' ? '🎥' : '🖼️';
   const mediaText = post.media === 'video' ? 'Video' : 'Image';
   const getStatusText = (status: string) => {
     switch (status) {
@@ -52,13 +51,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick, onPostContextMenu })
       style={{
         ...(policyBg ? { background: policyBg } : {}),
         ...(policyAccent ? { borderLeft: `3px solid ${policyAccent}` } : {}),
-        ...(isHovered ? {
-          transform: 'translateX(2px)',
-          boxShadow: '0 2px 6px rgba(155, 93, 229, 0.15)'
-        } : {})
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onClick={(e) => {
         e.stopPropagation();
         onClick(post);
@@ -117,7 +110,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick, onPostContextMenu })
             >
               <PolicyRepeatIcon
                 size={14}
-                color="#000"
+                color="currentColor"
                 style={{ opacity: 0.8 }}
               />
               {isRepeatHovered && (
@@ -136,7 +129,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onClick, onPostContextMenu })
               onMouseEnter={() => setIsMediaHovered(true)}
               onMouseLeave={() => setIsMediaHovered(false)}
             >
-              {mediaEmoji}
+              {post.media === 'video' ? <Video size={12} /> : <ImageIcon size={12} />}
               {isMediaHovered && (
                 <BlackTooltip>{mediaText}</BlackTooltip>
               )}

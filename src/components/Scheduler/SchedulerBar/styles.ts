@@ -30,11 +30,43 @@ export const DateControls = styled.div`
   align-items: center;
   justify-content: center;
   gap: 16px;
-  
+
   @media (max-width: 768px) {
     gap: 4px;
     flex: 1;
   }
+`;
+
+export const TodayBtn = styled.button`
+  background: transparent;
+  border: 1px solid ${props => props.theme.colors.primary}40;
+  color: ${props => props.theme.colors.primary};
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none;
+  white-space: nowrap;
+
+  &:hover {
+    background: ${props => props.theme.colors.primary}14;
+    border-color: ${props => props.theme.colors.primary}99;
+  }
+
+  @media (max-width: 768px) {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+`;
+
+export const ChevronWrapper = styled.span<{ $isOpen?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  color: ${props => props.theme.colors.muted};
+  transition: transform 0.2s ease;
+  transform: ${props => props.$isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
 `;
 
 export const NavArrowBtn = styled.button<{ $isHovered?: boolean }>`

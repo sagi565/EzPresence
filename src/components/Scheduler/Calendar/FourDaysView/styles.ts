@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 export const Container = styled.div`
   background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.primary}1A;
   border-radius: 16px;
   padding: 16px;
   box-shadow: ${props => props.theme.shadows.md};
@@ -31,7 +32,7 @@ export const HeaderRow = styled.div`
   display: grid;
   grid-template-columns: 80px repeat(4, 1fr);
   gap: 1px;
-  background: ${props => props.theme.colors.muted}40;
+  background: ${props => props.theme.colors.muted}26;
   border-radius: 12px 12px 0 0;
   overflow: hidden;
   margin-bottom: 1px;
@@ -74,12 +75,16 @@ export const DayHeader = styled.div<{ $isToday?: boolean }>`
 `;
 
 export const DayName = styled.div`
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: ${props => props.theme.colors.muted};
   margin-bottom: 4px;
-  
+
   @media (max-width: 768px) {
-    font-size: 10px;
+    font-size: 9px;
+    letter-spacing: 0.04em;
     margin-bottom: 2px;
   }
 `;
@@ -103,7 +108,7 @@ export const TimeRow = styled.div`
   display: grid;
   grid-template-columns: 80px repeat(4, 1fr);
   gap: 1px;
-  background: ${props => props.theme.colors.muted}40;
+  background: ${props => props.theme.colors.muted}26;
   min-height: 50px;
   
   @media (max-width: 768px) {
@@ -222,19 +227,22 @@ export const PostCard = styled.div<{ $isHalf?: boolean }>`
   font-size: 10px;
   box-shadow: ${props => props.theme.shadows.sm};
   transition: all 0.2s;
+  border: 1px solid ${props => props.theme.colors.muted}1A;
   border-left: 3px solid ${props => props.theme.colors.primary};
   height: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
-  
+
   ${props => props.$isHalf && `
     width: calc(50% - 2px);
   `}
 
   &:hover {
     transform: translateX(2px);
-    box-shadow: 0 2px 6px rgba(155, 93, 229, 0.15);
+    box-shadow: 0 2px 8px ${props => props.theme.colors.primary}26;
+    border-color: ${props => props.theme.colors.primary}40;
+    border-left-color: ${props => props.theme.colors.primary};
   }
   
   @media (max-width: 768px) {
@@ -314,8 +322,10 @@ export const PostTime = styled.span`
 `;
 
 export const MediaIcon = styled.span`
-  font-size: 10px;
-  
+  display: flex;
+  align-items: center;
+  color: ${props => props.theme.colors.muted};
+
   @media (max-width: 768px) {
     display: none;
   }

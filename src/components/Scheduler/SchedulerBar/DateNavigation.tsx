@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { CalendarDays, Columns3, ChevronDown } from 'lucide-react';
 import CreatePostButton from './CreatePostButton';
 import MiniCalendar from './MiniCalendar';
 import {
@@ -9,7 +10,9 @@ import {
   MonthYearDisplayContainer,
   ViewToggle,
   ViewBtn,
-  TooltipDesc
+  TooltipDesc,
+  TodayBtn,
+  ChevronWrapper
 } from './styles';
 
 interface DateNavigationProps {
@@ -122,6 +125,9 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
       </DateLeft>
 
       <DateControls>
+        <TodayBtn onClick={() => onDateSelect(new Date())}>
+          Today
+        </TodayBtn>
         <NavArrowBtn
           $isHovered={hoveredArrow === 'prev'}
           onClick={() => handleNavigation(-1)}
@@ -151,7 +157,9 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
           onMouseLeave={() => setHoveredMonth(false)}
         >
           <span>{displayText}</span>
-          <span style={{ fontSize: '12px' }}>▼</span>
+          <ChevronWrapper $isOpen={showMiniCalendar}>
+            <ChevronDown size={16} strokeWidth={2.5} />
+          </ChevronWrapper>
           {showMiniCalendar && (
             <MiniCalendar
               currentMonth={currentMonth}
@@ -191,7 +199,7 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
           onMouseEnter={() => setHoveredView('month')}
           onMouseLeave={() => setHoveredView(null)}
         >
-          📅
+          <CalendarDays size={18} />
           {hoveredView === 'month' && (
             <TooltipDesc>month view</TooltipDesc>
           )}
@@ -202,7 +210,7 @@ const DateNavigation: React.FC<DateNavigationProps> = ({
           onMouseEnter={() => setHoveredView('4days')}
           onMouseLeave={() => setHoveredView(null)}
         >
-          📋
+          <Columns3 size={18} />
           {hoveredView === '4days' && (
             <TooltipDesc>4-day view</TooltipDesc>
           )}
