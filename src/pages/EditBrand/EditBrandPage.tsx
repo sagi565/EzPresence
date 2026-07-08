@@ -33,7 +33,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 const EditBrandPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { brands, editBrand, loading: brandsLoading } = useBrands();
+  const { brands, editBrand, setActiveBrand, currentBrand, loading: brandsLoading } = useBrands();
 
   const [formData, setFormData] = useState<{
     name: string;
@@ -61,9 +61,11 @@ const EditBrandPage: React.FC = () => {
     new Set(JSON.parse(sessionStorage.getItem(OFFERED_KEY) || '[]') as SocialPlatform[])
   );
   const logoBase64Ref = useRef<string | undefined>(undefined);
+  const didLoadFormRef = useRef(false);
+  const didActivateRef = useRef(false);
+  const [isActivating, setIsActivating] = useState(true);
   const [nameError, setNameError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
   const [isButtonHovered, setIsButtonHovered] = useState(false);
@@ -74,9 +76,16 @@ const EditBrandPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Populate the form only ONCE from the loaded brand. This effect depends on
+    // `brands`, which is replaced on every refresh — including the refresh that
+    // `editBrand` triggers on save. Without this guard, saving re-runs this effect
+    // and overwrites the user's edits with the just-refetched server state, which
+    // looks like "the page shows without the changes" right before the redirect.
+    if (didLoadFormRef.current) return;
     if (brands.length > 0 && id) {
       const brand = brands.find(b => b.id === id);
       if (brand) {
+        didLoadFormRef.current = true;
         setFormData(prev => ({
           ...prev,
           name: brand.name,
@@ -91,6 +100,30 @@ const EditBrandPage: React.FC = () => {
       }
     }
   }, [brands, id, brandsLoading]);
+
+  // The edit page (for an already-created brand) is entirely scoped to the ACTIVE
+  // brand on the server: GET /platforms returns the active brand's platforms, and
+  // PUT /brands/active updates the active brand. Opening this page by `id` alone is
+  // therefore not enough — we must make the target brand active first, otherwise it
+  // shows the active brand's connected platforms and saves edits to the wrong brand.
+  useEffect(() => {
+    if (!id || didActivateRef.current) return;
+    // Wait until we know which brand is currently active.
+    if (!currentBrand) return;
+
+    didActivateRef.current = true;
+
+    if (currentBrand.id === id) {
+      setIsActivating(false);
+      return;
+    }
+
+    setIsActivating(true);
+    setActiveBrand(id)
+      .then(() => refetchPlatforms())
+      .catch(() => setGlobalError('Failed to load this brand.'))
+      .finally(() => setIsActivating(false));
+  }, [id, currentBrand, setActiveBrand, refetchPlatforms]);
 
   useEffect(() => {
     logoBase64Ref.current = formData.logoBase64 || logoPreview || undefined;
@@ -147,7 +180,7 @@ const EditBrandPage: React.FC = () => {
         logoBase64: base64,
         logoSource: { type: 'platform', platform: cp.platform }
       }));
-      setLogoPreview(getLogoDataUrl(base64));
+      setLogoPreview(getLogoDataUrl(base64) || null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch {
       // ignore
@@ -204,17 +237,17 @@ const EditBrandPage: React.FC = () => {
       };
 
       await editBrand(id, updateData);
-      setSubmitSuccess(true);
-      setTimeout(() => {
-        navigate('/');
-      }, 1000);
+      // Go straight to the home page on save — don't flash the edit page or a
+      // success screen afterwards. Keep isSubmitting true so the form stays
+      // disabled during the navigation.
+      navigate('/');
     } catch (err: any) {
       setGlobalError(err.message || 'Failed to update brand.');
       setIsSubmitting(false);
     }
   };
 
-  if (brandsLoading && brands.length === 0) {
+  if ((brandsLoading && brands.length === 0) || isActivating) {
     return (
       <Container>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -390,22 +423,11 @@ const EditBrandPage: React.FC = () => {
             </ErrorMessageWrapper>
           )}
 
-          {submitSuccess && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 18px',
-              background: 'rgba(20, 184, 166, 0.1)', border: '2px solid #14b8a6',
-              borderRadius: '12px', color: '#14b8a6', fontSize: '14px', fontWeight: 500,
-            }}>
-              <span style={{ fontSize: '20px' }}>✅</span>
-              <span>Brand updated successfully! Redirecting...</span>
-            </div>
-          )}
-
           <Actions>
             <SubmitBtn
               type="submit"
-              disabled={isSubmitting || submitSuccess}
-              $isSubmitting={isSubmitting || submitSuccess}
+              disabled={isSubmitting}
+              $isSubmitting={isSubmitting}
               $isHovered={isButtonHovered}
               $isActive={isButtonActive}
               onMouseEnter={() => setIsButtonHovered(true)}
@@ -414,7 +436,7 @@ const EditBrandPage: React.FC = () => {
               onMouseUp={() => setIsButtonActive(false)}
             >
               {showRipple && <Ripple />}
-              {isSubmitting ? 'Updating...' : submitSuccess ? 'Success!' : 'Save Changes'}
+              {isSubmitting ? 'Updating...' : 'Save Changes'}
             </SubmitBtn>
           </Actions>
         </Form>

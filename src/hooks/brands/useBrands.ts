@@ -75,32 +75,51 @@ export const useBrands = () => {
   };
 
   const editBrand = async (brandUuid: string, data: Partial<BrandInitializeDto>): Promise<void> => {
-    // Map to the structure expected by the backend (PascalCase properties inside updatedProperties)
-    const updateBody = {
-      updatedProperties: {
-         Name: data.name,
-         LogoObject: data.logoObject,
-         Slogan: data.slogan,
-         Category: data.category,
-         Subcategory: data.subcategory
-      }
-    };
-    
+    // The API only supports updating the *active* brand (PUT /brands/active) — there is
+    // no per-brand update endpoint. So to edit a specific brand we must make it active
+    // first, otherwise the changes (name, logo, etc.) land on whatever brand is currently
+    // active and the brand being edited appears unchanged.
+    if (currentBrand?.id !== brandUuid) {
+      await api.post(`/users/set-active-brand?BrandUuid=${brandUuid}`);
+    }
+
+    // Body shape must match BrandUpdateDto / BrandUpdatePropsDto in swagger.json, whose
+    // keys are camelCase. The dynamic `updatedProperties` patch is applied by key name,
+    // so PascalCase keys are silently ignored (request "succeeds" but nothing changes).
+    // Only include properties that were actually provided so we never clobber a field
+    // with null (undefined keys are dropped by JSON.stringify).
+    const updatedProperties: Record<string, unknown> = {};
+    if (data.name !== undefined) updatedProperties.name = data.name;
+    if (data.logoObject !== undefined) updatedProperties.logoObject = data.logoObject;
+    if (data.slogan !== undefined) updatedProperties.slogan = data.slogan;
+    if (data.category !== undefined) updatedProperties.category = data.category;
+    if (data.subcategory !== undefined) updatedProperties.subcategory = data.subcategory;
+
+    const updateBody = { updatedProperties };
+
     // Correct API call as per swagger.json for updating the active brand
     await api.put('/brands/active', updateBody);
+    // The edited brand is now the active one, so always refresh the list and re-fetch
+    // the active brand so the updated logo/name is reflected everywhere.
     await refreshBrands();
-    if (currentBrand?.id === brandUuid) {
-        await fetchActiveBrand();
-    }
+    await fetchActiveBrand();
   };
 
   const deleteBrand = async (brandUuid: string): Promise<void> => {
-    // Correct API call as per swagger.json for deleting the active brand
-    await api.delete('/brands/active');
-    await refreshBrands();
-    if (currentBrand?.id === brandUuid) {
-        await fetchActiveBrand();
+    // The user must always keep at least one brand.
+    if (brands.length <= 1) {
+      throw new Error('Cannot delete your only brand');
     }
+    // The API only supports deleting the *active* brand (DELETE /brands/active).
+    // To delete a specific brand, make it active first, then delete it.
+    if (currentBrand?.id !== brandUuid) {
+      await api.post(`/users/set-active-brand?BrandUuid=${brandUuid}`);
+    }
+    await api.delete('/brands/active');
+    // The server soft-deletes the active brand and promotes another brand to active,
+    // so always refresh the list and re-fetch the (new) active brand.
+    await refreshBrands();
+    await fetchActiveBrand();
   };
 
   return {
