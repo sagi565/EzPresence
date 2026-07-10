@@ -64,16 +64,9 @@ const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ onClose }) => {
     
     setIsProcessing(true);
     try {
+      // deleteBrand handles making the target brand active (if needed) and
+      // promoting another brand to active after deletion, server-side.
       await deleteBrand(brandToDelete);
-      
-      // Post-delete behavior: Switch to first available brand if deleted brand was active
-      if (brandToDelete === currentBrand?.id && brands.length > 1) {
-        const remainingBrands = brands.filter(b => b.id !== brandToDelete);
-        if (remainingBrands.length > 0) {
-          await setActiveBrand(remainingBrands[0].id);
-        }
-      }
-      
       setBrandToDelete(null);
     } catch (err) {
       console.error('Failed to delete brand:', err);
@@ -84,6 +77,8 @@ const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ onClose }) => {
 
   const confirmDelete = (e: React.MouseEvent, brandId: string) => {
     e.stopPropagation();
+    // The user must always keep at least one brand.
+    if (brands.length <= 1) return;
     setBrandToDelete(brandId);
   };
 
@@ -123,11 +118,16 @@ const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ onClose }) => {
             ) : brands.length === 0 ? (
               <div style={{ padding: '8px', fontSize: '13px', color: 'gray' }}>No brands found.</div>
             ) : (
-              brands.map(brand => {
+              [...brands]
+                // Pin the active brand to the top of the list.
+                .sort((a, b) =>
+                  (a.id === currentBrand?.id ? -1 : 0) - (b.id === currentBrand?.id ? -1 : 0))
+                .map(brand => {
                 const isActive = brand.id === currentBrand?.id;
+                const canDelete = brands.length > 1;
                 return (
-                  <BrandItem 
-                    key={brand.id} 
+                  <BrandItem
+                    key={brand.id}
                     $active={isActive}
                     onClick={() => !isActive && setActiveBrand(brand.id)}
                   >
@@ -141,11 +141,13 @@ const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ onClose }) => {
                     <div className="brand-name">{brand.name}</div>
                     <BrandActions>
                       <button onClick={(e) => handleEditBrand(e, brand.id)} title="Edit">✏️</button>
-                      <TrashButton 
-                        className="delete" 
-                        onClick={(e: React.MouseEvent) => confirmDelete(e, brand.id)} 
-                        title="Delete Brand"
-                      />
+                      {canDelete && (
+                        <TrashButton
+                          className="delete"
+                          onClick={(e: React.MouseEvent) => confirmDelete(e, brand.id)}
+                          title="Delete Brand"
+                        />
+                      )}
                     </BrandActions>
                   </BrandItem>
                 );

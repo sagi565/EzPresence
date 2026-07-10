@@ -126,6 +126,31 @@ export const Dropdown = styled.div`
   }
 `;
 
+export const OptionsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: ${props => props.theme.mode === 'dark' ? `${props.theme.colors.primary}66` : `${props.theme.colors.primary}33`} transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: ${props => props.theme.mode === 'dark' ? `${props.theme.colors.primary}66` : `${props.theme.colors.primary}33`};
+    border-radius: 3px;
+  }
+
+  ${media.phone} {
+    gap: 12px;
+    max-height: 55vh;
+  }
+`;
+
 export const MobileHandle = styled.div`
   display: none;
   ${media.phone} {

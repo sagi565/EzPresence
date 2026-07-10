@@ -34,7 +34,10 @@ export const BrandProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (Array.isArray(response)) {
         const activeBrands = response
-          .filter(b => !b.softDeleteUntil || new Date(b.softDeleteUntil) > new Date())
+          // Hide brands that are currently soft-deleted (future softDeleteUntil =
+          // pending purge). Keep brands that were never deleted, or whose window
+          // already lapsed (defensive — the API normally excludes those).
+          .filter(b => !b.softDeleteUntil || new Date(b.softDeleteUntil) <= new Date())
           .map(convertApiBrandToBrand);
         
         setBrands(activeBrands);
@@ -57,16 +60,35 @@ export const BrandProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, []);
 
+  const fetchActiveBrand = useCallback(async () => {
+    if (!auth.currentUser) return null;
+    try {
+      const response = await api.get<ApiBrandDto>('/brands/active');
+      if (response) {
+        const activeBrand = convertApiBrandToBrand(response);
+        setCurrentBrand(activeBrand);
+        return activeBrand;
+      }
+      return null;
+    } catch (err) {
+      return null;
+    }
+  }, []);
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) fetchBrands();
-      else {
+      if (user) {
+        // Load the list first, then override currentBrand with the authoritative
+        // active brand so the right one is highlighted (fetchBrands only falls
+        // back to isActive-flag / first-brand).
+        fetchBrands().then(() => fetchActiveBrand());
+      } else {
         setBrands([]);
         setCurrentBrand(null);
       }
     });
     return () => unsubscribe();
-  }, [fetchBrands]);
+  }, [fetchBrands, fetchActiveBrand]);
 
   const switchBrand = useCallback(async (brandId: string) => {
     const brand = brands.find(b => b.id === brandId);
@@ -83,21 +105,6 @@ export const BrandProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.error('Failed to sync active brand', err);
     }
   }, [brands]);
-
-  const fetchActiveBrand = useCallback(async () => {
-    if (!auth.currentUser) return null;
-    try {
-      const response = await api.get<ApiBrandDto>('/brands/active');
-      if (response) {
-        const activeBrand = convertApiBrandToBrand(response);
-        setCurrentBrand(activeBrand);
-        return activeBrand;
-      }
-      return null;
-    } catch (err) {
-      return null;
-    }
-  }, []);
 
   return (
     <BrandContext.Provider value={{ 

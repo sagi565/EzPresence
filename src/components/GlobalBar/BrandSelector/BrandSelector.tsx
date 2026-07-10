@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Brand, getLogoDataUrl } from '@models/Brand';
-import { Container, Selector, TenantName, BrandIcon, Dropdown, Option, OptIcon, AddBrandBtn, AddIcon, LogoImage, Scrim, MobileHandle, MobileHeader, MobileTitle, CloseButton } from './styles';
+import { Container, Selector, TenantName, BrandIcon, Dropdown, OptionsList, Option, OptIcon, AddBrandBtn, AddIcon, LogoImage, Scrim, MobileHandle, MobileHeader, MobileTitle, CloseButton } from './styles';
 
 interface BrandSelectorProps {
   brands: Brand[];
@@ -94,6 +94,7 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
                     <CloseButton onClick={() => setIsOpen(false)}>✕</CloseButton>
                   </MobileHeader>
 
+                  <OptionsList>
                   {brands.map((brand) => {
                     const isActive = brand.id === currentBrand.id;
                     const isOptionHovered = hoveredOption === brand.id;
@@ -122,6 +123,7 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
                       </Option>
                     );
                   })}
+                  </OptionsList>
                   <AddBrandBtn
                     $isHovered={hoveredAddBtn}
                     onClick={handleAddBrand}
@@ -137,6 +139,7 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
             : (
                 <Dropdown onClick={(e) => e.stopPropagation()}>
                   {/* PC view: standard dropdown behavior */}
+                  <OptionsList>
                   {brands.map((brand) => {
                     const isActive = brand.id === currentBrand.id;
                     const isOptionHovered = hoveredOption === brand.id;
@@ -165,6 +168,7 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
                       </Option>
                     );
                   })}
+                  </OptionsList>
                   <AddBrandBtn
                     $isHovered={hoveredAddBtn}
                     onClick={handleAddBrand}

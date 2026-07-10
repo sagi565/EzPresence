@@ -5,6 +5,199 @@
     "version": "v1"
   },
   "paths": {
+    "/api/assets": {
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Creates a brand asset (metadata row) and returns its public ID. The bytes\r\nare then uploaded via the generic storage endpoints (entityType = asset).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetCreateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetCreateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Retrieves all (Ready) assets for the current active brand.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assets/{id}": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Retrieves a single asset by its public ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Updates editable asset metadata (description, content name). Classification\r\nis immutable — to reclassify, delete and re-upload.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Hard-deletes an asset (storage object + row).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/brands": {
       "get": {
         "tags": [
@@ -501,6 +694,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         ],
         "responses": {
@@ -586,6 +787,93 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/contents/{id}/restore-original": {
+      "post": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Restores the original media content by deleting any modified version (v2).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/contents/{id}/modified-version": {
+      "post": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Creates or replaces a modified version (v2) of the media content.\r\nUsed by: Studio Pipeline (Background Worker) via EZpresenceClient.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateModifiedVersionRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateModifiedVersionRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateModifiedVersionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
           }
         }
       }
@@ -703,6 +991,101 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/contents/processing": {
+      "post": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Creates a PROCESSING media content placeholder up-front and returns its uuid.\r\nUsed by: Studio Pipeline (Background Worker) for direct-execute, where the media\r\ncontent is created when planning finishes (the worker, not the API, drives it).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProcessingContentRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProcessingContentRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProcessingContentRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contents/{id}/error": {
+      "post": {
+        "tags": [
+          "Contents"
+        ],
+        "summary": "Flags a media content as Error. Used by: Studio Pipeline (Background Worker)\r\nwhen a render/upload fails after the placeholder was created.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentErrorRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentErrorRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentErrorRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -1200,13 +1583,206 @@
         }
       }
     },
-    "/api/storage/{id}/upload-url": {
+    "/api/schedules/{scheduleUuid}/posts": {
+      "get": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "Retrieves the per-platform posts of a schedule, including the internal SchPostId\r\nused to trigger uploads.",
+        "parameters": [
+          {
+            "name": "scheduleUuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SchedulePostSummaryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SchedulePostSummaryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SchedulePostSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shared-content": {
+      "post": {
+        "tags": [
+          "SharedContent"
+        ],
+        "summary": "Mints (or returns the existing) shareable link for a content UUID. Caller must own the content.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShareLinkRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShareLinkRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShareLinkRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareLinkDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareLinkDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareLinkDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shared-content/{hash}/resolve": {
+      "get": {
+        "tags": [
+          "SharedContent"
+        ],
+        "summary": "Anonymous resolve: hash → presigned URL + minimal metadata. Returns 404 when unknown / not READY / deleted.",
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolvedShareDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolvedShareDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolvedShareDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shared-content/{hash}/thumbnail.jpg": {
+      "get": {
+        "tags": [
+          "SharedContent"
+        ],
+        "summary": "Anonymous thumbnail bytes. Returns 404 same conditions as Resolve.",
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/shared-content/{hash}/og": {
+      "get": {
+        "tags": [
+          "SharedContent"
+        ],
+        "summary": "Returns a minimal HTML page with Open Graph and Twitter-card meta tags.\r\nCalled by the Cloudflare Worker when a social-crawler requests /videos/{hash}.",
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/storage/{entityType}/{id}/upload-url": {
       "get": {
         "tags": [
           "Storage"
         ],
-        "summary": "Generates a pre-signed upload URL for a media content item using its public ID.",
+        "summary": "Generates a pre-signed upload URL for a stored object item using its public ID.",
         "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "id",
             "in": "path",
@@ -1223,17 +1799,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/UploadPlanDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/UploadPlanDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/UploadPlanDto"
                 }
               }
             }
@@ -1241,13 +1817,21 @@
         }
       }
     },
-    "/api/storage/{id}/upload/complete": {
+    "/api/storage/{entityType}/{id}/upload/complete": {
       "post": {
         "tags": [
           "Storage"
         ],
-        "summary": "Completes an upload process by attaching a thumbnail to the media content item identified by its public ID.",
+        "summary": "Completes an upload process by attaching a thumbnail to the stored object item identified by its public ID.",
         "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "id",
             "in": "path",
@@ -1284,13 +1868,21 @@
         }
       }
     },
-    "/api/storage/{id}/upload/abort": {
+    "/api/storage/{entityType}/{id}/upload/abort": {
       "post": {
         "tags": [
           "Storage"
         ],
-        "summary": "Aborts an in-progress upload for a media content item identified by its public ID.",
+        "summary": "Aborts an in-progress upload for a stored object item identified by its public ID.",
         "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "id",
             "in": "path",
@@ -1308,13 +1900,21 @@
         }
       }
     },
-    "/api/storage/{id}/download-url": {
+    "/api/storage/{entityType}/{id}/download-url": {
       "get": {
         "tags": [
           "Storage"
         ],
-        "summary": "Generates a temporary download URL for a media content item using its public ID.",
+        "summary": "Generates a temporary download URL for a stored object item using its public ID.",
         "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "id",
             "in": "path",
@@ -1322,6 +1922,28 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "download",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "filename",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -1490,7 +2112,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "Saves a vision plan into the SQL database.\r\n(Called by the Studio Core worker).",
+        "summary": "Saves a vision plan into the SQL database.\r\nUsed by: Studio Pipeline (Background Worker) via EZpresenceClient.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1542,7 +2164,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "CREATOR ENDPOINT - Generates a structured vision plan via Vision Creator.",
+        "summary": "Generates a structured vision plan via Vision Creator.\r\nUsed by: Studio Pipeline (Background Worker) via EZpresenceClient.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1591,7 +2213,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "CREATOR ENDPOINT - Updates an existing Vision plan using an LLM based on a prompt.",
+        "summary": "Updates an existing Vision plan using an LLM based on a prompt.\r\nUsed by: Studio Pipeline (Background Worker) via EZpresenceClient.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1640,7 +2262,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "CREATOR ENDPOINT - Executes a vision plan to generate a video and uploads the result.",
+        "summary": "Executes a vision plan to generate a video and uploads the result.\r\nUsed by: Studio Pipeline (Background Worker) via EZpresenceClient.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1672,7 +2294,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "CREATOR ENDPOINT - Generates a structured vision plan and executes it immediately for video output.",
+        "summary": "Generates a structured vision plan and executes it immediately for video output.\r\nUsed by: Studio Pipeline (Background Worker) via EZpresenceClient.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1709,55 +2331,6 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StudioPlanResponseDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/studio/audio-url": {
-      "post": {
-        "tags": [
-          "Studio"
-        ],
-        "summary": "Retrieves a public audio URL for a social media link.\r\n(Awaits Studio API processing).",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MediaLinkRequestDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MediaLinkRequestDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/MediaLinkRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExternalResourceDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExternalResourceDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExternalResourceDto"
                 }
               }
             }
@@ -1770,7 +2343,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "Links a media content item to a vision plan record.\r\n(Called by the Studio Core worker).",
+        "summary": "Links a media content item to a vision plan record.\r\nUsed by: Studio Pipeline (Background Worker) via EZpresenceClient.",
         "parameters": [
           {
             "name": "planUuid",
@@ -1845,14 +2418,93 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Deletes an atlas plan by its public UUID.\r\nIf the plan is linked to a generated media content, the media content\r\nis preserved — only the plan record is removed.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/studio/atlas/plans": {
+      "get": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Retrieves all atlas plans for the current active brand.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AtlasPlanSummaryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AtlasPlanSummaryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AtlasPlanSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "Studio"
         ],
-        "summary": "Dynamically updates a atlas plan.",
+        "summary": "Dynamically updates an atlas plan. For per-scene edits, send\r\nupdatedProperties.scenes as a patch object keyed by 1-based scene number,\r\nnot as a scenes array, e.g. { \"1\": { \"scene_subject\": \"...\",\r\n\"scene_script_segment\": \"...\", \"scene_script_instruction\": \"...\",\r\n\"active_media\": \"...\" } }.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1882,7 +2534,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "Saves a atlas plan into the SQL database.\r\n(Called by the Studio Core worker).",
+        "summary": "Saves a atlas plan into the SQL database.\r\nUsed by: Studio Pipeline (Background Worker) via EZpresenceClient.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1934,7 +2586,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "CREATOR ENDPOINT - Generates a structured atlas plan via Atlas Creator.",
+        "summary": "Generates a structured atlas plan via Atlas Creator.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1983,7 +2635,7 @@
         "tags": [
           "Studio"
         ],
-        "summary": "CREATOR ENDPOINT - Updates resources for a specific scene index in a atlas plan.",
+        "summary": "Updates resources for a specific scene index in a atlas plan.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2027,12 +2679,61 @@
         }
       }
     },
+    "/api/studio/atlas/plans/delete-scene": {
+      "put": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Deletes a scene at the given index from an atlas plan.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtlasSceneDeleteRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtlasSceneDeleteRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtlasSceneDeleteRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/studio/atlas/creator/execute": {
       "post": {
         "tags": [
           "Studio"
         ],
-        "summary": "CREATOR ENDPOINT - Executes a Atlas video generation and uploads the result.",
+        "summary": "Executes a Atlas video generation and uploads the result.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2059,12 +2760,61 @@
         }
       }
     },
+    "/api/studio/atlas/creator/direct-execute": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Generates and immediately executes an Atlas video in one shot.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtlasDirectExecuteRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtlasDirectExecuteRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtlasDirectExecuteRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioPlanResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/studio/atlas/plans/{planUuid}/media/{contentUuid}": {
       "put": {
         "tags": [
           "Studio"
         ],
-        "summary": "Links a media content item to a atlas plan record.\r\n(Called by the Studio Core worker).",
+        "summary": "Links a media content item to a atlas plan record.\r\nUsed by: Studio Pipeline (Background Worker) via EZpresenceClient.",
         "parameters": [
           {
             "name": "planUuid",
@@ -2092,12 +2842,289 @@
         }
       }
     },
+    "/api/studio/wizards/execute": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Executes a chain of wizards on an existing media content.\r\nUsed by: Studio Pipeline (Background Worker) via EZpresenceClient.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WizardsExecuteRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WizardsExecuteRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WizardsExecuteRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/studio/features/audio-url": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Retrieves a public audio URL for a social media link.\r\n(Awaits Studio API processing).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaLinkRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaLinkRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaLinkRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalResourceDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalResourceDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalResourceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/features/generate-user-input-with-llm": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Expands a raw user prompt into a ready-to-use final narration script\r\nusing the configured LLM. The response is meant to be pasted into the\r\n`UserInput` field of `POST /atlas/creator/plan`.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateUserInputRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateUserInputRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateUserInputRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateUserInputResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateUserInputResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateUserInputResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/features/transcribe-link": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Downloads + transcribes the audio of a social media link.\r\nReturns the transcription and a `hasSpeech` flag — when speech\r\nis absent, `message` carries an explanatory string the caller\r\ncan surface to the user.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranscribeLinkRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranscribeLinkRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranscribeLinkRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscribeLinkResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscribeLinkResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscribeLinkResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/features/generate-music": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Generates music and returns the uploaded audio link.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateMusicRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateMusicRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateMusicRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateAudioResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateAudioResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateAudioResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/features/generate-narration": {
+      "post": {
+        "tags": [
+          "Studio"
+        ],
+        "summary": "Generates narration and returns the uploaded audio link.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateNarrationRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateNarrationRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateNarrationRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateAudioResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateAudioResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateAudioResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/studio/log-asset-generation": {
       "post": {
         "tags": [
           "Studio"
         ],
-        "summary": "Saves asset generation logs to the database.",
+        "summary": "Saves asset generation logs to the database.\r\nUsed by: Studio Pipeline (Background Worker) via EZpresenceClient.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2124,10 +3151,187 @@
         }
       }
     },
+    "/api/studio/credits": {
+      "get": {
+        "tags": [
+          "StudioCredits"
+        ],
+        "summary": "Current user's wallet: balance, and whether they are unlimited (admin).",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditWalletStatus"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditWalletStatus"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditWalletStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/credits/quote/atlas/plan/calculate": {
+      "post": {
+        "tags": [
+          "StudioCredits"
+        ],
+        "summary": "Quote an Atlas planning. Priced from the script length + adapted-image count.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditQuoteAtlasPlanRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditQuoteAtlasPlanRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditQuoteAtlasPlanRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditQuoteDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditQuoteDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditQuoteDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/credits/quote/atlas/execute/calculate": {
+      "post": {
+        "tags": [
+          "StudioCredits"
+        ],
+        "summary": "Quote an Atlas execution. Priced from scene/dynamic-image counts + captions/voice.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditQuoteAtlasExecuteRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditQuoteAtlasExecuteRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditQuoteAtlasExecuteRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditQuoteDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditQuoteDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditQuoteDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/credits/quote/atlas/direct-execute/calculate": {
+      "post": {
+        "tags": [
+          "StudioCredits"
+        ],
+        "summary": "Quote an Atlas direct-execute. Priced from the script length + dynamic-image count + captions/voice.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditQuoteAtlasDirectExecuteRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditQuoteAtlasDirectExecuteRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditQuoteAtlasDirectExecuteRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditQuoteDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditQuoteDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditQuoteDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/test/upload/{schPostId}": {
       "post": {
         "tags": [
-          "TempUploadTest"
+          "Uploader"
         ],
         "parameters": [
           {
@@ -2293,6 +3497,96 @@
   },
   "components": {
     "schemas": {
+      "AssetCreateDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Optional. The user's own description (user_description). Upload-first: the AI\r\n            generates a description and classifies the asset type at enrichment, not here.",
+            "nullable": true
+          },
+          "fileName": {
+            "type": "string",
+            "description": "Original filename (extension drives media-type inference).",
+            "nullable": true
+          },
+          "checksumSha256": {
+            "type": "string",
+            "description": "Base64 SHA-256 used for upload integrity.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request to create a brand asset (metadata row). The actual bytes are then\r\nuploaded via the generic storage endpoints (entityType = asset)."
+      },
+      "AssetDto": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetType": {
+            "type": "string",
+            "description": "Null until enrichment classifies the asset.",
+            "nullable": true
+          },
+          "mediaType": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "User-supplied/editable description (user_description); may be null.",
+            "nullable": true
+          },
+          "generatedDescription": {
+            "type": "string",
+            "description": "AI caption written at enrichment; null until Ready.",
+            "nullable": true
+          },
+          "contentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contentExtension": {
+            "type": "string",
+            "nullable": true
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "sizeBytesCompressed": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "durationMs": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "thumbnailObject": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/StorableStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "AssetGenerationLogCreateRequestDto": {
         "type": "object",
         "properties": {
@@ -2313,11 +3607,20 @@
             "type": "string",
             "nullable": true
           },
-          "mediaContentUuid": {
+          "objectReference": {
             "type": "string",
-            "format": "uuid"
+            "nullable": true
+          },
+          "objectUuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           },
           "action": {
+            "type": "string",
+            "nullable": true
+          },
+          "details": {
             "type": "string",
             "nullable": true
           },
@@ -2351,6 +3654,164 @@
           "model": {
             "type": "string",
             "nullable": true
+          },
+          "itemCode": {
+            "type": "string",
+            "description": "Optional catalog item (service) this call is charged under, e.g.\r\n`atlas.voice`. When a producer doesn't set it, the ingestion endpoint\r\nresolves it from (creator, phase, source, asset_type). See\r\nEZpresence.Core.Services.AssetItemCodeResolver.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetUpdateDto": {
+        "type": "object",
+        "properties": {
+          "updatedProperties": {
+            "$ref": "#/components/schemas/AssetUpdatePropsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssetUpdatePropsDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "contentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "assetType": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Whitelisted, user-editable asset metadata. Changing `AssetType` is a\r\n(rare) reclassification: the service relocates the object to the new asset-type\r\nfolder in storage and repoints the row."
+      },
+      "AtlasAttachedAssetDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable id the planner uses to address this asset across the scene list.\r\nServer-derived from EZpresence.Core.Models.Dtos.Studio.AtlasAttachedAssetDto.AssetUuid; the media id derives from it\r\ntoo, so cross-scene dedup is stable.",
+            "nullable": true
+          },
+          "assetUuid": {
+            "type": "string",
+            "description": "The Ready brand asset's uuid — the only field the client supplies, and the\r\ndurable identity used to re-mint the presigned GET at execute time.",
+            "format": "uuid"
+          },
+          "assetType": {
+            "type": "string",
+            "description": "Ingest-classified type (`Logo|Person|Object|Location|Graphic`).\r\nServer-filled from enrichment; the planner trusts it verbatim.",
+            "nullable": true
+          },
+          "mediaType": {
+            "type": "string",
+            "description": "`\"image\"` or `\"video\"`. Server-filled from the asset. Videos render\r\n            verbatim; the worker forces EZpresence.Core.Models.Dtos.Studio.AtlasAttachedAssetDto.Mode to `\"static\"` for them.",
+            "nullable": true
+          },
+          "userDescription": {
+            "type": "string",
+            "description": "User-supplied/editable description (intent). Server-filled; may be null\r\n(upload-first UX). Used together with EZpresence.Core.Models.Dtos.Studio.AtlasAttachedAssetDto.GeneratedDescription.",
+            "nullable": true
+          },
+          "generatedDescription": {
+            "type": "string",
+            "description": "AI caption written at enrichment, in `scene_visual_description` style.\r\nServer-filled; the reliable matchable signal for placement.",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "description": "Freshly-minted presigned GET for the asset's R2 object. Server-filled at\r\nrequest build; never trusted at execute (expired by then — re-minted from\r\nEZpresence.Core.Models.Dtos.Studio.AtlasAttachedAssetDto.AssetUuid).",
+            "nullable": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "Render mode for images: `\"static\"` shows the still; `\"dynamic\"`\r\nruns Seedance image-to-video. Forced to `\"static\"` for videos.",
+            "nullable": true
+          },
+          "adaptToScene": {
+            "type": "boolean",
+            "description": "When true, the planner runs the image through gpt-image-2 with the matched\r\nscene's script as context and adds the scene-tailored result alongside the\r\noriginal. Always false for video assets."
+          }
+        },
+        "additionalProperties": false,
+        "description": "A brand `Asset` the user attached to <i>this</i> Atlas plan session\r\n(Track A — \"hero\"). The client sends only the EZpresence.Core.Models.Dtos.Studio.AtlasAttachedAssetDto.AssetUuid (plus\r\nthe per-attachment render toggles); the rest of the projection — type, both\r\ndescriptions, media kind, and a freshly-minted presigned GET EZpresence.Core.Models.Dtos.Studio.AtlasAttachedAssetDto.Url\r\n— is resolved <b>server-side</b> from the Ready asset before the request is\r\nforwarded to Studio (the planner reads this precomputed <b>text</b>, never the\r\npixels). Once planned, the asset becomes one (or two) EZpresence.Core.Models.Dtos.Studio.AtlasMediaDto\r\nitems on a scene; EZpresence.Core.Models.Dtos.Studio.AtlasAttachedAssetDto.AssetUuid is the durable identity persisted in\r\nthe plan and re-minted into a presigned GET at execute time."
+      },
+      "AtlasAttachmentDto": {
+        "type": "object",
+        "properties": {
+          "assetUuid": {
+            "type": "string",
+            "description": "Durable identity of the brand asset this attachment renders. The persisted\r\nplan URL is a presigned GET that expires, so at execute time the URL is\r\nre-minted from this uuid rather than trusted from the plan. Always set for a\r\nreal attachment (its presence is co-located with the discriminator block).",
+            "format": "uuid",
+            "nullable": true
+          },
+          "mediaKind": {
+            "type": "string",
+            "description": "`\"image\"` or `\"video\"`.",
+            "nullable": true
+          },
+          "mode": {
+            "type": "string",
+            "description": "Render mode: `\"static\"` (still/clip verbatim) or `\"dynamic\"`\r\n(Seedance image-to-video). Forced `\"static\"` for video.",
+            "nullable": true
+          },
+          "adaptedFrom": {
+            "type": "string",
+            "description": "For a gpt-image-2 scene-adapted variant, the id of the original\r\nattachment media item it was adapted from. Null for the original\r\n(un-adapted) attachment.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Render metadata for a user-supplied attachment media item."
+      },
+      "AtlasDirectExecuteRequestDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "description": "Plan id generated by the API (not the client) so the planning credit charge\r\nand the resulting plan share one key. Sent to the worker, which uses it as\r\nthe plan_uuid instead of generating its own.",
+            "format": "uuid",
+            "nullable": true
+          },
+          "userInput": {
+            "type": "string",
+            "description": "The user's final narration script. Atlas no longer rewrites this — clients\r\nthat need raw-idea → script expansion should call\r\n`POST /studio/atlas/creator/generate-user-input-with-llm` first and\r\npaste the response into this field.",
+            "nullable": true
+          },
+          "llmModel": {
+            "type": "string",
+            "nullable": true
+          },
+          "attachedAssets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtlasAttachedAssetDto"
+            },
+            "description": "Up to 5 user-supplied creative assets (images or videos) Atlas should\r\nweave into the timeline. The planner LLM classifies each asset and\r\npairs it with the scene whose script best fits — assets without a\r\nmatch land as closing scenes in input order.",
+            "nullable": true
+          },
+          "socialMediaLink": {
+            "$ref": "#/components/schemas/SocialMediaLinkDto"
+          },
+          "useCaptions": {
+            "type": "boolean",
+            "description": "When true, the generated plan is seeded with the default caption theme\r\n(rubik_white_lines_blur) as its ActiveCaptions. When false (default), the\r\nplan is created without captions."
+          },
+          "useWebSearch": {
+            "type": "boolean",
+            "description": "UseWebSearch feature (default true). The planner marks scenes that\r\nname a subject stock footage cannot depict (real personas,\r\ncharacters, branded products, recent events) with a per-scene\r\nsearchable subject; the resources manager searches the open web for\r\nit, ranks the images in the scene's similarity check, and validates\r\nthe winners with an LLM (real photo, highly correlated to the\r\nsubject). Winning images render as Ken-Burns stills."
+          },
+          "narrator": {
+            "$ref": "#/components/schemas/AtlasNarratorTheme"
+          },
+          "captions": {
+            "$ref": "#/components/schemas/CaptionsWizardConfigDto"
           }
         },
         "additionalProperties": false
@@ -2362,29 +3823,19 @@
             "type": "string",
             "format": "uuid"
           },
+          "narrator": {
+            "$ref": "#/components/schemas/AtlasNarratorTheme"
+          },
           "mediaIds": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "nullable": true
-          },
-          "voice": {
-            "type": "string",
-            "nullable": true
-          },
-          "speed": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "backgroundAudio": {
-            "type": "string",
+            "description": "Optional per-execute media override (one id per scene, in scene order). When\r\nomitted the service falls back to each scene's persisted `active_media`.",
             "nullable": true
           },
           "captions": {
-            "type": "string",
-            "nullable": true
+            "$ref": "#/components/schemas/CaptionsWizardConfigDto"
           }
         },
         "additionalProperties": false
@@ -2398,10 +3849,47 @@
           },
           "url": {
             "type": "string",
+            "description": "Direct, renderable media URL. Set for stock (a public, non-expiring provider\r\nURL). NULL for a user attachment.",
+            "nullable": true
+          },
+          "duration": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "thumbnail": {
+            "type": "string",
+            "description": "Preview image URL for a stock clip (Pexels screenshot / Pixabay\r\nrendition thumbnail), letting the plan UI show a still without\r\nloading the full video. Null for user attachments and any provider\r\nthat doesn't supply one.",
+            "nullable": true
+          },
+          "attachment": {
+            "$ref": "#/components/schemas/AtlasAttachmentDto"
+          },
+          "mediaKind": {
+            "type": "string",
+            "description": "`\"image\"` for a still — today that means a wide-web image found\r\n            by the UseWebSearch feature (a real photo of a named subject —\r\n            persona, character, product, event — that stock cannot depict),\r\n            which the executor renders as a Ken-Burns still. Null/`\"video\"`\r\n            for stock clips. Attachments carry their own kind on\r\n            EZpresence.Core.Models.Dtos.Studio.AtlasMediaDto.Attachment.",
+            "nullable": true
+          },
+          "provider": {
+            "type": "string",
+            "description": "Which source produced this media item: `\"pexels\"` /\r\n`\"pixabay\"` (stock), `\"asset\"` (brand-library\r\nattachment), `\"web_search\"` (UseWebSearch wide-web image).\r\nInformational attribution for the UI — the executor discriminates\r\non EZpresence.Core.Models.Dtos.Studio.AtlasMediaDto.Attachment / EZpresence.Core.Models.Dtos.Studio.AtlasMediaDto.MediaKind, not on\r\nthis. Null for plans persisted before the field existed.",
             "nullable": true
           }
         },
         "additionalProperties": false
+      },
+      "AtlasNarratorTheme": {
+        "enum": [
+          "grant",
+          "crofty",
+          "parker_springfield",
+          "jessica",
+          "beth",
+          "john",
+          "silas",
+          "ray"
+        ],
+        "type": "string"
       },
       "AtlasPlanCreateDto": {
         "type": "object",
@@ -2410,11 +3898,36 @@
             "type": "string",
             "format": "uuid"
           },
-          "clipScript": {
+          "clipTitle": {
             "type": "string",
             "nullable": true
           },
           "clipSubject": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipScript": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipMusicInstructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "activeVoice": {
+            "type": "string",
+            "nullable": true
+          },
+          "activeCaptions": {
+            "type": "string",
+            "nullable": true
+          },
+          "planningDuration": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "inputPrompt": {
             "type": "string",
             "nullable": true
           },
@@ -2424,6 +3937,12 @@
               "$ref": "#/components/schemas/AtlasSceneDto"
             },
             "nullable": true
+          },
+          "socialMediaLink": {
+            "$ref": "#/components/schemas/SocialMediaLinkDto"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StudioPlanStatus"
           }
         },
         "additionalProperties": false
@@ -2435,11 +3954,28 @@
             "type": "string",
             "format": "uuid"
           },
-          "clipScript": {
+          "clipTitle": {
             "type": "string",
             "nullable": true
           },
           "clipSubject": {
+            "type": "string",
+            "description": "Fallback stock-search topic used when a scene's SceneSubject returns\r\ntoo few results. 1-3 word general topic of the whole video.",
+            "nullable": true
+          },
+          "clipScript": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipMusicInstructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "activeVoice": {
+            "type": "string",
+            "nullable": true
+          },
+          "activeCaptions": {
             "type": "string",
             "nullable": true
           },
@@ -2450,6 +3986,9 @@
             },
             "nullable": true
           },
+          "socialMediaLink": {
+            "$ref": "#/components/schemas/SocialMediaLinkDto"
+          },
           "mediaContentUuid": {
             "type": "string",
             "format": "uuid",
@@ -2458,6 +3997,12 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "executedAt": {
+            "type": "string",
+            "description": "When the plan was executed (status entered 'executing'). Null until executed.",
+            "format": "date-time",
+            "nullable": true
           },
           "status": {
             "$ref": "#/components/schemas/StudioPlanStatus"
@@ -2468,12 +4013,77 @@
       "AtlasPlanRequestDto": {
         "type": "object",
         "properties": {
-          "clipScript": {
+          "planUuid": {
+            "type": "string",
+            "description": "Plan id generated by the API (not the client) so the planning credit charge\r\nand the resulting plan share one key. Sent to the worker, which uses it as\r\nthe plan_uuid instead of generating its own.",
+            "format": "uuid",
+            "nullable": true
+          },
+          "userInput": {
+            "type": "string",
+            "description": "The user's final narration script. Atlas no longer rewrites this — clients\r\nthat need raw-idea → script expansion should call\r\n`POST /studio/atlas/creator/generate-user-input-with-llm` first and\r\npaste the response into this field.",
+            "nullable": true
+          },
+          "llmModel": {
             "type": "string",
             "nullable": true
           },
-          "clipSubject": {
+          "attachedAssets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtlasAttachedAssetDto"
+            },
+            "description": "Up to 5 user-supplied creative assets (images or videos) Atlas should\r\nweave into the timeline. The planner LLM classifies each asset and\r\npairs it with the scene whose script best fits — assets without a\r\nmatch land as closing scenes in input order.",
+            "nullable": true
+          },
+          "socialMediaLink": {
+            "$ref": "#/components/schemas/SocialMediaLinkDto"
+          },
+          "useCaptions": {
+            "type": "boolean",
+            "description": "When true, the generated plan is seeded with the default caption theme\r\n(rubik_white_lines_blur) as its ActiveCaptions. When false (default), the\r\nplan is created without captions."
+          },
+          "useWebSearch": {
+            "type": "boolean",
+            "description": "UseWebSearch feature (default true). The planner marks scenes that\r\nname a subject stock footage cannot depict (real personas,\r\ncharacters, branded products, recent events) with a per-scene\r\nsearchable subject; the resources manager searches the open web for\r\nit, ranks the images in the scene's similarity check, and validates\r\nthe winners with an LLM (real photo, highly correlated to the\r\nsubject). Winning images render as Ken-Burns stills."
+          }
+        },
+        "additionalProperties": false
+      },
+      "AtlasPlanSummaryDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
             "type": "string",
+            "format": "uuid"
+          },
+          "clipTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/StudioPlanStatus"
+          },
+          "lastVersionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mediaContentUuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "thumbnailObject": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "executedAt": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         },
@@ -2495,7 +4105,23 @@
       "AtlasPlanUpdatePropsDto": {
         "type": "object",
         "properties": {
+          "clipTitle": {
+            "type": "string",
+            "nullable": true
+          },
           "clipSubject": {
+            "type": "string",
+            "nullable": true
+          },
+          "clipMusicInstructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "activeVoice": {
+            "type": "string",
+            "nullable": true
+          },
+          "activeCaptions": {
             "type": "string",
             "nullable": true
           },
@@ -2505,6 +4131,23 @@
               "$ref": "#/components/schemas/AtlasSceneDto"
             },
             "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/StudioPlanStatus"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AtlasSceneDeleteRequestDto": {
+        "type": "object",
+        "properties": {
+          "planUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sceneId": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -2516,8 +4159,35 @@
             "type": "integer",
             "format": "int32"
           },
+          "sceneSubject": {
+            "type": "string",
+            "description": "1-2 word noun phrase used VERBATIM as the stock-footage search query\r\nfor this scene's visuals. Falls back to the plan-level ClipSubject\r\nwhen too few results are returned.",
+            "nullable": true
+          },
           "sceneScriptSegment": {
             "type": "string",
+            "nullable": true
+          },
+          "sceneScriptInstruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "isOutroScene": {
+            "type": "boolean",
+            "description": "True for a silent outro scene covering the instrumental tail of a\r\nsocial-media-link voice clip (empty script segment)."
+          },
+          "isIntroScene": {
+            "type": "boolean",
+            "description": "True for a standalone intro scene covering the instrumental lead-in\r\nBEFORE the first spoken word of a social-media-link voice clip."
+          },
+          "isInterludeScene": {
+            "type": "boolean",
+            "description": "True for a standalone interlude scene covering an instrumental gap\r\nBETWEEN two spoken lines of a social-media-link voice clip."
+          },
+          "targetMediaDuration": {
+            "type": "number",
+            "description": "Minimum source-clip duration (seconds) the resolver aimed for when\r\npicking this scene's stock media. Set on intro/interlude/outro gap\r\nscenes; null for ordinary scenes.",
+            "format": "double",
             "nullable": true
           },
           "media": {
@@ -2525,6 +4195,11 @@
             "items": {
               "$ref": "#/components/schemas/AtlasMediaDto"
             },
+            "nullable": true
+          },
+          "activeMedia": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           }
         },
@@ -2542,6 +4217,50 @@
             "format": "int32"
           },
           "prompt": {
+            "type": "string",
+            "description": "New search subject for the scene. When null/empty, Studio Core asks\r\nthe Atlas planner to regenerate an alternative search term based on\r\nthe scene's segment and the plan's clip script.",
+            "nullable": true
+          },
+          "excludeSubjects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Prior search-term suggestions the caller has already seen and wants\r\nthe planner to avoid in the next regeneration. Only honored when\r\n`Prompt` is null/empty (the magic-update path). Lets the client\r\ndrive its own per-scene history without server-side state.",
+            "nullable": true
+          },
+          "reimagine": {
+            "type": "boolean",
+            "description": "When true, ask the planner to pick a search term from a different\r\nconceptual angle instead of staying close to the segment's literal\r\ntopic. Only honored on the magic-update path (`Prompt` null/empty)."
+          }
+        },
+        "additionalProperties": false
+      },
+      "AvatarWizardConfigDto": {
+        "type": "object",
+        "properties": {
+          "avatarName": {
+            "type": "string",
+            "nullable": true
+          },
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "style": {
+            "type": "string",
+            "nullable": true
+          },
+          "sizeRatio": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "position": {
+            "type": "string",
+            "nullable": true
+          },
+          "voiceId": {
             "type": "string",
             "nullable": true
           }
@@ -2825,6 +4544,41 @@
         },
         "additionalProperties": false
       },
+      "CaptionTheme": {
+        "enum": [
+          "rubik_white_lines_blur",
+          "rubik_white_words_shadow",
+          "rubik_white_words_shadow_pop",
+          "rubik_transparent_lines_highlight",
+          "rubik_white_lines_glow",
+          "poetsenone_white_lines_highlight_green",
+          "poetsenone_yellow_words",
+          "poetsenone_white_lines_blur_glow",
+          "poetsenone_blue_words",
+          "poetsenone_green_words",
+          "rubik_thin_yellow_lines",
+          "poetsenone_yellow_words_pop",
+          "flagship_karaoke_pop",
+          "flagship_full",
+          "flagship_hot_pink_words",
+          "flagship_sunset_block",
+          "flagship_glitch_focus"
+        ],
+        "type": "string"
+      },
+      "CaptionsWizardConfigDto": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "$ref": "#/components/schemas/CaptionTheme"
+          },
+          "enable_emoji": {
+            "type": "boolean",
+            "description": "When true, the Atlas executor calls the emoji planner and forwards\r\nemoji_assignments to the Captions Wizard. Default: false.\r\nBound from BOTH camelCase (\"enableEmoji\") inbound and snake_case\r\n(\"enable_emoji\") outbound — explicit so naming-policy changes can't\r\nsilently flip it back to false."
+          }
+        },
+        "additionalProperties": false
+      },
       "CompleteUploadRequestDto": {
         "required": [
           "thumbnailObject"
@@ -2835,9 +4589,25 @@
             "minLength": 1,
             "type": "string",
             "description": "Thumbnail bytes (Swagger sends this as base64).\r\nHard-limited to 1MB by design."
+          },
+          "durationMs": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
+      },
+      "ContentErrorRequestDto": {
+        "type": "object",
+        "properties": {
+          "errorDescription": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request to flag a media content as Error (used by the Studio worker when a\r\nrender/upload fails after the placeholder was created)."
       },
       "ContentReportRequestDto": {
         "required": [
@@ -2853,16 +4623,36 @@
         },
         "additionalProperties": false
       },
-      "ContentStatus": {
-        "enum": [
-          "Uploading",
-          "Ready",
-          "Deleted",
-          "Aborted",
-          "Error"
-        ],
-        "type": "string",
-        "description": "Storage lifecycle state."
+      "CreateModifiedVersionRequestDto": {
+        "type": "object",
+        "properties": {
+          "checksumSha256": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateProcessingContentRequestDto": {
+        "type": "object",
+        "properties": {
+          "contentName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request to create a PROCESSING media content placeholder up-front\r\n(used by the Studio worker for direct-execute)."
+      },
+      "CreateShareLinkRequestDto": {
+        "type": "object",
+        "properties": {
+          "contentUuid": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
       },
       "CreateUploadPlanRequestDto": {
         "type": "object",
@@ -2870,6 +4660,12 @@
           "listUuid": {
             "type": "string",
             "format": "uuid"
+          },
+          "contentUuid": {
+            "type": "string",
+            "description": "Optional. When set, the create call finalizes a pre-created\r\n'Processing' placeholder row (created at execute time) in place —\r\nfilling in the checksum and transitioning it to UPLOADING — instead\r\nof inserting a brand-new row. Falls back to a fresh insert when no\r\nmatching row exists.",
+            "format": "uuid",
+            "nullable": true
           },
           "contentName": {
             "type": "string",
@@ -2882,9 +4678,115 @@
           "isEzGenerated": {
             "type": "boolean",
             "nullable": true
+          },
+          "durationMs": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
+      },
+      "CreditQuoteAtlasDirectExecuteRequestDto": {
+        "type": "object",
+        "properties": {
+          "scriptCharsCount": {
+            "type": "integer",
+            "description": "Script character count (the frontend calculates it). Used by both atlas.plan and atlas.exec.",
+            "format": "int32"
+          },
+          "adaptedImageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dynamicImageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "captionsEnabled": {
+            "type": "boolean"
+          },
+          "voiceEnabled": {
+            "type": "boolean"
+          },
+          "audioAsScriptDurationSeconds": {
+            "type": "integer",
+            "description": "Input audio transcribed as the script: when set, execution is priced by this\r\nclip duration (whole seconds, atlas.exec_audio) instead of per char, and voice\r\nis not charged. Null/omitted = normal per-char execution.",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Atlas direct-execute quote (direct-execute also plans, so it includes the adapt count)."
+      },
+      "CreditQuoteAtlasExecuteRequestDto": {
+        "type": "object",
+        "properties": {
+          "scriptCharsCount": {
+            "type": "integer",
+            "description": "Script character count (the frontend calculates it). Drives exec + captions/voice.",
+            "format": "int32"
+          },
+          "dynamicImageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "captionsEnabled": {
+            "type": "boolean"
+          },
+          "voiceEnabled": {
+            "type": "boolean"
+          },
+          "audioAsScriptDurationSeconds": {
+            "type": "integer",
+            "description": "Input audio transcribed as the script: when set, execution is priced by this\r\nclip duration (whole seconds, atlas.exec_audio) instead of per char, and voice\r\nis not charged. Null/omitted = normal per-char execution.",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Atlas execution quote."
+      },
+      "CreditQuoteAtlasPlanRequestDto": {
+        "type": "object",
+        "properties": {
+          "scriptCharsCount": {
+            "type": "integer",
+            "description": "Script character count (the frontend calculates it).",
+            "format": "int32"
+          },
+          "adaptedImageCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Atlas planning quote."
+      },
+      "CreditQuoteDto": {
+        "type": "object",
+        "properties": {
+          "credits": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false,
+        "description": "A computed quote, in credits (1,000 credits = 1 USD)."
+      },
+      "CreditWalletStatus": {
+        "type": "object",
+        "properties": {
+          "balance": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unlimited": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Wallet snapshot for the Studio credits read API.\r\nUnlimited is true for admins, who are never charged."
       },
       "ExternalResourceDto": {
         "type": "object",
@@ -2900,6 +4802,97 @@
           },
           "videoName": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GenerateAudioResponseDto": {
+        "type": "object",
+        "properties": {
+          "audio_link": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GenerateMusicRequestDto": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "model": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GenerateNarrationRequestDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "model": {
+            "type": "string",
+            "nullable": true
+          },
+          "voice": {
+            "type": "string",
+            "nullable": true
+          },
+          "speed": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "instructions": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GenerateUserInputRequestDto": {
+        "type": "object",
+        "properties": {
+          "userPrompt": {
+            "type": "string",
+            "description": "Raw idea the user typed. The LLM expands it into a ready-to-speak\r\nfinal narration script the user can review before kicking off\r\nplanning.",
+            "nullable": true
+          },
+          "durationLevel": {
+            "type": "string",
+            "description": "Target script length band. Only used to size the generated script.",
+            "nullable": true
+          },
+          "llmModel": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GenerateUserInputResponseDto": {
+        "type": "object",
+        "properties": {
+          "userInput": {
+            "type": "string",
+            "description": "The generated final narration script — ready to be pasted into the\r\nAtlas plan request as `UserInput`.",
             "nullable": true
           }
         },
@@ -2967,6 +4960,10 @@
             "type": "string",
             "format": "uuid"
           },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
           "listUuid": {
             "type": "string",
             "format": "uuid",
@@ -3005,7 +5002,7 @@
             "nullable": true
           },
           "status": {
-            "$ref": "#/components/schemas/ContentStatus"
+            "$ref": "#/components/schemas/StorableStatus"
           },
           "softDeleteUntil": {
             "type": "string",
@@ -3113,6 +5110,70 @@
         },
         "additionalProperties": false
       },
+      "MusicWizardConfigDto": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "model": {
+            "type": "string",
+            "nullable": true
+          },
+          "offset": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "link": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "NarratorWizardConfigDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "model": {
+            "type": "string",
+            "nullable": true
+          },
+          "voice": {
+            "type": "string",
+            "nullable": true
+          },
+          "speed": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "instructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "offset": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "link": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "PlatformAccountDto": {
         "type": "object",
         "properties": {
@@ -3144,6 +5205,50 @@
               "type": "string",
               "format": "uuid"
             },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResolvedShareDto": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string",
+            "nullable": true
+          },
+          "contentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contentType": {
+            "type": "string",
+            "nullable": true
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "downloadUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "downloadUrlExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "durationMs": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64",
             "nullable": true
           }
         },
@@ -3225,6 +5330,38 @@
         },
         "additionalProperties": false
       },
+      "SchedulePostSummaryDto": {
+        "type": "object",
+        "properties": {
+          "schPostId": {
+            "type": "integer",
+            "description": "Internal unique ID of the post — the value consumed by the uploader endpoint.",
+            "format": "int64"
+          },
+          "platform": {
+            "type": "string",
+            "description": "Target platform, e.g. \"INSTAGRAM\", \"TIKTOK\", \"YOUTUBE\".",
+            "nullable": true
+          },
+          "plannedAtUtc": {
+            "type": "string",
+            "description": "Planned posting time (UTC).",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current post status, e.g. \"Pending\", \"InProgress\", \"Success\", \"Failed\".",
+            "nullable": true
+          },
+          "calendarItemId": {
+            "type": "string",
+            "description": "Encoded calendar item id for this occurrence — the identifier\r\n`PUT /api/schedules` expects to update the schedule/occurrence.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Lightweight read view of a single SchedulePost. Exposes the internal\r\nEZpresence.Core.Models.Dtos.Schedules.SchedulePostSummaryDto.SchPostId needed to drive per-platform uploads\r\n(e.g. `POST /api/test/upload/{schPostId}`) without surfacing the full entity."
+      },
       "ScheduleUpdateDto": {
         "type": "object",
         "properties": {
@@ -3301,6 +5438,20 @@
         },
         "additionalProperties": false
       },
+      "ShareLinkDto": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "SocialMediaLinkDto": {
         "type": "object",
         "properties": {
@@ -3315,9 +5466,25 @@
           "durationMs": {
             "type": "number",
             "format": "double"
+          },
+          "useAsScript": {
+            "type": "boolean",
+            "description": "When true (default), if the linked audio contains speech the\r\ntranscript becomes the plan's clip script (voice mode at execute\r\ntime). When false, the audio is always treated as background\r\nmusic — speech is ignored and the executor generates its own\r\nnarration on top."
           }
         },
         "additionalProperties": false
+      },
+      "StorableStatus": {
+        "enum": [
+          "Uploading",
+          "Ready",
+          "Deleted",
+          "Aborted",
+          "Processing",
+          "Error"
+        ],
+        "type": "string",
+        "description": "Storage lifecycle state."
       },
       "StudioPlanResponseDto": {
         "type": "object",
@@ -3332,7 +5499,8 @@
       "StudioPlanStatus": {
         "enum": [
           "Draft",
-          "Processing",
+          "Planning",
+          "Executing",
           "Done",
           "Failed"
         ],
@@ -3400,6 +5568,89 @@
         },
         "additionalProperties": false,
         "description": "Options specific to uploading content to TikTok."
+      },
+      "TranscribeLinkRequestDto": {
+        "type": "object",
+        "properties": {
+          "mediaLink": {
+            "type": "string",
+            "description": "The social media URL to download + transcribe.",
+            "nullable": true
+          },
+          "offsetMs": {
+            "type": "number",
+            "description": "Start offset into the clip, in milliseconds. Defaults to 0.",
+            "format": "double",
+            "nullable": true
+          },
+          "durationMs": {
+            "type": "number",
+            "description": "Window duration in milliseconds. Defaults to the 10s minimum.",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TranscribeLinkResponseDto": {
+        "type": "object",
+        "properties": {
+          "transcription": {
+            "type": "string",
+            "description": "The transcribed text. Empty when no speech was detected — see\r\nEZpresence.Core.Models.Dtos.Studio.TranscribeLinkResponseDto.HasSpeech and EZpresence.Core.Models.Dtos.Studio.TranscribeLinkResponseDto.Message.",
+            "nullable": true
+          },
+          "hasSpeech": {
+            "type": "boolean",
+            "description": "True when speech was detected and transcribed."
+          },
+          "durationMs": {
+            "type": "number",
+            "description": "Actual usable duration of the downloaded clip, in milliseconds.",
+            "format": "double"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable status message — populated with an explanatory string\r\nwhen no speech was found, otherwise empty.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UploadPlanDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Single file or multi file: always single.",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "description": "HTTP method to use (PUT).",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "description": "Pre-signed URL.",
+            "nullable": true
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Required request headers (must be sent exactly as provided).",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Absolute expiration timestamp (UTC).",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Describes how a client should upload a file directly to storage.\r\nReturned as JSON to the frontend."
       },
       "UserCreateDto": {
         "type": "object",
@@ -3472,7 +5723,7 @@
             "type": "string",
             "nullable": true
           },
-          "isDev": {
+          "isAdmin": {
             "type": "boolean",
             "nullable": true
           },
@@ -3570,8 +5821,7 @@
             "type": "boolean"
           },
           "captions": {
-            "type": "string",
-            "nullable": true
+            "$ref": "#/components/schemas/CaptionsWizardConfigDto"
           }
         },
         "additionalProperties": false
@@ -3587,8 +5837,7 @@
             "type": "boolean"
           },
           "captions": {
-            "type": "string",
-            "nullable": true
+            "$ref": "#/components/schemas/CaptionsWizardConfigDto"
           },
           "version": {
             "type": "integer",
@@ -3647,6 +5896,14 @@
           },
           "socialMediaLink": {
             "$ref": "#/components/schemas/SocialMediaLinkDto"
+          },
+          "inputPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "durationLevel": {
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "$ref": "#/components/schemas/StudioPlanStatus"
@@ -3715,6 +5972,10 @@
           "totalVersions": {
             "type": "integer",
             "format": "int32"
+          },
+          "durationLevel": {
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "$ref": "#/components/schemas/StudioPlanStatus"
@@ -3856,6 +6117,10 @@
             "format": "double",
             "nullable": true
           },
+          "inputPrompt": {
+            "type": "string",
+            "nullable": true
+          },
           "scenes": {
             "nullable": true
           },
@@ -3895,6 +6160,30 @@
           }
         },
         "additionalProperties": false
+      },
+      "WizardsExecuteRequestDto": {
+        "type": "object",
+        "properties": {
+          "mediaContentUuid": {
+            "type": "string",
+            "description": "The UUID of the media content to apply wizards to.",
+            "format": "uuid"
+          },
+          "captionsWizard": {
+            "$ref": "#/components/schemas/CaptionsWizardConfigDto"
+          },
+          "musicWizard": {
+            "$ref": "#/components/schemas/MusicWizardConfigDto"
+          },
+          "narratorWizard": {
+            "$ref": "#/components/schemas/NarratorWizardConfigDto"
+          },
+          "avatarWizard": {
+            "$ref": "#/components/schemas/AvatarWizardConfigDto"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request to execute one or more wizards on a media content item.\r\nThe wizards are applied in a fixed optimal order: Avatar -> Narrator -> Captions -> Music."
       },
       "YouTubeUploadOptions": {
         "required": [

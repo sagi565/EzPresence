@@ -204,13 +204,13 @@ export const BrandItem = styled.div<{ $active: boolean }>`
   gap: 12px;
   padding: 8px 12px;
   border-radius: ${props => props.theme.borderRadius.md};
-  background: ${props => props.$active ? `${props.theme.colors.primary}14` : 'transparent'};
-  border: none;
+  background: ${props => props.$active ? `${props.theme.colors.primary}24` : 'transparent'};
+  border: 1px solid ${props => props.$active ? `${props.theme.colors.primary}55` : 'transparent'};
   transition: all 0.2s;
-  cursor: pointer;
+  cursor: ${props => props.$active ? 'default' : 'pointer'};
 
   &:hover {
-    background: rgba(155, 93, 229, 0.05);
+    background: ${props => props.$active ? `${props.theme.colors.primary}24` : 'rgba(155, 93, 229, 0.05)'};
   }
 
   .brand-icon {
